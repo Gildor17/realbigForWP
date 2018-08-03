@@ -1,0 +1,12 @@
+{
+	"name": "Realbig For WordPress",
+	"version": "0.11a",
+	"download_url": "https://git.min.org.ua/shkurenko/RealbigWordpressPlugin/-/archive/master/RealbigWordpressPlugin-master.zip",
+	"requires": "4.0",
+	"tested": "4.9.6",
+	"sections":
+	{
+		"description": "Plugin for using realbig's opportunities in AD integration for wordpress sites",
+		"installation": "Copy folder from archive into: ~your Wp folder~/wp-content/plugins and activate it in your plugin installation panel"
+	}
+}
