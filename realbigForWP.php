@@ -15,7 +15,7 @@ include ( ABSPATH . "wp-content/plugins/realbigForWP/synchronising.php");
 /*
 Plugin name:  Realbig For WordPress
 Description:  Реалбиговский плагин для вордпреса
-Version:      0.1.1a
+Version:      0.1.2a
 Author:       Gildor
 License:      GPL2
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
@@ -35,11 +35,11 @@ $myUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
 //$myUpdateChecker->setAuthentication('your-token-here');
 
 //Optional: Set the branch that contains the stable release.
-$myUpdateChecker->setBranch('master');
+//$myUpdateChecker->setBranch('master');
 
 /****************** end of updater code *******************************************************************************/
 
-$GLOBALS['realbigForWP_version'] = '0.1.1a';
+$GLOBALS['realbigForWP_version'] = '0.1.2a';
 
 $GLOBALS['tokenStatusMessage'] = NULL;
 $serv = $_SERVER["HTTP_HOST"];
