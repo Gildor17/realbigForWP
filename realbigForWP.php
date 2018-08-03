@@ -15,7 +15,7 @@ include ( ABSPATH . "wp-content/plugins/realbigForWP/synchronising.php");
 /*
 Plugin name:  Realbig For WordPress
 Description:  Реалбиговский плагин для вордпреса
-Version:      0.11a
+Version:      0.1.1a
 Author:       Gildor
 License:      GPL2
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
