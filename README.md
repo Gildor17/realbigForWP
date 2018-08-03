@@ -1,2 +1,0 @@
-# realbigFoWP
-plugin for wp
