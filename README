@@ -2,7 +2,7 @@
 Tags: AD, content filling
 Requires at least: 4.0
 Tested up to: 4.9.6
-Stable tag: 0.1.1a
+Stable tag: 0.11a
 Requires PHP: 7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -15,18 +15,29 @@ plugin purpose is filling content of blogs and themes with AD blocks
 
 == Installation ==
 
+Здесь описаны основные правила по установке и настройке плагина.
+
+Со стороны вашего сайта на Wordpress:
+1. Скачайте плагин и распакуйте его в `~your wordpress site~/wp-content/plugins/` .
+    Примечание: Если вы скачивали с Github, то из названия папки уберите "-master";
+2. Активируйте плагин на вашем сайте;
+3. После активации, зайдите на вкладку "реалбиг плагин настройки", где в поле "Токен" введите токен, взятый с реалбига и синхронизируйтесь.
+
+Со стороны Realbig:
+Примечания:
+ - ваш блок должен быть отмечен, как "активный" на странице "ВП плагин", что бы при синхронизации настройки этого плагина учитывались.
+
+
+=======================================================================
 This section describes how to install the plugin and get it working.
 
-1. Upload the plugin files to the `/wp-content/plugins/plugin-name` directory;
+1. Upload the plugin files to the `~your wordpress site~/wp-content/plugins/` directory;
 2. Activate the plugin through the 'Plugins' screen in WordPress;
 3. Go to your page on Realbig and configure blocks for your purposes;
 4. Open settings page of plugin on your wordpress site;
 5. Copy "token" from blocks settings page on Realbig and paste it in the field on page, which you opened on previous step.
 
 == Changelog ==
-
-= 0.1.1a =
-* Auto-updates available;
 
 = 0.11a =
 * Fixed problem with token synchronizing and saving;
