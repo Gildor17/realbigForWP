@@ -25,28 +25,21 @@ License URI:  https://www.gnu.org/licenses/gpl-2.0.html
 
 /***************** updater code ***************************************************************************************/
 require 'plugin-update-checker/plugin-update-checker.php';
-//$myUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
-//	'https://gitlab.com/user-name/repo-name/',
-//	__FILE__,
-//	'unique-plugin-or-theme-slug'
-//);
-
-//Note: Self-hosted instances of GitLab must be initialized like this:
-$myUpdateChecker = new Puc_v4p4_Vcs_PluginUpdateChecker(
-	new Puc_v4p4_Vcs_GitLabApi('https://git.min.org.ua/shkurenko/realbigForWP'),
+$myUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
+	'https://github.com/Gildor17/realbigFoWP',
 	__FILE__,
-	'-'
+	'realbigFoWP'
 );
 
 //Optional: If you're using a private repository, specify the access token like this:
-$myUpdateChecker->setAuthentication('thg4JsTZRK16ZnWHL8uS');
+//$myUpdateChecker->setAuthentication('your-token-here');
 
 //Optional: Set the branch that contains the stable release.
-//$myUpdateChecker->setBranch('stable-branch-name');
+$myUpdateChecker->setBranch('master');
 
 /****************** end of updater code *******************************************************************************/
 
-$GLOBALS['realbigForWP_version'] = '0.11a';
+$GLOBALS['realbigForWP_version'] = '0.1.1a';
 
 $GLOBALS['tokenStatusMessage'] = NULL;
 $serv = $_SERVER["HTTP_HOST"];
