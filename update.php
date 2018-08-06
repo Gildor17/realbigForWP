@@ -38,12 +38,12 @@ class UpdateClass
 			if (!empty($settingsTable)&&!empty($newSettingsTable))
 			{
 				$oldSettingTableData = $wpdb->get_results('SELECT * FROM realbigSettings');
-				if (is_object($oldSettingTableData[0]))
+				if (!empty($oldSettingTableData[0]))
 				{
 					$oldSettingTableData = get_object_vars($oldSettingTableData[0]);
 				}
 				$newSettingTableData = $wpdb->get_results('SELECT * FROM '.$wpPrefix.'realbig_settings');
-				if (is_object($newSettingTableData[0]))
+				if (!empty($newSettingTableData[0]))
 				{
 					$newSettingTableData = get_object_vars($newSettingTableData[0]);
 				}

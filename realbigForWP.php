@@ -54,7 +54,7 @@ if (!empty($_POST['tokenInput']))
 //	$url = 'http://realbigweb/api/wp-get-settings?token='.$_POST['tokenInput'];     // orig web get
 //	$url = 'http://realbigweb/api/wp-get-settings';     // orig web post
 	$url = 'https://realbig.media/api/wp-get-settings?token='.$_POST['tokenInput'];     // orig
-    
+
     $dataForSending = [
         'token' => $_POST['tokenInput']
     ];
