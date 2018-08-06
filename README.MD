@@ -2,7 +2,7 @@
 Tags: AD, content filling
 Requires at least: 4.0
 Tested up to: 4.9.6
-Stable tag: 0.11a
+Stable tag: 0.1.4a
 Requires PHP: 7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -27,8 +27,7 @@ plugin purpose is filling content of blogs and themes with AD blocks
 Примечания:
  - ваш блок должен быть отмечен, как "активный" на странице "ВП плагин", что бы при синхронизации настройки этого плагина учитывались.
 
-
-=======================================================================
+English:
 This section describes how to install the plugin and get it working.
 
 1. Upload the plugin files to the `~your wordpress site~/wp-content/plugins/` directory;

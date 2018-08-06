@@ -14,7 +14,7 @@ include ( ABSPATH . "wp-content/plugins/realbigForWP/synchronising.php");
 
 /*
 Plugin name:  Realbig For WordPress
-Description:  Реалбиговский плагин для вордпреса
+Description:  Реалбиговский плагин для вордпреса. Для полного описания перейдите по ссылке: <a href="https://github.com/Gildor17/realbigFoWP/blob/master/README.MD" target="_blank">https://github.com/Gildor17/realbigFoWP/blob/master/README.MD</a>
 Version:      0.1.4a
 Author:       Gildor
 License:      GPL2
@@ -103,30 +103,30 @@ if (!empty($_POST['tokenInput']))
 		$GLOBALS['tokenStatusMessage'] = $e['message'];
 	}
 
-    if (empty($jsonToken))
-    {
-	    try
-	    {
-		    $jsonToken = wp_remote_get($url);
-		    $jsonToken = $jsonToken['body'];
-
-		    if (!empty($jsonToken))
-		    {
-			    $GLOBALS['connection_request_rezult'] = 2;
-			    $GLOBALS['connection_request_rezult_2'] = 'success';
-		    }
-		    else
-		    {
-			    $error = error_get_last();
-			    $GLOBALS['connection_request_rezult'] = 'Connection error: ' . $error['message'];
-			    $GLOBALS['connection_request_rezult_2'] = 'Connection error: ' . $error['message'];
-		    }
-	    }
-	    catch (Exception $e)
-	    {
-		    $GLOBALS['tokenStatusMessage'] = $e['message'];
-	    }
-    }
+//    if (empty($jsonToken))
+//    {
+//	    try
+//	    {
+//		    $jsonToken = wp_remote_get($url);
+//		    $jsonToken = $jsonToken['body'];
+//
+//		    if (!empty($jsonToken))
+//		    {
+//			    $GLOBALS['connection_request_rezult'] = 2;
+//			    $GLOBALS['connection_request_rezult_2'] = 'success';
+//		    }
+//		    else
+//		    {
+//			    $error = error_get_last();
+//			    $GLOBALS['connection_request_rezult'] = 'Connection error: ' . $error['message'];
+//			    $GLOBALS['connection_request_rezult_2'] = 'Connection error: ' . $error['message'];
+//		    }
+//	    }
+//	    catch (Exception $e)
+//	    {
+//		    $GLOBALS['tokenStatusMessage'] = $e['message'];
+//	    }
+//    }
 
 //    if (empty($jsonToken))        //doesn't work as it should
 //    {
@@ -146,28 +146,28 @@ if (!empty($_POST['tokenInput']))
 //	    }
 //    }
 
-    if (empty($jsonToken))
-    {
-	    try
-	    {
-		    ini_set('max_execution_time', 300);
-		    if (!$jsonToken = @file_get_contents($url, false, null, 0))
-		    {
-			    $error = error_get_last();
-			    $GLOBALS['connection_request_rezult'] = 'Connection error: ' . $error['message'];
-			    $GLOBALS['connection_request_rezult_3'] = 'Connection error: ' . $error['message'];
-		    }
-		    else
-		    {
-			    $GLOBALS['connection_request_rezult'] = 3;
-			    $GLOBALS['connection_request_rezult_3'] = 'success';
-            }
-	    }
-	    catch (Exception $e)
-	    {
-		    $GLOBALS['tokenStatusMessage'] = $e['message'];
-	    }
-    }
+//    if (empty($jsonToken))
+//    {
+//	    try
+//	    {
+//		    ini_set('max_execution_time', 300);
+//		    if (!$jsonToken = @file_get_contents($url, false, null, 0))
+//		    {
+//			    $error = error_get_last();
+//			    $GLOBALS['connection_request_rezult'] = 'Connection error: ' . $error['message'];
+//			    $GLOBALS['connection_request_rezult_3'] = 'Connection error: ' . $error['message'];
+//		    }
+//		    else
+//		    {
+//			    $GLOBALS['connection_request_rezult'] = 3;
+//			    $GLOBALS['connection_request_rezult_3'] = 'success';
+//            }
+//	    }
+//	    catch (Exception $e)
+//	    {
+//		    $GLOBALS['tokenStatusMessage'] = $e['message'];
+//	    }
+//    }
 
 	if (!empty($jsonToken))
 	{
@@ -293,9 +293,11 @@ function TokenSync()
             <div name="rezultDiv" style="font-size: 16px"><?= $GLOBALS['tokenStatusMessage'] ?></div>
             <? endif; ?>
 		</form>
+        <br>
+        <div>Надписи ниже нужны для тестировки</div>
         <div>Статус соединения 1: <?= (!empty($GLOBALS['connection_request_rezult_1']) ? $GLOBALS['connection_request_rezult_1'] : 'empty') ?></div>
-        <div>Статус соединения 2: <?= (!empty($GLOBALS['connection_request_rezult_2']) ? $GLOBALS['connection_request_rezult_2'] : 'empty') ?></div>
-        <div>Статус соединения 3: <?= (!empty($GLOBALS['connection_request_rezult_3']) ? $GLOBALS['connection_request_rezult_3'] : 'empty') ?></div>
+        <div>Статус соединения 2: <?//= (!empty($GLOBALS['connection_request_rezult_2']) ? $GLOBALS['connection_request_rezult_2'] : 'empty') ?></div>
+        <div>Статус соединения 3: <?//= (!empty($GLOBALS['connection_request_rezult_3']) ? $GLOBALS['connection_request_rezult_3'] : 'empty') ?></div>
         <div>Статус соединения общий: <?= $GLOBALS['connection_request_rezult'] ?></div>
 	</div>
 <?
