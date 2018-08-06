@@ -19,9 +19,9 @@ include_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 
 class UpdateClass
 {
-
 	function dbOldTablesRemoveFunction($wpdb, $wpPrefix)
 	{
+//		require_once $wpdb;
 		try
 		{
 			$blocksTable = $wpdb->get_var('SHOW TABLES LIKE "WpRealbigPluginSettings"');
@@ -38,20 +38,22 @@ class UpdateClass
 			if (!empty($settingsTable)&&!empty($newSettingsTable))
 			{
 				$oldSettingTableData = $wpdb->get_results('SELECT * FROM realbigSettings');
-				$oldSettingTableData = get_object_vars($oldSettingTableData[0]);
+				if (is_object($oldSettingTableData[0]))
+				{
+					$oldSettingTableData = get_object_vars($oldSettingTableData[0]);
+				}
 				$newSettingTableData = $wpdb->get_results('SELECT * FROM '.$wpPrefix.'realbig_settings');
-				$newSettingTableData = get_object_vars($newSettingTableData[0]);
+				if (is_object($newSettingTableData[0]))
+				{
+					$newSettingTableData = get_object_vars($newSettingTableData[0]);
+				}
 
 				if (!empty($oldSettingTableData)&&empty($newSettingTableData))
 				{
 					$newSettingsSql = 'INSERT INTO '.$wpPrefix.'realbig_settings (optionName, optionValue) VALUES ("'.$oldSettingTableData['optionName'].'", "'.$oldSettingTableData['optionValue'].'")';
 					$wpdb->query($newSettingsSql);
 				}
-
-				if (!empty($newSettingTableData)&&$newSettingTableData['optionName']==$oldSettingTableData['optionName']&&$newSettingTableData['optionValue']==$oldSettingTableData['optionValue'])
-				{
-					$wpdb->query('DROP TABLE `realbigSettings`');
-				}
+				$wpdb->query('DROP TABLE `realbigSettings`');
 			}
 		}
 		catch (Exception $e)

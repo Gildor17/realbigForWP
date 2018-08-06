@@ -233,8 +233,8 @@ $pluginActivityChecker = is_plugin_active('realbigForWP/realbigForWP.php');     
 
 $updating = new UpdateClass();
 $wpPrefix = $wpdb->base_prefix;
-$updating->dbOldTablesRemoveFunction($wpdb, $wpPrefix);
 $updating->dbTablesCreateFunction($tableForCurrentPluginChecker, $tableForToken, $pluginActivityChecker, $wpPrefix);
+$updating->dbOldTablesRemoveFunction($wpdb, $wpPrefix);
 
 /********** end of checking and creating tables ***********************************************************************/
 
