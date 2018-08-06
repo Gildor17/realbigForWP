@@ -15,7 +15,7 @@ include ( ABSPATH . "wp-content/plugins/realbigForWP/synchronising.php");
 /*
 Plugin name:  Realbig For WordPress
 Description:  Реалбиговский плагин для вордпреса
-Version:      0.1.3a
+Version:      0.1.4a
 Author:       Gildor
 License:      GPL2
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
@@ -31,20 +31,14 @@ $myUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
 	'realbigFoWP'
 );
 
-//Optional: If you're using a private repository, specify the access token like this:
-//$myUpdateChecker->setAuthentication('your-token-here');
-
-//Optional: Set the branch that contains the stable release.
-//$myUpdateChecker->setBranch('master');
-
 /****************** end of updater code *******************************************************************************/
 
-$GLOBALS['realbigForWP_version'] = '0.1.3a';
+$GLOBALS['realbigForWP_version'] = '0.1.4a';
 
 $GLOBALS['tokenStatusMessage'] = NULL;
 $serv = $_SERVER["HTTP_HOST"];
 
-$token = $wpdb->get_results("SELECT optionValue FROM realbigSettings WHERE optionName = '_wpRealbigPluginToken'");
+$token = $wpdb->get_results("SELECT optionValue FROM ".$wpdb->base_prefix."realbig_settings WHERE optionName = '_wpRealbigPluginToken'");
 if (!empty($token))
 {
 	$token = get_object_vars($token[0]);
@@ -54,6 +48,8 @@ else
 {
 	$GLOBALS['token'] = 'no token';
 }
+
+
 
 if (!empty($_POST['tokenInput']))
 {
@@ -86,6 +82,8 @@ if (!empty($_POST['tokenInput']))
 		$connectionChecker = curl_getinfo($ch, CURLINFO_OS_ERRNO);
 		$jsonToken = curl_exec($ch);
 		curl_close($ch);
+
+//		echo '<script>console.log("'.$jsonToken.'")</script>';
 
 		if (!empty($jsonToken))
 		{
@@ -187,8 +185,8 @@ if (!empty($_POST['tokenInput']))
         try
         {
 	        $counter = 0;
-	        $wpdb->query( 'DELETE FROM WpRealbigPluginSettings' );
-	        $sqlTokenSave = "INSERT INTO WpRealbigPluginSettings (text, block_number, setting_type, element, directElement, elementPosition, elementPlace, firstPlace, elementCount, elementStep) VALUES ";
+	        $wpdb->query( 'DELETE FROM '.$wpdb->base_prefix.'realbig_plugin_settings' );
+	        $sqlTokenSave = "INSERT INTO ".$wpdb->base_prefix."realbig_plugin_settings (text, block_number, setting_type, element, directElement, elementPosition, elementPlace, firstPlace, elementCount, elementStep) VALUES ";
 
 	        foreach ($decodedToken['data'] AS $k => $item)
 	        {
@@ -199,14 +197,14 @@ if (!empty($_POST['tokenInput']))
 
 		    $wpdb->query($sqlTokenSave);
 		    // if no needly note, then create
-		    $wpOptionsChecker = $wpdb->query("SELECT optionValue FROM realbigSettings WHERE optionName = '_wpRealbigPluginToken'");
+		    $wpOptionsChecker = $wpdb->query("SELECT optionValue FROM ".$wpdb->base_prefix."realbig_settings WHERE optionName = '_wpRealbigPluginToken'");
 		    if (empty($wpOptionsChecker))
 		    {
-			    $wpdb->insert('realbigSettings', ['optionName'=>'_wpRealbigPluginToken', 'optionValue'=>$_POST["tokenInput"]]);
+			    $wpdb->insert($wpdb->base_prefix.'realbig_settings', ['optionName'=>'_wpRealbigPluginToken', 'optionValue'=>$_POST["tokenInput"]]);
 		    }
 		    else
 		    {
-			    $wpdb->update('realbigSettings', ['optionName'=>'_wpRealbigPluginToken', 'optionValue'=>$_POST["tokenInput"]], ['optionName'=>'_wpRealbigPluginToken']);
+			    $wpdb->update($wpdb->base_prefix.'realbig_settings', ['optionName'=>'_wpRealbigPluginToken', 'optionValue'=>$_POST["tokenInput"]], ['optionName'=>'_wpRealbigPluginToken']);
 		    }
 		    $GLOBALS['token'] = $_POST["tokenInput"];
 	    }
@@ -222,18 +220,21 @@ elseif ($GLOBALS['token'] == 'no token')
 }
 
 /************* blocks for text ****************************************************************************************/
-$fromDb = $wpdb->get_results('SELECT setting_type, `text`, element, directElement, elementPosition, elementPlace, firstPlace, elementCount, elementStep FROM WpRealbigPluginSettings WGPS');
+$fromDb = $wpdb->get_results('SELECT setting_type, `text`, element, directElement, elementPosition, elementPlace, firstPlace, elementCount, elementStep FROM '.$wpdb->base_prefix.'realbig_plugin_settings WGPS');
 /************* end blocks for text ************************************************************************************/
 
 add_filter('the_content', 'pathToIcons', 102);
 
 /********** checking and creating tables ******************************************************************************/
-$tableForCurrentPluginChecker = $wpdb->get_var('SHOW TABLES LIKE "WpRealbigPluginSettings"');   //settings for block table checking
-$tableForToken = $wpdb->get_var('SHOW TABLES LIKE "realbigSettings"');      //settings for token and other
+$tableForCurrentPluginChecker = $wpdb->get_var('SHOW TABLES LIKE "'.$wpdb->base_prefix.'realbig_plugin_settings"');   //settings for block table checking
+$tableForToken = $wpdb->get_var('SHOW TABLES LIKE "'.$wpdb->base_prefix.'realbig_settings"');      //settings for token and other
 $pluginActivityChecker = is_plugin_active('realbigForWP/realbigForWP.php');     //plugin status (active or not)
 
+
 $updating = new UpdateClass();
-$updating->dbTablesCreateFunction($tableForCurrentPluginChecker, $tableForToken, $pluginActivityChecker);
+$wpPrefix = $wpdb->base_prefix;
+$updating->dbOldTablesRemoveFunction($wpdb, $wpPrefix);
+$updating->dbTablesCreateFunction($tableForCurrentPluginChecker, $tableForToken, $pluginActivityChecker, $wpPrefix);
 
 /********** end of checking and creating tables ***********************************************************************/
 

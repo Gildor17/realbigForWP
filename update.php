@@ -1,5 +1,8 @@
 <?php
 
+include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
+include_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+
 /**
  * Created by PhpStorm.
  * User: furio
@@ -13,17 +16,59 @@
  * @return Exception
  */
 
+
 class UpdateClass
 {
 
-	function dbTablesCreateFunction($tableForCurrentPluginChecker, $tableForToken, $pluginActivityChecker)
+	function dbOldTablesRemoveFunction($wpdb, $wpPrefix)
 	{
+		try
+		{
+			$blocksTable = $wpdb->get_var('SHOW TABLES LIKE "WpRealbigPluginSettings"');
+			$blocksTable1 = $wpdb->get_var('SHOW TABLES LIKE "Wp1RealbigPluginSettings"');
+			$settingsTable = $wpdb->get_var('SHOW TABLES LIKE "realbigSettings"');
+			$newBlocksTable = $wpdb->get_var('SHOW TABLES LIKE "'.$wpPrefix.'realbig_plugin_settings"');
+			$newSettingsTable = $wpdb->get_var('SHOW TABLES LIKE "'.$wpPrefix.'realbig_settings"');
+
+			if (!empty($blocksTable)&&!empty($newBlocksTable))
+			{
+				$wpdb->query('DROP TABLE `WpRealbigPluginSettings`');
+			}
+
+			if (!empty($settingsTable)&&!empty($newSettingsTable))
+			{
+				$oldSettingTableData = $wpdb->get_results('SELECT * FROM realbigSettings');
+				$oldSettingTableData = get_object_vars($oldSettingTableData[0]);
+				$newSettingTableData = $wpdb->get_results('SELECT * FROM '.$wpPrefix.'realbig_settings');
+				$newSettingTableData = get_object_vars($newSettingTableData[0]);
+
+				if (!empty($oldSettingTableData)&&empty($newSettingTableData))
+				{
+					$newSettingsSql = 'INSERT INTO '.$wpPrefix.'realbig_settings (optionName, optionValue) VALUES ("'.$oldSettingTableData['optionName'].'", "'.$oldSettingTableData['optionValue'].'")';
+					$wpdb->query($newSettingsSql);
+				}
+
+				if (!empty($newSettingTableData)&&$newSettingTableData['optionName']==$oldSettingTableData['optionName']&&$newSettingTableData['optionValue']==$oldSettingTableData['optionValue'])
+				{
+					$wpdb->query('DROP TABLE `realbigSettings`');
+				}
+			}
+		}
+		catch (Exception $e)
+		{
+			echo $e;
+		}
+	}
+
+	function dbTablesCreateFunction($tableForCurrentPluginChecker, $tableForToken, $pluginActivityChecker, $wpPrefix)
+	{
+		$old_tables = "WpRealbigPluginSettings, realbigSettings";
 		if ($pluginActivityChecker && empty($tableForCurrentPluginChecker))
 		{
 			try
 			{
 				dbDelta("
-CREATE TABLE `WpRealbigPluginSettings` 
+CREATE TABLE `".$wpPrefix."realbig_plugin_settings` 
 (
 	`id` INT(11) NOT NULL AUTO_INCREMENT,
 	`block_number` INT(11) NOT NULL,
@@ -56,7 +101,7 @@ ENGINE=InnoDB
 			try
 			{
 				dbDelta("
-CREATE TABLE `realbigSettings` (
+CREATE TABLE `".$wpPrefix."realbig_settings` (
 `id` INT(11) NOT NULL AUTO_INCREMENT,
 `optionName` VARCHAR(50) NOT NULL,
 `optionValue` TEXT NOT NULL,
@@ -72,7 +117,6 @@ ENGINE=InnoDB
 //			return $e;
 			}
 		}
-
 	}
 }
 
