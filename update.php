@@ -32,7 +32,7 @@ class UpdateClass
 
 			if (!empty($blocksTable)&&!empty($newBlocksTable))
 			{
-				$wpdb->query('DROP TABLE `WpRealbigPluginSettings`');
+				$wpdb->query($wpdb->prepare('DROP TABLE `WpRealbigPluginSettings`', []));
 			}
 
 			if (!empty($settingsTable)&&!empty($newSettingsTable))
@@ -51,9 +51,9 @@ class UpdateClass
 				if (!empty($oldSettingTableData)&&empty($newSettingTableData))
 				{
 					$newSettingsSql = 'INSERT INTO '.$wpPrefix.'realbig_settings (optionName, optionValue) VALUES ("'.$oldSettingTableData['optionName'].'", "'.$oldSettingTableData['optionValue'].'")';
-					$wpdb->query($newSettingsSql);
+					$wpdb->query($wpdb->prepare($newSettingsSql, ''));
 				}
-				$wpdb->query('DROP TABLE `realbigSettings`');
+				$wpdb->query($wpdb->prepare('DROP TABLE `realbigSettings`', []));
 			}
 		}
 		catch (Exception $e)

@@ -15,7 +15,7 @@ include ( ABSPATH . "wp-content/plugins/realbigForWP/synchronising.php");
 /*
 Plugin name:  Realbig For WordPress
 Description:  Реалбиговский плагин для вордпреса. Для полного описания перейдите по ссылке: <a href="https://github.com/Gildor17/realbigFoWP/blob/master/README.MD" target="_blank">https://github.com/Gildor17/realbigFoWP/blob/master/README.MD</a>
-Version:      0.1.6a
+Version:      0.1.7a
 Author:       Gildor
 License:      GPL2
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
@@ -33,7 +33,7 @@ $myUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
 
 /****************** end of updater code *******************************************************************************/
 
-$GLOBALS['realbigForWP_version'] = '0.1.6a';
+$GLOBALS['realbigForWP_version'] = '0.1.7a';
 
 $GLOBALS['tokenStatusMessage'] = NULL;
 $serv = $_SERVER["HTTP_HOST"];
@@ -182,7 +182,7 @@ if (!empty($_POST['tokenInput']))
         try
         {
 	        $counter = 0;
-	        $wpdb->query( 'DELETE FROM '.$wpdb->base_prefix.'realbig_plugin_settings' );
+	        $wpdb->query($wpdb->prepare( 'DELETE FROM '.$wpdb->base_prefix.'realbig_plugin_settings', ''));
 	        $sqlTokenSave = "INSERT INTO ".$wpdb->base_prefix."realbig_plugin_settings (text, block_number, setting_type, element, directElement, elementPosition, elementPlace, firstPlace, elementCount, elementStep) VALUES ";
 
 	        foreach ($decodedToken['data'] AS $k => $item)
@@ -192,9 +192,9 @@ if (!empty($_POST['tokenInput']))
 	        }
 	        $sqlTokenSave .= " ON DUPLICATE KEY UPDATE text = values(text), setting_type = values(setting_type), element = values(element), directElement = values(directElement), elementPosition = values(elementPosition), elementPlace = values(elementPlace), firstPlace = values(firstPlace), elementCount = values(elementCount), elementStep = values(elementStep) ";
 
-		    $wpdb->query($sqlTokenSave);
+		    $wpdb->query($wpdb->prepare($sqlTokenSave, ''));
 		    // if no needly note, then create
-		    $wpOptionsChecker = $wpdb->query("SELECT optionValue FROM ".$wpdb->base_prefix."realbig_settings WHERE optionName = '_wpRealbigPluginToken'");
+		    $wpOptionsChecker = $wpdb->query($wpdb->prepare("SELECT optionValue FROM ".$wpdb->base_prefix."realbig_settings WHERE optionName = '_wpRealbigPluginToken'", ''));
 		    if (empty($wpOptionsChecker))
 		    {
 			    $wpdb->insert($wpdb->base_prefix.'realbig_settings', ['optionName'=>'_wpRealbigPluginToken', 'optionValue'=>$_POST["tokenInput"]]);
@@ -296,6 +296,6 @@ function TokenSync()
         <div>Статус соединения 3: <?//= (!empty($GLOBALS['connection_request_rezult_3']) ? $GLOBALS['connection_request_rezult_3'] : 'empty') ?></div>
         <div>Статус соединения общий: <?= $GLOBALS['connection_request_rezult'] ?></div>
 	</div>
-<?
+<?php
 }
 /************ end of token input area *********************************************************************************/
