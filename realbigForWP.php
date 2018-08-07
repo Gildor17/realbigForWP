@@ -284,10 +284,10 @@ function TokenSync()
             <label><span style="font-size: 16px">Токен</span><br/>
                 <input name="tokenInput" id="tokenInputId" value="<?= $GLOBALS['token'] ?>" style="min-width: 280px" required>
             </label>
-            <? submit_button('Синхронизировать', 'primary', 'saveTokenButton') ?>
-            <? if (!empty($GLOBALS['tokenStatusMessage'])): ?>
+            <?php submit_button('Синхронизировать', 'primary', 'saveTokenButton') ?>
+            <?php if (!empty($GLOBALS['tokenStatusMessage'])): ?>
             <div name="rezultDiv" style="font-size: 16px"><?= $GLOBALS['tokenStatusMessage'] ?></div>
-            <? endif; ?>
+            <?php endif; ?>
 		</form>
         <br>
         <div>Надписи ниже нужны для тестировки</div>
