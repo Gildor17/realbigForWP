@@ -227,7 +227,6 @@ $tableForCurrentPluginChecker = $wpdb->get_var('SHOW TABLES LIKE "'.$wpdb->base_
 $tableForToken = $wpdb->get_var('SHOW TABLES LIKE "'.$wpdb->base_prefix.'realbig_settings"');      //settings for token and other
 $pluginActivityChecker = is_plugin_active('realbigForWP/realbigForWP.php');     //plugin status (active or not)
 
-
 $updating = new UpdateClass();
 $wpPrefix = $wpdb->base_prefix;
 $updating->dbTablesCreateFunction($tableForCurrentPluginChecker, $tableForToken, $pluginActivityChecker, $wpPrefix);
