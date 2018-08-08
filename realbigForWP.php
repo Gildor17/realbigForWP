@@ -61,9 +61,9 @@ if (!empty($_POST['tokenInput']))
 
 	try
 	{
-		$ch = curl_init('https://realbig.media/api/wp-get-settings?token='.$_POST['tokenInput']);
+		$ch = curl_init('https://realbig.media/api/wp-get-settings?token='.$_POST["tokenInput"]);
 //	    curl_setopt($ch, CURLOPT_URL, $url);
-		curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 5.1) AppleWebKit/535.6 (KHTML, like Gecko) Chrome/16.0.897.0 Safari/535.6');
+//		curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 5.1) AppleWebKit/535.6 (KHTML, like Gecko) Chrome/16.0.897.0 Safari/535.6');
 		curl_setopt($ch, CURLOPT_POST, 1);
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $dataForSending);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -76,7 +76,7 @@ if (!empty($_POST['tokenInput']))
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 //	    curl_setopt($ch, CURLOPT_REFERER, $url);
-		$connectionChecker = curl_getinfo($ch, CURLINFO_OS_ERRNO);
+//		$connectionChecker = curl_getinfo($ch, CURLINFO_OS_ERRNO);
 		$jsonToken = curl_exec($ch);
 		curl_close($ch);
 
