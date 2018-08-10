@@ -31,11 +31,9 @@ $myUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
 	'realbigForWP'
 );
 /****************** end of updater code *******************************************************************************/
-
 $GLOBALS['realbigForWP_version'] = '0.1.8a';
 
 $GLOBALS['tokenStatusMessage'] = NULL;
-$serv = $_SERVER["HTTP_HOST"];
 
 $token = $wpdb->get_results("SELECT optionValue FROM ".$wpdb->base_prefix."realbig_settings WHERE optionName = '_wpRealbigPluginToken'");
 if (!empty($token))
@@ -49,31 +47,55 @@ else
 }
 
 /****************** autosync ******************************************************************************************/
-if (!empty($token))
+if (!empty($token)&&$token!='no token')
 {
 	$wpOptionsCheckerSyncTime = $wpdb->get_row($wpdb->prepare('SELECT optionValue FROM '.$wpdb->base_prefix.'realbig_settings WHERE optionName = %s', ["token_sync_time"]));
-	$lastSyncTime = get_object_vars($wpOptionsCheckerSyncTime);
+	if (!empty($wpOptionsCheckerSyncTime))
+	{
+		$lastSyncTime = get_object_vars($wpOptionsCheckerSyncTime);
+	}
+	else
+	{
+		$lastSyncTime = null;
+    }
 
 	$timeDif = time() - intval($lastSyncTime['optionValue']);
 	if ($timeDif > 300)
 	{
-		synchronize($token, $wpOptionsCheckerSyncTime);
+		$sameTokenResult = true;
+		synchronize($token, $wpOptionsCheckerSyncTime, $sameTokenResult);
     }
 }
 /****************** end autosync **************************************************************************************/
 
+/********** adding AD code in head area *******************************************************************************/
 add_action('wp_head', 'AD_func_add', 1);
 function AD_func_add()
 {
-	?>
-    <script type="text/javascript"> rbConfig={start:performance.now()}; </script>
-    <script async="async" type="text/javascript" src="//any.realbig.media/rotator.min.js"></script>
-	<?php
+	require_once('textEditing.php');
+	$headerParsingResult = headerADInsertor();
+	if ($headerParsingResult==true)
+	{
+		?>
+        <script type="text/javascript"> rbConfig={start:performance.now()}; </script>
+        <script async="async" type="text/javascript" src="//any.realbig.media/rotator.min.js"></script>
+		<?php
+	}
 }
+/********** end of adding AD code in head area ************************************************************************/
 
+$blocksSettingsTableChecking = $wpdb->query('SELECT id FROM '.$wpdb->base_prefix.'realbig_plugin_settings');
 if (!empty($_POST['tokenInput']))
 {
-    synchronize($_POST['tokenInput'], $wpOptionsCheckerSyncTime);
+    if (!empty($token)&&$_POST['tokenInput']==$token&&$blocksSettingsTableChecking!=0)
+    {
+	    $sameTokenResult = true;
+    }
+    else
+    {
+	    $sameTokenResult = false;
+    }
+    synchronize($_POST['tokenInput'], $wpOptionsCheckerSyncTime??NULL, $sameTokenResult);
 }
 elseif ($GLOBALS['token'] == 'no token')
 {
@@ -97,16 +119,11 @@ dbOldTablesRemoveFunction($wpPrefix);
 
 /********** end of checking and creating tables ***********************************************************************/
 
-/********** adding AD code in head area *******************************************************************************/
-//http_head()   //in future
-
-/********** end of adding AD code in head area ************************************************************************/
-
 /********** using settings in texts ***********************************************************************************/
 function pathToIcons($content)
 {
     $fromDb = $GLOBALS['fromDb'];
-	require('textEditing.php');
+	require_once('textEditing.php');
     $setNum = 1;
 	$content = addIcons($fromDb, $content);
     return $content;

@@ -10,7 +10,7 @@ include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
 include_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 include_once( ABSPATH . '/wp-includes/wp-db.php');
 
-function synchronize($tokenInput, $wpOptionsCheckerSyncTime)
+function synchronize($tokenInput, $wpOptionsCheckerSyncTime, $sameTokenResult)
 {
 	global $wpdb;
 
@@ -18,10 +18,12 @@ function synchronize($tokenInput, $wpOptionsCheckerSyncTime)
 		
 //	$url = 'http://realbigweb/api/wp-get-settings?token='.$tokenInput;     // orig web get
 //	$url = 'http://realbigweb/api/wp-get-settings';     // orig web post
-	$url = 'https://realbig.media/api/wp-get-settings?token='.$tokenInput;     // orig
+//	$url = 'https://realbig.media/api/wp-get-settings?token='.$tokenInput.'&sameToken='.$sameTokenResult;     // orig
+	$url = 'https://realbig.media/api/wp-get-settings';     // orig post
 
 	$dataForSending = [
-		'token' => $tokenInput
+		'token' => $tokenInput,
+		'sameToken' => $sameTokenResult
 	];
 
 	try
@@ -105,7 +107,8 @@ function synchronize($tokenInput, $wpOptionsCheckerSyncTime)
 			}
 
 //            $wpOptionsCheckerSyncTime = $wpdb->get_row($wpdb->prepare('SELECT optionValue FROM '.$wpbdBasePrefix.'realbig_settings WHERE optionName = "token_sync_time"', []));
-			if (empty($wpOptionsCheckerSyncTime)) {
+			if (empty($wpOptionsCheckerSyncTime))
+			{
 				$wpdb->insert($wpbdBasePrefix.'realbig_settings', ['optionName'=>'token_sync_time', 'optionValue'=> time()]);
 			}
 			else
