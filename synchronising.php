@@ -106,22 +106,28 @@ function synchronize($tokenInput, $wpOptionsCheckerSyncTime, $sameTokenResult)
 				$wpdb->update($wpbdBasePrefix.'realbig_settings', ['optionName'=>'_wpRealbigPluginToken', 'optionValue'=>$tokenInput], ['optionName'=>'_wpRealbigPluginToken']);
 			}
 
-//            $wpOptionsCheckerSyncTime = $wpdb->get_row($wpdb->prepare('SELECT optionValue FROM '.$wpbdBasePrefix.'realbig_settings WHERE optionName = "token_sync_time"', []));
-			if (empty($wpOptionsCheckerSyncTime))
-			{
-				$wpdb->insert($wpbdBasePrefix.'realbig_settings', ['optionName'=>'token_sync_time', 'optionValue'=> time()]);
-			}
-			else
-			{
-				$wpdb->update($wpbdBasePrefix.'realbig_settings', ['optionName'=>'token_sync_time', 'optionValue'=> time()], ['optionName'=>'token_sync_time']);
-			}
-
 			$GLOBALS['token'] = $tokenInput;
 		}
 		catch (Exception $e)
 		{
 			$GLOBALS['tokenStatusMessage'] = $e;
 		}
+	}
+
+	try
+	{
+		if (empty($wpOptionsCheckerSyncTime))
+		{
+			$wpdb->insert($wpbdBasePrefix.'realbig_settings', ['optionName'=>'token_sync_time', 'optionValue'=> time()]);
+		}
+		else
+		{
+			$wpdb->update($wpbdBasePrefix.'realbig_settings', ['optionName'=>'token_sync_time', 'optionValue'=> time()], ['optionName'=>'token_sync_time']);
+		}
+	}
+	catch (Exception $e)
+	{
+
 	}
 
 //	return true;
