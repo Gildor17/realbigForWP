@@ -87,14 +87,7 @@ function AD_func_add()
 $blocksSettingsTableChecking = $wpdb->query('SELECT id FROM '.$wpdb->base_prefix.'realbig_plugin_settings');
 if (!empty($_POST['tokenInput']))
 {
-    if (!empty($token)&&$_POST['tokenInput']==$token&&$blocksSettingsTableChecking!=0)
-    {
-	    $sameTokenResult = true;
-    }
-    else
-    {
-	    $sameTokenResult = false;
-    }
+	$sameTokenResult = false;
     synchronize($_POST['tokenInput'], $wpOptionsCheckerSyncTime??NULL, $sameTokenResult);
 }
 elseif ($GLOBALS['token'] == 'no token')
