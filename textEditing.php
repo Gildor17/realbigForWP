@@ -115,5 +115,4 @@ function addIcons ($fromDb, $content)
 	{
 		return $editedContent;
 	}
-	return false;
 }
