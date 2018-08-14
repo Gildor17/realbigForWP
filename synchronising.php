@@ -15,7 +15,7 @@ function synchronize($tokenInput, $wpOptionsCheckerSyncTime, $sameTokenResult)
 	global $wpdb;
 
 	$wpbdBasePrefix = htmlspecialchars($wpdb->base_prefix);
-		
+
 //	$url = 'http://realbigweb/api/wp-get-settings?token='.$tokenInput;     // orig web get
 //	$url = 'http://realbigweb/api/wp-get-settings';     // orig web post
 //	$url = 'https://realbig.media/api/wp-get-settings?token='.$tokenInput.'&sameToken='.$sameTokenResult;     // orig
@@ -116,7 +116,7 @@ function synchronize($tokenInput, $wpOptionsCheckerSyncTime, $sameTokenResult)
 
 	try
 	{
-		if ($decodedToken['message']=='success')
+		if ($decodedToken['status']=='success')
 		{
 			if (empty($wpOptionsCheckerSyncTime))
 			{
