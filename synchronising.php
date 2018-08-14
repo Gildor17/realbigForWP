@@ -116,20 +116,86 @@ function synchronize($tokenInput, $wpOptionsCheckerSyncTime, $sameTokenResult)
 
 	try
 	{
-		if (empty($wpOptionsCheckerSyncTime))
+		if ($decodedToken['message']=='success')
 		{
-			$wpdb->insert($wpbdBasePrefix.'realbig_settings', ['optionName'=>'token_sync_time', 'optionValue'=> time()]);
-		}
-		else
-		{
-			$wpdb->update($wpbdBasePrefix.'realbig_settings', ['optionName'=>'token_sync_time', 'optionValue'=> time()], ['optionName'=>'token_sync_time']);
+			if (empty($wpOptionsCheckerSyncTime))
+			{
+				$wpdb->insert($wpbdBasePrefix.'realbig_settings', ['optionName'=>'token_sync_time', 'optionValue'=> time()]);
+			}
+			else
+			{
+				$wpdb->update($wpbdBasePrefix.'realbig_settings', ['optionName'=>'token_sync_time', 'optionValue'=> time()], ['optionName'=>'token_sync_time']);
+			}
 		}
 	}
 	catch (Exception $e)
 	{
-
 	}
 
 //	return true;
 
+}
+
+function tokenChecking()
+{
+	global $wpdb;
+	$GLOBALS['tokenStatusMessage'] = NULL;
+
+	$token = $wpdb->get_results("SELECT optionValue FROM ".$wpdb->base_prefix."realbig_settings WHERE optionName = '_wpRealbigPluginToken'");
+
+	if (!empty($token))
+	{
+		$token = get_object_vars($token[0]);
+		$GLOBALS['token'] = $token['optionValue'];
+		$token = $token['optionValue'];
+	}
+	else
+	{
+		$GLOBALS['token'] = 'no token';
+		$token = 'no token';
+	}
+
+	return $token;
+}
+
+function tokenTimeUpdateChecking($token)
+{
+	global $wpdb;
+	try
+	{
+//		if ($GLOBALS['tokenStatusMessage']=='success'||empty($GLOBALS['tokenStatusMessage']))
+//		{
+			$timeUpdate = $wpdb->get_results("SELECT timeUpdate FROM ".$wpdb->base_prefix."realbig_settings WHERE optionName = 'token_sync_time'");
+			if (empty($timeUpdate))
+			{
+				$updateResult = wpRealbigSettingsTableUpdateFunction();
+				if ($updateResult = true)
+				{
+					$timeUpdate = $wpdb->get_results("SELECT timeUpdate FROM ".$wpdb->base_prefix."realbig_settings WHERE optionName = 'token_sync_time'");
+				}
+			}
+			if (!empty($token)&&$token != 'no token'&&($GLOBALS['tokenStatusMessage']=='success'||empty($GLOBALS['tokenStatusMessage']))&&!empty($timeUpdate))
+			{
+				if (!empty($timeUpdate))
+				{
+					$timeUpdate = get_object_vars($timeUpdate[0]);
+					$GLOBALS['tokenTimeUpdate'] = $timeUpdate['timeUpdate'];
+					$GLOBALS['statusColor'] = 'green';
+				}
+				else
+				{
+					$GLOBALS['tokenTimeUpdate'] = '';
+					$GLOBALS['statusColor'] = 'red';
+				}
+			}
+			else
+			{
+				$GLOBALS['tokenTimeUpdate'] = 'never';
+				$GLOBALS['statusColor'] = 'red';
+			}
+//		}
+	}
+	catch (Exception $e)
+	{
+	}
 }

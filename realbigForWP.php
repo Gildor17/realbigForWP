@@ -22,7 +22,10 @@ License URI:  https://www.gnu.org/licenses/gpl-2.0.html
 */
 
 /** **************************************************************************************************************** **/
-
+//$test12 = $GLOBALS['PHP_SELF'];
+//$rezult = add_action('admin_init', 'adminPagesTest');
+//$adminChecker = $wpdb->get_var('SELECT optionValue FROM wp_realbig_settings WHERE optionName = "testAdminRow"');
+//$testwrs = wpRealbigSettingsTableUpdateFunction();
 /***************** updater code ***************************************************************************************/
 require 'plugin-update-checker/plugin-update-checker.php';
 $myUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
@@ -33,25 +36,30 @@ $myUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
 /****************** end of updater code *******************************************************************************/
 $GLOBALS['realbigForWP_version'] = '0.1.11a';
 
-$GLOBALS['tokenStatusMessage'] = NULL;
-
-$token = $wpdb->get_results("SELECT optionValue FROM ".$wpdb->base_prefix."realbig_settings WHERE optionName = '_wpRealbigPluginToken'");
-if (!empty($token))
+/********** checking and creating tables ******************************************************************************/
+try
 {
-	$token = get_object_vars($token[0]);
-	$GLOBALS['token'] = $token['optionValue'];
+	$tableForCurrentPluginChecker = $wpdb->get_var( 'SHOW TABLES LIKE "' . $wpdb->base_prefix . 'realbig_plugin_settings"' );   //settings for block table checking
+	$tableForToken                = $wpdb->get_var( 'SHOW TABLES LIKE "' . $wpdb->base_prefix . 'realbig_settings"' );      //settings for token and other
+	$pluginActivityChecker        = is_plugin_active( 'realbigForWP/realbigForWP.php' );     //plugin status (active or not)
 }
-else
-{
-	$GLOBALS['token'] = 'no token';
-}
+catch (Exception $e) {}
 
+$wpPrefix = $wpdb->base_prefix;
+dbTablesCreateFunction($tableForCurrentPluginChecker, $tableForToken, $pluginActivityChecker, $wpPrefix);
+dbOldTablesRemoveFunction($wpPrefix);
+
+/********** end of checking and creating tables ***********************************************************************/
+
+$token = tokenChecking();
 /****************** autosync ******************************************************************************************/
 if (!empty($token)&&$token!='no token')
 {
-    try
+	try
     {
-	    $wpOptionsCheckerSyncTime = $wpdb->get_row( $wpdb->prepare( 'SELECT optionValue FROM ' . $wpdb->base_prefix . 'realbig_settings WHERE optionName = %s', [ "token_sync_time" ] ) );
+	    $wpOptionsCheckerSyncTime = $wpdb->get_row( $wpdb->prepare( 'SELECT optionValue FROM ' . $wpdb->base_prefix . 'realbig_settings WHERE optionName = %s', [ "token_sync_time" ] ));
+//	    $syncIterations = $wpdb->get_var('SELECT optionValue FROM '.$wpdb->base_prefix.'realbig_settings WHERE optionName = "syncRequest"');
+//	    $wpdb->update($wpdb->base_prefix.'realbig_settings', ['optionValue'=> $syncIterations + 1], ['optionName'=>'syncRequest']);
 	    if ( ! empty( $wpOptionsCheckerSyncTime ) )
 	    {
 		    $lastSyncTime = get_object_vars( $wpOptionsCheckerSyncTime );
@@ -86,18 +94,21 @@ function AD_func_add()
 }
 /********** end of adding AD code in head area ************************************************************************/
 
-$blocksSettingsTableChecking = $wpdb->query('SELECT id FROM '.$wpdb->base_prefix.'realbig_plugin_settings');
-if (!empty($_POST['tokenInput']))
+//$blocksSettingsTableChecking = $wpdb->query('SELECT id FROM '.$wpdb->base_prefix.'realbig_plugin_settings');
+if (strpos($GLOBALS['PHP_SELF'], 'wp-admin') != false)
 {
+	if (!empty($_POST['tokenInput']))
+	{
+		$sameTokenResult = false;
+		synchronize($_POST['tokenInput'], (empty($wpOptionsCheckerSyncTime) ? NULL : $wpOptionsCheckerSyncTime), $sameTokenResult);
 //    if (!empty($token)&&$_POST['tokenInput']==$token&&$blocksSettingsTableChecking!=0)
 //    {
 //	    $sameTokenResult = true;
 //    }
 //    else
 //    {
-	    $sameTokenResult = false;
+//	    $sameTokenResult = false;
 //    }
-    synchronize($_POST['tokenInput'], (empty($wpOptionsCheckerSyncTime) ? NULL : $wpOptionsCheckerSyncTime), $sameTokenResult);
 ////	$url = 'http://realbigweb/api/wp-get-settings?token='.$_POST['tokenInput'];     // orig web get
 ////	$url = 'http://realbigweb/api/wp-get-settings';     // orig web post
 //	$url = 'https://realbig.media/api/wp-get-settings?token='.$_POST['tokenInput'];     // orig
@@ -201,10 +212,12 @@ if (!empty($_POST['tokenInput']))
 //		    $GLOBALS['tokenStatusMessage'] = $e;
 //	    }
 //    }
-}
-elseif ($GLOBALS['token'] == 'no token')
-{
-	$GLOBALS['tokenStatusMessage'] = 'Введите токен';
+	}
+    elseif ($GLOBALS['token'] == 'no token')
+	{
+		$GLOBALS['tokenStatusMessage'] = 'Введите токен';
+	}
+	tokenTimeUpdateChecking($GLOBALS['token']);
 }
 
 /************* blocks for text ****************************************************************************************/
@@ -212,21 +225,6 @@ $fromDb = $wpdb->get_results('SELECT setting_type, `text`, element, directElemen
 /************* end blocks for text ************************************************************************************/
 
 add_filter('the_content', 'pathToIcons', 102);
-
-/********** checking and creating tables ******************************************************************************/
-try
-{
-	$tableForCurrentPluginChecker = $wpdb->get_var( 'SHOW TABLES LIKE "' . $wpdb->base_prefix . 'realbig_plugin_settings"' );   //settings for block table checking
-	$tableForToken                = $wpdb->get_var( 'SHOW TABLES LIKE "' . $wpdb->base_prefix . 'realbig_settings"' );      //settings for token and other
-	$pluginActivityChecker        = is_plugin_active( 'realbigForWP/realbigForWP.php' );     //plugin status (active or not)
-}
-catch (Exception $e) {}
-
-$wpPrefix = $wpdb->base_prefix;
-dbTablesCreateFunction($tableForCurrentPluginChecker, $tableForToken, $pluginActivityChecker, $wpPrefix);
-dbOldTablesRemoveFunction($wpPrefix);
-
-/********** end of checking and creating tables ***********************************************************************/
 
 /********** using settings in texts ***********************************************************************************/
 function pathToIcons($content)
@@ -239,6 +237,15 @@ function pathToIcons($content)
 }
 /*********** end of using settings in texts ***************************************************************************/
 
+//function adminPagesTest()
+//{
+//    global $wpdb;
+//
+//    $adminChecker = $wpdb->get_var('SELECT optionValue FROM '.$wpdb->base_prefix.'realbig_settings WHERE optionName = "testAdminRow"');
+//	$adminChecker = $adminChecker + 1;
+//    $wpdb->update($wpdb->base_prefix.'realbig_settings', ['optionValue'=> $adminChecker], ['optionName'=>'testAdminRow']);
+//}
+
 /*********** begin of token input area ********************************************************************************/
 function my_plugin_action_links($links)
 {
@@ -247,7 +254,7 @@ function my_plugin_action_links($links)
 }
 add_action( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'my_plugin_action_links' );
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 if (is_admin())
 {
@@ -272,6 +279,7 @@ function TokenSync()
 		<form method="post" name="tokenForm" id="tokenFormId">
             <label><span style="font-size: 16px">Токен</span><br/>
                 <input name="tokenInput" id="tokenInputId" value="<?= $GLOBALS['token'] ?>" style="min-width: 280px" required>
+                <label style="font-size: 16px; margin-left: 10px; color: <?= $GLOBALS['statusColor'] ?> ">Время последней синхронизации: <?= $GLOBALS['tokenTimeUpdate'] ?></label>
             </label>
             <?php submit_button('Синхронизировать', 'primary', 'saveTokenButton') ?>
             <?php if (!empty($GLOBALS['tokenStatusMessage'])): ?>
