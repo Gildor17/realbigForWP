@@ -60,7 +60,6 @@ function synchronize($tokenInput, $wpOptionsCheckerSyncTime, $sameTokenResult)
 			$error = error_get_last();
 			$GLOBALS['connection_request_rezult'] = 'Connection error: ' . $error['message'];
 			$GLOBALS['connection_request_rezult_1'] = 'Connection error: ' . $error['message'];
-
 		}
 	}
 	catch (Exception $e)

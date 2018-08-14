@@ -15,7 +15,7 @@ include ( ABSPATH . "wp-content/plugins/realbigForWP/synchronising.php");
 /*
 Plugin name:  Realbig For WordPress
 Description:  Реалбиговский плагин для вордпреса. Для полного описания перейдите по ссылке: <a href="https://github.com/Gildor17/realbigFoWP/blob/master/README.MD" target="_blank">https://github.com/Gildor17/realbigFoWP/blob/master/README.MD</a>
-Version:      0.1.13a
+Version:      0.1.14a
 Author:       Gildor
 License:      GPL2
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
@@ -26,6 +26,7 @@ License URI:  https://www.gnu.org/licenses/gpl-2.0.html
 //$rezult = add_action('admin_init', 'adminPagesTest');
 //$adminChecker = $wpdb->get_var('SELECT optionValue FROM wp_realbig_settings WHERE optionName = "testAdminRow"');
 //$testwrs = wpRealbigSettingsTableUpdateFunction();
+global $wpdb;
 /***************** updater code ***************************************************************************************/
 require 'plugin-update-checker/plugin-update-checker.php';
 $myUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
@@ -34,19 +35,18 @@ $myUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
 	'realbigForWP'
 );
 /****************** end of updater code *******************************************************************************/
-$GLOBALS['realbigForWP_version'] = '0.1.13a';
-
+$GLOBALS['realbigForWP_version'] = '0.1.14a';
 /********** checking and creating tables ******************************************************************************/
+$wpPrefix = $wpdb->base_prefix;
 try
 {
 	$tableForCurrentPluginChecker = $wpdb->get_var( 'SHOW TABLES LIKE "' . $wpdb->base_prefix . 'realbig_plugin_settings"' );   //settings for block table checking
 	$tableForToken                = $wpdb->get_var( 'SHOW TABLES LIKE "' . $wpdb->base_prefix . 'realbig_settings"' );      //settings for token and other
-	$pluginActivityChecker        = is_plugin_active( 'realbigForWP/realbigForWP.php' );     //plugin status (active or not)
+//	$pluginActivityChecker        = is_plugin_active( 'realbigForWP/realbigForWP.php' );     //plugin status (active or not)
 }
 catch (Exception $e) {}
 
-$wpPrefix = $wpdb->base_prefix;
-dbTablesCreateFunction($tableForCurrentPluginChecker, $tableForToken, $pluginActivityChecker, $wpPrefix);
+dbTablesCreateFunction($tableForCurrentPluginChecker, $tableForToken, $wpPrefix);
 dbOldTablesRemoveFunction($wpPrefix);
 
 /********** end of checking and creating tables ***********************************************************************/

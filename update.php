@@ -59,11 +59,11 @@ function dbOldTablesRemoveFunction($wpPrefix)
 	}
 }
 
-function dbTablesCreateFunction($tableForCurrentPluginChecker, $tableForToken, $pluginActivityChecker, $wpPrefix)
+function dbTablesCreateFunction($tableForCurrentPluginChecker, $tableForToken, $wpPrefix)
 {
 
 	$old_tables = "WpRealbigPluginSettings, realbigSettings";
-	if ($pluginActivityChecker && empty($tableForCurrentPluginChecker))
+	if (empty($tableForCurrentPluginChecker))
 	{
 		try
 		{
@@ -96,7 +96,7 @@ ENGINE=InnoDB
 		}
 	}
 
-	if ($pluginActivityChecker && empty($tableForToken))
+	if (empty($tableForToken))
 	{
 		try
 		{
