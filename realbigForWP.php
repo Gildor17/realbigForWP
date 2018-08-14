@@ -60,7 +60,7 @@ if (!empty($token)&&$token!='no token')
 	    $wpOptionsCheckerSyncTime = $wpdb->get_row( $wpdb->prepare( 'SELECT optionValue FROM ' . $wpdb->base_prefix . 'realbig_settings WHERE optionName = %s', [ "token_sync_time" ] ));
 //	    $syncIterations = $wpdb->get_var('SELECT optionValue FROM '.$wpdb->base_prefix.'realbig_settings WHERE optionName = "syncRequest"');
 //	    $wpdb->update($wpdb->base_prefix.'realbig_settings', ['optionValue'=> $syncIterations + 1], ['optionName'=>'syncRequest']);
-	    if ( ! empty( $wpOptionsCheckerSyncTime ) )
+	    if (!empty( $wpOptionsCheckerSyncTime))
 	    {
 		    $lastSyncTime = get_object_vars( $wpOptionsCheckerSyncTime );
 	    }
@@ -69,12 +69,18 @@ if (!empty($token)&&$token!='no token')
 		    $lastSyncTime = null;
 	    }
 
-	    $timeDif = time() - intval( $lastSyncTime['optionValue'] );
-	    if ( $timeDif > 300 ) {
-		    $sameTokenResult = true;
-		    synchronize( $token, $wpOptionsCheckerSyncTime, $sameTokenResult );
-	    }
-    } catch (Exception $e) {}
+	    if (!empty($lastSyncTime))
+	    {
+		    $timeDif = time() - intval( $lastSyncTime['optionValue'] );
+		    if ($timeDif > 300)
+		    {
+			    $sameTokenResult = true;
+			    synchronize($token, $wpOptionsCheckerSyncTime, $sameTokenResult);
+			    tokenTimeUpdateChecking($GLOBALS['token']);
+		    }
+        }
+    }
+    catch (Exception $e) {}
 }
 /****************** end autosync **************************************************************************************/
 
