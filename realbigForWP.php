@@ -27,6 +27,7 @@ License URI:  https://www.gnu.org/licenses/gpl-2.0.html
 //$adminChecker = $wpdb->get_var('SELECT optionValue FROM wp_realbig_settings WHERE optionName = "testAdminRow"');
 //$testwrs = wpRealbigSettingsTableUpdateFunction();
 global $wpdb;
+global $table_prefix;
 /***************** updater code ***************************************************************************************/
 require 'plugin-update-checker/plugin-update-checker.php';
 $myUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
@@ -38,10 +39,14 @@ $myUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
 $GLOBALS['realbigForWP_version'] = '0.1.14a';
 /********** checking and creating tables ******************************************************************************/
 $wpPrefix = $wpdb->base_prefix;
+if (empty($wpPrefix)) {
+	$wpPrefix = $table_prefix;
+}
+
 try
 {
-	$tableForCurrentPluginChecker = $wpdb->get_var( 'SHOW TABLES LIKE "' . $wpdb->base_prefix . 'realbig_plugin_settings"' );   //settings for block table checking
-	$tableForToken                = $wpdb->get_var( 'SHOW TABLES LIKE "' . $wpdb->base_prefix . 'realbig_settings"' );      //settings for token and other
+	$tableForCurrentPluginChecker = $wpdb->get_var( 'SHOW TABLES LIKE "' . $wpPrefix . 'realbig_plugin_settings"' );   //settings for block table checking
+	$tableForToken                = $wpdb->get_var( 'SHOW TABLES LIKE "' . $wpPrefix . 'realbig_settings"' );      //settings for token and other
 //	$pluginActivityChecker        = is_plugin_active( 'realbigForWP/realbigForWP.php' );     //plugin status (active or not)
 }
 catch (Exception $e) {}
@@ -51,15 +56,15 @@ dbOldTablesRemoveFunction($wpPrefix);
 
 /********** end of checking and creating tables ***********************************************************************/
 
-$token = tokenChecking();
+$token = tokenChecking($wpPrefix);
 /****************** autosync ******************************************************************************************/
 if (!empty($token)&&$token!='no token')
 {
 	try
     {
-	    $wpOptionsCheckerSyncTime = $wpdb->get_row( $wpdb->prepare( 'SELECT optionValue FROM ' . $wpdb->base_prefix . 'realbig_settings WHERE optionName = %s', [ "token_sync_time" ] ));
-//	    $syncIterations = $wpdb->get_var('SELECT optionValue FROM '.$wpdb->base_prefix.'realbig_settings WHERE optionName = "syncRequest"');
-//	    $wpdb->update($wpdb->base_prefix.'realbig_settings', ['optionValue'=> $syncIterations + 1], ['optionName'=>'syncRequest']);
+	    $wpOptionsCheckerSyncTime = $wpdb->get_row( $wpdb->prepare( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = %s', [ "token_sync_time" ] ));
+//	    $syncIterations = $wpdb->get_var('SELECT optionValue FROM '.$wpPrefix.'realbig_settings WHERE optionName = "syncRequest"');
+//	    $wpdb->update($wpPrefix.'realbig_settings', ['optionValue'=> $syncIterations + 1], ['optionName'=>'syncRequest']);
 	    if (!empty( $wpOptionsCheckerSyncTime))
 	    {
 		    $lastSyncTime = get_object_vars( $wpOptionsCheckerSyncTime );
@@ -75,7 +80,7 @@ if (!empty($token)&&$token!='no token')
 		    if ($timeDif > 300)
 		    {
 			    $sameTokenResult = true;
-			    synchronize($token, $wpOptionsCheckerSyncTime, $sameTokenResult);
+			    synchronize($token, $wpOptionsCheckerSyncTime, $sameTokenResult, $wpPrefix);
 			    tokenTimeUpdateChecking($GLOBALS['token']);
 		    }
         }
@@ -100,7 +105,7 @@ function AD_func_add()
 }
 /********** end of adding AD code in head area ************************************************************************/
 
-//$blocksSettingsTableChecking = $wpdb->query('SELECT id FROM '.$wpdb->base_prefix.'realbig_plugin_settings');
+//$blocksSettingsTableChecking = $wpdb->query('SELECT id FROM '.$wpPrefix.'realbig_plugin_settings');
 if (strpos($GLOBALS['PHP_SELF'], 'wp-admin') != false)
 {
 	if (!empty($_POST['tokenInput']))
@@ -180,8 +185,8 @@ if (strpos($GLOBALS['PHP_SELF'], 'wp-admin') != false)
 //        try
 //        {
 //	        $counter = 0;
-//	        $wpdb->query($wpdb->prepare( 'DELETE FROM '.$wpdb->base_prefix.'realbig_plugin_settings', []));
-//	        $sqlTokenSave = "INSERT INTO ".$wpdb->base_prefix."realbig_plugin_settings (text, block_number, setting_type, element, directElement, elementPosition, elementPlace, firstPlace, elementCount, elementStep) VALUES ";
+//	        $wpdb->query($wpdb->prepare( 'DELETE FROM '.$wpPrefix.'realbig_plugin_settings', []));
+//	        $sqlTokenSave = "INSERT INTO ".$wpPrefix."realbig_plugin_settings (text, block_number, setting_type, element, directElement, elementPosition, elementPlace, firstPlace, elementCount, elementStep) VALUES ";
 //
 //	        foreach ($decodedToken['data'] AS $k => $item)
 //	        {
@@ -192,23 +197,23 @@ if (strpos($GLOBALS['PHP_SELF'], 'wp-admin') != false)
 //
 //		    $wpdb->query($wpdb->prepare($sqlTokenSave, []));
 //		    // if no needly note, then create
-//		    $wpOptionsCheckerTokenValue = $wpdb->query($wpdb->prepare( "SELECT optionValue FROM " . $wpdb->base_prefix . "realbig_settings WHERE optionName = '_wpRealbigPluginToken'", []));
+//		    $wpOptionsCheckerTokenValue = $wpdb->query($wpdb->prepare( "SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = '_wpRealbigPluginToken'", []));
 //		    if (empty($wpOptionsCheckerTokenValue))
 //		    {
-//			    $wpdb->insert($wpdb->base_prefix.'realbig_settings', ['optionName'=>'_wpRealbigPluginToken', 'optionValue'=>$_POST["tokenInput"]]);
+//			    $wpdb->insert($wpPrefix.'realbig_settings', ['optionName'=>'_wpRealbigPluginToken', 'optionValue'=>$_POST["tokenInput"]]);
 //		    }
 //		    else
 //		    {
-//			    $wpdb->update($wpdb->base_prefix.'realbig_settings', ['optionName'=>'_wpRealbigPluginToken', 'optionValue'=>$_POST["tokenInput"]], ['optionName'=>'_wpRealbigPluginToken']);
+//			    $wpdb->update($wpPrefix.'realbig_settings', ['optionName'=>'_wpRealbigPluginToken', 'optionValue'=>$_POST["tokenInput"]], ['optionName'=>'_wpRealbigPluginToken']);
 //		    }
 //
-////            $wpOptionsCheckerSyncTime = $wpdb->get_row($wpdb->prepare('SELECT optionValue FROM '.$wpdb->base_prefix.'realbig_settings WHERE optionName = "token_sync_time"', []));
+////            $wpOptionsCheckerSyncTime = $wpdb->get_row($wpdb->prepare('SELECT optionValue FROM '.$wpPrefix.'realbig_settings WHERE optionName = "token_sync_time"', []));
 //		    if (empty($wpOptionsCheckerSyncTime)) {
-//			    $wpdb->insert($wpdb->base_prefix.'realbig_settings', ['optionName'=>'token_sync_time', 'optionValue'=> time()]);
+//			    $wpdb->insert($wpPrefix.'realbig_settings', ['optionName'=>'token_sync_time', 'optionValue'=> time()]);
 //		    }
 //		    else
 //		    {
-//			    $wpdb->update($wpdb->base_prefix.'realbig_settings', ['optionName'=>'token_sync_time', 'optionValue'=> time()], ['optionName'=>'token_sync_time']);
+//			    $wpdb->update($wpPrefix.'realbig_settings', ['optionName'=>'token_sync_time', 'optionValue'=> time()], ['optionName'=>'token_sync_time']);
 //		    }
 //
 //		    $GLOBALS['token'] = $_POST["tokenInput"];
@@ -223,11 +228,11 @@ if (strpos($GLOBALS['PHP_SELF'], 'wp-admin') != false)
 	{
 		$GLOBALS['tokenStatusMessage'] = 'Введите токен';
 	}
-	tokenTimeUpdateChecking($GLOBALS['token']);
+	tokenTimeUpdateChecking($GLOBALS['token'], $wpPrefix);
 }
 
 /************* blocks for text ****************************************************************************************/
-$fromDb = $wpdb->get_results('SELECT setting_type, `text`, element, directElement, elementPosition, elementPlace, firstPlace, elementCount, elementStep FROM '.$wpdb->base_prefix.'realbig_plugin_settings WGPS');
+$fromDb = $wpdb->get_results('SELECT setting_type, `text`, element, directElement, elementPosition, elementPlace, firstPlace, elementCount, elementStep FROM '.$wpPrefix.'realbig_plugin_settings WGPS');
 /************* end blocks for text ************************************************************************************/
 
 add_filter('the_content', 'pathToIcons', 102);
@@ -247,9 +252,9 @@ function pathToIcons($content)
 //{
 //    global $wpdb;
 //
-//    $adminChecker = $wpdb->get_var('SELECT optionValue FROM '.$wpdb->base_prefix.'realbig_settings WHERE optionName = "testAdminRow"');
+//    $adminChecker = $wpdb->get_var('SELECT optionValue FROM '.$wpPrefix.'realbig_settings WHERE optionName = "testAdminRow"');
 //	$adminChecker = $adminChecker + 1;
-//    $wpdb->update($wpdb->base_prefix.'realbig_settings', ['optionValue'=> $adminChecker], ['optionName'=>'testAdminRow']);
+//    $wpdb->update($wpPrefix.'realbig_settings', ['optionValue'=> $adminChecker], ['optionName'=>'testAdminRow']);
 //}
 
 /*********** begin of token input area ********************************************************************************/

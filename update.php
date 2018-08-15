@@ -120,17 +120,17 @@ ENGINE=InnoDB
 	}
 }
 
-function wpRealbigSettingsTableUpdateFunction()
+function wpRealbigSettingsTableUpdateFunction($wpPrefix)
 {
 	global $wpdb;
 
 	try
 	{
-		$rez = $wpdb->query('SHOW FIELDS FROM '.$wpdb->base_prefix.'realbig_settings');
+		$rez = $wpdb->query('SHOW FIELDS FROM '.$wpPrefix.'realbig_settings');
 
 		if ($rez!=4)
 		{
-			$wpdb->query('ALTER TABLE '.$wpdb->base_prefix.'realbig_settings ADD `timeUpdate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER optionValue');
+			$wpdb->query('ALTER TABLE '.$wpPrefix.'realbig_settings ADD `timeUpdate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER optionValue');
 		}
 		return true;
 	}

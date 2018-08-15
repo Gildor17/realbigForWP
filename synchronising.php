@@ -10,11 +10,9 @@ include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
 include_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 include_once( ABSPATH . '/wp-includes/wp-db.php');
 
-function synchronize($tokenInput, $wpOptionsCheckerSyncTime, $sameTokenResult)
+function synchronize($tokenInput, $wpOptionsCheckerSyncTime, $sameTokenResult, $wpPrefix)
 {
 	global $wpdb;
-
-	$wpbdBasePrefix = htmlspecialchars($wpdb->base_prefix);
 
 //	$url = 'http://realbigweb/api/wp-get-settings?token='.$tokenInput;     // orig web get
 //	$url = 'http://realbigweb/api/wp-get-settings';     // orig web post
@@ -83,8 +81,8 @@ function synchronize($tokenInput, $wpOptionsCheckerSyncTime, $sameTokenResult)
 		try
 		{
 			$counter = 0;
-			$wpdb->query( 'DELETE FROM '.$wpbdBasePrefix.'realbig_plugin_settings');
-			$sqlTokenSave = "INSERT INTO ".$wpbdBasePrefix."realbig_plugin_settings (text, block_number, setting_type, element, directElement, elementPosition, elementPlace, firstPlace, elementCount, elementStep) VALUES ";
+			$wpdb->query( 'DELETE FROM '.$wpPrefix.'realbig_plugin_settings');
+			$sqlTokenSave = "INSERT INTO ".$wpPrefix."realbig_plugin_settings (text, block_number, setting_type, element, directElement, elementPosition, elementPlace, firstPlace, elementCount, elementStep) VALUES ";
 
 			foreach ($decodedToken['data'] AS $k => $item)
 			{
@@ -95,14 +93,14 @@ function synchronize($tokenInput, $wpOptionsCheckerSyncTime, $sameTokenResult)
 
 			$wpdb->query($sqlTokenSave);
 			// if no needly note, then create
-			$wpOptionsCheckerTokenValue = $wpdb->query($wpdb->prepare( "SELECT optionValue FROM " . $wpbdBasePrefix . "realbig_settings WHERE optionName = %s", ['_wpRealbigPluginToken']));
+			$wpOptionsCheckerTokenValue = $wpdb->query($wpdb->prepare( "SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", ['_wpRealbigPluginToken']));
 			if (empty($wpOptionsCheckerTokenValue))
 			{
-				$wpdb->insert($wpbdBasePrefix.'realbig_settings', ['optionName'=>'_wpRealbigPluginToken', 'optionValue'=>$tokenInput]);
+				$wpdb->insert($wpPrefix.'realbig_settings', ['optionName'=>'_wpRealbigPluginToken', 'optionValue'=>$tokenInput]);
 			}
 			else
 			{
-				$wpdb->update($wpbdBasePrefix.'realbig_settings', ['optionName'=>'_wpRealbigPluginToken', 'optionValue'=>$tokenInput], ['optionName'=>'_wpRealbigPluginToken']);
+				$wpdb->update($wpPrefix.'realbig_settings', ['optionName'=>'_wpRealbigPluginToken', 'optionValue'=>$tokenInput], ['optionName'=>'_wpRealbigPluginToken']);
 			}
 
 			$GLOBALS['token'] = $tokenInput;
@@ -119,11 +117,11 @@ function synchronize($tokenInput, $wpOptionsCheckerSyncTime, $sameTokenResult)
 		{
 			if (empty($wpOptionsCheckerSyncTime))
 			{
-				$wpdb->insert($wpbdBasePrefix.'realbig_settings', ['optionName'=>'token_sync_time', 'optionValue'=> time()]);
+				$wpdb->insert($wpPrefix.'realbig_settings', ['optionName'=>'token_sync_time', 'optionValue'=> time()]);
 			}
 			else
 			{
-				$wpdb->update($wpbdBasePrefix.'realbig_settings', ['optionName'=>'token_sync_time', 'optionValue'=> time()], ['optionName'=>'token_sync_time']);
+				$wpdb->update($wpPrefix.'realbig_settings', ['optionName'=>'token_sync_time', 'optionValue'=> time()], ['optionName'=>'token_sync_time']);
 			}
 		}
 	}
@@ -135,12 +133,12 @@ function synchronize($tokenInput, $wpOptionsCheckerSyncTime, $sameTokenResult)
 
 }
 
-function tokenChecking()
+function tokenChecking($wpPrefix)
 {
 	global $wpdb;
 	$GLOBALS['tokenStatusMessage'] = NULL;
 
-	$token = $wpdb->get_results("SELECT optionValue FROM ".$wpdb->base_prefix."realbig_settings WHERE optionName = '_wpRealbigPluginToken'");
+	$token = $wpdb->get_results("SELECT optionValue FROM ".$wpPrefix."realbig_settings WHERE optionName = '_wpRealbigPluginToken'");
 
 	if (!empty($token))
 	{
@@ -157,20 +155,20 @@ function tokenChecking()
 	return $token;
 }
 
-function tokenTimeUpdateChecking($token)
+function tokenTimeUpdateChecking($token, $wpPrefix)
 {
 	global $wpdb;
 	try
 	{
 //		if ($GLOBALS['tokenStatusMessage']=='success'||empty($GLOBALS['tokenStatusMessage']))
 //		{
-			$timeUpdate = $wpdb->get_results("SELECT timeUpdate FROM ".$wpdb->base_prefix."realbig_settings WHERE optionName = 'token_sync_time'");
+			$timeUpdate = $wpdb->get_results("SELECT timeUpdate FROM ".$wpPrefix."realbig_settings WHERE optionName = 'token_sync_time'");
 			if (empty($timeUpdate))
 			{
-				$updateResult = wpRealbigSettingsTableUpdateFunction();
+				$updateResult = wpRealbigSettingsTableUpdateFunction($wpPrefix);
 				if ($updateResult = true)
 				{
-					$timeUpdate = $wpdb->get_results("SELECT timeUpdate FROM ".$wpdb->base_prefix."realbig_settings WHERE optionName = 'token_sync_time'");
+					$timeUpdate = $wpdb->get_results("SELECT timeUpdate FROM ".$wpPrefix."realbig_settings WHERE optionName = 'token_sync_time'");
 				}
 			}
 			if (!empty($token)&&$token != 'no token'&&($GLOBALS['tokenStatusMessage']=='success'||empty($GLOBALS['tokenStatusMessage']))&&!empty($timeUpdate))
