@@ -14,123 +14,124 @@ function synchronize($tokenInput, $wpOptionsCheckerSyncTime, $sameTokenResult, $
 {
 	global $wpdb;
 
-//	$url = 'http://realbigweb/api/wp-get-settings?token='.$tokenInput;     // orig web get
-//	$url = 'http://realbigweb/api/wp-get-settings';     // orig web post
-//	$url = 'https://realbig.media/api/wp-get-settings?token='.$tokenInput.'&sameToken='.$sameTokenResult;     // orig
-	$url = 'https://realbig.media/api/wp-get-settings';     // orig post
-
-	$dataForSending = [
-		'token' => $tokenInput,
-		'sameToken' => $sameTokenResult
-	];
-
 	try
 	{
+		//	$url = 'http://realbigweb/api/wp-get-settings?token='.$tokenInput;     // orig web get
+//	$url = 'http://realbigweb/api/wp-get-settings';     // orig web post
+//	$url = 'https://realbig.media/api/wp-get-settings?token='.$tokenInput.'&sameToken='.$sameTokenResult;     // orig
+		$url = 'https://realbig.media/api/wp-get-settings';     // orig post
+
+		$dataForSending = [
+			'token' => $tokenInput,
+			'sameToken' => $sameTokenResult
+		];
+
+		try
+		{
 //		$ch = curl_init('https://realbig.media/api/wp-get-settings?token='.$tokenInput);
-		$ch = curl_init();
-	    curl_setopt($ch, CURLOPT_URL, $url);
+			$ch = curl_init();
+			curl_setopt($ch, CURLOPT_URL, $url);
 //		curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 5.1) AppleWebKit/535.6 (KHTML, like Gecko) Chrome/16.0.897.0 Safari/535.6');
-		curl_setopt($ch, CURLOPT_POST, 1);
-		curl_setopt($ch, CURLOPT_POSTFIELDS, $dataForSending);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($ch, CURLOPT_TIMEOUT, 15);
-		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
-		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
-		curl_setopt($ch, CURLOPT_ENCODING, 'gzip, deflate');
-		curl_setopt($ch, CURLOPT_COOKIE, '');
-		curl_setopt($ch, CURLOPT_COOKIEFILE, '');
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+			curl_setopt($ch, CURLOPT_POST, 1);
+			curl_setopt($ch, CURLOPT_POSTFIELDS, $dataForSending);
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+			curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+			curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
+			curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
+			curl_setopt($ch, CURLOPT_ENCODING, 'gzip, deflate');
+			curl_setopt($ch, CURLOPT_COOKIE, '');
+			curl_setopt($ch, CURLOPT_COOKIEFILE, '');
+			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+			curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 //	    curl_setopt($ch, CURLOPT_REFERER, $url);
 //		$connectionChecker = curl_getinfo($ch, CURLINFO_OS_ERRNO);
-		$jsonToken = curl_exec($ch);
-		curl_close($ch);
+			$jsonToken = curl_exec($ch);
+			curl_close($ch);
 
 //		echo '<script>console.log("'.$jsonToken.'")</script>';
 
-		if (!empty($jsonToken))
-		{
-			$GLOBALS['connection_request_rezult'] = 1;
-			$GLOBALS['connection_request_rezult_1'] = 'success';
-		}
-		else
-		{
-			$error = error_get_last();
-			$GLOBALS['connection_request_rezult'] = 'Connection error: ' . $error['message'];
-			$GLOBALS['connection_request_rezult_1'] = 'Connection error: ' . $error['message'];
-		}
-	}
-	catch (Exception $e)
-	{
-		$GLOBALS['tokenStatusMessage'] = $e['message'];
-	}
-
-	if (!empty($jsonToken))
-	{
-		$decodedToken = json_decode($jsonToken, true);
-		$GLOBALS['tokenStatusMessage'] = $decodedToken['message'];
-	}
-	else
-	{
-		$decodedToken = NULL;
-		$GLOBALS['tokenStatusMessage'] = 'ошибка соединения';
-	}
-
-	if (!empty($decodedToken['data']))
-	{
-		try
-		{
-			$counter = 0;
-			$wpdb->query( 'DELETE FROM '.$wpPrefix.'realbig_plugin_settings');
-			$sqlTokenSave = "INSERT INTO ".$wpPrefix."realbig_plugin_settings (text, block_number, setting_type, element, directElement, elementPosition, elementPlace, firstPlace, elementCount, elementStep) VALUES ";
-
-			foreach ($decodedToken['data'] AS $k => $item)
+			if (!empty($jsonToken))
 			{
-				$counter++;
-				$sqlTokenSave .= ( $counter != 1 ? ", " : "") . "('" . $item['text'] . "', " . (int)$item['block_number'] . ", " . (int)$item['setting_type'] . ", '" . htmlspecialchars($item['element']) . "', '" . htmlspecialchars($item['directElement']) . "', " . (int)$item['elementPosition'] . ", " . (int)$item['elementPlace'] . ", " . (int)$item['firstPlace'] . ", " . (int)$item['elementCount'] . ", " . (int)$item['elementStep'] . ")";
-			}
-			$sqlTokenSave .= " ON DUPLICATE KEY UPDATE text = values(text), setting_type = values(setting_type), element = values(element), directElement = values(directElement), elementPosition = values(elementPosition), elementPlace = values(elementPlace), firstPlace = values(firstPlace), elementCount = values(elementCount), elementStep = values(elementStep) ";
-
-			$wpdb->query($sqlTokenSave);
-			// if no needly note, then create
-			$wpOptionsCheckerTokenValue = $wpdb->query($wpdb->prepare( "SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", ['_wpRealbigPluginToken']));
-			if (empty($wpOptionsCheckerTokenValue))
-			{
-				$wpdb->insert($wpPrefix.'realbig_settings', ['optionName'=>'_wpRealbigPluginToken', 'optionValue'=>$tokenInput]);
+				$GLOBALS['connection_request_rezult'] = 1;
+				$GLOBALS['connection_request_rezult_1'] = 'success';
 			}
 			else
 			{
-				$wpdb->update($wpPrefix.'realbig_settings', ['optionName'=>'_wpRealbigPluginToken', 'optionValue'=>$tokenInput], ['optionName'=>'_wpRealbigPluginToken']);
+				$error = error_get_last();
+				$GLOBALS['connection_request_rezult'] = 'Connection error: ' . $error['message'];
+				$GLOBALS['connection_request_rezult_1'] = 'Connection error: ' . $error['message'];
 			}
-
-			$GLOBALS['token'] = $tokenInput;
 		}
 		catch (Exception $e)
 		{
-			$GLOBALS['tokenStatusMessage'] = $e;
+			$GLOBALS['tokenStatusMessage'] = $e['message'];
 		}
-	}
 
-	try
-	{
-		if ($decodedToken['status']=='success')
+		if (!empty($jsonToken))
 		{
-			if (empty($wpOptionsCheckerSyncTime))
+			$decodedToken = json_decode($jsonToken, true);
+			$GLOBALS['tokenStatusMessage'] = $decodedToken['message'];
+		}
+		else
+		{
+			$decodedToken = NULL;
+			$GLOBALS['tokenStatusMessage'] = 'ошибка соединения';
+		}
+
+		if (!empty($decodedToken['data']))
+		{
+			try
 			{
-				$wpdb->insert($wpPrefix.'realbig_settings', ['optionName'=>'token_sync_time', 'optionValue'=> time()]);
+				$counter = 0;
+				$wpdb->query( 'DELETE FROM '.$wpPrefix.'realbig_plugin_settings');
+				$sqlTokenSave = "INSERT INTO ".$wpPrefix."realbig_plugin_settings (text, block_number, setting_type, element, directElement, elementPosition, elementPlace, firstPlace, elementCount, elementStep) VALUES ";
+
+				foreach ($decodedToken['data'] AS $k => $item)
+				{
+					$counter++;
+					$sqlTokenSave .= ( $counter != 1 ? ", " : "") . "('" . $item['text'] . "', " . (int)$item['block_number'] . ", " . (int)$item['setting_type'] . ", '" . htmlspecialchars($item['element']) . "', '" . htmlspecialchars($item['directElement']) . "', " . (int)$item['elementPosition'] . ", " . (int)$item['elementPlace'] . ", " . (int)$item['firstPlace'] . ", " . (int)$item['elementCount'] . ", " . (int)$item['elementStep'] . ")";
+				}
+				$sqlTokenSave .= " ON DUPLICATE KEY UPDATE text = values(text), setting_type = values(setting_type), element = values(element), directElement = values(directElement), elementPosition = values(elementPosition), elementPlace = values(elementPlace), firstPlace = values(firstPlace), elementCount = values(elementCount), elementStep = values(elementStep) ";
+
+				$wpdb->query($sqlTokenSave);
+				// if no needly note, then create
+				$wpOptionsCheckerTokenValue = $wpdb->query($wpdb->prepare( "SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", ['_wpRealbigPluginToken']));
+				if (empty($wpOptionsCheckerTokenValue))
+				{
+					$wpdb->insert($wpPrefix.'realbig_settings', ['optionName'=>'_wpRealbigPluginToken', 'optionValue'=>$tokenInput]);
+				}
+				else
+				{
+					$wpdb->update($wpPrefix.'realbig_settings', ['optionName'=>'_wpRealbigPluginToken', 'optionValue'=>$tokenInput], ['optionName'=>'_wpRealbigPluginToken']);
+				}
+
+				$GLOBALS['token'] = $tokenInput;
 			}
-			else
+			catch (Exception $e)
 			{
-				$wpdb->update($wpPrefix.'realbig_settings', ['optionName'=>'token_sync_time', 'optionValue'=> time()], ['optionName'=>'token_sync_time']);
+				$GLOBALS['tokenStatusMessage'] = $e;
 			}
 		}
-	}
-	catch (Exception $e)
-	{
-	}
 
-//	return true;
-
+		try
+		{
+			if ($decodedToken['status']=='success')
+			{
+				if (empty($wpOptionsCheckerSyncTime))
+				{
+					$wpdb->insert($wpPrefix.'realbig_settings', ['optionName'=>'token_sync_time', 'optionValue'=> time()]);
+				}
+				else
+				{
+					$wpdb->update($wpPrefix.'realbig_settings', ['optionName'=>'token_sync_time', 'optionValue'=> time()], ['optionName'=>'token_sync_time']);
+				}
+			}
+		}
+		catch (Exception $e)
+		{
+		}
+	}
+	catch (Exception $e) {}
 }
 
 function tokenChecking($wpPrefix)
@@ -138,21 +139,28 @@ function tokenChecking($wpPrefix)
 	global $wpdb;
 	$GLOBALS['tokenStatusMessage'] = NULL;
 
-	$token = $wpdb->get_results("SELECT optionValue FROM ".$wpPrefix."realbig_settings WHERE optionName = '_wpRealbigPluginToken'");
-
-	if (!empty($token))
+	try
 	{
-		$token = get_object_vars($token[0]);
-		$GLOBALS['token'] = $token['optionValue'];
-		$token = $token['optionValue'];
-	}
-	else
-	{
-		$GLOBALS['token'] = 'no token';
-		$token = 'no token';
-	}
+		$token = $wpdb->get_results("SELECT optionValue FROM ".$wpPrefix."realbig_settings WHERE optionName = '_wpRealbigPluginToken'");
 
-	return $token;
+		if (!empty($token))
+		{
+			$token = get_object_vars($token[0]);
+			$GLOBALS['token'] = $token['optionValue'];
+			$token = $token['optionValue'];
+		}
+		else
+		{
+			$GLOBALS['token'] = 'no token';
+			$token = 'no token';
+		}
+
+		return $token;
+	}
+	catch (Exception $e)
+	{
+		return 'no token';
+	}
 }
 
 function tokenTimeUpdateChecking($token, $wpPrefix)

@@ -13,6 +13,7 @@ include_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 function addIcons ($fromDb, $content)
 {
 	$editedContent = $content;
+	$previousEditedContent = $editedContent;
 
 	try
 	{
@@ -44,6 +45,12 @@ function addIcons ($fromDb, $content)
 				{
 					$elementTag      = $item['element'];
 					$elementName     = $item['directElement'];
+					$elementPosition = $item['elementPosition'];
+					$elementText     = $item['text'];
+				}
+				elseif ( $item['setting_type'] == 4 )  //for direct block
+				{
+					$elementTag      = $item['element'];
 					$elementPosition = $item['elementPosition'];
 					$elementText     = $item['text'];
 				}
@@ -123,6 +130,15 @@ function addIcons ($fromDb, $content)
 				}
 				$editedContent = preg_replace( '~<placeholderForAdDop>~', $elementText, $editedContent );   //replacing right placeholders
 				$editedContent = preg_replace( '~<placeholderForAd>~', '', $editedContent );    //replacing all useless placeholders
+
+				if (!empty($editedContent))
+				{
+					$previousEditedContent = $editedContent;
+				}
+				else
+				{
+					$editedContent = $previousEditedContent;
+				}
 			}
 
 			return $editedContent;
@@ -138,20 +154,27 @@ function addIcons ($fromDb, $content)
 
 function headerADInsertor()
 {
-	$wp_cur_theme = wp_get_theme();
-	$wp_cur_theme_name = $wp_cur_theme->get_template();
+	try
+	{
+		$wp_cur_theme = wp_get_theme();
+		$wp_cur_theme_name = $wp_cur_theme->get_template();
 //	$wp_cur_theme_file = get_theme_file_uri('header.php');
-	$themeHeaderFileOpen = file_get_contents('wp-content/themes/'.$wp_cur_theme_name.'/header.php');
+		$themeHeaderFileOpen = file_get_contents('wp-content/themes/'.$wp_cur_theme_name.'/header.php');
 
-	$checkedHeader = preg_match('~rbConfig=\{start\:performance\.now\(\)\}\;~', $themeHeaderFileOpen, $m);
-	if (count($m) == 0)
-	{
-		$result = true;
-	}
-	else
-	{
-		$result = false;
-	}
+		$checkedHeader = preg_match('~rbConfig=\{start\:performance\.now\(\)\}\;~', $themeHeaderFileOpen, $m);
+		if (count($m) == 0)
+		{
+			$result = true;
+		}
+		else
+		{
+			$result = false;
+		}
 
-	return $result;
+		return $result;
+	}
+	catch (Exception $e)
+	{
+		return false;
+	}
 }

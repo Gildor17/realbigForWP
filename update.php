@@ -55,7 +55,7 @@ function dbOldTablesRemoveFunction($wpPrefix)
 	}
 	catch (Exception $e)
 	{
-		echo $e;
+//		echo $e;
 	}
 }
 
@@ -63,9 +63,9 @@ function dbTablesCreateFunction($tableForCurrentPluginChecker, $tableForToken, $
 {
 
 	$old_tables = "WpRealbigPluginSettings, realbigSettings";
-	if (empty($tableForCurrentPluginChecker))
+	try
 	{
-		try
+		if (empty($tableForCurrentPluginChecker))
 		{
 			dbDelta("
 CREATE TABLE `".$wpPrefix."realbig_plugin_settings` 
@@ -90,15 +90,8 @@ ENGINE=InnoDB
     ", true);
 			add_option('realbigForWP_version', $GLOBALS['realbigForWP_version']);
 		}
-		catch (Exception $e)
-		{
-//			return $e;
-		}
-	}
 
-	if (empty($tableForToken))
-	{
-		try
+		if (empty($tableForToken))
 		{
 			dbDelta("
 CREATE TABLE `".$wpPrefix."realbig_settings` (
@@ -113,10 +106,10 @@ COLLATE='utf8_general_ci'
 ENGINE=InnoDB
     ", true);
 		}
-		catch (Exception $e)
-		{
+	}
+	catch (Exception $e)
+	{
 //			return $e;
-		}
 	}
 }
 
