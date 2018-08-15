@@ -48,10 +48,8 @@ function addIcons ($fromDb, $content)
 					$elementPosition = $item['elementPosition'];
 					$elementText     = $item['text'];
 				}
-				elseif ( $item['setting_type'] == 4 )  //for direct block
+				elseif ( $item['setting_type'] == 4 )  //for end of content
 				{
-					$elementTag      = $item['element'];
-					$elementPosition = $item['elementPosition'];
 					$elementText     = $item['text'];
 				}
 
@@ -87,7 +85,7 @@ function addIcons ($fromDb, $content)
 						$editedContent = preg_replace( '~<placeholderForAd>~', '<placeholderForAdDop>', $editedContent, 1 );
 					}
 				}
-				elseif ( $item['setting_type'] == 3 )  //for repeatable block
+				elseif ( $item['setting_type'] == 3 )  //for direct element
 				{
 					$directElementTag = null;
 					$thisElementTag   = preg_match( '~[\.\#]{1}~', $elementName, $m );
@@ -126,6 +124,11 @@ function addIcons ($fromDb, $content)
 							'~<(' . $directElementTag . ') ([^>]*?) ' . $thisElementName . ' ([^>]*?)>((\s|\S)*?)<\/' . $directElementTag . '>~',
 							'<$1 $2 ' . $thisElementName . ' $3>$4</$1><placeholderForAd>', $editedContent, 1 );
 					}
+					$editedContent = preg_replace( '~<placeholderForAd>~', '<placeholderForAdDop>', $editedContent );
+				}
+				elseif ( $item['setting_type'] == 4 )  //for end of content
+				{
+					$editedContent = $editedContent.'<placeholderForAd>';
 					$editedContent = preg_replace( '~<placeholderForAd>~', '<placeholderForAdDop>', $editedContent );
 				}
 				$editedContent = preg_replace( '~<placeholderForAdDop>~', $elementText, $editedContent );   //replacing right placeholders

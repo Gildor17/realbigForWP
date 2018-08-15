@@ -55,7 +55,7 @@ function dbOldTablesRemoveFunction($wpPrefix)
 	}
 	catch (Exception $e)
 	{
-//		echo $e;
+		echo $e;
 	}
 }
 
@@ -109,6 +109,7 @@ ENGINE=InnoDB
 	}
 	catch (Exception $e)
 	{
+		echo $e;
 //			return $e;
 	}
 }

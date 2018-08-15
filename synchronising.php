@@ -129,9 +129,12 @@ function synchronize($tokenInput, $wpOptionsCheckerSyncTime, $sameTokenResult, $
 		}
 		catch (Exception $e)
 		{
+			echo $e;
 		}
 	}
-	catch (Exception $e) {}
+	catch (Exception $e) {
+		echo $e;
+	}
 }
 
 function tokenChecking($wpPrefix)
@@ -202,5 +205,6 @@ function tokenTimeUpdateChecking($token, $wpPrefix)
 	}
 	catch (Exception $e)
 	{
+		echo $e;
 	}
 }
