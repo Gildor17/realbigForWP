@@ -10,13 +10,15 @@ include_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
  * Time: 17:07
  */
 
+try
+{
+
 function addIcons ($fromDb, $content)
 {
-	$editedContent = $content;
-	$previousEditedContent = $editedContent;
-
 	try
 	{
+		$editedContent = $content;
+		$previousEditedContent = $editedContent;
 		if ( ! empty( $fromDb ) )
 		{
 			foreach ( $fromDb AS $k => $item )
@@ -104,11 +106,17 @@ function addIcons ($fromDb, $content)
 						if ( $directElementTag == null )
 						{
 							$usedTag          = preg_match( '~<([0-9a-z]*?) ([^>]*?) ' . $thisElementName . ' ([^>]*?)>~', $editedContent, $m1 );
-							$directElementTag = $m1[1];
+							if (!empty($m1[1]))
+							{
+								$directElementTag = $m1[1];
+							}
 						}
-						$editedContent = preg_replace(
-							'~<' . $directElementTag . ' ([^>]*?) ' . $thisElementName . ' ([^>]*?)>~',
-							'<placeholderForAd><' . $directElementTag . ' $1 ' . $thisElementName . ' $2>', $editedContent, 1 );
+						if ($directElementTag)
+						{
+							$editedContent = preg_replace(
+								'~<' . $directElementTag . ' ([^>]*?) ' . $thisElementName . ' ([^>]*?)>~',
+								'<placeholderForAd><' . $directElementTag . ' $1 ' . $thisElementName . ' $2>', $editedContent, 1 );
+						}
 //					$editedContent = preg_replace(
 //						'~< ([0-9a-z]*?) ([^>]*?) '.$thisElementName.' ([^>]*?)>~',
 //						'<placeholderForAd><$1 $2 '.$thisElementName.' $3>', $editedContent);
@@ -117,12 +125,18 @@ function addIcons ($fromDb, $content)
 					{
 						if ( $directElementTag == null )
 						{
-							$usedTag          = preg_match( '~<([0-9a-z]*?) ([^>]*?) ' . $thisElementName . ' ([^>]*?)>((\s|\S)*?)<\/p>~', $editedContent, $m1 );
-							$directElementTag = $m1[1];
+							$usedTag          = preg_match( '~<([0-9a-z]*?) ([^>]*?) ' . $thisElementName . ' ([^>]*?)>((\s|\S)*?)<\/([0-9a-z]*?)>~', $editedContent, $m1 );
+							if (!empty($m1[1]))
+							{
+								$directElementTag = $m1[1];
+							}
 						}
-						$editedContent = preg_replace(
-							'~<(' . $directElementTag . ') ([^>]*?) ' . $thisElementName . ' ([^>]*?)>((\s|\S)*?)<\/' . $directElementTag . '>~',
-							'<$1 $2 ' . $thisElementName . ' $3>$4</$1><placeholderForAd>', $editedContent, 1 );
+						if ($directElementTag)
+						{
+							$editedContent = preg_replace(
+								'~<(' . $directElementTag . ') ([^>]*?) ' . $thisElementName . ' ([^>]*?)>((\s|\S)*?)<\/' . $directElementTag . '>~',
+								'<$1 $2 ' . $thisElementName . ' $3>$4</$1><placeholderForAd>', $editedContent, 1 );
+						}
 					}
 					$editedContent = preg_replace( '~<placeholderForAd>~', '<placeholderForAdDop>', $editedContent );
 				}
@@ -180,4 +194,11 @@ function headerADInsertor()
 	{
 		return false;
 	}
+}
+
+}
+catch (Error $er)
+{
+	deactivate_plugins(plugin_basename( __FILE__ ));
+	?><div style="margin-left: 200px; border: 3px solid red"><? echo $er; ?></div><?
 }

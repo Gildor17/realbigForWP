@@ -10,6 +10,9 @@ include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
 include_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 include_once( ABSPATH . '/wp-includes/wp-db.php');
 
+try
+{
+
 function synchronize($tokenInput, $wpOptionsCheckerSyncTime, $sameTokenResult, $wpPrefix)
 {
 	global $wpdb;
@@ -20,6 +23,7 @@ function synchronize($tokenInput, $wpOptionsCheckerSyncTime, $sameTokenResult, $
 //	$url = 'http://realbigweb/api/wp-get-settings';     // orig web post
 //	$url = 'https://realbig.media/api/wp-get-settings?token='.$tokenInput.'&sameToken='.$sameTokenResult;     // orig
 		$url = 'https://realbig.media/api/wp-get-settings';     // orig post
+
 
 		$dataForSending = [
 			'token' => $tokenInput,
@@ -140,10 +144,10 @@ function synchronize($tokenInput, $wpOptionsCheckerSyncTime, $sameTokenResult, $
 function tokenChecking($wpPrefix)
 {
 	global $wpdb;
-	$GLOBALS['tokenStatusMessage'] = NULL;
 
 	try
 	{
+		$GLOBALS['tokenStatusMessage'] = NULL;
 		$token = $wpdb->get_results("SELECT optionValue FROM ".$wpPrefix."realbig_settings WHERE optionName = '_wpRealbigPluginToken'");
 
 		if (!empty($token))
@@ -207,4 +211,11 @@ function tokenTimeUpdateChecking($token, $wpPrefix)
 	{
 		echo $e;
 	}
+}
+
+}
+catch (Error $er)
+{
+	deactivate_plugins(plugin_basename( __FILE__ ));
+	?><div style="margin-left: 200px; border: 3px solid red"><? echo $er; ?></div><?
 }

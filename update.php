@@ -11,7 +11,8 @@ include_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
  * Time: 18:33
  */
 
-
+try
+{
 
 function dbOldTablesRemoveFunction($wpPrefix)
 {
@@ -61,8 +62,7 @@ function dbOldTablesRemoveFunction($wpPrefix)
 
 function dbTablesCreateFunction($tableForCurrentPluginChecker, $tableForToken, $wpPrefix)
 {
-
-	$old_tables = "WpRealbigPluginSettings, realbigSettings";
+//	$old_tables = "WpRealbigPluginSettings, realbigSettings";
 	try
 	{
 		if (empty($tableForCurrentPluginChecker))
@@ -110,7 +110,6 @@ ENGINE=InnoDB
 	catch (Exception $e)
 	{
 		echo $e;
-//			return $e;
 	}
 }
 
@@ -132,4 +131,11 @@ function wpRealbigSettingsTableUpdateFunction($wpPrefix)
 	{
 		return false;
 	}
+}
+
+}
+catch (Error $er)
+{
+	deactivate_plugins(plugin_basename( __FILE__ ));
+	?><div style="margin-left: 200px; border: 3px solid red"><? echo $er; ?></div><?
 }

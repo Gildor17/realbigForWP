@@ -15,7 +15,7 @@ include ( ABSPATH . "wp-content/plugins/realbigForWP/synchronising.php");
 /*
 Plugin name:  Realbig For WordPress
 Description:  Реалбиговский плагин для вордпреса. Для полного описания перейдите по ссылке: <a href="https://github.com/Gildor17/realbigFoWP/blob/master/README.MD" target="_blank">https://github.com/Gildor17/realbigFoWP/blob/master/README.MD</a>
-Version:      0.1.17a
+Version:      0.1.18a
 Author:       Gildor
 License:      GPL2
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
@@ -26,6 +26,8 @@ try
 	/** **************************************************************************************************************** **/
 	global $wpdb;
 	global $table_prefix;
+//	wp_redirect(get_site_url().'/wp-admin/index.php');  // this thing calling error
+
 	/***************** updater code ***************************************************************************************/
 	require 'plugin-update-checker/plugin-update-checker.php';
 	$myUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
@@ -34,18 +36,21 @@ try
 		'realbigForWP'
 	);
 	/****************** end of updater code *******************************************************************************/
-	$GLOBALS['realbigForWP_version'] = '0.1.17a';
+	$GLOBALS['realbigForWP_version'] = '0.1.18a';
 	/********** checking and creating tables ******************************************************************************/
 	$wpPrefix = $wpdb->base_prefix;
 	if ( empty( $wpPrefix ) ) {
 		$wpPrefix = $table_prefix;
 	}
 
-	try {
+	try
+    {
 		$tableForCurrentPluginChecker = $wpdb->get_var( 'SHOW TABLES LIKE "' . $wpPrefix . 'realbig_plugin_settings"' );   //settings for block table checking
 		$tableForToken                = $wpdb->get_var( 'SHOW TABLES LIKE "' . $wpPrefix . 'realbig_settings"' );      //settings for token and other
 //	$pluginActivityChecker        = is_plugin_active( 'realbigForWP/realbigForWP.php' );     //plugin status (active or not)
-	} catch ( Exception $e ) {
+	}
+	catch ( Exception $e )
+    {
 		echo $e;
 	}
 
@@ -82,10 +87,12 @@ try
 
 	/********** adding AD code in head area *******************************************************************************/
 	add_action( 'wp_head', 'AD_func_add', 1 );
-	function AD_func_add() {
+	function AD_func_add()
+    {
 		require_once( 'textEditing.php' );
 		$headerParsingResult = headerADInsertor();
-		if ( $headerParsingResult == true ) {
+		if ( $headerParsingResult == true )
+		{
 			?>
             <script type="text/javascript"> rbConfig = {start: performance.now()}; </script>
             <script async="async" type="text/javascript" src="//any.realbig.media/rotator.min.js"></script>
@@ -96,12 +103,17 @@ try
 	/********** end of adding AD code in head area ************************************************************************/
 
 //$blocksSettingsTableChecking = $wpdb->query('SELECT id FROM '.$wpPrefix.'realbig_plugin_settings');
-	if ( strpos( $GLOBALS['PHP_SELF'], 'wp-admin' ) != false ) {
-		if ( ! empty( $_POST['tokenInput'] ) ) {
+	if ( strpos( $GLOBALS['PHP_SELF'], 'wp-admin' ) != false )
+	{
+		if ( ! empty( $_POST['tokenInput'] ) )
+		{
 			$sameTokenResult = false;
 			synchronize( $_POST['tokenInput'], ( empty( $wpOptionsCheckerSyncTime ) ? null : $wpOptionsCheckerSyncTime ), $sameTokenResult, $wpPrefix );
-		} elseif ( $GLOBALS['token'] == 'no token' ) {
-			$GLOBALS['tokenStatusMessage'] = 'Введите токен';
+//			deactivate_plugins(plugin_basename( __FILE__ ));
+		}
+		elseif ( $GLOBALS['token'] == 'no token' )
+        {
+	        $GLOBALS['tokenStatusMessage'] = 'Введите токен';
 		}
 		tokenTimeUpdateChecking( $GLOBALS['token'], $wpPrefix );
 	}
@@ -139,7 +151,15 @@ try
 		add_action( 'admin_menu', 'my_pl_settings_menu_create' );
 	}
 	function my_pl_settings_menu_create() {
-		add_menu_page( 'Your code sending configuration', 'Реалбиг плагин настройки', 'administrator', __FILE__, 'TokenSync' );
+	    if (strpos($_SERVER['REQUEST_URI'], 'page=realbigForWP'))
+	    {
+		    add_menu_page( 'Your code sending configuration', 'realBIG', 'administrator', __FILE__, 'TokenSync', get_site_url().'/wp-content/plugins/realbigForWP/assets/realbig_plugin_hover.png' );
+        }
+        else
+        {
+	        add_menu_page( 'Your code sending configuration', 'realBIG', 'administrator', __FILE__, 'TokenSync', get_site_url().'/wp-content/plugins/realbigForWP/assets/realbig_plugin_standart.png' );
+        }
+//		add_menu_page( 'Your code sending configuration', 'realBIG', 'administrator', __FILE__, 'TokenSync', get_site_url().'/wp-content/plugins/realbigForWP/assets/realbig_plugin_hover.png' );
 		add_action( 'admin_init', 'register_mysettings' );
 	}
 
@@ -174,8 +194,20 @@ try
 	}
 	/************ end of token input area *********************************************************************************/
 }
-catch (Exception $e)
+catch (Exception $ex)
 {
-    echo $e;
-    deactivate_plugins('realbigForWP');
+//	deactivate_plugins('realbigForWP');
+	deactivate_plugins(plugin_basename( __FILE__ ));
+	?><div style="margin-left: 200px; border: 3px solid red"><? echo $ex; ?></div><?
+
+//	wp_die( 'This plugin requires PHP Version 5.2.  Sorry about that.' );
+}
+catch (Error $er)
+{
+	deactivate_plugins(plugin_basename( __FILE__ ));
+    ?><div style="margin-left: 200px; border: 3px solid red"><? echo $er; ?></div><?
+
+//    $urlForRedirection = get_site_url().'/wp-admin/index.php';
+//	wp_safe_redirect($urlForRedirection, 302);  // this thing calling error
+//    exit;
 }
