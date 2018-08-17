@@ -113,6 +113,52 @@ ENGINE=InnoDB
 	}
 }
 
+function updateElementEnumValuesFunction()
+{
+    global $wpdb;
+    try
+    {
+	    $enumTypeQuery = $wpdb->get_results('SHOW FIELDS FROM wp_realbig_plugin_settings WHERE Field = "element"');
+	    if (!empty($enumTypeQuery))
+	    {
+		    $enumTypeQuery = get_object_vars($enumTypeQuery[0]);
+//	    $enu1 = ;
+		    if (!strpos($enumTypeQuery['Type'], 'blockquote'))
+		    {
+			    $wpdb->query("ALTER TABLE wp_realbig_plugin_settings MODIFY `element` ENUM('p','li','ul','ol','blockquote','h1','h2','h3','h4','h5','h6') NULL DEFAULT NULL");
+		    }
+		    else
+		    {
+		        return false;
+		    }
+		    $enumTypeQuery = $wpdb->get_results('SHOW FIELDS FROM wp_realbig_plugin_settings WHERE Field = "element"');
+		    if (!empty($enumTypeQuery))
+		    {
+			    $enumTypeQuery = get_object_vars($enumTypeQuery[0]);
+//	    $enu1 = ;
+			    if (strpos($enumTypeQuery['Type'], 'blockquote'))
+			    {
+			        return true;
+                }
+                else
+                {
+			        return false;
+                }
+            }
+	    }
+	    else
+	    {
+	        return false;
+        }
+    }
+    catch (Exception $e)
+    {
+        return false;
+    }
+
+
+}
+
 function wpRealbigSettingsTableUpdateFunction($wpPrefix)
 {
 	global $wpdb;

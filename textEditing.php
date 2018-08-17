@@ -57,14 +57,29 @@ function addIcons ($fromDb, $content)
 
 				if ( $item['setting_type'] == 1 )   //for lonely block
 				{
-					if ( $elementPosition == 0 )    //if position before
-					{
-						$editedContent = preg_replace( '~<' . $elementName . '( |>){1}?~', '<placeholderForAd><' . $elementName . '$1', $editedContent, $elementNumber );
-					}
-					elseif ( $elementPosition == 1 )    //if position after
-					{
-						$editedContent = preg_replace( '~<( )*/( )*' . $elementName . '( )*>~', '</' . $elementName . '><placeholderForAd>', $editedContent, $elementNumber );
-					}
+				    if ($elementName=='img')     //element is image
+				    {
+					    if ( $elementPosition == 0 )    //if position before
+					    {
+						    $editedContent = preg_replace('~<'.$elementName.'( |>|\/>){1}?~','<placeholderForAd><'.$elementName.'$1', $editedContent, $elementNumber);
+					    }
+                        elseif ( $elementPosition == 1 )    //if position after
+					    {
+						    $editedContent = preg_replace( '~<'.$elementName.'([^>]*?)(\/>|>){1}~',
+                                '<'.$elementName.' $1 $2<placeholderForAd>', $editedContent, $elementNumber);
+					    }
+                    }
+                    else    // non-image element
+                    {
+	                    if ( $elementPosition == 0 )    //if position before
+	                    {
+		                    $editedContent = preg_replace( '~<' . $elementName . '( |>){1}?~', '<placeholderForAd><' . $elementName . '$1', $editedContent, $elementNumber );
+	                    }
+                        elseif ( $elementPosition == 1 )    //if position after
+	                    {
+		                    $editedContent = preg_replace( '~<( )*/( )*' . $elementName . '( )*>~', '</' . $elementName . '><placeholderForAd>', $editedContent, $elementNumber );
+	                    }
+                    }
 					$editedContent = preg_replace( '~<placeholderForAd>~', '', $editedContent, $elementNumber - 1 );
 					$editedContent = preg_replace( '~<placeholderForAd>~', '<placeholderForAdDop>', $editedContent, 1 );
 				}

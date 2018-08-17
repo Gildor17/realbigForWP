@@ -39,7 +39,8 @@ try
 	$GLOBALS['realbigForWP_version'] = '0.1.19a';
 	/********** checking and creating tables ******************************************************************************/
 	$wpPrefix = $wpdb->base_prefix;
-	if ( empty( $wpPrefix ) ) {
+	if ( empty( $wpPrefix ) )
+	{
 		$wpPrefix = $table_prefix;
 	}
 
@@ -60,10 +61,23 @@ try
 
 	$token = tokenChecking( $wpPrefix );
 	$gTrans = get_transient('realbigPluginSyncAttempt');
+
+//	/*** enumUpdate */ $resultEnumUpdate = updateElementEnumValuesFunction(); /** enumUpdateEnd */
+//	/** enumUpdate */ $resultEnumUpdate = updateElementEnumValuesFunction(); /** enumUpdateEnd */
+//
+//	if (!empty($resultEnumUpdate)&&$resultEnumUpdate == true)
+//	{
+//	    $file = __FILE__;
+//	    $countEnumFunctionReplace = 1;
+//		$tset25 = file_put_contents($file,str_replace('/** enumUpdate */ $resultEnumUpdate = updateElementEnumValuesFunction(); /** enumUpdateEnd */',
+//            '/** enumUpdate  $resultEnumUpdate = updateElementEnumValuesFunction(); enumUpdateEnd */',file_get_contents($file), $countEnumFunctionReplace));
+//		$resultEnumUpdate = false;
+//    }
 	/****************** autosync ******************************************************************************************/
+	$wpOptionsCheckerSyncTime = $wpdb->get_row( $wpdb->prepare( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = %s', [ "token_sync_time" ] ) );
 	if ( ! empty( $token ) && $token != 'no token' && $gTrans==false) {
 		try {
-			$wpOptionsCheckerSyncTime = $wpdb->get_row( $wpdb->prepare( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = %s', [ "token_sync_time" ] ) );
+//			$wpOptionsCheckerSyncTime = $wpdb->get_row( $wpdb->prepare( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = %s', [ "token_sync_time" ] ) );
 //	    $syncIterations = $wpdb->get_var('SELECT optionValue FROM '.$wpPrefix.'realbig_settings WHERE optionName = "syncRequest"');
 //	    $wpdb->update($wpPrefix.'realbig_settings', ['optionValue'=> $syncIterations + 1], ['optionName'=>'syncRequest']);
 			if ( ! empty( $wpOptionsCheckerSyncTime ) ) {
