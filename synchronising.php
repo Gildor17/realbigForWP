@@ -23,6 +23,7 @@ function synchronize($tokenInput, $wpOptionsCheckerSyncTime, $sameTokenResult, $
 //	$url = 'http://realbigweb/api/wp-get-settings';     // orig web post
 //	$url = 'https://realbig.media/api/wp-get-settings?token='.$tokenInput.'&sameToken='.$sameTokenResult;     // orig
 		$url = 'https://realbig.media/api/wp-get-settings';     // orig post
+//		$url = 'https://realb1ig.media/api/wp-get-settings';     // orig post error
 
 
 		$dataForSending = [
@@ -80,6 +81,7 @@ function synchronize($tokenInput, $wpOptionsCheckerSyncTime, $sameTokenResult, $
 		{
 			$decodedToken = NULL;
 			$GLOBALS['tokenStatusMessage'] = 'ошибка соединения';
+			$decodedToken['status'] = 'error';
 		}
 
 		if (!empty($decodedToken['data']))
@@ -119,6 +121,9 @@ function synchronize($tokenInput, $wpOptionsCheckerSyncTime, $sameTokenResult, $
 
 		try
 		{
+		    set_transient('realbigPluginSyncAttempt', $decodedToken['status'], 300);
+//            $gTrans = get_transient('realbigPluginSyncAttempt');
+//		    delete_transient('realbigPluginSyncAttempt');
 			if ($decodedToken['status']=='success')
 			{
 				if (empty($wpOptionsCheckerSyncTime))
