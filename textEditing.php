@@ -212,6 +212,11 @@ function headerADInsertor()
 }
 
 }
+catch (Exception $ex)
+{
+	deactivate_plugins(plugin_basename( __FILE__ ));
+	?><div style="margin-left: 200px; border: 3px solid red"><? echo $ex; ?></div><?
+}
 catch (Error $er)
 {
 	deactivate_plugins(plugin_basename( __FILE__ ));

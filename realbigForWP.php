@@ -26,6 +26,7 @@ try
 	/** **************************************************************************************************************** **/
 	global $wpdb;
 	global $table_prefix;
+
 //	wp_redirect(get_site_url().'/wp-admin/index.php');  // this thing calling error
 
 	/***************** updater code ***************************************************************************************/
@@ -59,23 +60,31 @@ try
 	dbOldTablesRemoveFunction( $wpPrefix );
 	/********** end of checking and creating tables ***********************************************************************/
 
-	$token = tokenChecking( $wpPrefix );
-	$gTrans = get_transient('realbigPluginSyncAttempt');
+	$token                 = tokenChecking( $wpPrefix );
+	$lastSyncTimeTransient = get_transient('realbigPluginSyncAttempt');
 
 //	/*** enumUpdate */ $resultEnumUpdate = updateElementEnumValuesFunction(); /** enumUpdateEnd */
-//	/** enumUpdate */ $resultEnumUpdate = updateElementEnumValuesFunction(); /** enumUpdateEnd */
-//
-//	if (!empty($resultEnumUpdate)&&$resultEnumUpdate == true)
-//	{
-//	    $file = __FILE__;
-//	    $countEnumFunctionReplace = 1;
-//		$tset25 = file_put_contents($file,str_replace('/** enumUpdate */ $resultEnumUpdate = updateElementEnumValuesFunction(); /** enumUpdateEnd */',
-//            '/** enumUpdate  $resultEnumUpdate = updateElementEnumValuesFunction(); enumUpdateEnd */',file_get_contents($file), $countEnumFunctionReplace));
-//		$resultEnumUpdate = false;
-//    }
+	/** enumUpdate */ $resultEnumUpdate = updateElementEnumValuesFunction(); /** enumUpdateEnd */
+
+	if (!empty($resultEnumUpdate)&&$resultEnumUpdate == true)   //doesn't ended
+//	if (true)   //doesn't ended
+	{
+	    $file = __FILE__;
+	    $countEnumFunctionReplace = 1;
+
+		$fileContent = file_get_contents($file);
+		$editedFileContent = preg_replace('~\/\*\* enumUpdate \*\/ \$resultEnumUpdate = updateElementEnumValuesFunction\(\)\; \/\*\* enumUpdateEnd \*\/~',
+			'/** enumUpdate  $resultEnumUpdate = updateElementEnumValuesFunction(); enumUpdateEnd */', $fileContent, $countEnumFunctionReplace);
+		if (!empty($editedFileContent)) {
+			$tset25 = file_put_contents($file, $editedFileContent);
+		} else {
+			$tset25 = file_put_contents($file, $fileContent);
+		}
+		$resultEnumUpdate = false;
+    }
 	/****************** autosync ******************************************************************************************/
 	$wpOptionsCheckerSyncTime = $wpdb->get_row( $wpdb->prepare( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = %s', [ "token_sync_time" ] ) );
-	if ( ! empty( $token ) && $token != 'no token' && $gTrans==false) {
+	if ( ! empty( $token ) && $token != 'no token' && $lastSyncTimeTransient == false) {
 		try {
 //			$wpOptionsCheckerSyncTime = $wpdb->get_row( $wpdb->prepare( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = %s', [ "token_sync_time" ] ) );
 //	    $syncIterations = $wpdb->get_var('SELECT optionValue FROM '.$wpPrefix.'realbig_settings WHERE optionName = "syncRequest"');
@@ -204,6 +213,16 @@ try
                 1: <?= ( ! empty( $GLOBALS['connection_request_rezult_1'] ) ? $GLOBALS['connection_request_rezult_1'] : 'empty' ) ?></div>
             <div>Статус соединения
                 общий: <?= ( ! empty( $GLOBALS['connection_request_rezult'] ) ? $GLOBALS['connection_request_rezult'] : 'empty' ) ?></div>
+<!--            <div>Ping-->
+<!--                ping: --><?//= ( ! empty( $GLOBALS['shellResult'] ) ? $GLOBALS['shellResult'] : 'empty' ) ?><!--</div>-->
+            <div>Ping
+                ping: <?= ( ! empty( $GLOBALS['shellResult1'] ) ? $GLOBALS['shellResult1'] : 'empty' ) ?></div>
+            <div>Ping
+                ping: <?= ( ! empty( $GLOBALS['shellResult2'] ) ? $GLOBALS['shellResult2'] : 'empty' ) ?></div>
+            <div>Ping
+                ping: <?= ( ! empty( $GLOBALS['shellResult3'] ) ? $GLOBALS['shellResult3'] : 'empty' ) ?></div>
+            <div>Ping
+                ping: <?= ( ! empty( $GLOBALS['shellResult4'] ) ? $GLOBALS['shellResult4'] : 'empty' ) ?></div>
         </div>
 		<?php
 	}
@@ -215,7 +234,7 @@ catch (Exception $ex)
 	deactivate_plugins(plugin_basename( __FILE__ ));
 	?><div style="margin-left: 200px; border: 3px solid red"><? echo $ex; ?></div><?
 
-//	wp_die( 'This plugin requires PHP Version 5.2.  Sorry about that.' );
+//	wp_die( 'test' );
 }
 catch (Error $er)
 {

@@ -19,12 +19,8 @@ function synchronize($tokenInput, $wpOptionsCheckerSyncTime, $sameTokenResult, $
 
 	try
 	{
-		//	$url = 'http://realbigweb/api/wp-get-settings?token='.$tokenInput;     // orig web get
 //	$url = 'http://realbigweb/api/wp-get-settings';     // orig web post
-//	$url = 'https://realbig.media/api/wp-get-settings?token='.$tokenInput.'&sameToken='.$sameTokenResult;     // orig
 		$url = 'https://realbig.media/api/wp-get-settings';     // orig post
-//		$url = 'https://realb1ig.media/api/wp-get-settings';     // orig post error
-
 
 		$dataForSending = [
 			'token' => $tokenInput,
@@ -218,6 +214,11 @@ function tokenTimeUpdateChecking($token, $wpPrefix)
 	}
 }
 
+}
+catch (Exception $ex)
+{
+	deactivate_plugins(plugin_basename( __FILE__ ));
+	?><div style="margin-left: 200px; border: 3px solid red"><? echo $ex; ?></div><?
 }
 catch (Error $er)
 {

@@ -144,6 +144,10 @@ function updateElementEnumValuesFunction()
                 {
 			        return false;
                 }
+            } 
+            else 
+            {
+		        return false;
             }
 	    }
 	    else
@@ -155,8 +159,6 @@ function updateElementEnumValuesFunction()
     {
         return false;
     }
-
-
 }
 
 function wpRealbigSettingsTableUpdateFunction($wpPrefix)
@@ -179,6 +181,11 @@ function wpRealbigSettingsTableUpdateFunction($wpPrefix)
 	}
 }
 
+}
+catch (Exception $ex)
+{
+	deactivate_plugins(plugin_basename( __FILE__ ));
+	?><div style="margin-left: 200px; border: 3px solid red"><? echo $ex; ?></div><?
 }
 catch (Error $er)
 {
