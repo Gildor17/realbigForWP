@@ -12,6 +12,7 @@ include_once( ABSPATH . '/wp-includes/wp-db.php');
 
 try
 {
+	global $wpdb;
 
 function synchronize($tokenInput, $wpOptionsCheckerSyncTime, $sameTokenResult, $wpPrefix)
 {
@@ -48,6 +49,8 @@ function synchronize($tokenInput, $wpOptionsCheckerSyncTime, $sameTokenResult, $
 //		$connectionChecker = curl_getinfo($ch, CURLINFO_OS_ERRNO);
 			$jsonToken = curl_exec($ch);
 			curl_close($ch);
+
+//			sleep(10);
 
 //		echo '<script>console.log("'.$jsonToken.'")</script>';
 
@@ -212,6 +215,21 @@ function tokenTimeUpdateChecking($token, $wpPrefix)
 	{
 		echo $e;
 	}
+}
+
+if (!empty($_POST['funcActivator'])&&$_POST['funcActivator']=='ready')
+{
+	$activeSyncTransient = get_transient('realbigPluginSyncProcess');
+    if ($activeSyncTransient==false)
+    {
+	    set_transient('realbigPluginSyncProcess', 'true', 30);
+	    $wpOptionsCheckerSyncTime = $wpdb->get_row( $wpdb->prepare( 'SELECT optionValue FROM ' . $GLOBALS['table_prefix'] . 'realbig_settings WHERE optionName = %s', [ "token_sync_time" ] ) );
+	    if ( ! empty( $wpOptionsCheckerSyncTime ) ) {
+		    $wpOptionsCheckerSyncTime = get_object_vars( $wpOptionsCheckerSyncTime );
+	    }
+	    $token = tokenChecking($GLOBALS['table_prefix']);
+	    synchronize($token, $wpOptionsCheckerSyncTime, true, $GLOBALS['table_prefix']);
+    }
 }
 
 }
