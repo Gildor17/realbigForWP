@@ -39,12 +39,11 @@ try
 	/****************** end of updater code *******************************************************************************/
 	$GLOBALS['realbigForWP_version'] = '0.1.21.1a';
 	/********** checking and creating tables ******************************************************************************/
-	$wpPrefix = $wpdb->base_prefix;
+	$wpPrefix = $table_prefix;
 	if ( empty( $wpPrefix ) )
 	{
-		$wpPrefix = $table_prefix;
+	    $wpPrefix = $wpdb->base_prefix;
 	}
-
 	try
     {
 		$tableForCurrentPluginChecker = $wpdb->get_var( 'SHOW TABLES LIKE "' . $wpPrefix . 'realbig_plugin_settings"' );   //settings for block table checking
