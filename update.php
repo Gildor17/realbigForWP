@@ -23,6 +23,7 @@ function dbOldTablesRemoveFunction($wpPrefix)
 	try
 	{
 		$blocksTable = $wpdb->get_var('SHOW TABLES LIKE "WpRealbigPluginSettings"');
+		$blocksTable1 = $wpdb->get_var('SHOW TABLES LIKE "Wp1RealbigPluginSettings"');
 		$settingsTable = $wpdb->get_var('SHOW TABLES LIKE "realbigSettings"');
 		$newBlocksTable = $wpdb->get_var('SHOW TABLES LIKE "'.$wpPrefix.'realbig_plugin_settings"');
 		$newSettingsTable = $wpdb->get_var('SHOW TABLES LIKE "'.$wpPrefix.'realbig_settings"');
