@@ -12,6 +12,7 @@ include_once( ABSPATH . '/wp-includes/wp-db.php');
 
 try
 {
+	global $wpdb;
 
 function synchronize($tokenInput, $wpOptionsCheckerSyncTime, $sameTokenResult, $wpPrefix)
 {
@@ -86,14 +87,14 @@ function synchronize($tokenInput, $wpOptionsCheckerSyncTime, $sameTokenResult, $
 			{
 				$counter = 0;
 				$wpdb->query( 'DELETE FROM '.$wpPrefix.'realbig_plugin_settings');
-				$sqlTokenSave = "INSERT INTO ".$wpPrefix."realbig_plugin_settings (text, block_number, setting_type, element, directElement, elementPosition, elementPlace, firstPlace, elementCount, elementStep) VALUES ";
+				$sqlTokenSave = "INSERT INTO ".$wpPrefix."realbig_plugin_settings (text, block_number, setting_type, element, directElement, elementPosition, elementPlace, firstPlace, elementCount, elementStep, minSymbols) VALUES ";
 
 				foreach ($decodedToken['data'] AS $k => $item)
 				{
 					$counter++;
-					$sqlTokenSave .= ( $counter != 1 ? ", " : "") . "('" . $item['text'] . "', " . (int)$item['block_number'] . ", " . (int)$item['setting_type'] . ", '" . htmlspecialchars($item['element']) . "', '" . htmlspecialchars($item['directElement']) . "', " . (int)$item['elementPosition'] . ", " . (int)$item['elementPlace'] . ", " . (int)$item['firstPlace'] . ", " . (int)$item['elementCount'] . ", " . (int)$item['elementStep'] . ")";
+					$sqlTokenSave .= ( $counter != 1 ? ", " : "") . "('" . $item['text'] . "', " . (int)$item['block_number'] . ", " . (int)$item['setting_type'] . ", '" . htmlspecialchars($item['element']) . "', '" . htmlspecialchars($item['directElement']) . "', " . (int)$item['elementPosition'] . ", " . (int)$item['elementPlace'] . ", " . (int)$item['firstPlace'] . ", " . (int)$item['elementCount'] . ", " . (int)$item['elementStep'] . ", " . (int)$item['minSymbols'] . ")";
 				}
-				$sqlTokenSave .= " ON DUPLICATE KEY UPDATE text = values(text), setting_type = values(setting_type), element = values(element), directElement = values(directElement), elementPosition = values(elementPosition), elementPlace = values(elementPlace), firstPlace = values(firstPlace), elementCount = values(elementCount), elementStep = values(elementStep) ";
+				$sqlTokenSave .= " ON DUPLICATE KEY UPDATE text = values(text), setting_type = values(setting_type), element = values(element), directElement = values(directElement), elementPosition = values(elementPosition), elementPlace = values(elementPlace), firstPlace = values(firstPlace), elementCount = values(elementCount), elementStep = values(elementStep), minSymbols = values(minSymbols) ";
 
 				$wpdb->query($sqlTokenSave);
 				// if no needly note, then create
@@ -212,6 +213,21 @@ function tokenTimeUpdateChecking($token, $wpPrefix)
 	{
 		echo $e;
 	}
+}
+
+if (!empty($_POST['funcActivator'])&&$_POST['funcActivator']=='ready')
+{
+	$activeSyncTransient = get_transient('realbigPluginSyncProcess');
+    if ($activeSyncTransient==false)
+    {
+	    set_transient('realbigPluginSyncProcess', 'true', 30);
+	    $wpOptionsCheckerSyncTime = $wpdb->get_row( $wpdb->prepare( 'SELECT optionValue FROM ' . $GLOBALS['table_prefix'] . 'realbig_settings WHERE optionName = %s', [ "token_sync_time" ] ) );
+	    if ( ! empty( $wpOptionsCheckerSyncTime ) ) {
+		    $wpOptionsCheckerSyncTime = get_object_vars( $wpOptionsCheckerSyncTime );
+	    }
+	    $token = tokenChecking($GLOBALS['table_prefix']);
+	    synchronize($token, $wpOptionsCheckerSyncTime, true, $GLOBALS['table_prefix']);
+    }
 }
 
 }

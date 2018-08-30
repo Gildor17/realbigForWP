@@ -23,7 +23,6 @@ function dbOldTablesRemoveFunction($wpPrefix)
 	try
 	{
 		$blocksTable = $wpdb->get_var('SHOW TABLES LIKE "WpRealbigPluginSettings"');
-		$blocksTable1 = $wpdb->get_var('SHOW TABLES LIKE "Wp1RealbigPluginSettings"');
 		$settingsTable = $wpdb->get_var('SHOW TABLES LIKE "realbigSettings"');
 		$newBlocksTable = $wpdb->get_var('SHOW TABLES LIKE "'.$wpPrefix.'realbig_plugin_settings"');
 		$newSettingsTable = $wpdb->get_var('SHOW TABLES LIKE "'.$wpPrefix.'realbig_settings"');
@@ -81,6 +80,7 @@ CREATE TABLE `".$wpPrefix."realbig_plugin_settings`
 	`firstPlace` INT(11) NOT NULL,
 	`elementCount` INT(11) NOT NULL,
 	`elementStep` INT(11) NOT NULL,
+	`minSymbols` INT(11) NULL DEFAULT NULL,
 	`time_create` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`time_update` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	PRIMARY KEY (`id`)
@@ -179,6 +179,24 @@ function wpRealbigSettingsTableUpdateFunction($wpPrefix)
 	{
 		return false;
 	}
+}
+
+function wpRealbigPluginSettingsColomnUpdateFunction($wpPrefix)
+{
+    global $wpdb;
+
+    try
+    {
+        $wpdb->query('ALTER TABLE '.$wpPrefix.'realbig_plugin_settings ADD COLUMN `minSymbols` INT(11) NULL DEFAULT NULL');
+
+        return true;
+    }
+    catch (Exception $e)
+    {
+        return false;
+    }
+
+
 }
 
 }

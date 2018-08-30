@@ -15,7 +15,7 @@ include ( ABSPATH . "wp-content/plugins/realbigForWP/synchronising.php");
 /*
 Plugin name:  Realbig For WordPress
 Description:  Реалбиговский плагин для вордпреса. Для полного описания перейдите по ссылке: <a href="https://github.com/Gildor17/realbigFoWP/blob/master/README.MD" target="_blank">https://github.com/Gildor17/realbigFoWP/blob/master/README.MD</a>
-Version:      0.1.21.1a
+Version:      0.1.22a
 Author:       Gildor
 License:      GPL2
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
@@ -26,9 +26,6 @@ try
 	/** **************************************************************************************************************** **/
 	global $wpdb;
 	global $table_prefix;
-
-//	wp_redirect(get_site_url().'/wp-admin/index.php');  // this thing calling error
-
 	/***************** updater code ***************************************************************************************/
 	require 'plugin-update-checker/plugin-update-checker.php';
 	$myUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
@@ -37,28 +34,34 @@ try
 		'realbigForWP'
 	);
 	/****************** end of updater code *******************************************************************************/
-	$GLOBALS['realbigForWP_version'] = '0.1.21.1a';
+	$GLOBALS['realbigForWP_version'] = '0.1.22a';
 	/********** checking and creating tables ******************************************************************************/
 	$wpPrefix = $table_prefix;
 	if ( empty( $wpPrefix ) )
 	{
-	    $wpPrefix = $wpdb->base_prefix;
+		$wpPrefix = $wpdb->base_prefix;
 	}
 	try
     {
-		$tableForCurrentPluginChecker = $wpdb->get_var( 'SHOW TABLES LIKE "' . $wpPrefix . 'realbig_plugin_settings"' );   //settings for block table checking
-		$tableForToken                = $wpdb->get_var( 'SHOW TABLES LIKE "' . $wpPrefix . 'realbig_settings"' );      //settings for token and other
-//	$pluginActivityChecker        = is_plugin_active( 'realbigForWP/realbigForWP.php' );     //plugin status (active or not)
+        $colCheck                     = $wpdb->get_col('SHOW COLUMNS FROM '.$wpPrefix.'realbig_plugin_settings');
+		$tableForCurrentPluginChecker = $wpdb->get_var('SHOW TABLES LIKE "'.$wpPrefix.'realbig_plugin_settings"');   //settings for block table checking
+		$tableForToken                = $wpdb->get_var('SHOW TABLES LIKE "'.$wpPrefix.'realbig_settings"');      //settings for token and other
 	}
 	catch ( Exception $e )
     {
 		echo $e;
 	}
-
-	dbTablesCreateFunction( $tableForCurrentPluginChecker, $tableForToken, $wpPrefix );
-	dbOldTablesRemoveFunction( $wpPrefix );
+	if (empty($tableForCurrentPluginChecker)||empty($tableForToken))
+	{
+		dbTablesCreateFunction( $tableForCurrentPluginChecker, $tableForToken, $wpPrefix );
+		dbOldTablesRemoveFunction( $wpPrefix );
+    }
+	if (!in_array('minSymbols', $colCheck)&&!empty($colCheck))
+	{
+		wpRealbigPluginSettingsColomnUpdateFunction($wpPrefix);
+    }
 	/********** end of checking and creating tables ***********************************************************************/
-
+	/********** token gathering and adding "timeUpdate" field in wp_realbig_settings **************************************/
 	$token                 = tokenChecking( $wpPrefix );
 	$lastSyncTimeTransient = get_transient('realbigPluginSyncAttempt');
 
@@ -81,35 +84,37 @@ try
 		}
 		$resultEnumUpdate = false;
     }
+	/********** end of token gathering and adding "timeUpdate" field in wp_realbig_settings *******************************/
 	/****************** autosync ******************************************************************************************/
 	$wpOptionsCheckerSyncTime = $wpdb->get_row( $wpdb->prepare( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = %s', [ "token_sync_time" ] ) );
-	if ( ! empty( $token ) && $token != 'no token' && $lastSyncTimeTransient == false) {
-		try {
-//			$wpOptionsCheckerSyncTime = $wpdb->get_row( $wpdb->prepare( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = %s', [ "token_sync_time" ] ) );
-//	    $syncIterations = $wpdb->get_var('SELECT optionValue FROM '.$wpPrefix.'realbig_settings WHERE optionName = "syncRequest"');
-//	    $wpdb->update($wpPrefix.'realbig_settings', ['optionValue'=> $syncIterations + 1], ['optionName'=>'syncRequest']);
-			if ( ! empty( $wpOptionsCheckerSyncTime ) ) {
-				$lastSyncTime = get_object_vars( $wpOptionsCheckerSyncTime );
-			} else {
-				$lastSyncTime = null;
-			}
-
-			if ( ! empty( $lastSyncTime ) ) {
-				$timeDif = time() - intval( $lastSyncTime['optionValue'] );
-				if ( $timeDif > 300 ) {
-					$sameTokenResult = true;
-					synchronize( $token, $wpOptionsCheckerSyncTime, $sameTokenResult, $wpPrefix );
-					tokenTimeUpdateChecking( $GLOBALS['token'], $wpPrefix );
-				}
-			}
-		} catch ( Exception $e ) {
-			echo $e;
-		}
+	$GLOBALS['wpOptionsCheckerSyncTime'] = $wpOptionsCheckerSyncTime;
+	function syncFunctionAdd($sc)
+	{
+	    $testVar = $sc;
+		wp_enqueue_script( 'synchronizationJS',
+			get_site_url(). '/wp-content/plugins/realbigForWP/synchronizationJS.js',
+			array('jquery'),
+			false,
+			true);
+	}
+	function syncFunctionAdd1($sc)
+	{
+		$testVar = $sc;
+		wp_enqueue_script( 'jsFileForTestPurposes1',
+			get_site_url(). '/wp-content/plugins/realbigForWP/jsFileForTestPurposes1.js',
+			array('jquery'),
+			false,
+			false);
+	}
+	add_action('wp_enqueue_scripts', 'syncFunctionAdd1', 200);
+	if ( ! empty( $token ) && $token != 'no token' && $lastSyncTimeTransient == false)
+	{
+		add_action('wp_enqueue_scripts', 'syncFunctionAdd', 201);
 	}
 	/****************** end autosync **************************************************************************************/
-
 	/********** adding AD code in head area *******************************************************************************/
 	add_action( 'wp_head', 'AD_func_add', 1 );
+
 	function AD_func_add()
     {
 		require_once( 'textEditing.php' );
@@ -122,9 +127,8 @@ try
 			<?php
 		}
 	}
-
 	/********** end of adding AD code in head area ************************************************************************/
-
+	/********** manual sync ***********************************************************************************************/
 //$blocksSettingsTableChecking = $wpdb->query('SELECT id FROM '.$wpPrefix.'realbig_plugin_settings');
 	if ( strpos( $GLOBALS['PHP_SELF'], 'wp-admin' ) != false )
 	{
@@ -140,29 +144,38 @@ try
 		}
 		tokenTimeUpdateChecking( $GLOBALS['token'], $wpPrefix );
 	}
+	/********** end of manual sync ****************************************************************************************/
 	/************* blocks for text ****************************************************************************************/
-	$fromDb = $wpdb->get_results( 'SELECT setting_type, `text`, element, directElement, elementPosition, elementPlace, firstPlace, elementCount, elementStep FROM ' . $wpPrefix . 'realbig_plugin_settings WGPS' );
+	$fromDb = $wpdb->get_results( 'SELECT * FROM ' . $wpPrefix . 'realbig_plugin_settings WGPS' );
 	/************* end blocks for text ************************************************************************************/
-	add_filter( 'the_content', 'pathToIcons', 102 );
+	add_filter( 'the_content', 'pathToIcons', 5000 );
+//	add_filter( 'the_title', 'insertingInTitle', 5000 );
 	/********** using settings in texts ***********************************************************************************/
-	function pathToIcons( $content ) {
-		if (is_page()||is_single()||is_singular()) {
-			$fromDb = $GLOBALS['fromDb'];
-			require_once( 'textEditing.php' );
-			$setNum  = 1;
-			$content = addIcons( $fromDb, $content );
-			return $content;
-		} else {
-			return $content;
-		}
+//	function insertingInTitle($title)
+//    {
+//	    $fromDb = $GLOBALS['fromDb'];
+//	    require_once( 'textEditing.php' );
+//	    $title = addIcons( $fromDb, $title, 'title');
+//	    $GLOBALS['usedBlocks'] = $title[1];
+//	    return $title[0];
+//    }
+
+	function pathToIcons( $content )
+    {
+        if (is_page()||is_single()||is_singular()) {
+	        $fromDb = $GLOBALS['fromDb'];
+	        require_once( 'textEditing.php' );
+	        $setNum  = 1;
+	        $content = addIcons( $fromDb, $content, 'content');
+	        return $content;
+        } else {
+            return $content;
+        }
+//        $post_page1 = is_page();
+//        $post_page2 = is_single();
+//        $post_page3 = is_singular();
 	}
 	/*********** end of using settings in texts ***************************************************************************/
-//function adminPagesTest() {
-//    global $wpdb;
-//    $adminChecker = $wpdb->get_var('SELECT optionValue FROM '.$wpPrefix.'realbig_settings WHERE optionName = "testAdminRow"');
-//	$adminChecker = $adminChecker + 1;
-//    $wpdb->update($wpPrefix.'realbig_settings', ['optionValue'=> $adminChecker], ['optionName'=>'testAdminRow']);
-//}
 	/*********** begin of token input area ********************************************************************************/
 	function my_plugin_action_links( $links ) {
 		$links = array_merge( array( '<a href="' . esc_url( admin_url( '/admin.php?page=realbigForWP%2FrealbigForWP.php' ) ) . '">' . __( 'Settings', 'textdomain' ) . '</a>' ), $links );
@@ -216,17 +229,8 @@ try
                 1: <?= ( ! empty( $GLOBALS['connection_request_rezult_1'] ) ? $GLOBALS['connection_request_rezult_1'] : 'empty' ) ?></div>
             <div>Статус соединения
                 общий: <?= ( ! empty( $GLOBALS['connection_request_rezult'] ) ? $GLOBALS['connection_request_rezult'] : 'empty' ) ?></div>
-<!--            <div>Ping-->
-<!--                ping: --><?//= ( ! empty( $GLOBALS['shellResult'] ) ? $GLOBALS['shellResult'] : 'empty' ) ?><!--</div>-->
-            <div>Ping
-                ping: <?= ( ! empty( $GLOBALS['shellResult1'] ) ? $GLOBALS['shellResult1'] : 'empty' ) ?></div>
-            <div>Ping
-                ping: <?= ( ! empty( $GLOBALS['shellResult2'] ) ? $GLOBALS['shellResult2'] : 'empty' ) ?></div>
-            <div>Ping
-                ping: <?= ( ! empty( $GLOBALS['shellResult3'] ) ? $GLOBALS['shellResult3'] : 'empty' ) ?></div>
-            <div>Ping
-                ping: <?= ( ! empty( $GLOBALS['shellResult4'] ) ? $GLOBALS['shellResult4'] : 'empty' ) ?></div>
         </div>
+<!--        <div style="width: 100px; height: 20px; border: 1px solid black; background-color: royalblue"></div>-->
 		<?php
 	}
 	/************ end of token input area *********************************************************************************/
