@@ -37,7 +37,7 @@ try
 
     		if ( ! empty( $fromDb ) )
     		{
-    		    $contentLength = strlen(strip_tags($content));
+    		    $contentLength = mb_strlen(strip_tags($content), 'utf-8');
     			foreach ( $fromDb AS $k => $item )
     			{
     				if (is_object($item))
