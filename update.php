@@ -181,13 +181,18 @@ function wpRealbigSettingsTableUpdateFunction($wpPrefix)
 	}
 }
 
-function wpRealbigPluginSettingsColomnUpdateFunction($wpPrefix)
+function wpRealbigPluginSettingsColomnUpdateFunction($wpPrefix, $minSymbolsColumnStatus, $minHeadersColumnStatus)
 {
     global $wpdb;
 
     try
     {
-        $wpdb->query('ALTER TABLE '.$wpPrefix.'realbig_plugin_settings ADD COLUMN `minSymbols` INT(11) NULL DEFAULT NULL');
+        if ($minSymbolsColumnStatus==false) {
+	        $wpdb->query('ALTER TABLE '.$wpPrefix.'realbig_plugin_settings ADD COLUMN `minSymbols` INT(11) NULL DEFAULT NULL');
+        }
+        if ($minHeadersColumnStatus==false) {
+	        $wpdb->query('ALTER TABLE '.$wpPrefix.'realbig_plugin_settings ADD COLUMN `minHeaders` INT(11) NULL DEFAULT NULL');
+        }
 
         return true;
     }

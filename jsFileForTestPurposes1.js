@@ -15,6 +15,20 @@ function testFuncInTestFile(blockSettingArray, contentLength) {
         for(var i = 0; i < blockSettingArray.length; i++)
         {
             try {
+                if (blockSettingArray[i]["minHeaders"] > 0)
+                {
+                    var termorarity_parent_with_content = parent_with_content.parentElement;
+                    var termorarity_parent_with_content_length = 0;
+                    var headersList = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
+                    for (var hc1 = 0; hc1 < headersList.length; hc1++)
+                    {
+                        termorarity_parent_with_content_length += termorarity_parent_with_content.getElementsByTagName(headersList[hc1]).length;
+                    }
+                    if (blockSettingArray[i]["minHeaders"] > termorarity_parent_with_content_length)
+                    {
+                        continue;
+                    }
+                }
                 if (blockSettingArray[i]["minSymbols"] > contentLength)
                 {
                     continue;
@@ -58,11 +72,11 @@ function testFuncInTestFile(blockSettingArray, contentLength) {
                 {
                     var elementType = blockSettingArray[i]["directElement"].charAt(0);
                     var elementName = blockSettingArray[i]["directElement"].substring(1);
-                    if (elementType==='#')
+                    if (elementType=='#')
                     {
                         currentElement = parent_with_content.querySelector(elementType+elementName);
                     }
-                    else if (elementType==='.')
+                    else if (elementType=='.')
                     {
                         currentElement = parent_with_content.getElementsByClassName(elementName);
                         if (currentElement.length > 0)
@@ -72,7 +86,7 @@ function testFuncInTestFile(blockSettingArray, contentLength) {
                                 if (!blockSettingArray[i]["element"]||currentElement[i1].tagName.toLowerCase() == blockSettingArray[i]["element"].toLowerCase())
                                 {
                                     currentElement = currentElement[i1];
-                                    // break;
+                                    break;
                                 }
                             }
                         }
@@ -82,13 +96,13 @@ function testFuncInTestFile(blockSettingArray, contentLength) {
                             elementToAdd = document.createElement("div");
                             elementToAdd.innerHTML = blockSettingArray[i]["text"];
                             newElement = elementToAdd.firstChild;
-                            currentElement.parentNode.insertBefore(newElement, currentElement.nextSibling);
+                            currentElement.parentNode.insertBefore(newElement, currentElement);
                         }
                         else {
                             elementToAdd = document.createElement("div");
                             elementToAdd.innerHTML = blockSettingArray[i]["text"];
                             newElement = elementToAdd.firstChild;
-                            currentElement.parentNode.insertBefore(newElement, currentElement);
+                            currentElement.parentNode.insertBefore(newElement, currentElement.nextSibling);
                         }
                     }
                 }

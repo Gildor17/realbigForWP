@@ -43,7 +43,6 @@ try
 	}
 	try
     {
-        $colCheck                     = $wpdb->get_col('SHOW COLUMNS FROM '.$wpPrefix.'realbig_plugin_settings');
 		$tableForCurrentPluginChecker = $wpdb->get_var('SHOW TABLES LIKE "'.$wpPrefix.'realbig_plugin_settings"');   //settings for block table checking
 		$tableForToken                = $wpdb->get_var('SHOW TABLES LIKE "'.$wpPrefix.'realbig_settings"');      //settings for token and other
 	}
@@ -56,10 +55,30 @@ try
 		dbTablesCreateFunction( $tableForCurrentPluginChecker, $tableForToken, $wpPrefix );
 		dbOldTablesRemoveFunction( $wpPrefix );
     }
-	if (!in_array('minSymbols', $colCheck)&&!empty($colCheck))
-	{
-		wpRealbigPluginSettingsColomnUpdateFunction($wpPrefix);
+    try
+    {
+	    $colCheck = $wpdb->get_col('SHOW COLUMNS FROM '.$wpPrefix.'realbig_plugin_settings');
     }
+    catch (Exception $e)
+    {
+	    echo $e;
+    }
+	$minSymbolsColumnStatus = true;
+	$minHeadersColumnStatus = true;
+	if (!empty($colCheck))
+	{
+	    if (!in_array('minSymbols', $colCheck)) {
+		    $minSymbolsColumnStatus = false;
+        }
+	    if (!in_array('minHeaders', $colCheck)) {
+		    $minHeadersColumnStatus = false;
+        }
+    }
+    if ($minSymbolsColumnStatus==false||$minHeadersColumnStatus==false)
+    {
+	    wpRealbigPluginSettingsColomnUpdateFunction($wpPrefix, $minSymbolsColumnStatus, $minHeadersColumnStatus);
+    }
+
 	/********** end of checking and creating tables ***********************************************************************/
 	/********** token gathering and adding "timeUpdate" field in wp_realbig_settings **************************************/
 	$token                 = tokenChecking( $wpPrefix );
@@ -68,22 +87,7 @@ try
 //	/*** enumUpdate */ $resultEnumUpdate = updateElementEnumValuesFunction(); /** enumUpdateEnd */
 	/** enumUpdate */ $resultEnumUpdate = updateElementEnumValuesFunction(); /** enumUpdateEnd */
 
-	if (!empty($resultEnumUpdate)&&$resultEnumUpdate == true)   //doesn't ended
-//	if (true)   //doesn't ended
-	{
-	    $file = __FILE__;
-	    $countEnumFunctionReplace = 1;
 
-		$fileContent = file_get_contents($file);
-		$editedFileContent = preg_replace('~\/\*\* enumUpdate \*\/ \$resultEnumUpdate = updateElementEnumValuesFunction\(\)\; \/\*\* enumUpdateEnd \*\/~',
-			'/** enumUpdate  $resultEnumUpdate = updateElementEnumValuesFunction(); enumUpdateEnd */', $fileContent, $countEnumFunctionReplace);
-		if (!empty($editedFileContent)) {
-			$tset25 = file_put_contents($file, $editedFileContent);
-		} else {
-			$tset25 = file_put_contents($file, $fileContent);
-		}
-		$resultEnumUpdate = false;
-    }
 	/********** end of token gathering and adding "timeUpdate" field in wp_realbig_settings *******************************/
 	/****************** autosync ******************************************************************************************/
 	$wpOptionsCheckerSyncTime = $wpdb->get_row( $wpdb->prepare( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = %s', [ "token_sync_time" ] ) );
