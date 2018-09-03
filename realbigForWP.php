@@ -4,6 +4,7 @@ include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
 include_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 include ( ABSPATH . "wp-content/plugins/realbigForWP/update.php");
 include ( ABSPATH . "wp-content/plugins/realbigForWP/synchronising.php");
+include ( ABSPATH . "wp-content/plugins/realbigForWP/textEditing.php");
 
 /**
  * Created by PhpStorm.
@@ -15,7 +16,7 @@ include ( ABSPATH . "wp-content/plugins/realbigForWP/synchronising.php");
 /*
 Plugin name:  Realbig For WordPress
 Description:  Реалбиговский плагин для вордпреса. Для полного описания перейдите по ссылке: <a href="https://github.com/Gildor17/realbigFoWP/blob/master/README.MD" target="_blank">https://github.com/Gildor17/realbigFoWP/blob/master/README.MD</a>
-Version:      0.1.22.1a
+Version:      0.1.23a
 Author:       Gildor
 License:      GPL2
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
@@ -26,6 +27,11 @@ try
 	/** **************************************************************************************************************** **/
 	global $wpdb;
 	global $table_prefix;
+	$GLOBALS['realbigForWP_version'] = '0.1.23a';
+	$lastSuccessVersionGatherer = get_option('realbig_status_gatherer_version');
+
+	$statusGatherer = statusGathererConstructor(true);
+
 	/***************** updater code ***************************************************************************************/
 	require 'plugin-update-checker/plugin-update-checker.php';
 	$myUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
@@ -34,49 +40,38 @@ try
 		'realbigForWP'
 	);
 	/****************** end of updater code *******************************************************************************/
-	$GLOBALS['realbigForWP_version'] = '0.1.22.1a';
 	/********** checking and creating tables ******************************************************************************/
 	$wpPrefix = $table_prefix;
 	if ( empty( $wpPrefix ) )
 	{
 		$wpPrefix = $wpdb->base_prefix;
 	}
-	try
-    {
+	$GLOBALS['wpPrefix'] = $wpPrefix;
+
+	if ($statusGatherer['realbig_plugin_settings_table']==false||$statusGatherer['realbig_settings_table']==false||$lastSuccessVersionGatherer!=$GLOBALS['realbigForWP_version'])
+	{
 		$tableForCurrentPluginChecker = $wpdb->get_var('SHOW TABLES LIKE "'.$wpPrefix.'realbig_plugin_settings"');   //settings for block table checking
-		$tableForToken                = $wpdb->get_var('SHOW TABLES LIKE "'.$wpPrefix.'realbig_settings"');      //settings for token and other
+		$tableForToken = $wpdb->get_var('SHOW TABLES LIKE "'.$wpPrefix.'realbig_settings"');      //settings for token and other
+//		if (empty($tableForCurrentPluginChecker)||empty($tableForToken))
+//		{
+			$statusGatherer = dbTablesCreateFunction( $tableForCurrentPluginChecker, $tableForToken, $wpPrefix, $statusGatherer);
+//		}
 	}
-	catch ( Exception $e )
+	elseif ($statusGatherer['realbig_plugin_settings_table']==true&&$statusGatherer['realbig_settings_table']==true&&$statusGatherer['old_tables_removed']==false)
     {
-		echo $e;
+		$statusGatherer = dbOldTablesRemoveFunction( $wpPrefix, $statusGatherer);
 	}
-	if (empty($tableForCurrentPluginChecker)||empty($tableForToken))
+	if ($statusGatherer['realbig_plugin_settings_columns']==false||$lastSuccessVersionGatherer!=$GLOBALS['realbigForWP_version'])
 	{
-		dbTablesCreateFunction( $tableForCurrentPluginChecker, $tableForToken, $wpPrefix );
-		dbOldTablesRemoveFunction( $wpPrefix );
-    }
-    try
-    {
-	    $colCheck = $wpdb->get_col('SHOW COLUMNS FROM '.$wpPrefix.'realbig_plugin_settings');
-    }
-    catch (Exception $e)
-    {
-	    echo $e;
-    }
-	$minSymbolsColumnStatus = true;
-	$minHeadersColumnStatus = true;
-	if (!empty($colCheck))
-	{
-	    if (!in_array('minSymbols', $colCheck)) {
-		    $minSymbolsColumnStatus = false;
-        }
-	    if (!in_array('minHeaders', $colCheck)) {
-		    $minHeadersColumnStatus = false;
-        }
-    }
-    if ($minSymbolsColumnStatus==false||$minHeadersColumnStatus==false)
-    {
-	    wpRealbigPluginSettingsColomnUpdateFunction($wpPrefix, $minSymbolsColumnStatus, $minHeadersColumnStatus);
+		$colCheck = $wpdb->get_col('SHOW COLUMNS FROM '.$wpPrefix.'realbig_plugin_settings');
+		if (!empty($colCheck))
+		{
+			$statusGatherer = wpRealbigPluginSettingsColomnUpdateFunction($wpPrefix, $colCheck, $statusGatherer);
+		}
+		else
+		{
+			$statusGatherer['realbig_plugin_settings_columns'] = false;
+		}
     }
 
 	/********** end of checking and creating tables ***********************************************************************/
@@ -85,13 +80,31 @@ try
 	$lastSyncTimeTransient = get_transient('realbigPluginSyncAttempt');
 
 //	/*** enumUpdate */ $resultEnumUpdate = updateElementEnumValuesFunction(); /** enumUpdateEnd */
-	/** enumUpdate */ $resultEnumUpdate = updateElementEnumValuesFunction(); /** enumUpdateEnd */
-
-
+    if ($statusGatherer['element_column_values']==false||$lastSuccessVersionGatherer!=$GLOBALS['realbigForWP_version'])
+    {
+	    /** enumUpdate */ $statusGatherer = updateElementEnumValuesFunction($wpPrefix, $statusGatherer); /** enumUpdateEnd */
+    }
+    if (!empty($statusGatherer))
+    {
+        if (!in_array(false, $statusGatherer)) {
+            if (!empty($lastSuccessVersionGatherer)) {
+                update_option('realbig_status_gatherer_version', $GLOBALS['realbigForWP_version'], 'no');
+            } else {
+                add_option('realbig_status_gatherer_version', $GLOBALS['realbigForWP_version'], '', 'no');
+            }
+        }
+	    $statusGathererJson = json_encode($statusGatherer);
+	    if (!empty($statusGatherer['update_status_gatherer'])&&$statusGatherer['update_status_gatherer']==true) {
+		    update_option('realbig_status_gatherer', $statusGathererJson, 'no');
+	    }
+	    else
+	    {
+		    add_option('realbig_status_gatherer', $statusGathererJson, '', 'no');
+	    }
+    }
 	/********** end of token gathering and adding "timeUpdate" field in wp_realbig_settings *******************************/
 	/****************** autosync ******************************************************************************************/
-	$wpOptionsCheckerSyncTime = $wpdb->get_row( $wpdb->prepare( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = %s', [ "token_sync_time" ] ) );
-	$GLOBALS['wpOptionsCheckerSyncTime'] = $wpOptionsCheckerSyncTime;
+//	$GLOBALS['wpOptionsCheckerSyncTime'] = $wpOptionsCheckerSyncTime;
 	function syncFunctionAdd($sc)
 	{
 	    $testVar = $sc;
@@ -136,6 +149,7 @@ try
 //$blocksSettingsTableChecking = $wpdb->query('SELECT id FROM '.$wpPrefix.'realbig_plugin_settings');
 	if ( strpos( $GLOBALS['PHP_SELF'], 'wp-admin' ) != false )
 	{
+		$wpOptionsCheckerSyncTime = $wpdb->get_row( $wpdb->prepare( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = %s', [ "token_sync_time" ] ) );
 		if ( ! empty( $_POST['tokenInput'] ) )
 		{
 			$sameTokenResult = false;
@@ -150,27 +164,24 @@ try
 	}
 	/********** end of manual sync ****************************************************************************************/
 	/************* blocks for text ****************************************************************************************/
-	$fromDb = $wpdb->get_results( 'SELECT * FROM ' . $wpPrefix . 'realbig_plugin_settings WGPS' );
+//	if (is_page()||is_single()||is_singular())
+//	{
+//		$fromDb = $wpdb->get_results( 'SELECT * FROM ' . $wpPrefix . 'realbig_plugin_settings WGPS' );
+		add_filter('the_content', 'pathToIcons', 5000);
+//	}
 	/************* end blocks for text ************************************************************************************/
-	add_filter( 'the_content', 'pathToIcons', 5000 );
-//	add_filter( 'the_title', 'insertingInTitle', 5000 );
+//	add_filter( 'the_content', 'pathToIcons', 5000 );
 	/********** using settings in texts ***********************************************************************************/
-//	function insertingInTitle($title)
-//    {
-//	    $fromDb = $GLOBALS['fromDb'];
-//	    require_once( 'textEditing.php' );
-//	    $title = addIcons( $fromDb, $title, 'title');
-//	    $GLOBALS['usedBlocks'] = $title[1];
-//	    return $title[0];
-//    }
-
-	function pathToIcons( $content )
+	function pathToIcons($content)
     {
         if (is_page()||is_single()||is_singular()) {
-	        $fromDb = $GLOBALS['fromDb'];
+            global $wpdb;
+
+	        $fromDb = $wpdb->get_results('SELECT * FROM ' . $GLOBALS['wpPrefix'] . 'realbig_plugin_settings WGPS');
+//	        $fromDb = $GLOBALS['fromDb'];
 	        require_once( 'textEditing.php' );
 	        $setNum  = 1;
-	        $content = addIcons( $fromDb, $content, 'content');
+	        $content = addIcons($fromDb, $content, 'content');
 	        return $content;
         } else {
             return $content;
@@ -181,7 +192,8 @@ try
 	}
 	/*********** end of using settings in texts ***************************************************************************/
 	/*********** begin of token input area ********************************************************************************/
-	function my_plugin_action_links( $links ) {
+	function my_plugin_action_links( $links )
+    {
 		$links = array_merge( array( '<a href="' . esc_url( admin_url( '/admin.php?page=realbigForWP%2FrealbigForWP.php' ) ) . '">' . __( 'Settings', 'textdomain' ) . '</a>' ), $links );
 
 		return $links;
@@ -191,7 +203,8 @@ try
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	if ( is_admin() ) {
+	if ( is_admin() )
+	{
 		add_action( 'admin_menu', 'my_pl_settings_menu_create' );
 	}
 	function my_pl_settings_menu_create() {
@@ -207,7 +220,8 @@ try
 		add_action( 'admin_init', 'register_mysettings' );
 	}
 
-	function register_mysettings() {
+	function register_mysettings()
+    {
 		register_setting( 'sending_zone', 'token_value_input' );
 		register_setting( 'sending_zone', 'token_value_send' );
 	}

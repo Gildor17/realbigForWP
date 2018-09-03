@@ -14,7 +14,7 @@ include_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 try
 {
 
-function dbOldTablesRemoveFunction($wpPrefix)
+function dbOldTablesRemoveFunction($wpPrefix, $statusGatherer)
 {
 //		require_once $wpdb;
 //	require_once( ABSPATH . '/wp-includes/wp-db.php');
@@ -31,7 +31,6 @@ function dbOldTablesRemoveFunction($wpPrefix)
 		{
 			$wpdb->query('DROP TABLE `WpRealbigPluginSettings`');
 		}
-
 		if (!empty($settingsTable)&&!empty($newSettingsTable))
 		{
 			$oldSettingTableData = $wpdb->get_results('SELECT * FROM realbigSettings');
@@ -52,14 +51,21 @@ function dbOldTablesRemoveFunction($wpPrefix)
 			}
 			$wpdb->query('DROP TABLE `realbigSettings`');
 		}
+		if (empty($blocksTable)&&empty($settingsTable))
+		{
+		    $statusGatherer['old_tables_removed'] = true;
+        }
+        return $statusGatherer;
 	}
 	catch (Exception $e)
 	{
 		echo $e;
+		$statusGatherer['old_tables_removed'] = false;
+		return $statusGatherer;
 	}
 }
 
-function dbTablesCreateFunction($tableForCurrentPluginChecker, $tableForToken, $wpPrefix)
+function dbTablesCreateFunction($tableForCurrentPluginChecker, $tableForToken, $wpPrefix, $statusGatherer)
 {
 //	$old_tables = "WpRealbigPluginSettings, realbigSettings";
 	try
@@ -81,6 +87,7 @@ CREATE TABLE `".$wpPrefix."realbig_plugin_settings`
 	`elementCount` INT(11) NOT NULL,
 	`elementStep` INT(11) NOT NULL,
 	`minSymbols` INT(11) NULL DEFAULT NULL,
+	`minHeaders` INT(11) NULL DEFAULT NULL,
 	`time_create` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`time_update` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	PRIMARY KEY (`id`)
@@ -90,6 +97,10 @@ ENGINE=InnoDB
     ", true);
 			add_option('realbigForWP_version', $GLOBALS['realbigForWP_version']);
 		}
+		else
+		{
+			$statusGatherer['realbig_plugin_settings_table'] = true;
+        }
 
 		if (empty($tableForToken))
 		{
@@ -106,58 +117,44 @@ COLLATE='utf8_general_ci'
 ENGINE=InnoDB
     ", true);
 		}
+		else
+		{
+			$statusGatherer['realbig_settings_table'] = true;
+		}
+		return $statusGatherer;
 	}
 	catch (Exception $e)
 	{
 		echo $e;
+		$statusGatherer['realbig_plugin_settings_table'] = false;
+		$statusGatherer['realbig_settings_table'] = false;
+		return $statusGatherer;
 	}
 }
 
-function updateElementEnumValuesFunction()
+function updateElementEnumValuesFunction($wpPrefix, $statusGatherer)
 {
     global $wpdb;
-    try
-    {
-	    $enumTypeQuery = $wpdb->get_results('SHOW FIELDS FROM wp_realbig_plugin_settings WHERE Field = "element"');
-	    if (!empty($enumTypeQuery))
-	    {
+    $requiredElementColumnValues = "enum('p','li','ul','ol','blockquote','h1','h2','h3','h4','h5','h6')";
+    try {
+	    $enumTypeQuery = $wpdb->get_results('SHOW FIELDS FROM '.$wpPrefix.'realbig_plugin_settings WHERE Field = "element"');
+	    if (!empty($enumTypeQuery)) {
 		    $enumTypeQuery = get_object_vars($enumTypeQuery[0]);
-//	    $enu1 = ;
-		    if (!strpos($enumTypeQuery['Type'], 'blockquote'))
-		    {
-			    $wpdb->query("ALTER TABLE wp_realbig_plugin_settings MODIFY `element` ENUM('p','li','ul','ol','blockquote','h1','h2','h3','h4','h5','h6') NULL DEFAULT NULL");
+		    if ($enumTypeQuery['Type'] != $requiredElementColumnValues) {
+			    $wpdb->query("ALTER TABLE ".$wpPrefix."realbig_plugin_settings MODIFY `element` ENUM('p','li','ul','ol','blockquote','h1','h2','h3','h4','h5','h6') NULL DEFAULT NULL");
+			    $statusGatherer['element_column_values'] = false;
+			    return $statusGatherer;
+		    } else {
+			    $statusGatherer['element_column_values'] = true;
+			    return $statusGatherer;
 		    }
-		    else
-		    {
-		        return false;
-		    }
-		    $enumTypeQuery = $wpdb->get_results('SHOW FIELDS FROM wp_realbig_plugin_settings WHERE Field = "element"');
-		    if (!empty($enumTypeQuery))
-		    {
-			    $enumTypeQuery = get_object_vars($enumTypeQuery[0]);
-//	    $enu1 = ;
-			    if (strpos($enumTypeQuery['Type'], 'blockquote'))
-			    {
-			        return true;
-                }
-                else
-                {
-			        return false;
-                }
-            } 
-            else 
-            {
-		        return false;
-            }
-	    }
-	    else
-	    {
-	        return false;
+	    } else {
+		    $statusGatherer['element_column_values'] = false;
+	        return $statusGatherer;
         }
-    }
-    catch (Exception $e)
-    {
-        return false;
+    } catch (Exception $e) {
+	    $statusGatherer['element_column_values'] = false;
+	    return $statusGatherer;
     }
 }
 
@@ -181,24 +178,37 @@ function wpRealbigSettingsTableUpdateFunction($wpPrefix)
 	}
 }
 
-function wpRealbigPluginSettingsColomnUpdateFunction($wpPrefix, $minSymbolsColumnStatus, $minHeadersColumnStatus)
+function wpRealbigPluginSettingsColomnUpdateFunction($wpPrefix, $colCheck, $statusGatherer)
 {
     global $wpdb;
+    $atLeastOneMissedColumn = false;
+	$requiredColumnsInRealbigPluginSettingsTable = ['block_number', 'text', 'setting_type', 'element', 'directElement', 'elementPosition', 'elementPlace', 'firstPlace', 'elementCount', 'elementStep', 'time_create', 'time_update', 'minSymbols', 'minHeaders'];
 
-    try
-    {
-        if ($minSymbolsColumnStatus==false) {
-	        $wpdb->query('ALTER TABLE '.$wpPrefix.'realbig_plugin_settings ADD COLUMN `minSymbols` INT(11) NULL DEFAULT NULL');
+	try
+	{
+        foreach ($requiredColumnsInRealbigPluginSettingsTable as $item)
+        {
+            $volodia = 1;
+            if (!in_array($item, $colCheck))
+            {
+	            $atLeastOneMissedColumn = true;
+	            $wpdb->query('ALTER TABLE '.$wpPrefix.'realbig_plugin_settings ADD COLUMN '.$item.' INT(11) NULL DEFAULT NULL');
+            }
         }
-        if ($minHeadersColumnStatus==false) {
-	        $wpdb->query('ALTER TABLE '.$wpPrefix.'realbig_plugin_settings ADD COLUMN `minHeaders` INT(11) NULL DEFAULT NULL');
+        if ($atLeastOneMissedColumn == false)
+        {
+	        $statusGatherer['realbig_plugin_settings_columns'] = true;
         }
-
-        return true;
+        else
+        {
+	        $statusGatherer['realbig_plugin_settings_columns'] = false;
+        }
+        return $statusGatherer;
     }
     catch (Exception $e)
     {
-        return false;
+	    $statusGatherer['realbig_plugin_settings_columns'] = false;
+	    return $statusGatherer;
     }
 
 

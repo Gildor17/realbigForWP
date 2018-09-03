@@ -215,6 +215,76 @@ function tokenTimeUpdateChecking($token, $wpPrefix)
 	}
 }
 
+function statusGathererConstructor($pointer)
+{
+	global $wpdb;
+	try
+    {
+	    $statusGatherer = [];
+	    $realbigStatusGatherer = get_option('realbig_status_gatherer');
+
+	    if ($pointer==false)
+	    {
+		    $statusGatherer['element_column_values'] = false;
+		    $statusGatherer['old_tables_removed'] = false;
+		    $statusGatherer['realbig_plugin_settings_table'] = false;
+		    $statusGatherer['realbig_settings_table'] = false;
+		    $statusGatherer['realbig_plugin_settings_columns'] = false;
+		    if (!empty($realbigStatusGatherer))
+		    {
+			    $statusGatherer['update_status_gatherer'] = true;
+		    }
+		    else
+		    {
+			    $statusGatherer['update_status_gatherer'] = false;
+            }
+
+		    return $statusGatherer;
+        }
+        else
+        {
+//		    $realbigStatusGatherer = get_option('realbig_status_gatherer');
+
+		    if (!empty($realbigStatusGatherer))
+		    {
+//	        $realbigStatusGatherer = $errorVariable;
+			    $realbigStatusGatherer = json_decode($realbigStatusGatherer, true);
+			    $statusGatherer['element_column_values'] = $realbigStatusGatherer['element_column_values'];
+			    $statusGatherer['old_tables_removed'] = $realbigStatusGatherer['old_tables_removed'];
+			    $statusGatherer['realbig_plugin_settings_table'] = $realbigStatusGatherer['realbig_plugin_settings_table'];
+			    $statusGatherer['realbig_settings_table'] = $realbigStatusGatherer['realbig_settings_table'];
+			    $statusGatherer['realbig_plugin_settings_columns'] = $realbigStatusGatherer['realbig_plugin_settings_columns'];
+			    $statusGatherer['update_status_gatherer'] = true;
+
+			    return $statusGatherer;
+		    }
+		    else
+		    {
+//	        $realbigStatusGatherer = $errorVariable;
+//	            throw new Error();
+			    $statusGatherer['element_column_values'] = false;
+			    $statusGatherer['old_tables_removed'] = false;
+			    $statusGatherer['realbig_plugin_settings_table'] = false;
+			    $statusGatherer['realbig_settings_table'] = false;
+			    $statusGatherer['realbig_plugin_settings_columns'] = false;
+			    $statusGatherer['update_status_gatherer'] = false;
+
+			    return $statusGatherer;
+		    }
+        }
+    }
+    catch (Exception $exception)
+    {
+		return $statusGatherer = [];
+//        $catchedException = true;
+    }
+    catch (Error $error)
+    {
+		return $statusGatherer = [];
+//		$catchedError = true;
+	}
+}
+
 if (!empty($_POST['funcActivator'])&&$_POST['funcActivator']=='ready')
 {
 	$activeSyncTransient = get_transient('realbigPluginSyncProcess');
