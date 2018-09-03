@@ -52,12 +52,10 @@ try
 	{
 		$tableForCurrentPluginChecker = $wpdb->get_var('SHOW TABLES LIKE "'.$wpPrefix.'realbig_plugin_settings"');   //settings for block table checking
 		$tableForToken = $wpdb->get_var('SHOW TABLES LIKE "'.$wpPrefix.'realbig_settings"');      //settings for token and other
-//		if (empty($tableForCurrentPluginChecker)||empty($tableForToken))
-//		{
-			$statusGatherer = dbTablesCreateFunction( $tableForCurrentPluginChecker, $tableForToken, $wpPrefix, $statusGatherer);
-//		}
+
+		$statusGatherer = dbTablesCreateFunction( $tableForCurrentPluginChecker, $tableForToken, $wpPrefix, $statusGatherer);
 	}
-	elseif ($statusGatherer['realbig_plugin_settings_table']==true&&$statusGatherer['realbig_settings_table']==true&&$statusGatherer['old_tables_removed']==false)
+	if ($statusGatherer['realbig_plugin_settings_table']==true&&$statusGatherer['realbig_settings_table']==true&&$statusGatherer['old_tables_removed']==false)
     {
 		$statusGatherer = dbOldTablesRemoveFunction( $wpPrefix, $statusGatherer);
 	}
