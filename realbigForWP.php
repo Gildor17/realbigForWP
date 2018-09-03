@@ -31,7 +31,6 @@ try
 	$lastSuccessVersionGatherer = get_option('realbig_status_gatherer_version');
 
 	$statusGatherer = statusGathererConstructor(true);
-
 	/***************** updater code ***************************************************************************************/
 	require 'plugin-update-checker/plugin-update-checker.php';
 	$myUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
@@ -71,7 +70,6 @@ try
 			$statusGatherer['realbig_plugin_settings_columns'] = false;
 		}
     }
-
 	/********** end of checking and creating tables ***********************************************************************/
 	/********** token gathering and adding "timeUpdate" field in wp_realbig_settings **************************************/
 	$token                 = tokenChecking( $wpPrefix );
