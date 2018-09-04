@@ -16,7 +16,7 @@ include ( ABSPATH . "wp-content/plugins/realbigForWP/textEditing.php");
 /*
 Plugin name:  Realbig For WordPress
 Description:  Реалбиговский плагин для вордпреса. Для полного описания перейдите по ссылке: <a href="https://github.com/Gildor17/realbigFoWP/blob/master/README.MD" target="_blank">https://github.com/Gildor17/realbigFoWP/blob/master/README.MD</a>
-Version:      0.1.24
+Version:      0.1.25
 Author:       Gildor
 License:      GPL2
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
@@ -27,7 +27,7 @@ try
 	/** **************************************************************************************************************** **/
 	global $wpdb;
 	global $table_prefix;
-	$GLOBALS['realbigForWP_version'] = '0.1.24';
+	$GLOBALS['realbigForWP_version'] = '0.1.25';
 	$lastSuccessVersionGatherer = get_option('realbig_status_gatherer_version');
 
 	$statusGatherer = statusGathererConstructor(true);
@@ -152,12 +152,14 @@ try
 	    }
 	}
 	$pushStatus = $wpdb->get_results($wpdb->prepare('SELECT optionName, optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName IN (%s, %s)', ["pushCode","pushStatus"]),ARRAY_A);
-	if (!empty($pushStatus)&&$pushStatus[0]['optionName']=='pushStatus') {
-	    $pushStatusValue = $pushStatus[0]['optionValue'];
-	    $pushCode = $pushStatus[1]['optionValue'];
-    } else {
-		$pushStatusValue = $pushStatus[1]['optionValue'];
-		$pushCode = $pushStatus[0]['optionValue'];
+	if (!empty($pushStatus)) {
+		if ($pushStatus[0]['optionName']=='pushStatus') {
+			$pushStatusValue = $pushStatus[0]['optionValue'];
+			$pushCode = $pushStatus[1]['optionValue'];
+		} else {
+			$pushStatusValue = $pushStatus[1]['optionValue'];
+			$pushCode = $pushStatus[0]['optionValue'];
+		}
     }
 	if (!empty($pushStatus)&&count($pushStatus)==2&&$pushStatusValue==1) {
 		add_action('wp_head', 'push_head_add', 2);
