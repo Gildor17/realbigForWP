@@ -16,7 +16,7 @@ include ( ABSPATH . "wp-content/plugins/realbigForWP/textEditing.php");
 /*
 Plugin name:  Realbig For WordPress
 Description:  Реалбиговский плагин для вордпреса. Для полного описания перейдите по ссылке: <a href="https://github.com/Gildor17/realbigFoWP/blob/master/README.MD" target="_blank">https://github.com/Gildor17/realbigFoWP/blob/master/README.MD</a>
-Version:      0.1.23a
+Version:      0.1.24
 Author:       Gildor
 License:      GPL2
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
@@ -27,7 +27,7 @@ try
 	/** **************************************************************************************************************** **/
 	global $wpdb;
 	global $table_prefix;
-	$GLOBALS['realbigForWP_version'] = '0.1.23a';
+	$GLOBALS['realbigForWP_version'] = '0.1.24';
 	$lastSuccessVersionGatherer = get_option('realbig_status_gatherer_version');
 
 	$statusGatherer = statusGathererConstructor(true);
