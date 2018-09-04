@@ -293,6 +293,33 @@ try
     	}
     }
 
+    function headerPushInsertor()
+    {
+    	try
+    	{
+    		$wp_cur_theme = wp_get_theme();
+    		$wp_cur_theme_name = $wp_cur_theme->get_template();
+    //	    $wp_cur_theme_file = get_theme_file_uri('header.php');
+    		$themeHeaderFileOpen = file_get_contents('wp-content/themes/'.$wp_cur_theme_name.'/header.php');
+
+    		$checkedHeader = preg_match('~realpush.media/pushJs~', $themeHeaderFileOpen, $m);
+    		if (count($m) == 0)
+    		{
+    			$result = true;
+    		}
+    		else
+    		{
+    			$result = false;
+    		}
+
+    		return $result;
+    	}
+    	catch (Exception $e)
+    	{
+    		return false;
+    	}
+    }
+
 	function creatingJavascriptParserForContentFunction($fromDb, $usedBlocks, $contentLength)
     {
         try {

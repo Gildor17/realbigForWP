@@ -140,6 +140,31 @@ try
 			<?php
 		}
 	}
+	function push_head_add()
+    {
+	    require_once( 'textEditing.php' );
+	    $headerParsingResult = headerPushInsertor();
+	    if ( $headerParsingResult == true )
+	    {
+		    ?>
+            <script charset="utf-8" async
+                    src="https://realpush.media/pushJs/<?php echo $GLOBALS['pushCode'] ?>.js"></script>
+		    <?php
+	    }
+	}
+	$pushStatus = $wpdb->get_results($wpdb->prepare('SELECT optionName, optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName IN (%s, %s)', ["pushCode","pushStatus"]),ARRAY_A);
+	if ($pushStatus[0]['optionName']=='pushStatus') {
+	    $pushStatusValue = $pushStatus[0]['optionValue'];
+	    $pushCode = $pushStatus[1]['optionValue'];
+    } else {
+		$pushStatusValue = $pushStatus[1]['optionValue'];
+		$pushCode = $pushStatus[0]['optionValue'];
+    }
+	if (!empty($pushStatus)&&count($pushStatus)==2&&$pushStatusValue==1) {
+		add_action('wp_head', 'push_head_add', 2);
+		$GLOBALS['pushCode'] = $pushCode;
+	}
+
 	/********** end of adding AD code in head area ************************************************************************/
 	/********** manual sync ***********************************************************************************************/
 //$blocksSettingsTableChecking = $wpdb->query('SELECT id FROM '.$wpPrefix.'realbig_plugin_settings');

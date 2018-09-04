@@ -107,7 +107,27 @@ function synchronize($tokenInput, $wpOptionsCheckerSyncTime, $sameTokenResult, $
 				{
 					$wpdb->update($wpPrefix.'realbig_settings', ['optionName'=>'_wpRealbigPluginToken', 'optionValue'=>$tokenInput], ['optionName'=>'_wpRealbigPluginToken']);
 				}
-
+				if (!empty($decodedToken['dataPush']))
+				{
+					$wpOptionsCheckerPushStatus = $wpdb->query($wpdb->prepare( "SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", ['pushStatus']));
+					if (empty($wpOptionsCheckerPushStatus))
+					{
+						$wpdb->insert($wpPrefix.'realbig_settings', ['optionName'=>'pushStatus', 'optionValue'=>$decodedToken['dataPush']['pushStatus']]);
+					}
+					else
+					{
+						$wpdb->update($wpPrefix.'realbig_settings', ['optionName'=>'pushStatus', 'optionValue'=>$decodedToken['dataPush']['pushStatus']], ['optionName'=>'pushStatus']);
+					}
+					$wpOptionsCheckerPushCode = $wpdb->query($wpdb->prepare( "SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", ['pushCode']));
+					if (empty($wpOptionsCheckerPushCode))
+					{
+						$wpdb->insert($wpPrefix.'realbig_settings', ['optionName'=>'pushCode', 'optionValue'=>$decodedToken['dataPush']['pushCode']]);
+					}
+					else
+					{
+						$wpdb->update($wpPrefix.'realbig_settings', ['optionName'=>'pushCode', 'optionValue'=>$decodedToken['dataPush']['pushCode']], ['optionName'=>'pushCode']);
+					}
+                }
 				$GLOBALS['token'] = $tokenInput;
 			}
 			catch (Exception $e)
