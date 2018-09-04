@@ -105,16 +105,15 @@ try
 	{
 	    $testVar = $sc;
 		wp_enqueue_script( 'synchronizationJS',
-			get_site_url(). '/wp-content/plugins/realbigForWP/synchronizationJS.js',
+			plugins_url(). '/realbigForWP/synchronizationJS.js',
 			array('jquery'),
 			false,
 			true);
 	}
 	function syncFunctionAdd1($sc)
 	{
-		$testVar = $sc;
 		wp_enqueue_script( 'jsFileForTestPurposes1',
-			get_site_url(). '/wp-content/plugins/realbigForWP/jsFileForTestPurposes1.js',
+			plugins_url(). '/realbigForWP/jsFileForTestPurposes1.js',
 			array('jquery'),
 			false,
 			false);
