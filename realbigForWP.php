@@ -152,7 +152,7 @@ try
 	    }
 	}
 	$pushStatus = $wpdb->get_results($wpdb->prepare('SELECT optionName, optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName IN (%s, %s)', ["pushCode","pushStatus"]),ARRAY_A);
-	if ($pushStatus[0]['optionName']=='pushStatus') {
+	if (!empty($pushStatus)&&$pushStatus[0]['optionName']=='pushStatus') {
 	    $pushStatusValue = $pushStatus[0]['optionValue'];
 	    $pushCode = $pushStatus[1]['optionValue'];
     } else {
