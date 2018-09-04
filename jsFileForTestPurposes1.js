@@ -3,6 +3,7 @@ function testFuncInTestFile(blockSettingArray, contentLength) {
     try {
         var content_pointer = document.getElementById("content_pointer_id");
         var parent_with_content = content_pointer.parentElement;
+        parent_with_content = parent_with_content.parentElement;
 
         var newElement = document.createElement("div");
         var elementToAdd;
