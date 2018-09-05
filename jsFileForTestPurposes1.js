@@ -12,13 +12,14 @@ function testFuncInTestFile(blockSettingArray, contentLength) {
         var currentElement;
         var backElement = 0;
         var sumResult = 0;
+        var repeat = false;
 
         for(var i = 0; i < blockSettingArray.length; i++)
         {
             try {
                 if (blockSettingArray[i]["minHeaders"] > 0)
                 {
-                    var termorarity_parent_with_content = parent_with_content.parentElement;
+                    var termorarity_parent_with_content = parent_with_content;
                     var termorarity_parent_with_content_length = 0;
                     var headersList = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
                     for (var hc1 = 0; hc1 < headersList.length; hc1++)
@@ -59,6 +60,7 @@ function testFuncInTestFile(blockSettingArray, contentLength) {
                             elementToAdd.innerHTML = blockSettingArray[i]["text"];
                             newElement = elementToAdd.firstChild;
                             currentElement.parentNode.insertBefore(newElement, currentElement);
+                            blockSettingArray.splice(i, 1);
                         }
                         else
                         {
@@ -66,6 +68,7 @@ function testFuncInTestFile(blockSettingArray, contentLength) {
                             elementToAdd.innerHTML = blockSettingArray[i]["text"];
                             newElement = elementToAdd.firstChild;
                             currentElement.parentNode.insertBefore(newElement, currentElement.nextSibling);
+                            blockSettingArray.splice(i, 1);
                         }
                     }
                 }
@@ -75,7 +78,7 @@ function testFuncInTestFile(blockSettingArray, contentLength) {
                     var elementName = blockSettingArray[i]["directElement"].substring(1);
                     if (elementType=='#')
                     {
-                        currentElement = parent_with_content.querySelector(elementType+elementName);
+                        currentElement = document.querySelector(elementType+elementName);
                     }
                     else if (elementType=='.')
                     {
@@ -98,13 +101,17 @@ function testFuncInTestFile(blockSettingArray, contentLength) {
                             elementToAdd.innerHTML = blockSettingArray[i]["text"];
                             newElement = elementToAdd.firstChild;
                             currentElement.parentNode.insertBefore(newElement, currentElement);
+                            blockSettingArray.splice(i, 1);
                         }
                         else {
                             elementToAdd = document.createElement("div");
                             elementToAdd.innerHTML = blockSettingArray[i]["text"];
                             newElement = elementToAdd.firstChild;
                             currentElement.parentNode.insertBefore(newElement, currentElement.nextSibling);
+                            blockSettingArray.splice(i, 1);
                         }
+                    } else {
+                        repeat = true;
                     }
                 }
                 else if (blockSettingArray[i]["setting_type"]==4)
@@ -114,8 +121,17 @@ function testFuncInTestFile(blockSettingArray, contentLength) {
                     newElement = elementToAdd.firstChild;
                     // parent_with_content.parentNode.insertBefore(newElement, parent_with_content.nextSibling);
                     parent_with_content.append(newElement);
+                    blockSettingArray.splice(i, 1);
                 }
             } catch (e) { }
         }
+        // if (window.load) { }
+        window.addEventListener('load', function () {
+            if (repeat = true) {
+                setTimeout(function () {
+                    testFuncInTestFile(blockSettingArray, contentLength)
+                }, 100);
+            }
+        });
     } catch (e) { }
 }
