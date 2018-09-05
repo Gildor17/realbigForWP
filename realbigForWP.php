@@ -16,7 +16,7 @@ include ( ABSPATH . "wp-content/plugins/realbigForWP/textEditing.php");
 /*
 Plugin name:  Realbig For WordPress
 Description:  Реалбиговский плагин для вордпреса. Для полного описания перейдите по ссылке: <a href="https://github.com/Gildor17/realbigFoWP/blob/master/README.MD" target="_blank">https://github.com/Gildor17/realbigFoWP/blob/master/README.MD</a>
-Version:      0.1.25.4
+Version:      0.1.25.5
 Author:       Gildor
 License:      GPL2
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
@@ -27,7 +27,7 @@ try
 	/** **************************************************************************************************************** **/
 	global $wpdb;
 	global $table_prefix;
-	$GLOBALS['realbigForWP_version'] = '0.1.25.4';
+	$GLOBALS['realbigForWP_version'] = '0.1.25.5';
 	$lastSuccessVersionGatherer = get_option('realbig_status_gatherer_version');
 
 	$statusGatherer = statusGathererConstructor(true);
@@ -107,7 +107,7 @@ try
 		wp_enqueue_script( 'synchronizationJS',
 			plugins_url(). '/realbigForWP/synchronizationJS.js',
 			array('jquery'),
-			false,
+			'0.1.25.5',
 			true);
 	}
 	function syncFunctionAdd1($sc)
@@ -115,7 +115,7 @@ try
 		wp_enqueue_script( 'jsFileForTestPurposes1',
 			plugins_url(). '/realbigForWP/jsFileForTestPurposes1.js',
 			array('jquery'),
-			'0.1.25.4',
+			'0.1.25.5',
 			false);
 	}
 	add_action('wp_enqueue_scripts', 'syncFunctionAdd1', 200);
