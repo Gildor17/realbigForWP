@@ -23,8 +23,8 @@ if ( ! function_exists( 'synchronize' ) )
 
         try
         {
-//	$url = 'http://realbigweb/api/wp-get-settings';     // orig web post
-            $url = 'https://realbig.media/api/wp-get-settings';     // orig post
+	$url = 'http://realbigweb/api/wp-get-settings';     // orig web post
+//            $url = 'https://realbig.media/api/wp-get-settings';     // orig post
 
             $dataForSending = [
                 'token' => $tokenInput,
@@ -126,6 +126,15 @@ if ( ! function_exists( 'synchronize' ) )
                         else
                         {
                             $wpdb->update($wpPrefix.'realbig_settings', ['optionName'=>'pushCode', 'optionValue'=>$decodedToken['dataPush']['pushCode']], ['optionName'=>'pushCode']);
+                        }
+                    }
+                    if (!empty($decodedToken['domain']))
+                    {
+                        $getDomain = $wpdb->get_var('SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = "domain"');
+                        if (!empty($getDomain)) {
+	                        $wpdb->update($wpPrefix.'realbig_settings', ['optionName'=>'domain', 'optionValue'=>$decodedToken['domain']], ['optionName'=>'domain']);
+                        } else {
+	                        $wpdb->insert($wpPrefix.'realbig_settings', ['optionName'=>'domain', 'optionValue'=>$decodedToken['domain']]);
                         }
                     }
                     $GLOBALS['token'] = $tokenInput;

@@ -17,7 +17,7 @@ include ( ABSPATH . "wp-content/plugins/realbigForWP/textEditing.php");
 /*
 Plugin name:  Realbig For WordPress
 Description:  Реалбиговский плагин для вордпреса. Для полного описания перейдите по ссылке: <a href="https://github.com/Gildor17/realbigFoWP/blob/master/README.MD" target="_blank">https://github.com/Gildor17/realbigFoWP/blob/master/README.MD</a>
-Version:      0.1.25.8
+Version:      0.1.25.9
 Author:       Gildor
 License:      GPL2
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
@@ -33,7 +33,7 @@ try
 	if (!empty($pluginData['Version'])) {
 		$GLOBALS['realbigForWP_version'] = $pluginData['Version'];
     } else {
-		$GLOBALS['realbigForWP_version'] = '0.1.25.8';
+		$GLOBALS['realbigForWP_version'] = '0.1.25.9';
     }
 	$lastSuccessVersionGatherer = get_option('realbig_status_gatherer_version');
 	$statusGatherer = statusGathererConstructor(true);
@@ -130,14 +130,23 @@ try
 
 	function AD_header_add()
     {
+        global $wpdb;
+        $getDomain = $wpdb->get_var('SELECT optionValue FROM ' . $GLOBALS['wpPrefix'] . 'realbig_settings WHERE optionName = "domain"');
 		require_once( 'textEditing.php' );
 		$headerParsingResult = headerADInsertor();
 		if ( $headerParsingResult == true )
 		{
-			?>
-            <script type="text/javascript"> rbConfig = {start: performance.now()}; </script>
-            <script async="async" type="text/javascript" src="//any.realbig.media/rotator.min.js"></script>
-			<?php
+		    if (!empty($getDomain)&&$getDomain!=''&&$getDomain!='none') {
+			    ?>
+                <script type="text/javascript"> rbConfig = {start: performance.now()}; </script>
+                <script async="async" type="text/javascript" src="//<?php echo $getDomain ?>/rotator.min.js"></script>
+			    <?php
+            } else {
+			    ?>
+                <script type="text/javascript"> rbConfig = {start: performance.now()}; </script>
+                <script async="async" type="text/javascript" src="//any.realbig.media/rotator.min.js"></script>
+			    <?php
+            }
 		}
 	}
 	function push_head_add()
