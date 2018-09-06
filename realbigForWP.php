@@ -136,7 +136,7 @@ try
 		$headerParsingResult = headerADInsertor();
 		if ( $headerParsingResult == true )
 		{
-		    if (!empty($getDomain)&&$getDomain!=''&&$getDomain!='none') {
+		    if (!empty($getDomain)&&$getDomain!='') {
 			    ?>
                 <script type="text/javascript"> rbConfig = {start: performance.now()}; </script>
                 <script async="async" type="text/javascript" src="//<?php echo $getDomain ?>/rotator.min.js"></script>
