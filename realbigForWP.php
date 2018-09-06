@@ -1,5 +1,6 @@
 <?php
 
+include_once( dirname(__FILE__).'/../../../wp-load.php' );
 include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
 include_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 include ( ABSPATH . "wp-content/plugins/realbigForWP/update.php");
@@ -27,9 +28,14 @@ try
 	/** **************************************************************************************************************** **/
 	global $wpdb;
 	global $table_prefix;
-	$GLOBALS['realbigForWP_version'] = '0.1.25.7';
-	$lastSuccessVersionGatherer = get_option('realbig_status_gatherer_version');
 
+	$pluginData = get_plugin_data(__FILE__);
+	if (!empty($pluginData['Version'])) {
+		$GLOBALS['realbigForWP_version'] = $pluginData['Version'];
+    } else {
+		$GLOBALS['realbigForWP_version'] = '0.1.25.7';
+    }
+	$lastSuccessVersionGatherer = get_option('realbig_status_gatherer_version');
 	$statusGatherer = statusGathererConstructor(true);
 	/***************** updater code ***************************************************************************************/
 	require 'plugin-update-checker/plugin-update-checker.php';
@@ -41,8 +47,7 @@ try
 	/****************** end of updater code *******************************************************************************/
 	/********** checking and creating tables ******************************************************************************/
 	$wpPrefix = $table_prefix;
-	if ( empty( $wpPrefix ) )
-	{
+	if ( empty( $wpPrefix ) ) {
 		$wpPrefix = $wpdb->base_prefix;
 	}
 	$GLOBALS['wpPrefix'] = $wpPrefix;
@@ -58,7 +63,7 @@ try
     {
 		$statusGatherer = dbOldTablesRemoveFunction( $wpPrefix, $statusGatherer);
 	}
-	if ($statusGatherer['realbig_plugin_settings_columns']==false||$lastSuccessVersionGatherer!=$GLOBALS['realbigForWP_version'])
+	if ($statusGatherer['realbig_plugin_settings_table']==true&&($statusGatherer['realbig_plugin_settings_columns']==false||$lastSuccessVersionGatherer!=$GLOBALS['realbigForWP_version']))
 	{
 		$colCheck = $wpdb->get_col('SHOW COLUMNS FROM '.$wpPrefix.'realbig_plugin_settings');
 		if (!empty($colCheck))
@@ -76,7 +81,7 @@ try
 	$lastSyncTimeTransient = get_transient('realbigPluginSyncAttempt');
 
 //	/*** enumUpdate */ $resultEnumUpdate = updateElementEnumValuesFunction(); /** enumUpdateEnd */
-    if ($statusGatherer['element_column_values']==false||$lastSuccessVersionGatherer!=$GLOBALS['realbigForWP_version'])
+    if ($statusGatherer['realbig_plugin_settings_table']==true&&($statusGatherer['element_column_values']==false||$lastSuccessVersionGatherer!=$GLOBALS['realbigForWP_version']))
     {
 	    /** enumUpdate */ $statusGatherer = updateElementEnumValuesFunction($wpPrefix, $statusGatherer); /** enumUpdateEnd */
     }
@@ -92,42 +97,38 @@ try
 	    $statusGathererJson = json_encode($statusGatherer);
 	    if (!empty($statusGatherer['update_status_gatherer'])&&$statusGatherer['update_status_gatherer']==true) {
 		    update_option('realbig_status_gatherer', $statusGathererJson, 'no');
-	    }
-	    else
-	    {
+	    } else {
 		    add_option('realbig_status_gatherer', $statusGathererJson, '', 'no');
 	    }
     }
 	/********** end of token gathering and adding "timeUpdate" field in wp_realbig_settings *******************************/
 	/****************** autosync ******************************************************************************************/
 //	$GLOBALS['wpOptionsCheckerSyncTime'] = $wpOptionsCheckerSyncTime;
-	function syncFunctionAdd($sc)
+	function syncFunctionAdd()
 	{
-	    $testVar = $sc;
 		wp_enqueue_script( 'synchronizationJS',
 			plugins_url(). '/realbigForWP/synchronizationJS.js',
 			array('jquery'),
-			'0.1.25.7',
+			$GLOBALS['realbigForWP_version'],
 			true);
 	}
-	function syncFunctionAdd1($sc)
+	function syncFunctionAdd1()
 	{
 		wp_enqueue_script( 'jsFileForTestPurposes1',
 			plugins_url(). '/realbigForWP/jsFileForTestPurposes1.js',
 			array('jquery'),
-			'0.1.25.7',
+			$GLOBALS['realbigForWP_version'],
 			false);
 	}
 	add_action('wp_enqueue_scripts', 'syncFunctionAdd1', 200);
-	if ( ! empty( $token ) && $token != 'no token' && $lastSyncTimeTransient == false)
-	{
+	if ( ! empty( $token ) && $token != 'no token' && $lastSyncTimeTransient == false) {
 		add_action('wp_enqueue_scripts', 'syncFunctionAdd', 201);
 	}
 	/****************** end autosync **************************************************************************************/
 	/********** adding AD code in head area *******************************************************************************/
-	add_action( 'wp_head', 'AD_func_add', 1 );
+	add_action( 'wp_head', 'AD_header_add', 1 );
 
-	function AD_func_add()
+	function AD_header_add()
     {
 		require_once( 'textEditing.php' );
 		$headerParsingResult = headerADInsertor();
@@ -161,11 +162,10 @@ try
 			$pushCode = $pushStatus[0]['optionValue'];
 		}
     }
-	if (!empty($pushStatus)&&count($pushStatus)==2&&$pushStatusValue==1) {
+	if (!empty($pushStatus)&&!empty($pushStatusValue)&&!empty($pushCode)&&count($pushStatus)==2&&$pushStatusValue==1) {
 		add_action('wp_head', 'push_head_add', 2);
 		$GLOBALS['pushCode'] = $pushCode;
 	}
-
 	/********** end of adding AD code in head area ************************************************************************/
 	/********** manual sync ***********************************************************************************************/
 //$blocksSettingsTableChecking = $wpdb->query('SELECT id FROM '.$wpPrefix.'realbig_plugin_settings');
@@ -186,31 +186,21 @@ try
 	}
 	/********** end of manual sync ****************************************************************************************/
 	/************* blocks for text ****************************************************************************************/
-//	if (is_page()||is_single()||is_singular())
-//	{
-//		$fromDb = $wpdb->get_results( 'SELECT * FROM ' . $wpPrefix . 'realbig_plugin_settings WGPS' );
-		add_filter('the_content', 'pathToIcons', 5000);
-//	}
+		add_filter('the_content', 'adBlocksToContentInsertingFunction', 5000);
 	/************* end blocks for text ************************************************************************************/
-//	add_filter( 'the_content', 'pathToIcons', 5000 );
 	/********** using settings in texts ***********************************************************************************/
-	function pathToIcons($content)
+	function adBlocksToContentInsertingFunction($content)
     {
         if (is_page()||is_single()||is_singular()) {
             global $wpdb;
 
 	        $fromDb = $wpdb->get_results('SELECT * FROM ' . $GLOBALS['wpPrefix'] . 'realbig_plugin_settings WGPS');
-//	        $fromDb = $GLOBALS['fromDb'];
 	        require_once( 'textEditing.php' );
-	        $setNum  = 1;
 	        $content = addIcons($fromDb, $content, 'content');
 	        return $content;
         } else {
             return $content;
         }
-//        $post_page1 = is_page();
-//        $post_page2 = is_single();
-//        $post_page3 = is_singular();
 	}
 	/*********** end of using settings in texts ***************************************************************************/
 	/*********** begin of token input area ********************************************************************************/
@@ -220,11 +210,8 @@ try
 
 		return $links;
 	}
-
 	add_action( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'my_plugin_action_links' );
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 	if ( is_admin() )
 	{
 		add_action( 'admin_menu', 'my_pl_settings_menu_create' );
@@ -277,18 +264,11 @@ try
 }
 catch (Exception $ex)
 {
-//	deactivate_plugins('realbigForWP');
 	deactivate_plugins(plugin_basename( __FILE__ ));
 	?><div style="margin-left: 200px; border: 3px solid red"><? echo $ex; ?></div><?
-
-//	wp_die( 'test' );
 }
 catch (Error $er)
 {
 	deactivate_plugins(plugin_basename( __FILE__ ));
     ?><div style="margin-left: 200px; border: 3px solid red"><? echo $er; ?></div><?
-
-//    $urlForRedirection = get_site_url().'/wp-admin/index.php';
-//	wp_safe_redirect($urlForRedirection, 302);  // this thing calling error
-//    exit;
 }

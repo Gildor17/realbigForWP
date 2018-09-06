@@ -12,7 +12,6 @@ include_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 
 try
 {
-
     function addIcons ($fromDb, $content, $contentType, $usedBlocks=null)
     {
     	try
@@ -23,19 +22,7 @@ try
     		$usedBlocks = [];
     		$objArray = [];
 
-//    		if ($contentType!='title'&&!empty($usedBlocks))
-//    		{
-//    		    for ($i = 0; $i < count($fromDb); $i++)
-//    		    {
-//    		        $resultHere = in_array($fromDb[$i]['id'], $usedBlocks);
-//    		        if ($resultHere==true)
-//    		        {
-//    			        unset($fromDb[$i]);
-//                    }
-//                }
-//            }
-
-    		if ( ! empty( $fromDb ) )
+    		if (!empty($fromDb))
     		{
     		    $contentLength = mb_strlen(strip_tags($content), 'utf-8');
     			foreach ( $fromDb AS $k => $item )
@@ -44,13 +31,16 @@ try
     				{
     					$item = get_object_vars( $item );
     				}
+    				if (empty($item['setting_type'])) {
+    				    continue;
+                    }
 				    if (!empty($item['minHeaders'])&&$item['minHeaders'] > 0)
 				    {
                         $headersMatchesResult = preg_match_all('~<(h1|h2|h3|h4|h5|h6)~', $content, $headM);
                         $headersMatchesResult = count($headM[0]);
                         $headersMatchesResult += 1;
                     }
-    				if (!empty($item['minHeaders'])&&$item['minHeaders'] > 0&&$item['minHeaders'] > $headersMatchesResult)
+    				if (!empty($item['minHeaders'])&&!empty($headersMatchesResult)&&$item['minHeaders'] > 0&&$item['minHeaders'] > $headersMatchesResult)
     				{
                         continue;
                     }
@@ -88,6 +78,9 @@ try
 
     				if ( $item['setting_type'] == 1 )   //for lonely block
     				{
+    				    if (empty($elementName)||empty($elementPosition)||empty($elementNumber)||empty($elementText)) {
+    				        continue;
+                        }
     				    if ($elementNumber < 0) {
 					        $replaces = 0;
     				/**********************************************************/
@@ -142,8 +135,6 @@ try
 					        $editedContent = preg_replace( '~<placeholderForAd>~', '', $editedContent, $elementNumber - 1 );
 					        $editedContent = preg_replace( '~<placeholderForAd>~', '<placeholderForAdDop>', $editedContent, 1, $countReplaces );
 				        }
-//    					$editedContent = preg_replace( '~<placeholderForAd>~', '', $editedContent, $elementNumber - 1 );
-//    					$editedContent = preg_replace( '~<placeholderForAd>~', '<placeholderForAdDop>', $editedContent, 1, $countReplaces );
     				}
     				elseif ( $item['setting_type'] == 2 )  //for repeatable block
     				{
@@ -166,6 +157,10 @@ try
     				}
     				elseif ( $item['setting_type'] == 3 )  //for direct element
     				{
+					    if (empty($elementName)||empty($elementPosition)||empty($elementText)) {
+						    continue;
+					    }
+
     					$directElementTag = null;
     					$thisElementTag   = preg_match( '~[\.\#]{1}~', $elementName, $m );
     					$thisElementName  = preg_replace( '~([\.\#]{1})~', '', $elementName, 1 );
@@ -219,6 +214,9 @@ try
     				}
     				elseif ( $item['setting_type'] == 4 )  //for end of content
     				{
+					    if (empty($elementText)) {
+						    continue;
+					    }
     					$editedContent = $editedContent.'<placeholderForAd>';
     					$editedContent = preg_replace( '~<placeholderForAd>~', '<placeholderForAdDop>', $editedContent, -1, $countReplaces);
     				}
@@ -311,7 +309,6 @@ try
     		{
     			$result = false;
     		}
-
     		return $result;
     	}
     	catch (Exception $e)
@@ -323,220 +320,6 @@ try
 	function creatingJavascriptParserForContentFunction($fromDb, $usedBlocks, $contentLength)
     {
         try {
-//	        $scriptingCode = '
-//
-//<script>var newElement = document.createElement("div");
-//newElement.style.cssText = "height: 20px; width: 100px; border: 1px solid black; background-color: yellow";
-//var content_pointer = document.getElementById("content_pointer_id");
-//var parent_with_content = content_pointer.parentElement;
-//var h1_in_parent = parent_with_content.getElementsByTagName("h1");
-//
-//if (h1_in_parent.length==0)
-//{
-//    parent_with_content = parent_with_content.parentElement;
-//    h1_in_parent = parent_with_content.getElementsByTagName("h1");
-//}
-//if (h1_in_parent.length==1)
-//{
-//    element_h1 = h1_in_parent[0];
-//    element_h1.parentNode.insertBefore(newElement, element_h1.nextSibling);
-//}
-//
-//// element_h1 = document.getElementsByTagName("h1");
-//var newElement = document.createElement("div");
-//newElement.style.cssText = "height: 20px; width: 100px; border: 1px solid black; background-color: yellow";
-//// element_h1.parentNode.insertBefore(newElement, element_h1.nextSibling);
-//
-//var blockSettingArray = [];
-//var counter = 0;
-//
-//';
-//
-//	        foreach ($fromDb AS $k => $item)
-//	        {
-//		        if ( is_object( $item ) ) {
-//			        $item = get_object_vars( $item );
-//		        }
-//		        $resultHere = in_array($item['id'], $usedBlocks);
-//		        if ($resultHere==false) {
-//
-//			        $scriptingCode .= 'blockSettingArray[' . $k . '] = [];' . PHP_EOL;
-//
-//			        if ( $item['setting_type'] == 1 )       //for lonely block
-//			        {
-////				$scriptingCode .= 'blockSettingArray['.$k.']["element"] = []'. PHP_EOL;
-////				$scriptingCode .= 'blockSettingArray['.$k.']["elementPosition"] = []'. PHP_EOL;
-////				$scriptingCode .= 'blockSettingArray['.$k.']["elementPlace"] = []'. PHP_EOL;
-////				$scriptingCode .= 'blockSettingArray['.$k.']["text"] = []'. PHP_EOL;
-//				        $scriptingCode .= 'blockSettingArray[' . $k . ']["setting_type"] = 1; ' . PHP_EOL;
-//				        $scriptingCode .= 'blockSettingArray[' . $k . ']["element"] = "' . $item['element'] . '"; ' . PHP_EOL;
-//				        $scriptingCode .= 'blockSettingArray[' . $k . ']["elementPosition"] = ' . $item['elementPosition'] . '; ' . PHP_EOL;
-//				        $scriptingCode .= 'blockSettingArray[' . $k . ']["elementPlace"] = ' . $item['elementPlace'] . '; ' . PHP_EOL;
-//				        $scriptingCode .= 'blockSettingArray[' . $k . ']["text"] = \'' . $item['text'] . '\'; ' . PHP_EOL;
-//			        } elseif ( $item['setting_type'] == 3 )  //for direct block
-//			        {
-//				        $scriptingCode .= 'blockSettingArray[' . $k . ']["setting_type"] = 3; ' . PHP_EOL;
-//				        $scriptingCode .= 'blockSettingArray[' . $k . ']["element"] = "' . $item['element'] . '"; ' . PHP_EOL;
-//				        $scriptingCode .= 'blockSettingArray[' . $k . ']["directElement"] = "' . $item['directElement'] . '"; ' . PHP_EOL;
-//				        $scriptingCode .= 'blockSettingArray[' . $k . ']["elementPosition"] = ' . $item['elementPosition'] . '; ' . PHP_EOL;
-//				        $scriptingCode .= 'blockSettingArray[' . $k . ']["text"] = \'' . $item['text'] . '\'; ' . PHP_EOL;
-//			        } elseif ( $item['setting_type'] == 4 )  //for end of content
-//			        {
-//				        $scriptingCode .= 'blockSettingArray[' . $k . ']["setting_type"] = 4; ' . PHP_EOL;
-//				        $scriptingCode .= 'blockSettingArray[' . $k . ']["text"] = \'' . $item['text'] . '\'; ' . PHP_EOL;
-//			        }
-//		        }
-//	        }
-//	        $scriptingCode .= PHP_EOL;
-//
-//	        $scriptingCode .= '
-//var currentElement;
-//';
-//
-//	        foreach ($fromDb AS $k => $item)
-//	        {
-//		        if ( is_object( $item ) ) {
-//			        $item = get_object_vars( $item );
-//		        }
-//		        $resultHere = in_array($item['id'], $usedBlocks);
-//		        if ($resultHere==false) {
-//
-//			        $scriptingCode .= 'blockSettingArray[' . $k . '] = [];' . PHP_EOL;
-//
-//			        if ( $item['setting_type'] == 1 )       //for lonely block
-//			        {
-//			            $scriptingCode .= '
-//currentElement = parent_with_content.getElementsByTagName(blockSettingArray['.$k.']["element"]);
-//currentElement = currentElement[blockSettingArray['.$k.']["elementPlace"]-1];'.PHP_EOL;
-//				        if ($item['elementPosition']==0)
-//				        {
-//                            $scriptingCode .= 'currentElement.parentNode.insertBefore(newElement, currentElement.nextSibling);'.PHP_EOL;
-//				        }
-//				        else
-//				        {
-//					        $scriptingCode .= 'currentElement.parentNode.insertBefore(newElement, currentElement);'.PHP_EOL;
-//				        }
-////				        $scriptingCode .= 'blockSettingArray[' . $k . ']["setting_type"] = 1; ' . PHP_EOL;
-////				        $scriptingCode .= 'blockSettingArray[' . $k . ']["element"] = "' . $item['element'] . '"; ' . PHP_EOL;
-////				        $scriptingCode .= 'blockSettingArray[' . $k . ']["elementPosition"] = ' . $item['elementPosition'] . '; ' . PHP_EOL;
-////				        $scriptingCode .= 'blockSettingArray[' . $k . ']["elementPlace"] = ' . $item['elementPlace'] . '; ' . PHP_EOL;
-////				        $scriptingCode .= 'blockSettingArray[' . $k . ']["text"] = \'' . $item['text'] . '\'; ' . PHP_EOL;
-//			        }
-//                    elseif ( $item['setting_type'] == 3 )  //for direct block
-//			        {
-//				        $elementType = substr($item['directElement'], 0, 1);
-//				        $elementName = substr($item['directElement'], 1);
-////				        var elementName = blockSettingArray[i]["directElement"].subString(1);
-//
-//                        if ($elementType=='#') {
-//                            $scriptingCode .= 'currentElement = parent_with_content.getElementById('.$elementName.');';
-//                        } elseif ($elementType=='.') {
-//                            $scriptingCode .= 'currentElement = parent_with_content.getElementsByClassName('.$elementName.');';
-//                            $scriptingCode .= 'break;';
-//                        }
-//
-////				        $scriptingCode .= 'blockSettingArray[' . $k . ']["setting_type"] = 3; ' . PHP_EOL;
-////				        $scriptingCode .= 'blockSettingArray[' . $k . ']["element"] = "' . $item['element'] . '"; ' . PHP_EOL;
-////				        $scriptingCode .= 'blockSettingArray[' . $k . ']["directElement"] = "' . $item['directElement'] . '"; ' . PHP_EOL;
-////				        $scriptingCode .= 'blockSettingArray[' . $k . ']["elementPosition"] = ' . $item['elementPosition'] . '; ' . PHP_EOL;
-////				        $scriptingCode .= 'blockSettingArray[' . $k . ']["text"] = \'' . $item['text'] . '\'; ' . PHP_EOL;
-//			        } elseif ( $item['setting_type'] == 4 )  //for end of content
-//			        {
-//				        $scriptingCode .= 'blockSettingArray[' . $k . ']["setting_type"] = 4; ' . PHP_EOL;
-//				        $scriptingCode .= 'blockSettingArray[' . $k . ']["text"] = \'' . $item['text'] . '\'; ' . PHP_EOL;
-//			        }
-//		        }
-//	        }
-//	        $scriptingCode .= PHP_EOL;
-//
-//	        $scriptingCode .= '</script>';
-//
-//            $scriptingCode = '<script type="text/javascript">document.addEventListener(\'DOMContentLoaded\', function ()
-//{
-//    var newElement = document.createElement("div");
-//    newElement.style.cssText = "height: 20px; width: 100px; border: 1px solid black; background-color: yellow";
-//    var content_pointer = document.getElementById("content_pointer_id");
-//    var parent_with_content = content_pointer.parentElement;
-//    var h1_in_parent = parent_with_content.getElementsByTagName("h1");
-//
-//    if (h1_in_parent.length==0)
-//    {
-//        parent_with_content = parent_with_content.parentElement;
-//        h1_in_parent = parent_with_content.getElementsByTagName("h1");
-//    }
-//    if (h1_in_parent.length==1) {
-//        element_h1 = h1_in_parent[0];
-//        element_h1.parentNode.insertBefore(newElement, element_h1.nextSibling);
-//    }
-//
-//// element_h1 = document.getElementsByTagName("h1");
-//    var newElement = document.createElement("div");
-//    newElement.style.cssText = "height: 20px; width: 100px; border: 1px solid black; background-color: yellow";
-//// element_h1.parentNode.insertBefore(newElement, element_h1.nextSibling);
-//
-//    var blockSettingArray = [];
-//    var counter = 0;
-//
-//    var currentElement;
-//
-//    for(var i = 0; i < blockSettingArray.length; i++)
-//    {
-//        if (blockSettingArray[i]["setting_type"]==1)
-//        {
-//            currentElement = parent_with_content.getElementsByTagName(blockSettingArray[i]["element"]);
-//            currentElement = currentElement[blockSettingArray[i]["elementPlace"]-1];
-//            if (blockSettingArray[i]["elementPosition"]==0)
-//            {
-//                currentElement.parentNode.insertBefore(newElement, currentElement.nextSibling);
-//            }
-//            else
-//            {
-//                currentElement.parentNode.insertBefore(newElement, currentElement);
-//            }
-//        }
-//        else if (blockSettingArray[i]["setting_type"]==3)
-//        {
-//            var elementType = blockSettingArray[i]["directElement"].charAt(0);
-//            var elementName = blockSettingArray[i]["directElement"].subString(1);
-//            if (elementType==\'#\')
-//            {
-//                currentElement = parent_with_content.getElementById(elementName);
-//            }
-//            else if (elementType==\'.\')
-//            {
-//                currentElement = parent_with_content.getElementsByClassName(elementName);
-//                if (currentElement.length > 0)
-//                {
-//                    for (var i1 = 0; i1 < currentElement.length; i1++)
-//                    {
-//                        if (currentElement[i1].tagName.toLowerCase() == blockSettingArray[i]["element"].toLowerCase())
-//                        {
-//                            currentElement = currentElement[i1];
-//                            break;
-//                        }
-//                    }
-//
-//                }
-//            }
-//            if (blockSettingArray[i]["elementPosition"]==0)
-//            {
-//                currentElement.parentNode.insertBefore(newElement, currentElement.nextSibling);
-//            }
-//            else
-//            {
-//                currentElement.parentNode.insertBefore(newElement, currentElement);
-//            }
-//        }
-//        else if (blockSettingArray[i]["setting_type"]==4)
-//        {
-//            parent_with_content.parentNode.insertBefore(newElement, parent_with_content);
-//        }
-//    }
-//});
-//</script>';
-
-//            $scriptingCode = '<script>document.addEventListener("DOMContentLoaded", function() {testFuncInTestFile()});</script>';
-            
             $scriptingCode = '
             <script>
 var blockSettingArray = [];
@@ -549,7 +332,6 @@ var contentLength = '.$contentLength.';
 		        }
 		        $resultHere = in_array($item['id'], $usedBlocks);
 		        if ($resultHere==false) {
-
 			        $scriptingCode .= 'blockSettingArray[' . $k . '] = [];' . PHP_EOL;
 			        if ( $item['setting_type'] == 1 )       //for lonely block
 			        {

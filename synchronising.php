@@ -28,8 +28,7 @@ if ( ! function_exists( 'synchronize' ) )
 
             $dataForSending = [
                 'token' => $tokenInput,
-                'sameToken' => $sameTokenResult
-            ];
+                'sameToken' => $sameTokenResult ];
 
             try
             {
@@ -52,8 +51,6 @@ if ( ! function_exists( 'synchronize' ) )
 //		$connectionChecker = curl_getinfo($ch, CURLINFO_OS_ERRNO);
                 $jsonToken = curl_exec($ch);
                 curl_close($ch);
-
-//		echo '<script>console.log("'.$jsonToken.'")</script>';
 
                 if (!empty($jsonToken))
                 {
@@ -189,7 +186,6 @@ if ( ! function_exists( 'tokenChecking' ) )
 				$GLOBALS['token'] = 'no token';
 				$token = 'no token';
 			}
-
 			return $token;
 		}
 		catch (Exception $e)
@@ -206,13 +202,11 @@ if ( ! function_exists( 'tokenTimeUpdateChecking' ) )
 		global $wpdb;
 		try
 		{
-//		if ($GLOBALS['tokenStatusMessage']=='success'||empty($GLOBALS['tokenStatusMessage']))
-//		{
 			$timeUpdate = $wpdb->get_results("SELECT timeUpdate FROM ".$wpPrefix."realbig_settings WHERE optionName = 'token_sync_time'");
 			if (empty($timeUpdate))
 			{
 				$updateResult = wpRealbigSettingsTableUpdateFunction($wpPrefix);
-				if ($updateResult = true)
+				if ($updateResult == true)
 				{
 					$timeUpdate = $wpdb->get_results("SELECT timeUpdate FROM ".$wpPrefix."realbig_settings WHERE optionName = 'token_sync_time'");
 				}
@@ -244,7 +238,7 @@ if ( ! function_exists( 'tokenTimeUpdateChecking' ) )
 	}
 }
 
-if ( ! function_exists( 'statusGathererConstructor' ) )
+if (!function_exists('statusGathererConstructor'))
 {
 	function statusGathererConstructor($pointer)
 	{
@@ -274,8 +268,6 @@ if ( ! function_exists( 'statusGathererConstructor' ) )
 			}
 			else
 			{
-//		    $realbigStatusGatherer = get_option('realbig_status_gatherer');
-
 				if (!empty($realbigStatusGatherer))
 				{
 //	        $realbigStatusGatherer = $errorVariable;
@@ -317,8 +309,6 @@ if ( ! function_exists( 'statusGathererConstructor' ) )
 	}
 }
 
-
-
 if (!empty($_POST['funcActivator'])&&$_POST['funcActivator']=='ready')
 {
 	$activeSyncTransient = get_transient('realbigPluginSyncProcess');
@@ -326,8 +316,8 @@ if (!empty($_POST['funcActivator'])&&$_POST['funcActivator']=='ready')
     {
 	    set_transient('realbigPluginSyncProcess', 'true', 30);
 	    $wpOptionsCheckerSyncTime = $wpdb->get_row( $wpdb->prepare( 'SELECT optionValue FROM ' . $GLOBALS['table_prefix'] . 'realbig_settings WHERE optionName = %s', [ "token_sync_time" ] ) );
-	    if ( ! empty( $wpOptionsCheckerSyncTime ) ) {
-		    $wpOptionsCheckerSyncTime = get_object_vars( $wpOptionsCheckerSyncTime );
+	    if (!empty( $wpOptionsCheckerSyncTime)) {
+		    $wpOptionsCheckerSyncTime = get_object_vars($wpOptionsCheckerSyncTime);
 	    }
 	    $token = tokenChecking($GLOBALS['table_prefix']);
 	    synchronize($token, $wpOptionsCheckerSyncTime, true, $GLOBALS['table_prefix']);

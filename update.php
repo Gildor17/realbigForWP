@@ -16,10 +16,7 @@ try
 
 function dbOldTablesRemoveFunction($wpPrefix, $statusGatherer)
 {
-//		require_once $wpdb;
-//	require_once( ABSPATH . '/wp-includes/wp-db.php');
 	global $wpdb;
-
 	try
 	{
 		$blocksTable = $wpdb->get_var('SHOW TABLES LIKE "WpRealbigPluginSettings"');
@@ -67,7 +64,6 @@ function dbOldTablesRemoveFunction($wpPrefix, $statusGatherer)
 
 function dbTablesCreateFunction($tableForCurrentPluginChecker, $tableForToken, $wpPrefix, $statusGatherer)
 {
-//	$old_tables = "WpRealbigPluginSettings, realbigSettings";
 	try
 	{
 		if (empty($tableForCurrentPluginChecker))
@@ -79,7 +75,7 @@ CREATE TABLE `".$wpPrefix."realbig_plugin_settings`
 	`block_number` INT(11) NOT NULL,
 	`text` TEXT NOT NULL,
 	`setting_type` INT(11) NOT NULL,
-	`element` ENUM('p','li','ul','ol','h1','h2','h3','h4','h5','h6') NOT NULL,
+	`element` ENUM('p','li','ul','ol','blockquote','h1','h2','h3','h4','h5','h6') NOT NULL,
 	`directElement` TEXT NOT NULL,
 	`elementPosition` INT(11) NOT NULL,
 	`elementPlace` INT(11) NOT NULL,
@@ -188,7 +184,6 @@ function wpRealbigPluginSettingsColomnUpdateFunction($wpPrefix, $colCheck, $stat
 	{
         foreach ($requiredColumnsInRealbigPluginSettingsTable as $item)
         {
-            $volodia = 1;
             if (!in_array($item, $colCheck))
             {
 	            $atLeastOneMissedColumn = true;
@@ -210,8 +205,6 @@ function wpRealbigPluginSettingsColomnUpdateFunction($wpPrefix, $colCheck, $stat
 	    $statusGatherer['realbig_plugin_settings_columns'] = false;
 	    return $statusGatherer;
     }
-
-
 }
 
 }
