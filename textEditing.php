@@ -324,6 +324,7 @@ try
             <script>
 var blockSettingArray = [];
 var contentLength = '.$contentLength.';
+var testPath = "'.plugins_url().'/realbigForWP/jsFileForTestPurposes1.js";
 ';
 	        foreach ($fromDb AS $k => $item)
 	        {
