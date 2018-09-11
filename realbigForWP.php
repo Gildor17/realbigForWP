@@ -17,7 +17,7 @@ include ( ABSPATH . "wp-content/plugins/realbigForWP/textEditing.php");
 /*
 Plugin name:  Realbig For WordPress
 Description:  Реалбиговский плагин для вордпреса. Для полного описания перейдите по ссылке: <a href="https://github.com/Gildor17/realbigFoWP/blob/master/README.MD" target="_blank">https://github.com/Gildor17/realbigFoWP/blob/master/README.MD</a>
-Version:      0.1.25.91
+Version:      0.1.25.92
 Author:       Gildor
 License:      GPL2
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
@@ -33,7 +33,7 @@ try
 	if (!empty($pluginData['Version'])) {
 		$GLOBALS['realbigForWP_version'] = $pluginData['Version'];
     } else {
-		$GLOBALS['realbigForWP_version'] = '0.1.25.91';
+		$GLOBALS['realbigForWP_version'] = '0.1.25.92';
     }
 	$lastSuccessVersionGatherer = get_option('realbig_status_gatherer_version');
 	$statusGatherer = statusGathererConstructor(true);
@@ -120,13 +120,13 @@ try
 			$GLOBALS['realbigForWP_version'],
 			false);
 	}
-	add_action('wp_enqueue_scripts', 'syncFunctionAdd1', 200);
+	add_action('wp_enqueue_scripts', 'syncFunctionAdd1', 100);
 	if ( ! empty( $token ) && $token != 'no token' && $lastSyncTimeTransient == false) {
-		add_action('wp_enqueue_scripts', 'syncFunctionAdd', 201);
+		add_action('wp_enqueue_scripts', 'syncFunctionAdd', 101);
 	}
 	/****************** end autosync **************************************************************************************/
 	/********** adding AD code in head area *******************************************************************************/
-	add_action( 'wp_head', 'AD_header_add', 1 );
+	add_action( 'wp_head', 'AD_header_add', 0 );
 
 	function AD_header_add()
     {
@@ -172,7 +172,7 @@ try
 		}
     }
 	if (!empty($pushStatus)&&!empty($pushStatusValue)&&!empty($pushCode)&&count($pushStatus)==2&&$pushStatusValue==1) {
-		add_action('wp_head', 'push_head_add', 2);
+		add_action('wp_head', 'push_head_add', 0);
 		$GLOBALS['pushCode'] = $pushCode;
 	}
 	/********** end of adding AD code in head area ************************************************************************/

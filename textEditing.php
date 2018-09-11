@@ -78,7 +78,7 @@ try
 
     				if ( $item['setting_type'] == 1 )   //for lonely block
     				{
-    				    if (empty($elementName)||empty($elementPosition)||empty($elementNumber)||empty($elementText)) {
+    				    if (empty($elementName)||empty($elementNumber)||empty($elementText)) {
     				        continue;
                         }
     				    if ($elementNumber < 0) {
@@ -157,7 +157,7 @@ try
     				}
     				elseif ( $item['setting_type'] == 3 )  //for direct element
     				{
-					    if (empty($elementName)||empty($elementPosition)||empty($elementText)) {
+					    if (empty($elementName)||empty($elementText)) {
 						    continue;
 					    }
 
@@ -324,7 +324,6 @@ try
             <script>
 var blockSettingArray = [];
 var contentLength = '.$contentLength.';
-var testPath = "'.plugins_url().'/realbigForWP/jsFileForTestPurposes1.js";
 ';
 	        foreach ($fromDb AS $k => $item)
 	        {
