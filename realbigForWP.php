@@ -177,7 +177,6 @@ try
 	if ( strpos( $GLOBALS['PHP_SELF'], 'wp-admin' ) != false )
 	{
 		$wpOptionsCheckerSyncTime = $wpdb->get_row( $wpdb->prepare( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = %s', [ "token_sync_time" ] ) );
-		$wpOptionsCheckerSyncTime = $wpdb->get_row( $wpdb->prepare( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = %s', [ "token_sync_time" ] ) );
 		if ( ! empty( $_POST['tokenInput'] ) )
 		{
 			$sameTokenResult = false;
