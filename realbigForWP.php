@@ -7,17 +7,10 @@ include ( ABSPATH . "wp-content/plugins/realbigForWP/update.php");
 include ( ABSPATH . "wp-content/plugins/realbigForWP/synchronising.php");
 include ( ABSPATH . "wp-content/plugins/realbigForWP/textEditing.php");
 
-/**
- * Created by PhpStorm.
- * User: user
- * Date: 2018-07-03
- * Time: 10:34
- */
-
 /*
 Plugin name:  Realbig For WordPress
 Description:  Реалбиговский плагин для вордпреса. Для полного описания перейдите по ссылке: <a href="https://github.com/Gildor17/realbigFoWP/blob/master/README.MD" target="_blank">https://github.com/Gildor17/realbigFoWP/blob/master/README.MD</a>
-Version:      0.1.25.93
+Version:      0.1.25.95
 Author:       Gildor
 License:      GPL2
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
@@ -33,7 +26,7 @@ try
 	if (!empty($pluginData['Version'])) {
 		$GLOBALS['realbigForWP_version'] = $pluginData['Version'];
     } else {
-		$GLOBALS['realbigForWP_version'] = '0.1.25.93';
+		$GLOBALS['realbigForWP_version'] = '0.1.25.95';
     }
 	$lastSuccessVersionGatherer = get_option('realbig_status_gatherer_version');
 	$statusGatherer = statusGathererConstructor(true);
@@ -75,6 +68,9 @@ try
 			$statusGatherer['realbig_plugin_settings_columns'] = false;
 		}
     }
+    ?><script>console.log('realbig_settings_table: <?= $wpdb->get_var('SHOW TABLES LIKE "'.$wpPrefix.'realbig_settings"')?>');
+    console.log('realbig_plugin_settings_table: <?= $wpdb->get_var('SHOW TABLES LIKE "'.$wpPrefix.'realbig_plugin_settings"')?>');</script><?php
+
 	/********** end of checking and creating tables ***********************************************************************/
 	/********** token gathering and adding "timeUpdate" field in wp_realbig_settings **************************************/
 	$token                 = tokenChecking( $wpPrefix );
@@ -181,6 +177,7 @@ try
 	if ( strpos( $GLOBALS['PHP_SELF'], 'wp-admin' ) != false )
 	{
 		$wpOptionsCheckerSyncTime = $wpdb->get_row( $wpdb->prepare( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = %s', [ "token_sync_time" ] ) );
+		$wpOptionsCheckerSyncTime = $wpdb->get_row( $wpdb->prepare( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = %s', [ "token_sync_time" ] ) );
 		if ( ! empty( $_POST['tokenInput'] ) )
 		{
 			$sameTokenResult = false;
@@ -200,7 +197,7 @@ try
 	/********** using settings in texts ***********************************************************************************/
 	function adBlocksToContentInsertingFunction($content)
     {
-        if (is_page()||is_single()||is_singular()) {
+        if (is_page()||is_single()||is_singular()||is_archive()) {
             global $wpdb;
 
 	        $fromDb = $wpdb->get_results('SELECT * FROM ' . $GLOBALS['wpPrefix'] . 'realbig_plugin_settings WGPS');
