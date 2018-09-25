@@ -405,7 +405,8 @@ var contentLength = '.$contentLength.';
 		        }
 	        }
 	        $scriptingCode .= PHP_EOL;
-	        $scriptingCode .= 'testFuncInTestFile(blockSettingArray, contentLength)</script>';
+	        $scriptingCode .= 'jsInputerLaunch = 15</script>';
+//	        $scriptingCode .= 'testFuncInTestFile(blockSettingArray, contentLength)</script>';
 
 	        return $scriptingCode;
         }

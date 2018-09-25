@@ -22,6 +22,10 @@ try
 	global $wpdb;
 	global $table_prefix;
 
+	if (!empty($_POST['statusRefresher'])) {
+		delete_option('realbig_status_gatherer_version');
+    }
+
 	$pluginData = get_plugin_data(__FILE__);
 	if (!empty($pluginData['Version'])) {
 		$GLOBALS['realbigForWP_version'] = $pluginData['Version'];
@@ -68,8 +72,7 @@ try
 			$statusGatherer['realbig_plugin_settings_columns'] = false;
 		}
     }
-    ?><script>console.log('realbig_settings_table: <?= $wpdb->get_var('SHOW TABLES LIKE "'.$wpPrefix.'realbig_settings"')?>');
-    console.log('realbig_plugin_settings_table: <?= $wpdb->get_var('SHOW TABLES LIKE "'.$wpPrefix.'realbig_plugin_settings"')?>');</script><?php
+
 
 	/********** end of checking and creating tables ***********************************************************************/
 	/********** token gathering and adding "timeUpdate" field in wp_realbig_settings **************************************/
@@ -180,7 +183,7 @@ try
 		if ( ! empty( $_POST['tokenInput'] ) )
 		{
 			$sameTokenResult = false;
-			synchronize( $_POST['tokenInput'], ( empty( $wpOptionsCheckerSyncTime ) ? null : $wpOptionsCheckerSyncTime ), $sameTokenResult, $wpPrefix );
+			synchronize( $_POST['tokenInput'], ( empty( $wpOptionsCheckerSyncTime ) ? null : $wpOptionsCheckerSyncTime ), $sameTokenResult, $wpPrefix, 'manual');
 //			deactivate_plugins(plugin_basename( __FILE__ ));
 		}
 		elseif ( $GLOBALS['token'] == 'no token' )
@@ -250,7 +253,10 @@ try
                     <label style="font-size: 16px; margin-left: 10px; color: <?= $GLOBALS['statusColor'] ?> ">Время
                         последней синхронизации: <?= $GLOBALS['tokenTimeUpdate'] ?></label>
                 </label>
-				<?php submit_button( 'Синхронизировать', 'primary', 'saveTokenButton' ) ?>
+                <br>
+                <label for="statusRefresher">обновить проверку</label>
+                <input type="checkbox" name="statusRefresher" id="statusRefresher">
+                <?php submit_button( 'Синхронизировать', 'primary', 'saveTokenButton' ) ?>
 				<?php if ( ! empty( $GLOBALS['tokenStatusMessage'] ) ): ?>
                     <div name="rezultDiv" style="font-size: 16px"><?= $GLOBALS['tokenStatusMessage'] ?></div>
 				<?php endif; ?>
