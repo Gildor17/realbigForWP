@@ -10,7 +10,7 @@ include ( ABSPATH . "wp-content/plugins/realbigForWP/textEditing.php");
 /*
 Plugin name:  Realbig For WordPress
 Description:  Реалбиговский плагин для вордпреса. Для полного описания перейдите по ссылке: <a href="https://github.com/Gildor17/realbigFoWP/blob/master/README.MD" target="_blank">https://github.com/Gildor17/realbigFoWP/blob/master/README.MD</a>
-Version:      0.1.25.911
+Version:      0.1.25.912
 Author:       Gildor
 License:      GPL2
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
@@ -30,7 +30,7 @@ try
 	if (!empty($pluginData['Version'])) {
 		$GLOBALS['realbigForWP_version'] = $pluginData['Version'];
     } else {
-		$GLOBALS['realbigForWP_version'] = '0.1.25.911';
+		$GLOBALS['realbigForWP_version'] = '0.1.25.912';
     }
 	$lastSuccessVersionGatherer = get_option('realbig_status_gatherer_version');
 	$statusGatherer = statusGathererConstructor(true);
@@ -80,7 +80,7 @@ try
 	$lastSyncTimeTransient = get_transient('realbigPluginSyncAttempt');
 
 	$unmarkSuccessfulUpdate = $wpdb->get_var('SELECT optionValue FROM '.$wpPrefix.'realbig_settings WHERE optionName = "successUpdateMark"');
-	$jsAutoSynchronizationStatus = intval($wpdb->get_var('SELECT optionValue FROM '.$wpPrefix.'realbig_settings WHERE optionName = "jsAutoSyncFails"'));
+	$jsAutoSynchronizationStatus = $wpdb->get_var('SELECT optionValue FROM '.$wpPrefix.'realbig_settings WHERE optionName = "jsAutoSyncFails"');
 	if (isset($jsAutoSynchronizationStatus)&&$jsAutoSynchronizationStatus>4&&!empty($token)&&$token!='no token'&&$lastSyncTimeTransient==false) {
 		$wpOptionsCheckerSyncTime = $wpdb->get_row($wpdb->prepare('SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = %s',["token_sync_time"]));
 		synchronize($token, (empty($wpOptionsCheckerSyncTime)?null:$wpOptionsCheckerSyncTime), true, $GLOBALS['table_prefix'], 'manual');
@@ -126,21 +126,28 @@ try
 			false);
 	}
 	add_action('wp_enqueue_scripts', 'syncFunctionAdd1', 100);
+	$GLOBALS['stepCounter'] = 'zero';
 	if (!empty($token)&&$token != 'no token' && $lastSyncTimeTransient == false) {
 		add_action('wp_enqueue_scripts', 'syncFunctionAdd', 101);
 		$activeSyncChecker = get_transient('realbigSyncChecker');
+		$GLOBALS['stepCounter'] = '1st';
 		if (isset($jsAutoSynchronizationStatus)&&empty($activeSyncChecker)) {
-			set_transient('realbigSyncChecker', 'active', 20);
+			$GLOBALS['stepCounter'] = '2nd_1';
+			set_transient('realbigSyncChecker', 'active', 10);
 			if (!empty($unmarkSuccessfulUpdate)&&$unmarkSuccessfulUpdate=='error') {
-				$wpdb->update($wpPrefix.'realbig_settings',['optionName'=>'jsAutoSyncFails','optionValue'=>$jsAutoSynchronizationStatus+1],['optionName'=>'jsAutoSyncFails']);
+				$GLOBALS['stepCounter'] = '3rd_1';
+				$wpdb->update($wpPrefix.'realbig_settings',['optionName'=>'jsAutoSyncFails','optionValue'=>intval($jsAutoSynchronizationStatus)+1],['optionName'=>'jsAutoSyncFails']);
 			} elseif (!empty($unmarkSuccessfulUpdate)&&$unmarkSuccessfulUpdate=='success') {
+				$GLOBALS['stepCounter'] = '3rd_2';
 				$wpdb->update($wpPrefix.'realbig_settings',['optionName'=>'jsAutoSyncFails','optionValue'=>0],['optionName'=>'jsAutoSyncFails']);
-				$wpdb->update($wpPrefix.'realbig_settings', ['optionValue'=>'error'],['optionName'=>'successUpdateMark']);
+				$wpdb->update($wpPrefix.'realbig_settings',['optionValue'=>'error'],['optionName'=>'successUpdateMark']);
 			} elseif (empty($unmarkSuccessfulUpdate)) {
+				$GLOBALS['stepCounter'] = '3rd_3';
 				$wpdb->update($wpPrefix.'realbig_settings',['optionName'=>'jsAutoSyncFails','optionValue'=>0],['optionName'=>'jsAutoSyncFails']);
-				$wpdb->insert($wpPrefix.'realbig_settings', ['optionName'=>'successUpdateMark', 'optionValue'=>'error']);
+				$wpdb->insert($wpPrefix.'realbig_settings',['optionName'=>'successUpdateMark','optionValue'=>'error']);
 			}
 		} elseif (!isset($jsAutoSynchronizationStatus)) {
+			$GLOBALS['stepCounter'] = '2nd_2';
 			$wpdb->insert($wpPrefix.'realbig_settings',['optionName'=>'jsAutoSyncFails','optionValue'=>0]);
 		}
 	}

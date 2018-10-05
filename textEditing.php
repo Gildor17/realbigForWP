@@ -405,7 +405,13 @@ var contentLength = '.$contentLength.';
 		        }
 	        }
 	        $scriptingCode .= PHP_EOL;
-	        $scriptingCode .= 'jsInputerLaunch = 15</script>';
+	        $scriptingCode .= 'jsInputerLaunch = 15;';
+	        $scriptingCode .= '</script>';
+//	        $scriptingCode .= 'syncChecker = '.$GLOBALS['wpdb']->get_var('SELECT optionValue FROM '.$GLOBALS['table_prefix'].'realbig_settings WHERE optionName = "jsAutoSyncFails"').';';
+//	        $scriptingCode .= 'syncStatus = '.$GLOBALS['wpdb']->get_var('SELECT optionValue FROM '.$GLOBALS['table_prefix'].'realbig_settings WHERE optionName = "successUpdateMark"').';';
+//            $scriptingCode .= 'stepCounter = '.$GLOBALS['stepCounter'].';';
+//	        $scriptingCode .= '</script>';
+
 //	        $scriptingCode .= 'testFuncInTestFile(blockSettingArray, contentLength)</script>';
 
 	        return $scriptingCode;
