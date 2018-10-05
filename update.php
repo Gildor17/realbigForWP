@@ -75,7 +75,7 @@ CREATE TABLE `".$wpPrefix."realbig_plugin_settings`
 	`block_number` INT(11) NOT NULL,
 	`text` TEXT NOT NULL,
 	`setting_type` INT(11) NOT NULL,
-	`element` ENUM('p','li','ul','ol','blockquote','h1','h2','h3','h4','h5','h6') NOT NULL,
+	`element` ENUM('p','li','ul','ol','blockquote','img','video','h1','h2','h3','h4','h5','h6') NOT NULL,
 	`directElement` TEXT NOT NULL,
 	`elementPosition` INT(11) NOT NULL,
 	`elementPlace` INT(11) NOT NULL,
@@ -131,13 +131,13 @@ ENGINE=InnoDB
 function updateElementEnumValuesFunction($wpPrefix, $statusGatherer)
 {
     global $wpdb;
-    $requiredElementColumnValues = "enum('p','li','ul','ol','blockquote','h1','h2','h3','h4','h5','h6')";
+    $requiredElementColumnValues = "enum('p','li','ul','ol','blockquote','img','video','h1','h2','h3','h4','h5','h6')";
     try {
 	    $enumTypeQuery = $wpdb->get_results('SHOW FIELDS FROM '.$wpPrefix.'realbig_plugin_settings WHERE Field = "element"');
 	    if (!empty($enumTypeQuery)) {
 		    $enumTypeQuery = get_object_vars($enumTypeQuery[0]);
 		    if ($enumTypeQuery['Type'] != $requiredElementColumnValues) {
-			    $wpdb->query("ALTER TABLE ".$wpPrefix."realbig_plugin_settings MODIFY `element` ENUM('p','li','ul','ol','blockquote','h1','h2','h3','h4','h5','h6') NULL DEFAULT NULL");
+			    $wpdb->query("ALTER TABLE ".$wpPrefix."realbig_plugin_settings MODIFY `element` ENUM('p','li','ul','ol','blockquote','img','video','h1','h2','h3','h4','h5','h6') NULL DEFAULT NULL");
 			    $statusGatherer['element_column_values'] = false;
 			    return $statusGatherer;
 		    } else {
