@@ -19,9 +19,10 @@ try
 if ( ! function_exists( 'synchronize' ) ) {
 	function synchronize( $tokenInput, $wpOptionsCheckerSyncTime, $sameTokenResult, $wpPrefix, $requestType ) {
 		global $wpdb;
+		$unsuccessfullAjaxSyncAttempt = 0;
 
 		try {
-//	$url = 'http://realbigweb/api/wp-get-settings';     // orig web post
+//	        $url = 'http://realbigweb/api/wp-get-settings';     // orig web post
 			$url = 'https://realbig.media/api/wp-get-settings';     // orig post
 
 			$dataForSending = [
@@ -57,12 +58,14 @@ if ( ! function_exists( 'synchronize' ) ) {
 					$error                                  = error_get_last();
 					$GLOBALS['connection_request_rezult']   = 'Connection error: ' . $error['message'];
 					$GLOBALS['connection_request_rezult_1'] = 'Connection error: ' . $error['message'];
+					$unsuccessfullAjaxSyncAttempt = 1;
 				}
 			} catch ( Exception $e ) {
 				$GLOBALS['tokenStatusMessage'] = $e['message'];
 				if ( $requestType == 'ajax' ) {
 					$ajaxResult = $e['message'];
 				}
+				$unsuccessfullAjaxSyncAttempt = 1;
 			}
 			if ( ! empty( $jsonToken ) ) {
 				$decodedToken                  = json_decode( $jsonToken, true );
@@ -77,6 +80,7 @@ if ( ! function_exists( 'synchronize' ) ) {
 				if ( $requestType == 'ajax' ) {
 					$ajaxResult = 'connection error';
 				}
+				$unsuccessfullAjaxSyncAttempt = 1;
 			}
 
 			if ( ! empty( $decodedToken['data'] ) ) {
@@ -140,21 +144,29 @@ if ( ! function_exists( 'synchronize' ) ) {
 					$GLOBALS['token'] = $tokenInput;
 				} catch ( Exception $e ) {
 					$GLOBALS['tokenStatusMessage'] = $e;
+					$unsuccessfullAjaxSyncAttempt = 1;
 				}
 			}
 
+            $unmarkSuccessfulUpdate = $wpdb->get_var('SELECT optionValue FROM '.$wpPrefix.'realbig_settings WHERE optionName = "successUpdateMark"');
+            if (!empty($unmarkSuccessfulUpdate)) {
+                $wpdb->update($wpPrefix.'realbig_settings', ['optionValue'=>'success'],['optionName'=>'successUpdateMark']);
+            } else {
+                $wpdb->insert($wpPrefix.'realbig_settings', ['optionName'=>'successUpdateMark', 'optionValue'=>'success']);
+            }
+
 			try {
 				set_transient( 'realbigPluginSyncAttempt', $decodedToken['status'], 300 );
-//            $gTrans = get_transient('realbigPluginSyncAttempt');
-//		    delete_transient('realbigPluginSyncAttempt');
 				if ( $decodedToken['status'] == 'success' ) {
 					if ( empty( $wpOptionsCheckerSyncTime ) ) {
-						$wpdb->insert( $wpPrefix . 'realbig_settings', [ 'optionName'  => 'token_sync_time',
-						                                                 'optionValue' => time()
+						$wpdb->insert( $wpPrefix . 'realbig_settings', [
+							'optionName'  => 'token_sync_time',
+							'optionValue' => time()
 						] );
 					} else {
-						$wpdb->update( $wpPrefix . 'realbig_settings', [ 'optionName'  => 'token_sync_time',
-						                                                 'optionValue' => time()
+						$wpdb->update( $wpPrefix . 'realbig_settings', [
+							'optionName'  => 'token_sync_time',
+							'optionValue' => time()
 						], [ 'optionName' => 'token_sync_time' ] );
 					}
 				}
@@ -326,7 +338,8 @@ if (!function_exists('statusGathererConstructor'))
 	}
 }
 
-if (!empty($_POST['funcActivator'])&&$_POST['funcActivator']=='ready')
+$jsAutoSynchronizationStatus = intval($wpdb->get_var('SELECT optionValue FROM '.$GLOBALS['table_prefix'].'realbig_settings WHERE optionName = "jsAutoSyncFails"'));
+if (!empty($jsAutoSynchronizationStatus)&&$jsAutoSynchronizationStatus<5&&!empty($_POST['funcActivator'])&&$_POST['funcActivator']=='ready')
 {
 	$activeSyncTransient = get_transient('realbigPluginSyncProcess');
     if ($activeSyncTransient==false)
@@ -338,7 +351,7 @@ if (!empty($_POST['funcActivator'])&&$_POST['funcActivator']=='ready')
 	    }
 	    $token = tokenChecking($GLOBALS['table_prefix']);
 	    $ajaxResult = synchronize($token, $wpOptionsCheckerSyncTime, true, $GLOBALS['table_prefix'], 'ajax');
-	    echo $ajaxResult;
+//	    echo $ajaxResult;
     }
 }
 
