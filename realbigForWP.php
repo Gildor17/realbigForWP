@@ -276,25 +276,25 @@ try
         <div class="wrap col-md-12">
             <form method="post" name="tokenForm" id="tokenFormId">
                 <label><span style="font-size: 16px">Токен</span><br/>
-                    <input name="tokenInput" id="tokenInputId" value="<?= $GLOBALS['token'] ?>" style="min-width: 280px"
+                    <input name="tokenInput" id="tokenInputId" value="<?php echo $GLOBALS['token'] ?>" style="min-width: 280px"
                            required>
-                    <label style="font-size: 16px; margin-left: 10px; color: <?= $GLOBALS['statusColor'] ?> ">Время
-                        последней синхронизации: <?= $GLOBALS['tokenTimeUpdate'] ?></label>
+                    <label style="font-size: 16px; margin-left: 10px; color: <?php echo $GLOBALS['statusColor'] ?> ">Время
+                        последней синхронизации: <?php echo $GLOBALS['tokenTimeUpdate'] ?></label>
                 </label>
                 <br>
                 <label for="statusRefresher">обновить проверку</label>
                 <input type="checkbox" name="statusRefresher" id="statusRefresher">
                 <?php submit_button( 'Синхронизировать', 'primary', 'saveTokenButton' ) ?>
 				<?php if ( ! empty( $GLOBALS['tokenStatusMessage'] ) ): ?>
-                    <div name="rezultDiv" style="font-size: 16px"><?= $GLOBALS['tokenStatusMessage'] ?></div>
+                    <div name="rezultDiv" style="font-size: 16px"><?php echo $GLOBALS['tokenStatusMessage'] ?></div>
 				<?php endif; ?>
             </form>
             <br>
             <div>Надписи ниже нужны для тестировки</div>
             <div>Статус соединения
-                1: <?= ( ! empty( $GLOBALS['connection_request_rezult_1'] ) ? $GLOBALS['connection_request_rezult_1'] : 'empty' ) ?></div>
+                1: <?php echo ( ! empty( $GLOBALS['connection_request_rezult_1'] ) ? $GLOBALS['connection_request_rezult_1'] : 'empty' ) ?></div>
             <div>Статус соединения
-                общий: <?= ( ! empty( $GLOBALS['connection_request_rezult'] ) ? $GLOBALS['connection_request_rezult'] : 'empty' ) ?></div>
+                общий: <?php echo ( ! empty( $GLOBALS['connection_request_rezult'] ) ? $GLOBALS['connection_request_rezult'] : 'empty' ) ?></div>
         </div>
 <!--        <div style="width: 100px; height: 20px; border: 1px solid black; background-color: royalblue"></div>-->
 		<?php
@@ -304,10 +304,10 @@ try
 catch (Exception $ex)
 {
 	deactivate_plugins(plugin_basename( __FILE__ ));
-	?><div style="margin-left: 200px; border: 3px solid red"><? echo $ex; ?></div><?
+	?><div style="margin-left: 200px; border: 3px solid red"><?php echo $ex; ?></div><?php
 }
 catch (Error $er)
 {
 	deactivate_plugins(plugin_basename( __FILE__ ));
-    ?><div style="margin-left: 200px; border: 3px solid red"><? echo $er; ?></div><?
+    ?><div style="margin-left: 200px; border: 3px solid red"><?php echo $er; ?></div><?php
 }
