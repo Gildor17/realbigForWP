@@ -47,7 +47,7 @@ function testFuncInTestFile(blockSettingArray, contentLength) {
                             currentElement = currentElement[sumResult];
                         }
                     }
-                    if (currentElement != undefined || currentElement != null) {
+                    if (currentElement != undefined && currentElement != null) {
                         if (blockSettingArray[i]["elementPosition"] == 0) {
                             elementToAdd = document.createElement("div");
                             elementToAdd.innerHTML = blockSettingArray[i]["text"];
@@ -71,7 +71,8 @@ function testFuncInTestFile(blockSettingArray, contentLength) {
                         currentElement = document.querySelector(elementType + elementName);
                     }
                     else if (elementType == '.') {
-                        currentElement = parent_with_content.getElementsByClassName(elementName);
+                        /* currentElement = parent_with_content.getElementsByClassName(elementName);   //orig */
+                        currentElement = document.getElementsByClassName(elementName);
                         if (currentElement.length > 0) {
                             for (var i1 = 0; i1 < currentElement.length; i1++) {
                                 if (!blockSettingArray[i]["element"] || currentElement[i1].tagName.toLowerCase() == blockSettingArray[i]["element"].toLowerCase()) {
@@ -81,7 +82,7 @@ function testFuncInTestFile(blockSettingArray, contentLength) {
                             }
                         }
                     }
-                    if (currentElement != undefined || currentElement != null) {
+                    if (currentElement != undefined && currentElement != null) {
                         if (blockSettingArray[i]["elementPosition"] == 0) {
                             elementToAdd = document.createElement("div");
                             elementToAdd.innerHTML = blockSettingArray[i]["text"];
