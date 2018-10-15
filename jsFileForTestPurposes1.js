@@ -14,8 +14,10 @@ function testFuncInTestFile(blockSettingArray, contentLength) {
         var backElement = 0;
         var sumResult = 0;
         var repeat = false;
+        var currentElementChecker = false;
 
         for (var i = 0; i < blockSettingArray.length; i++) {
+            currentElementChecker = false;
             try {
                 if (blockSettingArray[i]["minHeaders"] > 0) {
                     var termorarity_parent_with_content = parent_with_content;
@@ -40,14 +42,16 @@ function testFuncInTestFile(blockSettingArray, contentLength) {
                         sumResult = currentElement.length + blockSettingArray[i]["elementPlace"];
                         if (sumResult >= 0 && sumResult < currentElement.length) {
                             currentElement = currentElement[sumResult];
+                            currentElementChecker = true;
                         }
                     } else {
                         sumResult = blockSettingArray[i]["elementPlace"] - 1;
                         if (sumResult < currentElement.length) {
                             currentElement = currentElement[sumResult];
+                            currentElementChecker = true;
                         }
                     }
-                    if (currentElement != undefined && currentElement != null) {
+                    if (currentElement != undefined && currentElement != null && currentElementChecker) {
                         if (blockSettingArray[i]["elementPosition"] == 0) {
                             elementToAdd = document.createElement("div");
                             elementToAdd.innerHTML = blockSettingArray[i]["text"];
@@ -62,6 +66,8 @@ function testFuncInTestFile(blockSettingArray, contentLength) {
                             currentElement.parentNode.insertBefore(newElement, currentElement.nextSibling);
                             blockSettingArray.splice(i, 1);
                         }
+                    } else {
+                        repeat = true;
                     }
                 }
                 else if (blockSettingArray[i]["setting_type"] == 3) {
@@ -69,20 +75,21 @@ function testFuncInTestFile(blockSettingArray, contentLength) {
                     var elementName = blockSettingArray[i]["directElement"].substring(1);
                     if (elementType == '#') {
                         currentElement = document.querySelector(elementType + elementName);
-                    }
-                    else if (elementType == '.') {
+                        currentElementChecker = true;
+                    } else if (elementType == '.') {
                         /* currentElement = parent_with_content.getElementsByClassName(elementName);   //orig */
                         currentElement = document.getElementsByClassName(elementName);
                         if (currentElement.length > 0) {
                             for (var i1 = 0; i1 < currentElement.length; i1++) {
                                 if (!blockSettingArray[i]["element"] || currentElement[i1].tagName.toLowerCase() == blockSettingArray[i]["element"].toLowerCase()) {
                                     currentElement = currentElement[i1];
+                                    currentElementChecker = true;
                                     break;
                                 }
                             }
                         }
                     }
-                    if (currentElement != undefined && currentElement != null) {
+                    if (currentElement != undefined && currentElement != null && currentElementChecker) {
                         if (blockSettingArray[i]["elementPosition"] == 0) {
                             elementToAdd = document.createElement("div");
                             elementToAdd.innerHTML = blockSettingArray[i]["text"];
