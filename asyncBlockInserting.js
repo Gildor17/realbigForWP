@@ -1,6 +1,6 @@
 var jsInputerLaunch = 0;
 
-function testFuncInTestFile(blockSettingArray, contentLength) {
+function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
     try {
         var content_pointer = document.getElementById("content_pointer_id");
         var parent_with_content = content_pointer.parentElement;
@@ -69,8 +69,7 @@ function testFuncInTestFile(blockSettingArray, contentLength) {
                     } else {
                         repeat = true;
                     }
-                }
-                else if (blockSettingArray[i]["setting_type"] == 3) {
+                } else if (blockSettingArray[i]["setting_type"] == 3) {
                     var elementType = blockSettingArray[i]["directElement"].charAt(0);
                     var elementName = blockSettingArray[i]["directElement"].substring(1);
                     if (elementType == '#') {
@@ -107,14 +106,30 @@ function testFuncInTestFile(blockSettingArray, contentLength) {
                     } else {
                         repeat = true;
                     }
-                }
-                else if (blockSettingArray[i]["setting_type"] == 4) {
+                } else if (blockSettingArray[i]["setting_type"] == 4) {
                     elementToAdd = document.createElement("div");
                     elementToAdd.innerHTML = blockSettingArray[i]["text"];
                     newElement = elementToAdd.firstChild;
                     // parent_with_content.parentNode.insertBefore(newElement, parent_with_content.nextSibling);
                     parent_with_content.append(newElement);
                     blockSettingArray.splice(i, 1);
+                } else if (blockSettingArray[i]["setting_type"] == 5) {
+                    elementToAdd = document.createElement("div");
+                    elementToAdd.innerHTML = blockSettingArray[i]["text"];
+                    newElement = elementToAdd.firstChild;
+                    let curElement = document.getElementById("content_pointer_id").parentElement;
+                    if (curElement.getElementsByTagName("p").length > 0) {
+                        let elementNumber = Math.round(curElement.getElementsByTagName("p").length/2);
+                        curElement = curElement.getElementsByTagName("p")[elementNumber];
+                        if (curElement != undefined && curElement != null) {
+                            curElement.parentNode.insertBefore(newElement, curElement.nextSibling);
+                            blockSettingArray.splice(i, 1);
+                        } else {
+                            repeat = true;
+                        }
+                    } else {
+                        repeat = true;
+                    }
                 }
             } catch (e) {
             }
@@ -122,7 +137,7 @@ function testFuncInTestFile(blockSettingArray, contentLength) {
         window.addEventListener('load', function () {
             if (repeat = true) {
                 setTimeout(function () {
-                    testFuncInTestFile(blockSettingArray, contentLength)
+                    asyncBlocksInsertingFunction(blockSettingArray, contentLength)
                 }, 100);
             }
         });
@@ -130,13 +145,13 @@ function testFuncInTestFile(blockSettingArray, contentLength) {
     }
 }
 
-testFuncLauncher();
-function testFuncLauncher() {
+asyncFunctionLauncher();
+function asyncFunctionLauncher() {
     if (jsInputerLaunch == 15) {
-        testFuncInTestFile(blockSettingArray, contentLength);
+        asyncBlocksInsertingFunction(blockSettingArray, contentLength);
     } else {
         setTimeout(function () {
-            testFuncLauncher();
+            asyncFunctionLauncher();
         }, 20)
     }
 }
