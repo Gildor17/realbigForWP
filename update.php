@@ -57,9 +57,11 @@ try {
 	}
 
 	function dbTablesCreateFunction( $tableForCurrentPluginChecker, $tableForToken, $wpPrefix, $statusGatherer ) {
+	    global $wpdb;
 		try {
-			if ( empty( $tableForCurrentPluginChecker ) ) {
-				dbDelta( "
+			if (empty($tableForCurrentPluginChecker)) {
+
+			    $sql = "
 CREATE TABLE `" . $wpPrefix . "realbig_plugin_settings` 
 (
 	`id` INT(11) NOT NULL AUTO_INCREMENT,
@@ -80,15 +82,20 @@ CREATE TABLE `" . $wpPrefix . "realbig_plugin_settings`
 	PRIMARY KEY (`id`)
 )
 COLLATE='utf8_general_ci'
-ENGINE=InnoDB
-    ", true );
+ENGINE=InnoDB   
+";
+				dbDelta($sql, true);
 				add_option( 'realbigForWP_version', $GLOBALS['realbigForWP_version'] );
+//				if (!empty($wpdb->get_var( 'SHOW TABLES LIKE "' . $wpPrefix . 'realbig_plugin_settings"' ))) {
+//					$statusGatherer['realbig_plugin_settings_table'] = true;
+//                }
 			} else {
 				$statusGatherer['realbig_plugin_settings_table'] = true;
 			}
 
-			if ( empty( $tableForToken ) ) {
-				dbDelta( "
+			if (empty($tableForToken)) {
+
+				$sql = "
 CREATE TABLE `" . $wpPrefix . "realbig_settings` (
 `id` INT(11) NOT NULL AUTO_INCREMENT,
 `optionName` VARCHAR(50) NOT NULL,
@@ -99,13 +106,14 @@ UNIQUE INDEX `optionName` (`optionName`)
 )
 COLLATE='utf8_general_ci'
 ENGINE=InnoDB
-    ", true );
+";
+				dbDelta($sql, true);
 			} else {
 				$statusGatherer['realbig_settings_table'] = true;
 			}
 
 			return $statusGatherer;
-		} catch ( Exception $e ) {
+		} catch (Exception $e) {
 			echo $e;
 			$statusGatherer['realbig_plugin_settings_table'] = false;
 			$statusGatherer['realbig_settings_table']        = false;

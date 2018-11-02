@@ -21,8 +21,8 @@ try {
 			$unsuccessfullAjaxSyncAttempt = 0;
 
 			try {
-				$url = 'http://realbigweb/api/wp-get-settings';     // orig web post
-//			$url = 'https://realbig.media/api/wp-get-settings';     // orig post
+//			$url = 'http://realbigweb/api/wp-get-settings';     // orig web post
+			$url = 'https://realbig.media/api/wp-get-settings';     // orig post
 
 				$dataForSending = [
 					'token'     => $tokenInput,

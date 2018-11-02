@@ -1,5 +1,12 @@
 <?php
 
+//include_once( dirname(__FILE__).'/../../../wp-load.php' );
+//include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
+//include_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+//include ( ABSPATH . "wp-content/plugins/realbigForWP/update.php");
+//include ( ABSPATH . "wp-content/plugins/realbigForWP/synchronising.php");
+//include ( ABSPATH . "wp-content/plugins/realbigForWP/textEditing.php");
+
 include_once ( dirname(__FILE__).'/../../../wp-load.php' );
 include_once ( dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
 include_once ( dirname(__FILE__)."/../../../wp-admin/includes/upgrade.php" );
@@ -48,11 +55,21 @@ try {
 	}
 	$GLOBALS['wpPrefix'] = $wpPrefix;
 
+	if (!empty($_POST['manuallyTableCreating'])) {
+		dbTablesCreateFunction( false, true, $wpPrefix, $statusGatherer );
+    }
+
 	if ( $statusGatherer['realbig_plugin_settings_table'] == false || $statusGatherer['realbig_settings_table'] == false || $lastSuccessVersionGatherer != $GLOBALS['realbigForWP_version'] ) {
 		$tableForCurrentPluginChecker = $wpdb->get_var( 'SHOW TABLES LIKE "' . $wpPrefix . 'realbig_plugin_settings"' );   //settings for block table checking
 		$tableForToken                = $wpdb->get_var( 'SHOW TABLES LIKE "' . $wpPrefix . 'realbig_settings"' );      //settings for token and other
 
+//        $GLOBALS['problematic_table_status'] = $tableForCurrentPluginChecker;
+
 		$statusGatherer = dbTablesCreateFunction( $tableForCurrentPluginChecker, $tableForToken, $wpPrefix, $statusGatherer );
+
+		if (empty($wpdb->get_var( 'SHOW TABLES LIKE "' . $wpPrefix . 'realbig_plugin_settings"' ))) {
+			$GLOBALS['problematic_table_status'] = true;
+		}
 	}
 	if ( $statusGatherer['realbig_plugin_settings_table'] == true && $statusGatherer['realbig_settings_table'] == true && $statusGatherer['old_tables_removed'] == false ) {
 		$statusGatherer = dbOldTablesRemoveFunction( $wpPrefix, $statusGatherer );
@@ -284,12 +301,18 @@ try {
                 <br>
                 <label for="statusRefresher">обновить проверку</label>
                 <input type="checkbox" name="statusRefresher" id="statusRefresher">
+                <br>
+	            <? if (!empty($GLOBALS['problematic_table_status'])): ?>
+                    <label for="manuallyTableCreating">создать таблицу вручную</label>
+                    <input type="checkbox" name="manuallyTableCreating" id="manuallyTableCreatingId">
+	            <? endif; ?>
 				<?php submit_button( 'Синхронизировать', 'primary', 'saveTokenButton' ) ?>
 				<?php if ( ! empty( $GLOBALS['tokenStatusMessage'] ) ): ?>
                     <div name="rezultDiv" style="font-size: 16px"><?php echo $GLOBALS['tokenStatusMessage'] ?></div>
 				<?php endif; ?>
             </form>
             <br>
+
             <div>Надписи ниже нужны для тестировки</div>
             <div>Статус соединения
                 1: <?php echo( ! empty( $GLOBALS['connection_request_rezult_1'] ) ? $GLOBALS['connection_request_rezult_1'] : 'empty' ) ?></div>
