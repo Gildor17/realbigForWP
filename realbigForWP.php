@@ -67,7 +67,8 @@ try {
 
 		$statusGatherer = dbTablesCreateFunction( $tableForCurrentPluginChecker, $tableForToken, $wpPrefix, $statusGatherer );
 
-		if (empty($wpdb->get_var( 'SHOW TABLES LIKE "' . $wpPrefix . 'realbig_plugin_settings"' ))) {
+		$resultingTableCheck = $wpdb->get_var( 'SHOW TABLES LIKE "' . $wpPrefix . 'realbig_plugin_settings"' );
+		if (empty($resultingTableCheck)) {
 			$GLOBALS['problematic_table_status'] = true;
 		}
 	}
