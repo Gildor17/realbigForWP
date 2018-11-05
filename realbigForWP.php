@@ -17,7 +17,7 @@ include_once ( dirname(__FILE__)."/textEditing.php");
 /*
 Plugin name:  Realbig For WordPress
 Description:  Реалбиговский плагин для вордпреса. Для полного описания перейдите по ссылке: <a href="https://github.com/Gildor17/realbigFoWP/blob/master/README.MD" target="_blank">https://github.com/Gildor17/realbigFoWP/blob/master/README.MD</a>
-Version:      0.1.26.04
+Version:      0.1.26.05
 Author:       Realbig Team
 License:      GPLv2 or later
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
@@ -36,7 +36,7 @@ try {
 	if ( ! empty( $pluginData['Version'] ) ) {
 		$GLOBALS['realbigForWP_version'] = $pluginData['Version'];
 	} else {
-		$GLOBALS['realbigForWP_version'] = '0.1.26.04';
+		$GLOBALS['realbigForWP_version'] = '0.1.26.05';
 	}
 	$lastSuccessVersionGatherer = get_option( 'realbig_status_gatherer_version' );
 	$statusGatherer             = statusGathererConstructor( true );
@@ -56,7 +56,8 @@ try {
 	$GLOBALS['wpPrefix'] = $wpPrefix;
 
 	if (!empty($_POST['manuallyTableCreating'])) {
-		dbTablesCreateFunction( false, true, $wpPrefix, $statusGatherer );
+//		dbTablesCreateFunction( false, true, $wpPrefix, $statusGatherer );
+		$GLOBALS['manuallyTableCreatingResult'] = manuallyTablesCreation($wpPrefix);
     }
 
 	if ( $statusGatherer['realbig_plugin_settings_table'] == false || $statusGatherer['realbig_settings_table'] == false || $lastSuccessVersionGatherer != $GLOBALS['realbigForWP_version'] ) {
@@ -303,6 +304,7 @@ try {
                 <label for="statusRefresher">обновить проверку</label>
                 <input type="checkbox" name="statusRefresher" id="statusRefresher">
                 <br>
+<!--	            --><?// if (empty($GLOBALS['problematic_table_status'])): ?>
 	            <? if (!empty($GLOBALS['problematic_table_status'])): ?>
                     <label for="manuallyTableCreating">создать таблицу вручную</label>
                     <input type="checkbox" name="manuallyTableCreating" id="manuallyTableCreatingId">
@@ -319,6 +321,9 @@ try {
                 1: <?php echo( ! empty( $GLOBALS['connection_request_rezult_1'] ) ? $GLOBALS['connection_request_rezult_1'] : 'empty' ) ?></div>
             <div>Статус соединения
                 общий: <?php echo( ! empty( $GLOBALS['connection_request_rezult'] ) ? $GLOBALS['connection_request_rezult'] : 'empty' ) ?></div>
+            <? if (!empty($GLOBALS['manuallyTableCreatingResult'])): ?>
+                <div>Table creating: <?php echo $GLOBALS['manuallyTableCreatingResult']; ?></div>
+            <? endif; ?>
         </div>
         <!--        <div style="width: 100px; height: 20px; border: 1px solid black; background-color: royalblue"></div>-->
 		<?php

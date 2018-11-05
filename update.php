@@ -1,8 +1,13 @@
 <?php
 
-include_once( dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
-include_once( dirname(__FILE__)."/../../../wp-admin/includes/upgrade.php" );
+//include_once( dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
+//include_once( dirname(__FILE__)."/../../../wp-admin/includes/upgrade.php" );
 //require_once( ABSPATH . '/wp-includes/wp-db.php');
+include_once ( dirname(__FILE__).'/../../../wp-load.php' );
+include_once ( dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
+include_once ( dirname(__FILE__)."/../../../wp-admin/includes/upgrade.php" );
+include_once ( dirname(__FILE__).'/../../../wp-includes/wp-db.php');
+
 
 /**
  * Created by PhpStorm.
@@ -12,6 +17,52 @@ include_once( dirname(__FILE__)."/../../../wp-admin/includes/upgrade.php" );
  */
 
 try {
+
+    function manuallyTablesCreation ($wpPrefix) {
+	    global $wpdb;
+	    try {
+		    $checkTable = $wpdb->get_var( 'SHOW TABLES LIKE "' . $wpPrefix . 'realbig_plugin_settings"' );
+		    if (empty($checkTable)) {
+//		    if (!empty($checkTable)) {
+			    $sql = "
+CREATE TABLE `" . $wpPrefix . "realbig_plugin_settings` 
+(
+	`id` INT(11) NOT NULL AUTO_INCREMENT,
+	`block_number` INT(11) NOT NULL,
+	`text` TEXT NOT NULL,
+	`setting_type` INT(11) NOT NULL,
+	`element` ENUM('p','li','ul','ol','blockquote','img','video','h1','h2','h3','h4','h5','h6') NOT NULL,
+	`directElement` TEXT NOT NULL,
+	`elementPosition` INT(11) NOT NULL,
+	`elementPlace` INT(11) NOT NULL,
+	`firstPlace` INT(11) NOT NULL,
+	`elementCount` INT(11) NOT NULL,
+	`elementStep` INT(11) NOT NULL,
+	`minSymbols` INT(11) NULL DEFAULT NULL,
+	`minHeaders` INT(11) NULL DEFAULT NULL,
+	`time_create` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`time_update` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	PRIMARY KEY (`id`)
+)
+COLLATE='utf8_general_ci'
+ENGINE=InnoDB   
+";
+			    dbDelta($sql);
+            }
+            if (empty($wpdb->last_error)) {
+	            $checkTable = $wpdb->get_var( 'SHOW TABLES LIKE "' . $wpPrefix . 'realbig_plugin_settings"' );
+	            if (empty($checkTable)) {
+		            return "fail";
+	            } else {
+		            return "success";
+	            }
+            } else {
+	            return $wpdb->last_error;
+            }
+	    } catch (Exception $e) {
+	        return $e->getMessage();
+        }
+    }
 
 	function dbOldTablesRemoveFunction( $wpPrefix, $statusGatherer ) {
 		global $wpdb;
@@ -33,7 +84,6 @@ try {
 				if ( ! empty( $newSettingTableData[0] ) ) {
 					$newSettingTableData = get_object_vars( $newSettingTableData[0] );
 				}
-
 				if ( ! empty( $oldSettingTableData ) && empty( $newSettingTableData ) ) {
 					$newSettingsSql = 'INSERT INTO ' . $wpPrefix . 'realbig_settings (optionName, optionValue) VALUES (%s, %s)';
 					$wpdb->query( $wpdb->prepare( $newSettingsSql, [

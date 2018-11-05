@@ -21,8 +21,8 @@ try {
 			$unsuccessfullAjaxSyncAttempt = 0;
 
 			try {
-//			$url = 'http://realbigweb/api/wp-get-settings';     // orig web post
-			$url = 'https://realbig.media/api/wp-get-settings';     // orig post
+			$url = 'http://realbigweb/api/wp-get-settings';     // orig web post
+//			$url = 'https://realbig.media/api/wp-get-settings';     // orig post
 
 				$dataForSending = [
 					'token'     => $tokenInput,
@@ -72,6 +72,80 @@ try {
 					if ( $requestType == 'ajax' ) {
 						$ajaxResult = $decodedToken['message'];
 					}
+					if (!empty($decodedToken)&&$decodedToken['status']=='success') {
+						try {
+							if (!empty($decodedToken['data'])) {
+							    $counter = 0;
+							    $wpdb->query( 'DELETE FROM ' . $wpPrefix . 'realbig_plugin_settings' );
+								$sqlTokenSave = "INSERT INTO " . $wpPrefix . "realbig_plugin_settings (text, block_number, setting_type, element, directElement, elementPosition, elementPlace, firstPlace, elementCount, elementStep, minSymbols, minHeaders) VALUES ";
+								foreach ( $decodedToken['data'] AS $k => $item ) {
+								    $counter ++;
+								    $sqlTokenSave .= ( $counter != 1 ? ", " : "" ) . "('" . $item['text'] . "', " . (int) $item['block_number'] . ", " . (int) $item['setting_type'] . ", '" . htmlspecialchars( $item['element'] ) . "', '" . htmlspecialchars( $item['directElement'] ) . "', " . (int) $item['elementPosition'] . ", " . (int) $item['elementPlace'] . ", " . (int) $item['firstPlace'] . ", " . (int) $item['elementCount'] . ", " . (int) $item['elementStep'] . ", " . (int) $item['minSymbols'] . ", " . (int) $item['minHeaders'] . ")";
+							    }
+							    $sqlTokenSave .= " ON DUPLICATE KEY UPDATE text = values(text), setting_type = values(setting_type), element = values(element), directElement = values(directElement), elementPosition = values(elementPosition), elementPlace = values(elementPlace), firstPlace = values(firstPlace), elementCount = values(elementCount), elementStep = values(elementStep), minSymbols = values(minSymbols), minHeaders = values(minHeaders) ";
+								$wpdb->query( $sqlTokenSave );
+							} else {
+								$wpdb->query( 'DELETE FROM ' . $wpPrefix . 'realbig_plugin_settings' );
+							}
+							// if no needly note, then create
+							$wpOptionsCheckerTokenValue = $wpdb->query( $wpdb->prepare( "SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", [ '_wpRealbigPluginToken' ] ) );
+							if ( empty( $wpOptionsCheckerTokenValue ) ) {
+								$wpdb->insert( $wpPrefix . 'realbig_settings', [
+									'optionName'  => '_wpRealbigPluginToken',
+									'optionValue' => $tokenInput
+								] );
+							} else {
+								$wpdb->update( $wpPrefix . 'realbig_settings', [
+									'optionName'  => '_wpRealbigPluginToken',
+									'optionValue' => $tokenInput
+								], [ 'optionName' => '_wpRealbigPluginToken' ] );
+							}
+							if ( ! empty( $decodedToken['dataPush'] ) ) {
+								$wpOptionsCheckerPushStatus = $wpdb->query( $wpdb->prepare( "SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", [ 'pushStatus' ] ) );
+								if ( empty( $wpOptionsCheckerPushStatus ) ) {
+									$wpdb->insert( $wpPrefix . 'realbig_settings', [
+										'optionName'  => 'pushStatus',
+										'optionValue' => $decodedToken['dataPush']['pushStatus']
+									] );
+								} else {
+									$wpdb->update( $wpPrefix . 'realbig_settings', [
+										'optionName'  => 'pushStatus',
+										'optionValue' => $decodedToken['dataPush']['pushStatus']
+									], [ 'optionName' => 'pushStatus' ] );
+								}
+								$wpOptionsCheckerPushCode = $wpdb->query( $wpdb->prepare( "SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", [ 'pushCode' ] ) );
+								if ( empty( $wpOptionsCheckerPushCode ) ) {
+									$wpdb->insert( $wpPrefix . 'realbig_settings', [
+										'optionName'  => 'pushCode',
+										'optionValue' => $decodedToken['dataPush']['pushCode']
+									] );
+								} else {
+									$wpdb->update( $wpPrefix . 'realbig_settings', [
+										'optionName'  => 'pushCode',
+										'optionValue' => $decodedToken['dataPush']['pushCode']
+									], [ 'optionName' => 'pushCode' ] );
+								}
+							}
+							if ( ! empty( $decodedToken['domain'] ) ) {
+								$getDomain = $wpdb->get_var( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = "domain"' );
+								if ( ! empty( $getDomain ) ) {
+									$wpdb->update( $wpPrefix . 'realbig_settings', [
+										'optionName'  => 'domain',
+										'optionValue' => $decodedToken['domain']
+									], [ 'optionName' => 'domain' ] );
+								} else {
+									$wpdb->insert( $wpPrefix . 'realbig_settings', [
+										'optionName'  => 'domain',
+										'optionValue' => $decodedToken['domain']
+									] );
+								}
+							}
+							$GLOBALS['token'] = $tokenInput;
+						} catch ( Exception $e ) {
+							$GLOBALS['tokenStatusMessage'] = $e;
+							$unsuccessfullAjaxSyncAttempt  = 1;
+						}
+					}
 				} else {
 					$decodedToken                  = null;
 					$GLOBALS['tokenStatusMessage'] = 'ошибка соединения';
@@ -80,79 +154,6 @@ try {
 						$ajaxResult = 'connection error';
 					}
 					$unsuccessfullAjaxSyncAttempt = 1;
-				}
-
-				if ( ! empty( $decodedToken['data'] ) ) {
-					try {
-						$counter = 0;
-						$wpdb->query( 'DELETE FROM ' . $wpPrefix . 'realbig_plugin_settings' );
-						$sqlTokenSave = "INSERT INTO " . $wpPrefix . "realbig_plugin_settings (text, block_number, setting_type, element, directElement, elementPosition, elementPlace, firstPlace, elementCount, elementStep, minSymbols, minHeaders) VALUES ";
-
-						foreach ( $decodedToken['data'] AS $k => $item ) {
-							$counter ++;
-							$sqlTokenSave .= ( $counter != 1 ? ", " : "" ) . "('" . $item['text'] . "', " . (int) $item['block_number'] . ", " . (int) $item['setting_type'] . ", '" . htmlspecialchars( $item['element'] ) . "', '" . htmlspecialchars( $item['directElement'] ) . "', " . (int) $item['elementPosition'] . ", " . (int) $item['elementPlace'] . ", " . (int) $item['firstPlace'] . ", " . (int) $item['elementCount'] . ", " . (int) $item['elementStep'] . ", " . (int) $item['minSymbols'] . ", " . (int) $item['minHeaders'] . ")";
-						}
-						$sqlTokenSave .= " ON DUPLICATE KEY UPDATE text = values(text), setting_type = values(setting_type), element = values(element), directElement = values(directElement), elementPosition = values(elementPosition), elementPlace = values(elementPlace), firstPlace = values(firstPlace), elementCount = values(elementCount), elementStep = values(elementStep), minSymbols = values(minSymbols), minHeaders = values(minHeaders) ";
-
-						$wpdb->query( $sqlTokenSave );
-						// if no needly note, then create
-						$wpOptionsCheckerTokenValue = $wpdb->query( $wpdb->prepare( "SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", [ '_wpRealbigPluginToken' ] ) );
-						if ( empty( $wpOptionsCheckerTokenValue ) ) {
-							$wpdb->insert( $wpPrefix . 'realbig_settings', [
-								'optionName'  => '_wpRealbigPluginToken',
-								'optionValue' => $tokenInput
-							] );
-						} else {
-							$wpdb->update( $wpPrefix . 'realbig_settings', [
-								'optionName'  => '_wpRealbigPluginToken',
-								'optionValue' => $tokenInput
-							], [ 'optionName' => '_wpRealbigPluginToken' ] );
-						}
-						if ( ! empty( $decodedToken['dataPush'] ) ) {
-							$wpOptionsCheckerPushStatus = $wpdb->query( $wpdb->prepare( "SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", [ 'pushStatus' ] ) );
-							if ( empty( $wpOptionsCheckerPushStatus ) ) {
-								$wpdb->insert( $wpPrefix . 'realbig_settings', [
-									'optionName'  => 'pushStatus',
-									'optionValue' => $decodedToken['dataPush']['pushStatus']
-								] );
-							} else {
-								$wpdb->update( $wpPrefix . 'realbig_settings', [
-									'optionName'  => 'pushStatus',
-									'optionValue' => $decodedToken['dataPush']['pushStatus']
-								], [ 'optionName' => 'pushStatus' ] );
-							}
-							$wpOptionsCheckerPushCode = $wpdb->query( $wpdb->prepare( "SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", [ 'pushCode' ] ) );
-							if ( empty( $wpOptionsCheckerPushCode ) ) {
-								$wpdb->insert( $wpPrefix . 'realbig_settings', [
-									'optionName'  => 'pushCode',
-									'optionValue' => $decodedToken['dataPush']['pushCode']
-								] );
-							} else {
-								$wpdb->update( $wpPrefix . 'realbig_settings', [
-									'optionName'  => 'pushCode',
-									'optionValue' => $decodedToken['dataPush']['pushCode']
-								], [ 'optionName' => 'pushCode' ] );
-							}
-						}
-						if ( ! empty( $decodedToken['domain'] ) ) {
-							$getDomain = $wpdb->get_var( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = "domain"' );
-							if ( ! empty( $getDomain ) ) {
-								$wpdb->update( $wpPrefix . 'realbig_settings', [
-									'optionName'  => 'domain',
-									'optionValue' => $decodedToken['domain']
-								], [ 'optionName' => 'domain' ] );
-							} else {
-								$wpdb->insert( $wpPrefix . 'realbig_settings', [
-									'optionName'  => 'domain',
-									'optionValue' => $decodedToken['domain']
-								] );
-							}
-						}
-						$GLOBALS['token'] = $tokenInput;
-					} catch ( Exception $e ) {
-						$GLOBALS['tokenStatusMessage'] = $e;
-						$unsuccessfullAjaxSyncAttempt  = 1;
-					}
 				}
 
 				$unmarkSuccessfulUpdate = $wpdb->get_var( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = "successUpdateMark"' );
