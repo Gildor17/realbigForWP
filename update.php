@@ -40,8 +40,7 @@ CREATE TABLE `" . $wpPrefix . "realbig_plugin_settings`
 	`elementStep` INT(11) NOT NULL,
 	`minSymbols` INT(11) NULL DEFAULT NULL,
 	`minHeaders` INT(11) NULL DEFAULT NULL,
-	`time_create` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	`time_update` TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+	`time_update` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	PRIMARY KEY (`id`)
 )
 COLLATE='utf8_general_ci'
@@ -127,8 +126,7 @@ CREATE TABLE `" . $wpPrefix . "realbig_plugin_settings`
 	`elementStep` INT(11) NOT NULL,
 	`minSymbols` INT(11) NULL DEFAULT NULL,
 	`minHeaders` INT(11) NULL DEFAULT NULL,
-	`time_create` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	`time_update` TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+	`time_update` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	PRIMARY KEY (`id`)
 )
 COLLATE='utf8_general_ci'
@@ -150,7 +148,7 @@ CREATE TABLE `" . $wpPrefix . "realbig_settings` (
 `id` INT(11) NOT NULL AUTO_INCREMENT,
 `optionName` VARCHAR(50) NOT NULL,
 `optionValue` TEXT NOT NULL,
-`timeUpdate` TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+`timeUpdate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 PRIMARY KEY (`id`),
 UNIQUE INDEX `optionName` (`optionName`)
 )
@@ -231,7 +229,6 @@ ENGINE=InnoDB
 			'firstPlace',
 			'elementCount',
 			'elementStep',
-			'time_create',
 			'time_update',
 			'minSymbols',
 			'minHeaders'
