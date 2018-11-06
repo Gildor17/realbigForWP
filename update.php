@@ -150,7 +150,7 @@ CREATE TABLE `" . $wpPrefix . "realbig_settings` (
 `id` INT(11) NOT NULL AUTO_INCREMENT,
 `optionName` VARCHAR(50) NOT NULL,
 `optionValue` TEXT NOT NULL,
-`timeUpdate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+`timeUpdate` TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
 PRIMARY KEY (`id`),
 UNIQUE INDEX `optionName` (`optionName`)
 )
@@ -208,7 +208,7 @@ ENGINE=InnoDB
 			$rez = $wpdb->query( 'SHOW FIELDS FROM ' . $wpPrefix . 'realbig_settings' );
 
 			if ( $rez != 4 ) {
-				$wpdb->query( 'ALTER TABLE ' . $wpPrefix . 'realbig_settings ADD `timeUpdate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER optionValue' );
+				$wpdb->query( 'ALTER TABLE ' . $wpPrefix . 'realbig_settings ADD `timeUpdate` TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP AFTER optionValue' );
 			}
 
 			return true;
