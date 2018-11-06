@@ -83,7 +83,7 @@ try {
 							    }
 							    $sqlTokenSave .= " ON DUPLICATE KEY UPDATE text = values(text), setting_type = values(setting_type), element = values(element), directElement = values(directElement), elementPosition = values(elementPosition), elementPlace = values(elementPlace), firstPlace = values(firstPlace), elementCount = values(elementCount), elementStep = values(elementStep), minSymbols = values(minSymbols), minHeaders = values(minHeaders) ";
 								$wpdb->query( $sqlTokenSave );
-							} else {
+							} elseif (empty($decodedToken['data'])&&$decodedToken['message'] == "Не нашло позиций для блоков на указанном сайте, добавьте позиции для сайтов на странице настроек плагина") {
 								$wpdb->query( 'DELETE FROM ' . $wpPrefix . 'realbig_plugin_settings' );
 							}
 							// if no needly note, then create
