@@ -73,6 +73,9 @@ try {
 							if (!empty($decodedToken['data'])) {
 								wp_cache_flush();
 								$excludedPagesCheck = $wpdb->query( $wpdb->prepare( "SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", [ 'excludedPages' ]));
+								if (!isset($decodedToken['excludedPages'])) {
+									$decodedToken['excludedPages'] = "";
+								}
 								if (empty($excludedPagesCheck)) {
 									$wpdb->insert($wpPrefix.'realbig_settings', [
 										'optionName'  => 'excludedPages',

@@ -124,8 +124,9 @@ try {
         $excludedPagesCheckArray = explode(",", $excludedPagesCheck);
         if (!empty($excludedPagesCheckArray)) {
             foreach ($excludedPagesCheckArray AS $item) {
-                if (!empty(trim($item))) {
-	                preg_match("~".trim($item)."~", $_SERVER["REQUEST_URI"], $m);
+                $item = trim($item);
+                if (!empty($item)) {
+	                preg_match("~".$item."~", $_SERVER["REQUEST_URI"], $m);
 	                if (count($m) > 0) {
 		                $excludedPage = true;
 	                }
