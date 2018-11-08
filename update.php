@@ -1,13 +1,9 @@
 <?php
 
-//include_once( dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
-//include_once( dirname(__FILE__)."/../../../wp-admin/includes/upgrade.php" );
-//require_once( ABSPATH . '/wp-includes/wp-db.php');
 include_once ( dirname(__FILE__).'/../../../wp-load.php' );
 include_once ( dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
 include_once ( dirname(__FILE__)."/../../../wp-admin/includes/upgrade.php" );
 include_once ( dirname(__FILE__).'/../../../wp-includes/wp-db.php');
-
 
 /**
  * Created by PhpStorm.
@@ -23,7 +19,6 @@ try {
 	    try {
 		    $checkTable = $wpdb->get_var( 'SHOW TABLES LIKE "' . $wpPrefix . 'realbig_plugin_settings"' );
 		    if (empty($checkTable)) {
-//		    if (!empty($checkTable)) {
 			    $sql = "
 CREATE TABLE `" . $wpPrefix . "realbig_plugin_settings` 
 (

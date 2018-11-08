@@ -131,8 +131,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                         repeat = true;
                     }
                 }
-            } catch (e) {
-            }
+            } catch (e) { }
         }
         window.addEventListener('load', function () {
             if (repeat = true) {
@@ -141,8 +140,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                 }, 100);
             }
         });
-    } catch (e) {
-    }
+    } catch (e) { }
 }
 
 asyncFunctionLauncher();

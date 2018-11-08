@@ -32,7 +32,6 @@ try {
 //		$ch = curl_init('https://realbig.media/api/wp-get-settings?token='.$tokenInput);
 					$ch = curl_init();
 					curl_setopt( $ch, CURLOPT_URL, $url );
-//		curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 5.1) AppleWebKit/535.6 (KHTML, like Gecko) Chrome/16.0.897.0 Safari/535.6');
 					curl_setopt( $ch, CURLOPT_POST, 1 );
 					curl_setopt( $ch, CURLOPT_POSTFIELDS, $dataForSending );
 					curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
@@ -44,8 +43,6 @@ try {
 					curl_setopt( $ch, CURLOPT_COOKIEFILE, '' );
 					curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, false );
 					curl_setopt( $ch, CURLOPT_SSL_VERIFYHOST, false );
-//	    curl_setopt($ch, CURLOPT_REFERER, $url);
-//		$connectionChecker = curl_getinfo($ch, CURLINFO_OS_ERRNO);
 					$jsonToken = curl_exec( $ch );
 					curl_close( $ch );
 
@@ -71,11 +68,24 @@ try {
 					if ( $requestType == 'ajax' ) {
 						$ajaxResult = $decodedToken['message'];
 					}
-					if (!empty($decodedToken)&&$decodedToken['status']=='success') {
+					if (!empty($decodedToken)&&($decodedToken['status']=='success'||$decodedToken['status']=='empty_success')) {
 						try {
 							if (!empty($decodedToken['data'])) {
+								wp_cache_flush();
+								$excludedPagesCheck = $wpdb->query( $wpdb->prepare( "SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", [ 'excludedPages' ]));
+								if (empty($excludedPagesCheck)) {
+									$wpdb->insert($wpPrefix.'realbig_settings', [
+										'optionName'  => 'excludedPages',
+										'optionValue' => $decodedToken['excludedPages']
+									]);
+                                } else {
+									$wpdb->update( $wpPrefix.'realbig_settings', [
+										'optionName'  => 'excludedPages',
+										'optionValue' => $decodedToken['excludedPages']
+									], ['optionName'  => 'excludedPages']);
+                                }
 							    $counter = 0;
-							    $wpdb->query( 'DELETE FROM ' . $wpPrefix . 'realbig_plugin_settings' );
+							    $wpdb->query( 'DELETE FROM ' . $wpPrefix . 'realbig_plugin_settings');
 								$sqlTokenSave = "INSERT INTO " . $wpPrefix . "realbig_plugin_settings (text, block_number, setting_type, element, directElement, elementPosition, elementPlace, firstPlace, elementCount, elementStep, minSymbols, minHeaders) VALUES ";
 								foreach ( $decodedToken['data'] AS $k => $item ) {
 								    $counter ++;
@@ -83,9 +93,10 @@ try {
 							    }
 							    $sqlTokenSave .= " ON DUPLICATE KEY UPDATE text = values(text), setting_type = values(setting_type), element = values(element), directElement = values(directElement), elementPosition = values(elementPosition), elementPlace = values(elementPlace), firstPlace = values(firstPlace), elementCount = values(elementCount), elementStep = values(elementStep), minSymbols = values(minSymbols), minHeaders = values(minHeaders) ";
 								$wpdb->query( $sqlTokenSave );
-							} elseif (empty($decodedToken['data'])&&$decodedToken['message'] == "Не нашло позиций для блоков на указанном сайте, добавьте позиции для сайтов на странице настроек плагина") {
-								$wpdb->query( 'DELETE FROM ' . $wpPrefix . 'realbig_plugin_settings' );
+							} elseif (empty($decodedToken['data'])&&$decodedToken['status'] == "empty_success") {
+								$wpdb->query( 'DELETE FROM ' . $wpPrefix . 'realbig_plugin_settings');
 							}
+
 							// if no needly note, then create
 							$wpOptionsCheckerTokenValue = $wpdb->query( $wpdb->prepare( "SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", [ '_wpRealbigPluginToken' ] ) );
 							if ( empty( $wpOptionsCheckerTokenValue ) ) {
@@ -237,7 +248,8 @@ try {
 						$timeUpdate = $wpdb->get_results( "SELECT timeUpdate FROM " . $wpPrefix . "realbig_settings WHERE optionName = 'token_sync_time'" );
 					}
 				}
-				if ( ! empty( $token ) && $token != 'no token' && ( $GLOBALS['tokenStatusMessage'] == 'success' || empty( $GLOBALS['tokenStatusMessage'] ) ) && ! empty( $timeUpdate ) ) {
+				if (!empty($token)&&$token != 'no token'&&((!empty($GLOBALS['tokenStatusMessage'])&&($GLOBALS['tokenStatusMessage'] == 'Синхронизация прошла успешно' || $GLOBALS['tokenStatusMessage'] == 'Не нашло позиций для блоков на указанном сайте, добавьте позиции для сайтов на странице настроек плагина')) || empty($GLOBALS['tokenStatusMessage'])) && !empty($timeUpdate)) {
+//				if (!empty($token)&&$token!='no token'&&!empty($timeUpdate)) {
 					if ( ! empty( $timeUpdate ) ) {
 						$timeUpdate                 = get_object_vars( $timeUpdate[0] );
 						$GLOBALS['tokenTimeUpdate'] = $timeUpdate['timeUpdate'];

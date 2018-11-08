@@ -16,8 +16,8 @@ include_once ( dirname(__FILE__)."/textEditing.php");
 
 /*
 Plugin name:  Realbig For WordPress
-Description:  Реалбиговский плагин для вордпреса. Для полного описания перейдите по ссылке: <a href="https://github.com/Gildor17/realbigFoWP/blob/master/README.MD" target="_blank">https://github.com/Gildor17/realbigFoWP/blob/master/README.MD</a>
-Version:      0.1.26.09
+Description:  Плагин для монетизации от RealBig.media
+Version:      0.1.26.10
 Author:       Realbig Team
 License:      GPLv2 or later
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
@@ -36,7 +36,7 @@ try {
 	if ( ! empty( $pluginData['Version'] ) ) {
 		$GLOBALS['realbigForWP_version'] = $pluginData['Version'];
 	} else {
-		$GLOBALS['realbigForWP_version'] = '0.1.26.09';
+		$GLOBALS['realbigForWP_version'] = '0.1.26.10';
 	}
 	$lastSuccessVersionGatherer = get_option( 'realbig_status_gatherer_version' );
 	$statusGatherer             = statusGathererConstructor( true );
@@ -84,8 +84,6 @@ try {
 			$statusGatherer['realbig_plugin_settings_columns'] = false;
 		}
 	}
-
-
 	/********** end of checking and creating tables ***********************************************************************/
 	/********** token gathering and adding "timeUpdate" field in wp_realbig_settings **************************************/
 	$token                 = tokenChecking( $wpPrefix );
@@ -119,6 +117,23 @@ try {
 		}
 	}
 	/********** end of token gathering and adding "timeUpdate" field in wp_realbig_settings *******************************/
+	/********** checking requested page for excluding *********************************************************************/
+	$excludedPagesCheck = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", ['excludedPages']));
+	$excludedPage = false;
+    if (!empty($excludedPagesCheck)) {
+        $excludedPagesCheckArray = explode(",", $excludedPagesCheck);
+        if (!empty($excludedPagesCheckArray)) {
+            foreach ($excludedPagesCheckArray AS $item) {
+                if (!empty(trim($item))) {
+	                preg_match("~".trim($item)."~", $_SERVER["REQUEST_URI"], $m);
+	                if (count($m) > 0) {
+		                $excludedPage = true;
+	                }
+                }
+            }
+        }
+    }
+	/********** end of checking requested page for excluding **************************************************************/
 	/********** autosync and JS text edit *********************************************************************************/
 //	$GLOBALS['wpOptionsCheckerSyncTime'] = $wpOptionsCheckerSyncTime;
 	function syncFunctionAdd() {
@@ -243,10 +258,12 @@ try {
 	}
 	/********** end of manual sync ****************************************************************************************/
 	/************* blocks for text ****************************************************************************************/
-	add_filter( 'the_content', 'adBlocksToContentInsertingFunction', 5000 );
+	if (empty($excludedPage)) {
+		add_filter( 'the_content', 'adBlocksToContentInsertingFunction', 5000 );
+	}
 	/************* end blocks for text ************************************************************************************/
 	/********** using settings in texts ***********************************************************************************/
-	function adBlocksToContentInsertingFunction( $content ) {
+	function adBlocksToContentInsertingFunction($content) {
 //        if (is_page()||is_single()||is_singular()||is_archive()||is_post_type_viewable("single")) {
 		if ( is_page() || is_single() || is_singular() || is_archive() ) {
 			global $wpdb;
@@ -260,7 +277,6 @@ try {
 			return $content;
 		}
 	}
-
 	/*********** end of using settings in texts ***************************************************************************/
 	/*********** begin of token input area ********************************************************************************/
 	function my_plugin_action_links( $links ) {

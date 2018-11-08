@@ -8,7 +8,5 @@ function syncFunction()
         async: true,
         type: 'post',
         dataType: 'text',
-    }).done(function (data) {
-        // console.log(data);
-    })
+    }).done(function (data) { })
 }
