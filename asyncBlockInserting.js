@@ -52,20 +52,15 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                         }
                     }
                     if (currentElement != undefined && currentElement != null && currentElementChecker) {
+                        elementToAdd = document.createElement("div");
+                        elementToAdd.innerHTML = blockSettingArray[i]["text"];
+                        newElement = elementToAdd.firstChild;
                         if (blockSettingArray[i]["elementPosition"] == 0) {
-                            elementToAdd = document.createElement("div");
-                            elementToAdd.innerHTML = blockSettingArray[i]["text"];
-                            newElement = elementToAdd.firstChild;
                             currentElement.parentNode.insertBefore(newElement, currentElement);
-                            blockSettingArray.splice(i, 1);
-                        }
-                        else {
-                            elementToAdd = document.createElement("div");
-                            elementToAdd.innerHTML = blockSettingArray[i]["text"];
-                            newElement = elementToAdd.firstChild;
+                        } else {
                             currentElement.parentNode.insertBefore(newElement, currentElement.nextSibling);
-                            blockSettingArray.splice(i, 1);
                         }
+                        blockSettingArray.splice(i, 1);
                     } else {
                         repeat = true;
                     }
@@ -89,20 +84,15 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                         }
                     }
                     if (currentElement != undefined && currentElement != null && currentElementChecker) {
+                        elementToAdd = document.createElement("div");
+                        elementToAdd.innerHTML = blockSettingArray[i]["text"];
+                        newElement = elementToAdd.firstChild;
                         if (blockSettingArray[i]["elementPosition"] == 0) {
-                            elementToAdd = document.createElement("div");
-                            elementToAdd.innerHTML = blockSettingArray[i]["text"];
-                            newElement = elementToAdd.firstChild;
                             currentElement.parentNode.insertBefore(newElement, currentElement);
-                            blockSettingArray.splice(i, 1);
-                        }
-                        else {
-                            elementToAdd = document.createElement("div");
-                            elementToAdd.innerHTML = blockSettingArray[i]["text"];
-                            newElement = elementToAdd.firstChild;
+                        } else {
                             currentElement.parentNode.insertBefore(newElement, currentElement.nextSibling);
-                            blockSettingArray.splice(i, 1);
                         }
+                        blockSettingArray.splice(i, 1);
                     } else {
                         repeat = true;
                     }

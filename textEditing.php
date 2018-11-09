@@ -39,8 +39,7 @@ try {
 					} elseif ( ! empty( $item['minSymbols'] ) && $item['minSymbols'] > 0 && $item['minSymbols'] > $contentLength ) {
 						continue;
 					}
-					if ( $item['setting_type'] == 1 )
-					{       //for lonely block
+					if ( $item['setting_type'] == 1 ) {       //for lonely block
 						$elementName     = $item['element'];
 						$elementPosition = $item['elementPosition'];
 						$elementNumber   = $item['elementPlace'];

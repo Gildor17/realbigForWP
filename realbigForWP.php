@@ -63,9 +63,7 @@ try {
 	if ( $statusGatherer['realbig_plugin_settings_table'] == false || $statusGatherer['realbig_settings_table'] == false || $lastSuccessVersionGatherer != $GLOBALS['realbigForWP_version'] ) {
 		$tableForCurrentPluginChecker = $wpdb->get_var( 'SHOW TABLES LIKE "' . $wpPrefix . 'realbig_plugin_settings"' );   //settings for block table checking
 		$tableForToken                = $wpdb->get_var( 'SHOW TABLES LIKE "' . $wpPrefix . 'realbig_settings"' );      //settings for token and other
-
 //        $GLOBALS['problematic_table_status'] = $tableForCurrentPluginChecker;
-
 		$statusGatherer = dbTablesCreateFunction( $tableForCurrentPluginChecker, $tableForToken, $wpPrefix, $statusGatherer );
 
 		$resultingTableCheck = $wpdb->get_var( 'SHOW TABLES LIKE "' . $wpPrefix . 'realbig_plugin_settings"' );
@@ -120,19 +118,21 @@ try {
 	/********** checking requested page for excluding *********************************************************************/
 	$excludedPagesCheck = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", ['excludedPages']));
 	$excludedPage = false;
-    if (!empty($excludedPagesCheck)) {
+    if (!empty($excludedPagesCheck)&&!is_admin()&&!empty($_SERVER["REDIRECT_URL"])) {
         $excludedPagesCheckArray = explode(",", $excludedPagesCheck);
         if (!empty($excludedPagesCheckArray)) {
             foreach ($excludedPagesCheckArray AS $item) {
                 $item = trim($item);
                 if (!empty($item)) {
-	                preg_match("~".$item."~", $_SERVER["REQUEST_URI"], $m);
+	                preg_match("~".$item."~", $_SERVER["REDIRECT_URL"], $m);
 	                if (count($m) > 0) {
 		                $excludedPage = true;
 	                }
                 }
             }
         }
+    } elseif (is_admin()||empty($_SERVER["REDIRECT_URL"])) {
+	    $excludedPage = true;
     }
 	/********** end of checking requested page for excluding **************************************************************/
 	/********** autosync and JS text edit *********************************************************************************/
