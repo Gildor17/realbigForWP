@@ -369,12 +369,12 @@ catch (Exception $ex)
 		if (empty($errorInDB)) {
 			$wpdb->insert($wpPrefix.'realbig_settings', [
 				'optionName'  => 'deactError',
-				'optionValue' => 'realbigForWP: '.$ex['message']
+				'optionValue' => 'synchro: '.$ex['message']
 			]);
 		} else {
 			$wpdb->update( $wpPrefix.'realbig_settings', [
 				'optionName'  => 'deactError',
-				'optionValue' => 'realbigForWP: '.$ex['message']
+				'optionValue' => 'synchro: '.$ex['message']
 			], ['optionName'  => 'deactError']);
 		}
 	} catch (Exception $exIex) {
@@ -398,12 +398,12 @@ catch (Error $er)
 		if (empty($errorInDB)) {
 			$wpdb->insert($wpPrefix.'realbig_settings', [
 				'optionName'  => 'deactError',
-				'optionValue' => 'realbigForWP: '.$ex['message']
+				'optionValue' => 'synchro: '.$ex['message']
 			]);
 		} else {
 			$wpdb->update( $wpPrefix.'realbig_settings', [
 				'optionName'  => 'deactError',
-				'optionValue' => 'realbigForWP: '.$ex['message']
+				'optionValue' => 'synchro: '.$ex['message']
 			], ['optionName'  => 'deactError']);
 		}
 	} catch (Exception $exIex) {
