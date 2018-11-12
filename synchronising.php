@@ -23,28 +23,40 @@ try {
 //			$url = 'http://realbigweb/api/wp-get-settings';     // orig web post
 			$url = 'https://realbig.media/api/wp-get-settings';     // orig post
 
+                /** for default CURL request **/
+//				$dataForSending = [
+//					'token'     => $tokenInput,
+//					'sameToken' => $sameTokenResult
+//				];
+
+                /** for WP request **/
 				$dataForSending = [
-					'token'     => $tokenInput,
-					'sameToken' => $sameTokenResult
+				    'body'  => [
+                        'token'     => $tokenInput,
+                        'sameToken' => $sameTokenResult
+                    ]
 				];
 
 				try {
 //		$ch = curl_init('https://realbig.media/api/wp-get-settings?token='.$tokenInput);
-					$ch = curl_init();
-					curl_setopt( $ch, CURLOPT_URL, $url );
-					curl_setopt( $ch, CURLOPT_POST, 1 );
-					curl_setopt( $ch, CURLOPT_POSTFIELDS, $dataForSending );
-					curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
-					curl_setopt( $ch, CURLOPT_TIMEOUT, 15 );
-					curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT, 30 );
-					curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, false );
-					curl_setopt( $ch, CURLOPT_ENCODING, 'gzip, deflate' );
-					curl_setopt( $ch, CURLOPT_COOKIE, '' );
-					curl_setopt( $ch, CURLOPT_COOKIEFILE, '' );
-					curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, false );
-					curl_setopt( $ch, CURLOPT_SSL_VERIFYHOST, false );
-					$jsonToken = curl_exec( $ch );
-					curl_close( $ch );
+//					$ch = curl_init();
+//					curl_setopt( $ch, CURLOPT_URL, $url );
+//					curl_setopt( $ch, CURLOPT_POST, 1 );
+//					curl_setopt( $ch, CURLOPT_POSTFIELDS, $dataForSending );
+//					curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+//					curl_setopt( $ch, CURLOPT_TIMEOUT, 15 );
+//					curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT, 30 );
+//					curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, false );
+//					curl_setopt( $ch, CURLOPT_ENCODING, 'gzip, deflate' );
+//					curl_setopt( $ch, CURLOPT_COOKIE, '' );
+//					curl_setopt( $ch, CURLOPT_COOKIEFILE, '' );
+//					curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, false );
+//					curl_setopt( $ch, CURLOPT_SSL_VERIFYHOST, false );
+//					$jsonToken = curl_exec( $ch );
+//					curl_close( $ch );
+
+					$jsonToken = wp_safe_remote_post($url, $dataForSending);
+					$jsonToken = $jsonToken['body'];
 
 					if ( ! empty( $jsonToken ) ) {
 						$GLOBALS['connection_request_rezult']   = 1;
@@ -344,11 +356,59 @@ try {
 }
 catch (Exception $ex)
 {
+	try {
+		global $wpdb;
+		if (!empty($GLOBALS['wpPrefix'])) {
+			$wpPrefix = $GLOBALS['wpPrefix'];
+		} else {
+			global $table_prefix;
+			$wpPrefix = $table_prefix;
+		}
+
+		$errorInDB = $wpdb->query("SELECT * FROM ".$wpPrefix."realbig_settings WHERE optionName = 'deactError'");
+		if (empty($errorInDB)) {
+			$wpdb->insert($wpPrefix.'realbig_settings', [
+				'optionName'  => 'deactError',
+				'optionValue' => 'realbigForWP: '.$ex['message']
+			]);
+		} else {
+			$wpdb->update( $wpPrefix.'realbig_settings', [
+				'optionName'  => 'deactError',
+				'optionValue' => 'realbigForWP: '.$ex['message']
+			], ['optionName'  => 'deactError']);
+		}
+	} catch (Exception $exIex) {
+	} catch (Error $erIex) { }
+
 	deactivate_plugins(plugin_basename( __FILE__ ));
 	?><div style="margin-left: 200px; border: 3px solid red"><?php echo $ex; ?></div><?php
 }
 catch (Error $er)
 {
+	try {
+		global $wpdb;
+		if (!empty($GLOBALS['wpPrefix'])) {
+			$wpPrefix = $GLOBALS['wpPrefix'];
+		} else {
+			global $table_prefix;
+			$wpPrefix = $table_prefix;
+		}
+
+		$errorInDB = $wpdb->query("SELECT * FROM ".$wpPrefix."realbig_settings WHERE optionName = 'deactError'");
+		if (empty($errorInDB)) {
+			$wpdb->insert($wpPrefix.'realbig_settings', [
+				'optionName'  => 'deactError',
+				'optionValue' => 'realbigForWP: '.$ex['message']
+			]);
+		} else {
+			$wpdb->update( $wpPrefix.'realbig_settings', [
+				'optionName'  => 'deactError',
+				'optionValue' => 'realbigForWP: '.$ex['message']
+			], ['optionName'  => 'deactError']);
+		}
+	} catch (Exception $exIex) {
+	} catch (Error $erIex) { }
+
 	deactivate_plugins(plugin_basename( __FILE__ ));
 	?><div style="margin-left: 200px; border: 3px solid red"><?php echo $er; ?></div><?php
 }

@@ -1,6 +1,8 @@
 var jsInputerLaunch = 0;
 
 function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
+    // var currentPathFFile2 = path.dirname(__filename);
+
     try {
         var content_pointer = document.getElementById("content_pointer_id");
         var parent_with_content = content_pointer.parentElement;

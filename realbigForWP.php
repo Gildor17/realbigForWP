@@ -116,23 +116,27 @@ try {
 	}
 	/********** end of token gathering and adding "timeUpdate" field in wp_realbig_settings *******************************/
 	/********** checking requested page for excluding *********************************************************************/
-	$excludedPagesCheck = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", ['excludedPages']));
-	$excludedPage = false;
-    if (!empty($excludedPagesCheck)&&!is_admin()&&!empty($_SERVER["REDIRECT_URL"])) {
-        $excludedPagesCheckArray = explode(",", $excludedPagesCheck);
-        if (!empty($excludedPagesCheckArray)) {
-            foreach ($excludedPagesCheckArray AS $item) {
-                $item = trim($item);
-                if (!empty($item)) {
-	                preg_match("~".$item."~", $_SERVER["REDIRECT_URL"], $m);
-	                if (count($m) > 0) {
-		                $excludedPage = true;
-	                }
-                }
-            }
-        }
-    } elseif (is_admin()||empty($_SERVER["REDIRECT_URL"])) {
-	    $excludedPage = true;
+	try {
+		$excludedPagesCheck = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", ['excludedPages']));
+		$excludedPage = false;
+		if (!empty($excludedPagesCheck)&&!is_admin()&&!empty($_SERVER["REDIRECT_URL"])) {
+			$excludedPagesCheckArray = explode(",", $excludedPagesCheck);
+			if (!empty($excludedPagesCheckArray)) {
+				foreach ($excludedPagesCheckArray AS $item) {
+					$item = trim($item);
+					if (!empty($item)) {
+						preg_match("~".$item."~", $_SERVER["REDIRECT_URL"], $m);
+						if (count($m) > 0) {
+							$excludedPage = true;
+						}
+					}
+				}
+			}
+		} elseif (is_admin()||empty($_SERVER["REDIRECT_URL"])) {
+			$excludedPage = true;
+		}
+    } catch (Exception $excludedE) {
+		$excludedPage = false;
     }
 	/********** end of checking requested page for excluding **************************************************************/
 	/********** autosync and JS text edit *********************************************************************************/
@@ -349,11 +353,59 @@ try {
 }
 catch (Exception $ex)
 {
+    try {
+	    global $wpdb;
+	    if (!empty($GLOBALS['wpPrefix'])) {
+	        $wpPrefix = $GLOBALS['wpPrefix'];
+        } else {
+	        global $table_prefix;
+	        $wpPrefix = $table_prefix;
+        }
+
+        $errorInDB = $wpdb->query("SELECT * FROM ".$wpPrefix."realbig_settings WHERE optionName = 'deactError'");
+	    if (empty($errorInDB)) {
+		    $wpdb->insert($wpPrefix.'realbig_settings', [
+			    'optionName'  => 'deactError',
+			    'optionValue' => 'realbigForWP: '.$ex['message']
+		    ]);
+	    } else {
+		    $wpdb->update( $wpPrefix.'realbig_settings', [
+			    'optionName'  => 'deactError',
+			    'optionValue' => 'realbigForWP: '.$ex['message']
+		    ], ['optionName'  => 'deactError']);
+	    }
+    } catch (Exception $exIex) {
+    } catch (Error $erIex) { }
+
 	deactivate_plugins(plugin_basename( __FILE__ ));
 	?><div style="margin-left: 200px; border: 3px solid red"><?php echo $ex; ?></div><?php
 }
 catch (Error $er)
 {
+	try {
+		global $wpdb;
+		if (!empty($GLOBALS['wpPrefix'])) {
+			$wpPrefix = $GLOBALS['wpPrefix'];
+		} else {
+			global $table_prefix;
+			$wpPrefix = $table_prefix;
+		}
+
+		$errorInDB = $wpdb->query("SELECT * FROM ".$wpPrefix."realbig_settings WHERE optionName = 'deactError'");
+		if (empty($errorInDB)) {
+			$wpdb->insert($wpPrefix.'realbig_settings', [
+				'optionName'  => 'deactError',
+				'optionValue' => 'realbigForWP: '.$ex['message']
+			]);
+		} else {
+			$wpdb->update( $wpPrefix.'realbig_settings', [
+				'optionName'  => 'deactError',
+				'optionValue' => 'realbigForWP: '.$ex['message']
+			], ['optionName'  => 'deactError']);
+		}
+	} catch (Exception $exIex) {
+	} catch (Error $erIex) { }
+
 	deactivate_plugins(plugin_basename( __FILE__ ));
     ?><div style="margin-left: 200px; border: 3px solid red"><?php echo $er; ?></div><?php
 }

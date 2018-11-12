@@ -1,7 +1,6 @@
 syncFunction();
 
-function syncFunction()
-{
+function syncFunction() {
     jQuery.ajax({
         url: "//"+document.domain+"/wp-content/plugins/realbigForWP/synchronising.php",
         data: {funcActivator: 'ready'},

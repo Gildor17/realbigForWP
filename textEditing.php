@@ -203,14 +203,7 @@ try {
 				$creatingJavascriptParserForContent = creatingJavascriptParserForContentFunction( $fromDb, $usedBlocks, $contentLength );
 				$editedContent                      = $editedContent . $creatingJavascriptParserForContent;
 
-				if ( $contentType == 'title' ) {
-					$objArray[0] = $editedContent;
-					$objArray[1] = $usedBlocks;
-
-					return $objArray;
-				} else {
-					return $editedContent;
-				}
+                return $editedContent;
 			} else {
 				return $editedContent;
 			}
