@@ -266,12 +266,12 @@ catch (Exception $ex)
 		if (empty($errorInDB)) {
 			$wpdb->insert($wpPrefix.'realbig_settings', [
 				'optionName'  => 'deactError',
-				'optionValue' => 'update: '.$ex['message']
+				'optionValue' => 'update: '.$ex->getMessage()
 			]);
 		} else {
 			$wpdb->update( $wpPrefix.'realbig_settings', [
 				'optionName'  => 'deactError',
-				'optionValue' => 'update: '.$ex['message']
+				'optionValue' => 'update: '.$ex->getMessage()
 			], ['optionName'  => 'deactError']);
 		}
 	} catch (Exception $exIex) {
@@ -295,12 +295,12 @@ catch (Error $er)
 		if (empty($errorInDB)) {
 			$wpdb->insert($wpPrefix.'realbig_settings', [
 				'optionName'  => 'deactError',
-				'optionValue' => 'update: '.$er['message']
+				'optionValue' => 'update: '.$er->getMessage()
 			]);
 		} else {
 			$wpdb->update( $wpPrefix.'realbig_settings', [
 				'optionName'  => 'deactError',
-				'optionValue' => 'update: '.$er['message']
+				'optionValue' => 'update: '.$er->getMessage()
 			], ['optionName'  => 'deactError']);
 		}
 	} catch (Exception $exIex) {

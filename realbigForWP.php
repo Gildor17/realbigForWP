@@ -17,7 +17,7 @@ include_once ( dirname(__FILE__)."/textEditing.php");
 /*
 Plugin name:  Realbig For WordPress
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.1.26.12
+Version:      0.1.26.13
 Author:       Realbig Team
 License:      GPLv2 or later
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
@@ -36,7 +36,7 @@ try {
 	if ( ! empty( $pluginData['Version'] ) ) {
 		$GLOBALS['realbigForWP_version'] = $pluginData['Version'];
 	} else {
-		$GLOBALS['realbigForWP_version'] = '0.1.26.12';
+		$GLOBALS['realbigForWP_version'] = '0.1.26.13';
 	}
 	$lastSuccessVersionGatherer = get_option( 'realbig_status_gatherer_version' );
 	$statusGatherer             = statusGathererConstructor( true );
@@ -366,12 +366,12 @@ catch (Exception $ex)
 	    if (empty($errorInDB)) {
 		    $wpdb->insert($wpPrefix.'realbig_settings', [
 			    'optionName'  => 'deactError',
-			    'optionValue' => 'realbigForWP: '.$ex['message']
+			    'optionValue' => 'realbigForWP: '.$ex->getMessage()
 		    ]);
 	    } else {
 		    $wpdb->update( $wpPrefix.'realbig_settings', [
 			    'optionName'  => 'deactError',
-			    'optionValue' => 'realbigForWP: '.$ex['message']
+			    'optionValue' => 'realbigForWP: '.$ex->getMessage()
 		    ], ['optionName'  => 'deactError']);
 	    }
     } catch (Exception $exIex) {
@@ -395,12 +395,12 @@ catch (Error $er)
 		if (empty($errorInDB)) {
 			$wpdb->insert($wpPrefix.'realbig_settings', [
 				'optionName'  => 'deactError',
-				'optionValue' => 'realbigForWP: '.$er['message']
+				'optionValue' => 'realbigForWP: '.$er->getMessage()
 			]);
 		} else {
 			$wpdb->update( $wpPrefix.'realbig_settings', [
 				'optionName'  => 'deactError',
-				'optionValue' => 'realbigForWP: '.$er['message']
+				'optionValue' => 'realbigForWP: '.$er->getMessage()
 			], ['optionName'  => 'deactError']);
 		}
 	} catch (Exception $exIex) {
