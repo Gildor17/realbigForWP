@@ -398,12 +398,12 @@ catch (Error $er)
 		if (empty($errorInDB)) {
 			$wpdb->insert($wpPrefix.'realbig_settings', [
 				'optionName'  => 'deactError',
-				'optionValue' => 'synchro: '.$ex['message']
+				'optionValue' => 'synchro: '.$er['message']
 			]);
 		} else {
 			$wpdb->update( $wpPrefix.'realbig_settings', [
 				'optionName'  => 'deactError',
-				'optionValue' => 'synchro: '.$ex['message']
+				'optionValue' => 'synchro: '.$er['message']
 			], ['optionName'  => 'deactError']);
 		}
 	} catch (Exception $exIex) {

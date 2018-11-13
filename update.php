@@ -295,12 +295,12 @@ catch (Error $er)
 		if (empty($errorInDB)) {
 			$wpdb->insert($wpPrefix.'realbig_settings', [
 				'optionName'  => 'deactError',
-				'optionValue' => 'update: '.$ex['message']
+				'optionValue' => 'update: '.$er['message']
 			]);
 		} else {
 			$wpdb->update( $wpPrefix.'realbig_settings', [
 				'optionName'  => 'deactError',
-				'optionValue' => 'update: '.$ex['message']
+				'optionValue' => 'update: '.$er['message']
 			], ['optionName'  => 'deactError']);
 		}
 	} catch (Exception $exIex) {
