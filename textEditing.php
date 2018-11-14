@@ -256,9 +256,9 @@ try {
 		try {
 			$scriptingCode = '
             <script>
-var blockSettingArray = [];
-var contentLength = ' . $contentLength . ';
-';
+            var blockSettingArray = [];
+            var contentLength = ' . $contentLength . ';
+            ';
 			foreach ( $fromDb AS $k => $item ) {
 				if ( is_object( $item ) ) {
 					$item = get_object_vars( $item );
