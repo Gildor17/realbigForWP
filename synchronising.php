@@ -6,7 +6,7 @@
  * Time: 18:17
  */
 
-include_once ( dirname(__FILE__).'/../../../wp-load.php' );
+include ( dirname(__FILE__).'/../../../wp-load.php' );
 include_once ( dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
 include_once ( dirname(__FILE__)."/../../../wp-admin/includes/upgrade.php" );
 include_once ( dirname(__FILE__).'/../../../wp-includes/wp-db.php');

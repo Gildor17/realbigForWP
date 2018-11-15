@@ -7,17 +7,18 @@
 //include ( ABSPATH . "wp-content/plugins/realbigForWP/synchronising.php");
 //include ( ABSPATH . "wp-content/plugins/realbigForWP/textEditing.php");
 
-include_once ( dirname(__FILE__).'/../../../wp-load.php' );
+include ( dirname(__FILE__).'/../../../wp-load.php' );
 include_once ( dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
 include_once ( dirname(__FILE__)."/../../../wp-admin/includes/upgrade.php" );
-include_once ( dirname(__FILE__)."/update.php");
-include_once ( dirname(__FILE__)."/synchronising.php");
-include_once ( dirname(__FILE__)."/textEditing.php");
+include ( dirname(__FILE__)."/update.php");
+//include_once ( dirname(__FILE__)."/synchronising.php");
+include ( dirname(__FILE__)."/synchronising.php");
+include ( dirname(__FILE__)."/textEditing.php");
 
 /*
 Plugin name:  Realbig For WordPress
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.1.26.15
+Version:      0.1.26.16
 Author:       Realbig Team
 License:      GPLv2 or later
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
@@ -36,10 +37,10 @@ try {
 	if ( ! empty( $pluginData['Version'] ) ) {
 		$GLOBALS['realbigForWP_version'] = $pluginData['Version'];
 	} else {
-		$GLOBALS['realbigForWP_version'] = '0.1.26.15';
+		$GLOBALS['realbigForWP_version'] = '0.1.26.16';
 	}
 	$lastSuccessVersionGatherer = get_option( 'realbig_status_gatherer_version' );
-	require_once( 'synchronising.php' );
+//	require_once( 'synchronising.php' );
 	$statusGatherer             = statusGathererConstructor( true );
 	/***************** updater code ***************************************************************************************/
 	require 'plugin-update-checker/plugin-update-checker.php';
