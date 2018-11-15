@@ -17,7 +17,7 @@ include_once ( dirname(__FILE__)."/textEditing.php");
 /*
 Plugin name:  Realbig For WordPress
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.1.26.14
+Version:      0.1.26.15
 Author:       Realbig Team
 License:      GPLv2 or later
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
@@ -36,7 +36,7 @@ try {
 	if ( ! empty( $pluginData['Version'] ) ) {
 		$GLOBALS['realbigForWP_version'] = $pluginData['Version'];
 	} else {
-		$GLOBALS['realbigForWP_version'] = '0.1.26.14';
+		$GLOBALS['realbigForWP_version'] = '0.1.26.15';
 	}
 	$lastSuccessVersionGatherer = get_option( 'realbig_status_gatherer_version' );
 	require_once( 'synchronising.php' );
@@ -270,18 +270,21 @@ try {
 	/************* end blocks for text ************************************************************************************/
 	/********** using settings in texts ***********************************************************************************/
 	function adBlocksToContentInsertingFunction($content) {
-//        if (is_page()||is_single()||is_singular()||is_archive()||is_post_type_viewable("single")) {
-		if ( is_page() || is_single() || is_singular() || is_archive() ) {
-			global $wpdb;
+	    if (!empty($content)) {
+		    if ( is_page() || is_single() || is_singular() || is_archive() ) {
+			    global $wpdb;
 
-			$fromDb = $wpdb->get_results( 'SELECT * FROM ' . $GLOBALS['wpPrefix'] . 'realbig_plugin_settings WGPS' );
-			require_once( 'textEditing.php' );
-			$content = addIcons( $fromDb, $content, 'content' );
+			    $fromDb = $wpdb->get_results( 'SELECT * FROM ' . $GLOBALS['wpPrefix'] . 'realbig_plugin_settings WGPS' );
+			    require_once( 'textEditing.php' );
+			    $content = addIcons( $fromDb, $content, 'content' );
 
-			return $content;
-		} else {
-			return $content;
-		}
+			    return $content;
+		    } else {
+			    return $content;
+		    }
+        } else {
+		    return $content;
+        }
 	}
 	/*********** end of using settings in texts ***************************************************************************/
 	/*********** begin of token input area ********************************************************************************/
