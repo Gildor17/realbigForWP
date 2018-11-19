@@ -11,7 +11,9 @@ include_once ( dirname(__FILE__)."/../../../wp-admin/includes/upgrade.php" );
  */
 
 try {
-	function addIcons( $fromDb, $content, $contentType, $usedBlocks = null ) {
+	if (!defined("ABSPATH")) { exit;}
+
+	function RFWP_addIcons( $fromDb, $content, $contentType, $usedBlocks = null ) {
 		try {
 			$editedContent         = $content;
 			$previousEditedContent = $editedContent;
@@ -200,7 +202,7 @@ try {
 				}
 				$editedContent = '<span id="content_pointer_id"></span>' . $editedContent;
 //			    $usedBlocks = [];
-				$creatingJavascriptParserForContent = creatingJavascriptParserForContentFunction( $fromDb, $usedBlocks, $contentLength );
+				$creatingJavascriptParserForContent = RFWP_creatingJavascriptParserForContentFunction( $fromDb, $usedBlocks, $contentLength );
 				$editedContent                      = $editedContent . $creatingJavascriptParserForContent;
 
                 return $editedContent;
@@ -212,7 +214,7 @@ try {
 		}
 	}
 
-	function headerADInsertor() {
+	function RFWP_headerADInsertor() {
 		try {
 			$wp_cur_theme      = wp_get_theme();
 			$wp_cur_theme_name = $wp_cur_theme->get_template();
@@ -232,7 +234,7 @@ try {
 		}
 	}
 
-	function headerPushInsertor() {
+	function RFWP_headerPushInsertor() {
 		try {
 			$wp_cur_theme      = wp_get_theme();
 			$wp_cur_theme_name = $wp_cur_theme->get_template();
@@ -252,7 +254,7 @@ try {
 		}
 	}
 
-	function creatingJavascriptParserForContentFunction( $fromDb, $usedBlocks, $contentLength ) {
+	function RFWP_creatingJavascriptParserForContentFunction( $fromDb, $usedBlocks, $contentLength ) {
 		try {
 			$scriptingCode = '
             <script>

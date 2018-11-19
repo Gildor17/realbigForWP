@@ -1,6 +1,6 @@
 <?php
 
-include ( dirname(__FILE__).'/../../../wp-load.php' );
+//include ( dirname(__FILE__).'/../../../wp-load.php' );
 include_once ( dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
 include_once ( dirname(__FILE__)."/../../../wp-admin/includes/upgrade.php" );
 include_once ( dirname(__FILE__).'/../../../wp-includes/wp-db.php');
@@ -13,8 +13,9 @@ include_once ( dirname(__FILE__).'/../../../wp-includes/wp-db.php');
  */
 
 try {
+    if (!defined("ABSPATH")) { exit;}
 
-    function manuallyTablesCreation ($wpPrefix) {
+    function RFWP_manuallyTablesCreation ($wpPrefix) {
 	    global $wpdb;
 	    try {
 		    $checkTable = $wpdb->get_var( 'SHOW TABLES LIKE "' . $wpPrefix . 'realbig_plugin_settings"' );
@@ -58,7 +59,7 @@ ENGINE=InnoDB
         }
     }
 
-	function dbOldTablesRemoveFunction( $wpPrefix, $statusGatherer ) {
+	function RFWP_dbOldTablesRemoveFunction( $wpPrefix, $statusGatherer ) {
 		global $wpdb;
 		try {
 			$blocksTable      = $wpdb->get_var( 'SHOW TABLES LIKE "WpRealbigPluginSettings"' );
@@ -100,7 +101,7 @@ ENGINE=InnoDB
 		}
 	}
 
-	function dbTablesCreateFunction( $tableForCurrentPluginChecker, $tableForToken, $wpPrefix, $statusGatherer ) {
+	function RFWP_dbTablesCreateFunction( $tableForCurrentPluginChecker, $tableForToken, $wpPrefix, $statusGatherer ) {
 	    global $wpdb;
 		try {
 			if (empty($tableForCurrentPluginChecker)) {
@@ -165,7 +166,7 @@ ENGINE=InnoDB
 		}
 	}
 
-	function updateElementEnumValuesFunction( $wpPrefix, $statusGatherer ) {
+	function RFWP_updateElementEnumValuesFunction( $wpPrefix, $statusGatherer ) {
 		global $wpdb;
 		$requiredElementColumnValues = "enum('p','li','ul','ol','blockquote','img','video','h1','h2','h3','h4','h5','h6')";
 		try {
@@ -194,7 +195,7 @@ ENGINE=InnoDB
 		}
 	}
 
-	function wpRealbigSettingsTableUpdateFunction( $wpPrefix ) {
+	function RFWP_wpRealbigSettingsTableUpdateFunction( $wpPrefix ) {
 		global $wpdb;
 
 		try {
@@ -210,7 +211,7 @@ ENGINE=InnoDB
 		}
 	}
 
-	function wpRealbigPluginSettingsColomnUpdateFunction( $wpPrefix, $colCheck, $statusGatherer ) {
+	function RFWP_wpRealbigPluginSettingsColomnUpdateFunction( $wpPrefix, $colCheck, $statusGatherer ) {
 		global $wpdb;
 		$atLeastOneMissedColumn                      = false;
 		$requiredColumnsInRealbigPluginSettingsTable = [
