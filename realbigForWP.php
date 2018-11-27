@@ -17,7 +17,7 @@ include ( dirname(__FILE__)."/textEditing.php");
 /*
 Plugin name:  Realbig For WordPress
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.1.26.17
+Version:      0.1.26.18
 Author:       Realbig Team
 License:      GPLv2 or later
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
@@ -46,7 +46,7 @@ try {
 	if ( ! empty( $pluginData['Version'] ) ) {
 		$GLOBALS['realbigForWP_version'] = $pluginData['Version'];
 	} else {
-		$GLOBALS['realbigForWP_version'] = '0.1.26.17';
+		$GLOBALS['realbigForWP_version'] = '0.1.26.18';
 	}
 	$lastSuccessVersionGatherer = get_option( 'realbig_status_gatherer_version' );
 //	require_once( 'synchronising.php' );
@@ -124,25 +124,29 @@ try {
 	try {
 		$excludedPagesCheck = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", ['excludedPages']));
 		$excludedPage = false;
-		if (!empty($excludedPagesCheck)&&!is_admin()&&!empty($_SERVER["REDIRECT_URL"])) {
+		$usedUrl = $_SERVER["REDIRECT_URL"];
+		if (empty($usedUrl)) {
+			$usedUrl = $_SERVER["REQUEST_URI"];
+		}
+		if (!empty($excludedPagesCheck)&&!is_admin()&&!empty($usedUrl)) {
 			$excludedPagesCheckArray = explode(",", $excludedPagesCheck);
 			if (!empty($excludedPagesCheckArray)) {
 				foreach ($excludedPagesCheckArray AS $item) {
 					$item = trim($item);
 					if (!empty($item)) {
-						preg_match("~".$item."~", $_SERVER["REDIRECT_URL"], $m);
+						preg_match("~".$item."~", $usedUrl, $m);
 						if (count($m) > 0) {
 							$excludedPage = true;
 						}
 					}
 				}
 			}
-		} elseif (is_admin()||empty($_SERVER["REDIRECT_URL"])) {
+		} elseif (is_admin()||empty($usedUrl)) {
 			$excludedPage = true;
 		}
-    } catch (Exception $excludedE) {
+	} catch (Exception $excludedE) {
 		$excludedPage = false;
-    }
+	}
 	/********** end of checking requested page for excluding **************************************************************/
 	/********** autosync and JS text edit *********************************************************************************/
 //	$GLOBALS['wpOptionsCheckerSyncTime'] = $wpOptionsCheckerSyncTime;
