@@ -124,10 +124,14 @@ try {
 	try {
 		$excludedPagesCheck = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", ['excludedPages']));
 		$excludedPage = false;
-		$usedUrl = $_SERVER["REDIRECT_URL"];
-		if (empty($usedUrl)) {
-			$usedUrl = $_SERVER["REQUEST_URI"];
+		if (!empty($_SERVER["REDIRECT_URL"])) {
+			$usedUrl = $_SERVER["REDIRECT_URL"];
+		} else {
+			if (!empty($_SERVER["REQUEST_URI"])) {
+				$usedUrl = $_SERVER["REQUEST_URI"];
+			}
 		}
+
 		if (!empty($excludedPagesCheck)&&!is_admin()&&!empty($usedUrl)) {
 			$excludedPagesCheckArray = explode(",", $excludedPagesCheck);
 			if (!empty($excludedPagesCheckArray)) {
@@ -141,7 +145,7 @@ try {
 					}
 				}
 			}
-		} elseif (is_admin()||empty($usedUrl)) {
+		} elseif (is_admin()) {
 			$excludedPage = true;
 		}
 	} catch (Exception $excludedE) {
