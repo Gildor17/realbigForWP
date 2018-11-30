@@ -1,4 +1,4 @@
-var jsInputerLaunch = 0;
+// var jsInputerLaunch = 0;
 
 function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
     // var currentPathFFile2 = path.dirname(__filename);
@@ -135,9 +135,9 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
     } catch (e) { }
 }
 
-asyncFunctionLauncher();
+// asyncFunctionLauncher();
 function asyncFunctionLauncher() {
-    if (jsInputerLaunch == 15) {
+    if (window.jsInputerLaunch !== undefined&&jsInputerLaunch == 15) {
         asyncBlocksInsertingFunction(blockSettingArray, contentLength);
     } else {
         setTimeout(function () {
@@ -145,4 +145,4 @@ function asyncFunctionLauncher() {
         }, 20)
     }
 }
-
+asyncFunctionLauncher();
