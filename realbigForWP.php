@@ -17,7 +17,7 @@ include ( dirname(__FILE__)."/textEditing.php");
 /*
 Plugin name:  Realbig For WordPress
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.1.26.19
+Version:      0.1.26.20
 Author:       Realbig Team
 License:      GPLv2 or later
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
@@ -46,7 +46,7 @@ try {
 	if ( ! empty( $pluginData['Version'] ) ) {
 		$GLOBALS['realbigForWP_version'] = $pluginData['Version'];
 	} else {
-		$GLOBALS['realbigForWP_version'] = '0.1.26.19';
+		$GLOBALS['realbigForWP_version'] = '0.1.26.20';
 	}
 	$lastSuccessVersionGatherer = get_option( 'realbig_status_gatherer_version' );
 //	require_once( 'synchronising.php' );
@@ -122,8 +122,8 @@ try {
 	/********** end of token gathering and adding "timeUpdate" field in wp_realbig_settings *******************************/
 	/********** checking requested page for excluding *********************************************************************/
 	try {
-		$excludedPagesCheck = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", ['excludedPages']));
 		$excludedPage = false;
+		$mainPageStatus = 0;
 		if (!empty($_SERVER["REDIRECT_URL"])) {
 			$usedUrl = $_SERVER["REDIRECT_URL"];
 		} else {
@@ -132,25 +132,61 @@ try {
 			}
 		}
 
-		if (!empty($excludedPagesCheck)&&!is_admin()&&!empty($usedUrl)) {
-			$excludedPagesCheckArray = explode(",", $excludedPagesCheck);
-			if (!empty($excludedPagesCheckArray)) {
-				foreach ($excludedPagesCheckArray AS $item) {
-					$item = trim($item);
-					if (!empty($item)) {
-						preg_match("~".$item."~", $usedUrl, $m);
-						if (count($m) > 0) {
-							$excludedPage = true;
+		if (is_admin()) {
+			$excludedPage = true;
+		} elseif (!empty($usedUrl)) {
+			$excludedMainPageCheck = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", ['excludedMainPage']));
+
+			preg_match_all("~(\/|\\\)([^\/^\\\]+)~", get_home_url(), $m);
+
+			$homeStatus = false;
+			if (!empty($usedUrl)&&!empty($m)) {
+				if ($usedUrl=="/"||$usedUrl==get_home_url()."/") {
+					$homeStatus = true;
+				} else {
+					foreach ($m[0] AS $item) {
+						if ($usedUrl==$item."/") {
+							$homeStatus = true;
 						}
 					}
 				}
 			}
-		} elseif (is_admin()) {
-			$excludedPage = true;
+
+			if ($homeStatus==true) {
+				if (isset($excludedMainPageCheck)) {
+					if ( $excludedMainPageCheck == 1 ) {
+						$mainPageStatus = 1;
+					} elseif ( $excludedMainPageCheck == 0 ) {
+						$mainPageStatus = 2;
+					}
+				}
+			}
+
+			if ($mainPageStatus == 1) {
+				$excludedPage = true;
+			} elseif ($mainPageStatus == 0) {
+				$excludedPagesCheck = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", ['excludedPages']));
+
+				if (!empty($excludedPagesCheck)) {
+					$excludedPagesCheckArray = explode(",", $excludedPagesCheck);
+					if (!empty($excludedPagesCheckArray)) {
+						foreach ($excludedPagesCheckArray AS $item) {
+							$item = trim($item);
+							if (!empty($item)) {
+								preg_match("~".$item."~", $usedUrl, $m);
+								if (count($m) > 0) {
+									$excludedPage = true;
+								}
+							}
+						}
+					}
+				}
+			}
 		}
 	} catch (Exception $excludedE) {
 		$excludedPage = false;
 	}
+	$GLOBALS['mainPageStatus'] = $mainPageStatus;
 	/********** end of checking requested page for excluding **************************************************************/
 	/********** autosync and JS text edit *********************************************************************************/
 //	$GLOBALS['wpOptionsCheckerSyncTime'] = $wpOptionsCheckerSyncTime;
@@ -276,27 +312,27 @@ try {
 	}
 	/********** end of manual sync ****************************************************************************************/
 	/************* blocks for text ****************************************************************************************/
-	if (empty($excludedPage)) {
+	if ($mainPageStatus == 2||empty($excludedPage)) {
 		add_filter( 'the_content', 'RFWP_adBlocksToContentInsertingFunction', 5000 );
 	}
 	/************* end blocks for text ************************************************************************************/
 	/********** using settings in texts ***********************************************************************************/
 	function RFWP_adBlocksToContentInsertingFunction($content) {
-	    if (!empty($content)) {
-		    if ( is_page() || is_single() || is_singular() || is_archive() ) {
-			    global $wpdb;
+		if (!empty($content)) {
+			if ($GLOBALS['mainPageStatus'] == 2 || is_page() || is_single() || is_singular() || is_archive()) {
+				global $wpdb;
 
-			    $fromDb = $wpdb->get_results( 'SELECT * FROM ' . $GLOBALS['wpPrefix'] . 'realbig_plugin_settings WGPS' );
-			    require_once( 'textEditing.php' );
-			    $content = RFWP_addIcons( $fromDb, $content, 'content' );
+				$fromDb = $wpdb->get_results( 'SELECT * FROM ' . $GLOBALS['wpPrefix'] . 'realbig_plugin_settings WGPS' );
+				require_once( 'textEditing.php' );
+				$content = RFWP_addIcons( $fromDb, $content, 'content' );
 
-			    return $content;
-		    } else {
-			    return $content;
-		    }
-        } else {
-		    return $content;
-        }
+				return $content;
+			} else {
+				return $content;
+			}
+		} else {
+			return $content;
+		}
 	}
 	/*********** end of using settings in texts ***************************************************************************/
 	/*********** begin of token input area ********************************************************************************/

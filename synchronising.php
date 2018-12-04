@@ -34,6 +34,7 @@ try {
 				];
 				try {
 					$jsonToken = wp_safe_remote_post($url, $dataForSending);
+//					$jsonToken = wp_remote_post($url, $dataForSending);
 					if (!is_wp_error($jsonToken)) {
 						$jsonToken = $jsonToken['body'];
 						if ( ! empty( $jsonToken ) ) {
@@ -73,7 +74,18 @@ try {
 									$wpdb->update( $wpPrefix.'realbig_settings', ['optionName'  => 'excludedPages', 'optionValue' => $decodedToken['excludedPages']],
                                     ['optionName'  => 'excludedPages']);
                                 }
-							    $counter = 0;
+
+								$excludedMainPageCheck = $wpdb->query( $wpdb->prepare( "SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", [ 'excludedMainPage' ]));
+								if (isset($decodedToken['excludedMainPage'])) {
+									if (empty($excludedMainPageCheck)) {
+										$wpdb->insert($wpPrefix.'realbig_settings', ['optionName'  => 'excludedMainPage', 'optionValue' => $decodedToken['excludedMainPage']]);
+									} else {
+										$wpdb->update( $wpPrefix.'realbig_settings', ['optionName'  => 'excludedMainPage', 'optionValue' => $decodedToken['excludedMainPage']],
+											['optionName'  => 'excludedMainPage']);
+									}
+								}
+
+								$counter = 0;
 							    $wpdb->query( 'DELETE FROM ' . $wpPrefix . 'realbig_plugin_settings');
 								$sqlTokenSave = "INSERT INTO " . $wpPrefix . "realbig_plugin_settings (text, block_number, setting_type, element, directElement, elementPosition, elementPlace, firstPlace, elementCount, elementStep, minSymbols, minHeaders) VALUES ";
 								foreach ( $decodedToken['data'] AS $k => $item ) {
