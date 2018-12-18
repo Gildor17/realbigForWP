@@ -41,28 +41,65 @@ try {
 					} elseif ( ! empty( $item['minSymbols'] ) && $item['minSymbols'] > 0 && $item['minSymbols'] > $contentLength ) {
 						continue;
 					}
-					if ( $item['setting_type'] == 1 ) {       //for lonely block
-						$elementName     = $item['element'];
-						$elementPosition = $item['elementPosition'];
-						$elementNumber   = $item['elementPlace'];
-						$elementText     = $item['text'];
-					} elseif ( $item['setting_type'] == 2 ) {       //for repeatable block
-						$elementName     = $item['element'];
-						$elementPosition = $item['elementPosition'];
-						$elementNumber   = $item['firstPlace'];
-						$elementRepeats  = $item['elementCount'] - 1;
-						$elementStep     = $item['elementStep'];
-						$elementText     = $item['text'];
-					} elseif ( $item['setting_type'] == 3 ) {       //for direct block
-						$elementTag      = $item['element'];
-						$elementName     = $item['directElement'];
-						$elementPosition = $item['elementPosition'];
-						$elementText     = $item['text'];
-					} elseif ( $item['setting_type'] == 4 ) {       //for end of content
-						$elementText = $item['text'];
-					} elseif ( $item['setting_type'] == 5 ) {       //for middle of content
-						$elementText = $item['text'];
+					switch ($item['setting_type']) {
+						case 1:
+							$elementName     = $item['element'];
+							$elementPosition = $item['elementPosition'];
+							$elementNumber   = $item['elementPlace'];
+							$elementText     = $item['text'];
+							break;
+						case 2:
+							$elementName     = $item['element'];
+							$elementPosition = $item['elementPosition'];
+							$elementNumber   = $item['firstPlace'];
+							$elementRepeats  = $item['elementCount'] - 1;
+							$elementStep     = $item['elementStep'];
+							$elementText     = $item['text'];
+							break;
+						case 3:
+							$elementTag      = $item['element'];
+							$elementName     = $item['directElement'];
+							$elementPosition = $item['elementPosition'];
+							$elementText     = $item['text'];
+							break;
+						case 4:
+							$elementText     = $item['text'];
+							break;
+						case 5:
+							$elementText     = $item['text'];
+							break;
+						case 6:
+							$elementNumber   = $item['elementPlace'];
+							$elementText     = $item['text'];
+							break;
 					}
+					$elementText = "<div class='percentPointerClass'>".$elementText."</div>";
+
+//					if ( $item['setting_type'] == 1 ) {       //for lonely block
+//						$elementName     = $item['element'];
+//						$elementPosition = $item['elementPosition'];
+//						$elementNumber   = $item['elementPlace'];
+//						$elementText     = $item['text'];
+//					} elseif ( $item['setting_type'] == 2 ) {       //for repeatable block
+//						$elementName     = $item['element'];
+//						$elementPosition = $item['elementPosition'];
+//						$elementNumber   = $item['firstPlace'];
+//						$elementRepeats  = $item['elementCount'] - 1;
+//						$elementStep     = $item['elementStep'];
+//						$elementText     = $item['text'];
+//					} elseif ( $item['setting_type'] == 3 ) {       //for direct block
+//						$elementTag      = $item['element'];
+//						$elementName     = $item['directElement'];
+//						$elementPosition = $item['elementPosition'];
+//						$elementText     = $item['text'];
+//					} elseif ( $item['setting_type'] == 4 ) {       //for end of content
+//						$elementText = $item['text'];
+//					} elseif ( $item['setting_type'] == 5 ) {       //for middle of content
+//						$elementText = $item['text'];
+//					} elseif ( $item['setting_type'] == 6 ) {
+//						$elementNumber   = $item['elementPlace'];
+//						$elementText     = $item['text'];
+//                    }
 
 					if ( $item['setting_type'] == 1 ) {       //for lonely block
 						if ( empty( $elementName ) || empty( $elementNumber ) || empty( $elementText ) ) {
@@ -315,6 +352,20 @@ try {
 						}
 					} elseif ( $item['setting_type'] == 5 ) {       //for middle of content
 						$scriptingCode .= 'blockSettingArray[' . $k . ']["setting_type"] = 5; ' . PHP_EOL;
+						$scriptingCode .= 'blockSettingArray[' . $k . ']["text"] = \'' . $item['text'] . '\'; ' . PHP_EOL;
+						if ( ! empty( $item['minSymbols'] ) && $item['minSymbols'] > 1 ) {
+							$scriptingCode .= 'blockSettingArray[' . $k . ']["minSymbols"] = ' . $item['minSymbols'] . '; ' . PHP_EOL;
+						} else {
+							$scriptingCode .= 'blockSettingArray[' . $k . ']["minSymbols"] = 0;' . PHP_EOL;
+						}
+						if ( ! empty( $item['minHeaders'] ) && $item['minHeaders'] > 1 ) {
+							$scriptingCode .= 'blockSettingArray[' . $k . ']["minHeaders"] = ' . $item['minHeaders'] . '; ' . PHP_EOL;
+						} else {
+							$scriptingCode .= 'blockSettingArray[' . $k . ']["minHeaders"] = 0;' . PHP_EOL;
+						}
+					} elseif ( $item['setting_type'] == 6 ) {       //for percentage
+						$scriptingCode .= 'blockSettingArray[' . $k . ']["setting_type"] = 6; ' . PHP_EOL;
+						$scriptingCode .= 'blockSettingArray[' . $k . ']["elementPlace"] = ' . $item['elementPlace'] . '; ' . PHP_EOL;
 						$scriptingCode .= 'blockSettingArray[' . $k . ']["text"] = \'' . $item['text'] . '\'; ' . PHP_EOL;
 						if ( ! empty( $item['minSymbols'] ) && $item['minSymbols'] > 1 ) {
 							$scriptingCode .= 'blockSettingArray[' . $k . ']["minSymbols"] = ' . $item['minSymbols'] . '; ' . PHP_EOL;

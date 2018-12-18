@@ -1,15 +1,20 @@
-// var jsInputerLaunch = 0;
+//var jsInputerLaunch = 0;
 
 function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
     // var currentPathFFile2 = path.dirname(__filename);
 
     try {
+
         var content_pointer = document.getElementById("content_pointer_id");
         var parent_with_content = content_pointer.parentElement;
+        var lordOfElements = parent_with_content;
         parent_with_content = parent_with_content.parentElement;
+
+        // percentSeparator(lordOfElements);
 
         var newElement = document.createElement("div");
         var elementToAdd;
+        var poolbackI = 0;
 
         var counter = 0;
         var currentElement;
@@ -17,10 +22,18 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
         var sumResult = 0;
         var repeat = false;
         var currentElementChecker = false;
+        let containerFor6th = [];
 
         for (var i = 0; i < blockSettingArray.length; i++) {
+            // if (poolbackI == 1) {
+            //     i--;
+            //     poolbackI = 0;
+            // }
             currentElementChecker = false;
             try {
+                elementToAdd = document.createElement("div");
+                elementToAdd.classList.add("percentPointerClass");
+                elementToAdd.innerHTML = blockSettingArray[i]["text"];
                 if (blockSettingArray[i]["minHeaders"] > 0) {
                     var termorarity_parent_with_content = parent_with_content;
                     var termorarity_parent_with_content_length = 0;
@@ -54,15 +67,14 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                         }
                     }
                     if (currentElement != undefined && currentElement != null && currentElementChecker) {
-                        elementToAdd = document.createElement("div");
-                        elementToAdd.innerHTML = blockSettingArray[i]["text"];
-                        newElement = elementToAdd.firstChild;
                         if (blockSettingArray[i]["elementPosition"] == 0) {
-                            currentElement.parentNode.insertBefore(newElement, currentElement);
+                            currentElement.parentNode.insertBefore(elementToAdd, currentElement);
                         } else {
-                            currentElement.parentNode.insertBefore(newElement, currentElement.nextSibling);
+                            currentElement.parentNode.insertBefore(elementToAdd, currentElement.nextSibling);
                         }
                         blockSettingArray.splice(i, 1);
+                        poolbackI = 1;
+                        i--;
                     } else {
                         repeat = true;
                     }
@@ -73,7 +85,6 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                         currentElement = document.querySelector(elementType + elementName);
                         currentElementChecker = true;
                     } else if (elementType == '.') {
-                        /* currentElement = parent_with_content.getElementsByClassName(elementName);   //orig */
                         currentElement = document.getElementsByClassName(elementName);
                         if (currentElement.length > 0) {
                             for (var i1 = 0; i1 < currentElement.length; i1++) {
@@ -86,45 +97,74 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                         }
                     }
                     if (currentElement != undefined && currentElement != null && currentElementChecker) {
-                        elementToAdd = document.createElement("div");
-                        elementToAdd.innerHTML = blockSettingArray[i]["text"];
-                        newElement = elementToAdd.firstChild;
                         if (blockSettingArray[i]["elementPosition"] == 0) {
-                            currentElement.parentNode.insertBefore(newElement, currentElement);
+                            currentElement.parentNode.insertBefore(elementToAdd, currentElement);
                         } else {
-                            currentElement.parentNode.insertBefore(newElement, currentElement.nextSibling);
+                            currentElement.parentNode.insertBefore(elementToAdd, currentElement.nextSibling);
                         }
                         blockSettingArray.splice(i, 1);
+                        poolbackI = 1;
+                        i--;
                     } else {
                         repeat = true;
                     }
                 } else if (blockSettingArray[i]["setting_type"] == 4) {
-                    elementToAdd = document.createElement("div");
-                    elementToAdd.innerHTML = blockSettingArray[i]["text"];
-                    newElement = elementToAdd.firstChild;
-                    // parent_with_content.parentNode.insertBefore(newElement, parent_with_content.nextSibling);
-                    parent_with_content.append(newElement);
+                    parent_with_content.append(elementToAdd);
                     blockSettingArray.splice(i, 1);
+                    poolbackI = 1;
+                    i--;
                 } else if (blockSettingArray[i]["setting_type"] == 5) {
-                    elementToAdd = document.createElement("div");
-                    elementToAdd.innerHTML = blockSettingArray[i]["text"];
-                    newElement = elementToAdd.firstChild;
                     let curElement = document.getElementById("content_pointer_id").parentElement;
                     if (curElement.getElementsByTagName("p").length > 0) {
                         let elementNumber = Math.round(curElement.getElementsByTagName("p").length/2);
                         curElement = curElement.getElementsByTagName("p")[elementNumber];
                         if (curElement != undefined && curElement != null) {
-                            curElement.parentNode.insertBefore(newElement, curElement.nextSibling);
+                            curElement.parentNode.insertBefore(elementToAdd, curElement.nextSibling);
                             blockSettingArray.splice(i, 1);
+                            poolbackI = 1;
+                            i--;
                         } else {
                             repeat = true;
                         }
                     } else {
                         repeat = true;
                     }
+                } else if (blockSettingArray[i]["setting_type"] == 6) {
+                    if (containerFor6th.length > 0) {
+                        for (let j = 0; j < containerFor6th.length; j++) {
+                            if (containerFor6th[j]["elementPlace"]<blockSettingArray[i]["elementPlace"]) {
+                                // continue;
+                                if (j == containerFor6th.length-1) {
+                                    containerFor6th.push(blockSettingArray[i]);
+                                    blockSettingArray.splice(i, 1);
+                                    poolbackI = 1;
+                                    i--;
+                                    break;
+                                }
+                            } else {
+                                for (let k = containerFor6th.length-1; k > j-1; k--) {
+                                    containerFor6th[k + 1] = containerFor6th[k];
+                                }
+                                containerFor6th[j] = blockSettingArray[i];
+                                blockSettingArray.splice(i, 1);
+                                poolbackI = 1;
+                                i--;
+                                break;
+                            }
+                        }
+                    } else {
+                        containerFor6th.push(blockSettingArray[i]);
+                        blockSettingArray.splice(i, 1);
+                        poolbackI = 1;
+                        i--;
+                    }
+                //    vidpravutu v vidstiinuk dlya 6ho tipa
                 }
             } catch (e) { }
         }
+        percentInserter(lordOfElements, containerFor6th);
+        let stopper = 0;
+
         window.addEventListener('load', function () {
             if (repeat = true) {
                 setTimeout(function () {
@@ -132,17 +172,155 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                 }, 100);
             }
         });
-    } catch (e) { }
+    } catch (e) {
+        console.log(e.message);
+    }
 }
 
-// asyncFunctionLauncher();
 function asyncFunctionLauncher() {
     if (window.jsInputerLaunch !== undefined&&jsInputerLaunch == 15) {
         asyncBlocksInsertingFunction(blockSettingArray, contentLength);
     } else {
         setTimeout(function () {
-            asyncFunctionLauncher();
+            asyncFunctionLauncher()
         }, 20)
     }
 }
 asyncFunctionLauncher();
+
+function percentSeparator(lordOfElements) {
+    var separator = lordOfElements.children;
+    var lordOfElementsResult = 0;
+    var lordOfElementsTextResult = "";
+    var textLength;
+    var lengthPercent = 0;
+    var textNeedyLength = 0;
+    var currentChildrenLength = 0;
+    var previousChildrenLength = 0;
+    var separatorResult = [];
+    var separatorResultCounter = 0;
+    var lastICounterValue = 0;
+
+    if (!document.getElementById("markedSpan")) {
+        // lengthPercent = [10,25,43,60,82,97];
+        textLength = 0;
+        for (let i = 0; i < lordOfElements.children.length; i++) {
+            if (lordOfElements.children[i].tagName!="SCRIPT"&&!lordOfElements.children[i].classList.contains("percentPointerClass")) {
+                textLength = textLength + lordOfElements.children[i].innerText.length;
+            }
+        }
+
+        let numberToUse = 0;
+        for (let j = 0; j < 101; j++) {
+            // textNeedyLength = Math.round(textLength * (lengthPercent[j]/100));
+            textNeedyLength = Math.round(textLength * (j/100));
+            // for (let i = 0; i < Math.round(lordOfElements.children.length/2); i++) {
+
+            for (let i = lastICounterValue; i < lordOfElements.children.length; i++) {
+                if (lordOfElements.children[i].tagName!="SCRIPT"&&!lordOfElements.children[i].classList.contains("percentPointerClass")) {
+                    if (currentChildrenLength >= textNeedyLength) {
+                        let elementToAdd = document.createElement("div");
+                        elementToAdd.classList.add("percentPointerClass");
+                        // elementToAdd.innerHTML = "<div style='border: 1px solid grey; font-size: 20px; height: 25px; width: auto; background-color: #2aabd2'>"+lengthPercent[j]+"</div>";
+                        elementToAdd.innerHTML = "<div style='border: 1px solid grey; font-size: 20px; height: 25px; width: auto; background-color: #2aabd2'>"+j+"</div>";
+                        if (i > 0) {
+                            numberToUse = i - 1;
+                        } else {
+                            numberToUse = i;
+                        }
+                        if (previousChildrenLength==0||((currentChildrenLength - Math.round(previousChildrenLength/2)) >= textNeedyLength)) {
+                            lordOfElements.children[numberToUse].parentNode.insertBefore(elementToAdd, lordOfElements.children[i]);
+                        } else {
+                            lordOfElements.children[numberToUse].parentNode.insertBefore(elementToAdd, lordOfElements.children[i].nextSibling);
+                        }
+                        lastICounterValue = i;
+                        break;
+                    }
+                    lordOfElementsTextResult = lordOfElementsTextResult + " " + lordOfElements.children[i].innerText;
+                    lordOfElementsResult = lordOfElementsResult + lordOfElements.children[i].innerText.length;
+                    previousChildrenLength = lordOfElements.children[i].innerText.length;
+                    currentChildrenLength = lordOfElementsResult;
+                }
+            }
+        }
+        var spanMarker = document.createElement("span");
+        spanMarker.setAttribute("id", "markedSpan");
+        lordOfElements.prepend(spanMarker);
+    }
+
+
+    for (let i = 0; i < separator.length; i++) {
+        if (["P","UL","OL"].includes(separator[i].tagName)) {
+            separatorResult[separatorResultCounter] = separator[i];
+            separatorResultCounter++;
+        } else if (separator[i].tagName=="BLOCKQUOTE"&&separator[i].children.length==1&&separator[i].children[0].tagName=="P") {
+            separatorResult[separatorResultCounter] = separator[i];
+            separatorResultCounter++;
+        }
+    }
+}
+
+function percentInserter(lordOfElements, containerFor6th) {
+    try {
+        var separator = lordOfElements.children;
+        var lordOfElementsResult = 0;
+        var lordOfElementsTextResult = "";
+        var textLength;
+        var lengthPercent = 0;
+        var textNeedyLength = 0;
+        var currentChildrenLength = 0;
+        var previousChildrenLength = 0;
+        var separatorResult = [];
+        var separatorResultCounter = 0;
+        var lastICounterValue = 0;
+
+        if (!document.getElementById("markedSpan")) {
+            // lengthPercent = [10,25,43,60,82,97];
+            textLength = 0;
+            for (let i = 0; i < lordOfElements.children.length; i++) {
+                if (lordOfElements.children[i].tagName!="SCRIPT"&&!lordOfElements.children[i].classList.contains("percentPointerClass")) {
+                    textLength = textLength + lordOfElements.children[i].innerText.length;
+                }
+            }
+
+            let numberToUse = 0;
+            for (let j = 0; j < containerFor6th.length; j++) {
+                textNeedyLength = Math.round(textLength * (containerFor6th[j]["elementPlace"]/100));
+                // textNeedyLength = Math.round(textLength * (j/100));
+                // for (let i = 0; i < Math.round(lordOfElements.children.length/2); i++) {
+                for (let i = lastICounterValue; i < lordOfElements.children.length; i++) {
+                    if (lordOfElements.children[i].tagName!="SCRIPT"&&!lordOfElements.children[i].classList.contains("percentPointerClass")) {
+                        if (currentChildrenLength >= textNeedyLength) {
+                            let elementToAdd = document.createElement("div");
+                            elementToAdd.classList.add("percentPointerClass");
+                            // elementToAdd.innerHTML = "<div style='border: 1px solid grey; font-size: 20px; height: 25px; width: auto; background-color: #2aabd2'>"+lengthPercent[j]+"</div>";
+                            // elementToAdd.innerHTML = "<div style='border: 1px solid grey; font-size: 20px; height: 25px; width: auto; background-color: #2aabd2'>"+j+"</div>";
+                            elementToAdd.innerHTML = containerFor6th[j]["text"];
+                            if (i > 0) {
+                                numberToUse = i - 1;
+                            } else {
+                                numberToUse = i;
+                            }
+                            if (previousChildrenLength==0||((currentChildrenLength - Math.round(previousChildrenLength/2)) >= textNeedyLength)) {
+                                lordOfElements.children[numberToUse].parentNode.insertBefore(elementToAdd, lordOfElements.children[i]);
+                            } else {
+                                lordOfElements.children[numberToUse].parentNode.insertBefore(elementToAdd, lordOfElements.children[i].nextSibling);
+                            }
+                            lastICounterValue = i;
+                            break;
+                        }
+                        lordOfElementsTextResult = lordOfElementsTextResult + " " + lordOfElements.children[i].innerText;
+                        lordOfElementsResult = lordOfElementsResult + lordOfElements.children[i].innerText.length;
+                        previousChildrenLength = lordOfElements.children[i].innerText.length;
+                        currentChildrenLength = lordOfElementsResult;
+                    }
+                }
+            }
+            var spanMarker = document.createElement("span");
+            spanMarker.setAttribute("id", "markedSpan");
+            lordOfElements.prepend(spanMarker);
+        }
+    } catch (e) {
+
+    }
+}

@@ -22,7 +22,7 @@ try {
 			$unsuccessfullAjaxSyncAttempt = 0;
 
 			try {
-//			$url = 'http://realbigweb/api/wp-get-settings';     // orig web post
+//			$url = 'https://realbigweb/api/wp-get-settings';     // orig web post
 			$url = 'https://realbig.media/api/wp-get-settings';     // orig post
 
                 /** for WP request **/
