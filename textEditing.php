@@ -172,7 +172,7 @@ try {
 							$editedContent = preg_replace( '~<placeholderForAd>~', '', $editedContent, $elementStep - 1 );
 							$editedContent = preg_replace( '~<placeholderForAd>~', '<placeholderForAdDop>', $editedContent, 1, $countReplaces );
 						}
-					} elseif ( $item['setting_type'] == 3 ) {       //for direct element
+					} elseif ( $item['setting_type'] == 33 ) {       //for direct element (temporary unused)
 						if ( empty( $elementName ) || empty( $elementText ) ) {
 							continue;
 						}
