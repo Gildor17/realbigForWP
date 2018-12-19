@@ -273,6 +273,7 @@ function percentInserter(lordOfElements, containerFor6th) {
         var separatorResult = [];
         var separatorResultCounter = 0;
         var lastICounterValue = 0;
+        var lastJ1CounterValue = 0;
         var possibleTagsArray = ["P", "H1", "H2", "H3", "H4", "H5", "H6", "DIV", "OL", "UL", "BLOCKQUOTE"];
 
         if (!document.getElementById("markedSpan")) {
@@ -303,7 +304,7 @@ function percentInserter(lordOfElements, containerFor6th) {
                     if (possibleTagsArray.includes(lordOfElements.children[i].tagName)&&!lordOfElements.children[i].classList.contains("percentPointerClass")&&lordOfElements.children[i].id!="toc_container") {
                         if (lordOfElements.children[i].tagName=="DIV") {
                             if (lordOfElements.children[i].children.length > 0) {
-                                for (let j1 = 0; j1 < lordOfElements.children[i].children.length; j1++) {
+                                for (let j1 = lastJ1CounterValue; j1 < lordOfElements.children[i].children.length; j1++) {
                                     if (possibleTagsArray.includes(lordOfElements.children[i].children[j1].tagName)&&!lordOfElements.children[i].children[j1].classList.contains("percentPointerClass")&&lordOfElements.children[i].children[j1].id!="toc_container") {
                                         if (currentChildrenLength >= textNeedyLength) {
                                             let elementToAdd = document.createElement("div");
@@ -320,6 +321,7 @@ function percentInserter(lordOfElements, containerFor6th) {
                                                 lordOfElements.children[i].children[numberToUse].parentNode.insertBefore(elementToAdd, lordOfElements.children[i].children[j1].nextSibling);
                                             }
                                             lastICounterValue = i;
+                                            lastJ1CounterValue = j1;
                                             previousBreak = 1;
                                             break;
                                         }
