@@ -168,7 +168,24 @@ try {
 				$excludedPagesCheck = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", ['excludedPages']));
 
 				if (!empty($excludedPagesCheck)) {
-					$excludedPagesCheckArray = explode(",", $excludedPagesCheck);
+				    $excludedDelimiter = 0;
+				    $maxCountDelimiter = 0;
+					$excludedPagesCheckArray[1] = explode(",", $excludedPagesCheck);
+					$excludedPagesCheckArray[2] = explode("\n", $excludedPagesCheck);
+					$excludedPagesCheckArray[3] = explode(";", $excludedPagesCheck);
+
+					foreach ($excludedPagesCheckArray AS $k => $item) {
+					    if (count($item) > $maxCountDelimiter) {
+					        $maxCountDelimiter = count($item);
+					        $excludedDelimiter = $k;
+                        }
+                    }
+                    if ($excludedDelimiter > 0) {
+	                    $excludedPagesCheckArray = $excludedPagesCheckArray[$excludedDelimiter];
+                    } else {
+	                    $excludedPagesCheckArray = $excludedPagesCheck;
+                    }
+
 					if (!empty($excludedPagesCheckArray)) {
 						foreach ($excludedPagesCheckArray AS $item) {
 							$item = trim($item);
