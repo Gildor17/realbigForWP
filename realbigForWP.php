@@ -15,9 +15,9 @@ include ( dirname(__FILE__)."/synchronising.php");
 include ( dirname(__FILE__)."/textEditing.php");
 
 /*
-Plugin name:  Realbig For WordPress
+Plugin name:  Realbig Media
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.1.26.23
+Version:      0.1.26.24
 Author:       Realbig Team
 License:      GPLv2 or later
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
@@ -46,7 +46,7 @@ try {
 	if ( ! empty( $pluginData['Version'] ) ) {
 		$GLOBALS['realbigForWP_version'] = $pluginData['Version'];
 	} else {
-		$GLOBALS['realbigForWP_version'] = '0.1.26.23';
+		$GLOBALS['realbigForWP_version'] = '0.1.26.24';
 	}
 	$lastSuccessVersionGatherer = get_option( 'realbig_status_gatherer_version' );
 //	require_once( 'synchronising.php' );
@@ -209,7 +209,7 @@ try {
 	add_action( 'wp_enqueue_scripts', 'RFWP_syncFunctionAdd1', 100 );
 	$GLOBALS['stepCounter'] = 'zero';
 	if ( ! empty( $token ) && $token != 'no token' && $lastSyncTimeTransient == false ) {
-		add_action( 'wp_enqueue_scripts', 'RFWP_syncFunctionAdd', 101 );
+//		add_action( 'wp_enqueue_scripts', 'RFWP_syncFunctionAdd', 101 );
 		$activeSyncChecker      = get_transient( 'realbigSyncChecker' );
 		$GLOBALS['stepCounter'] = '1st';
 		if ( isset( $jsAutoSynchronizationStatus ) && empty( $activeSyncChecker ) ) {

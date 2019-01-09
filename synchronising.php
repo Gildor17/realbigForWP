@@ -6,7 +6,7 @@
  * Time: 18:17
  */
 
-include ( dirname(__FILE__).'/../../../wp-load.php' );
+//include ( dirname(__FILE__).'/../../../wp-load.php' );
 include_once ( dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
 include_once ( dirname(__FILE__)."/../../../wp-admin/includes/upgrade.php" );
 include_once ( dirname(__FILE__).'/../../../wp-includes/wp-db.php');
@@ -299,19 +299,25 @@ try {
 		}
 	}
 
-	$jsAutoSynchronizationStatus = intval( $wpdb->get_var( 'SELECT optionValue FROM ' . $GLOBALS['table_prefix'] . 'realbig_settings WHERE optionName = "jsAutoSyncFails"' ) );
-	if ( ! empty( $jsAutoSynchronizationStatus ) && $jsAutoSynchronizationStatus < 5 && ! empty( $_POST['funcActivator'] ) && $_POST['funcActivator'] == 'ready' ) {
-		$activeSyncTransient = get_transient( 'realbigPluginSyncProcess' );
-		if ( $activeSyncTransient == false ) {
-			set_transient( 'realbigPluginSyncProcess', 'true', 30 );
-			$wpOptionsCheckerSyncTime = $wpdb->get_row( $wpdb->prepare( 'SELECT optionValue FROM ' . $GLOBALS['table_prefix'] . 'realbig_settings WHERE optionName = %s', [ "token_sync_time" ] ) );
-			if ( ! empty( $wpOptionsCheckerSyncTime ) ) {
-				$wpOptionsCheckerSyncTime = get_object_vars( $wpOptionsCheckerSyncTime );
-			}
-			$token      = RFWP_tokenChecking( $GLOBALS['table_prefix'] );
-			$ajaxResult = RFWP_synchronize( $token, $wpOptionsCheckerSyncTime, true, $GLOBALS['table_prefix'], 'ajax' );
+//	if ( ! empty( $jsAutoSynchronizationStatus ) && $jsAutoSynchronizationStatus < 5 && ! empty( $_POST['funcActivator'] ) && $_POST['funcActivator'] == 'ready' ) {
+	if (!empty($_POST["action"])&&$_POST["action"]=="heartbeat") {
+	    $succssfullSync = get_transient("realbigPluginSyncAttempt");
+	    if (empty($succssfullSync)) {
+		    $jsAutoSynchronizationStatus = intval( $wpdb->get_var( 'SELECT optionValue FROM ' . $GLOBALS['table_prefix'] . 'realbig_settings WHERE optionName = "jsAutoSyncFails"' ) );
+		    if (!empty($jsAutoSynchronizationStatus)&&$jsAutoSynchronizationStatus<5) {
+			    $activeSyncTransient = get_transient( 'realbigPluginSyncProcess' );
+			    if ( $activeSyncTransient == false ) {
+				    set_transient( 'realbigPluginSyncProcess', 'true', 30 );
+				    $wpOptionsCheckerSyncTime = $wpdb->get_row( $wpdb->prepare( 'SELECT optionValue FROM ' . $GLOBALS['table_prefix'] . 'realbig_settings WHERE optionName = %s', [ "token_sync_time" ] ) );
+				    if ( ! empty( $wpOptionsCheckerSyncTime ) ) {
+					    $wpOptionsCheckerSyncTime = get_object_vars( $wpOptionsCheckerSyncTime );
+				    }
+				    $token      = RFWP_tokenChecking( $GLOBALS['table_prefix'] );
+				    $ajaxResult = RFWP_synchronize( $token, $wpOptionsCheckerSyncTime, true, $GLOBALS['table_prefix'], 'ajax' );
 //	    echo $ajaxResult;
-		}
+			    }
+		    }
+        }
 	}
 
 }

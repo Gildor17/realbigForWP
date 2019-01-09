@@ -4,7 +4,6 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
     // var currentPathFFile2 = path.dirname(__filename);
 
     try {
-
         var content_pointer = document.getElementById("content_pointer_id");
         var parent_with_content = content_pointer.parentElement;
         var lordOfElements = parent_with_content;
@@ -183,7 +182,7 @@ function asyncFunctionLauncher() {
     } else {
         setTimeout(function () {
             asyncFunctionLauncher()
-        }, 20)
+        }, 50)
     }
 }
 asyncFunctionLauncher();
