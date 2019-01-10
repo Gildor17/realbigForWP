@@ -41,12 +41,13 @@ try {
 					} elseif ( ! empty( $item['minSymbols'] ) && $item['minSymbols'] > 0 && $item['minSymbols'] > $contentLength ) {
 						continue;
 					}
+
+					$elementText     = $item['text'];
 					switch ($item['setting_type']) {
 						case 1:
 							$elementName     = $item['element'];
 							$elementPosition = $item['elementPosition'];
 							$elementNumber   = $item['elementPlace'];
-							$elementText     = $item['text'];
 							break;
 						case 2:
 							$elementName     = $item['element'];
@@ -54,23 +55,14 @@ try {
 							$elementNumber   = $item['firstPlace'];
 							$elementRepeats  = $item['elementCount'] - 1;
 							$elementStep     = $item['elementStep'];
-							$elementText     = $item['text'];
 							break;
 						case 3:
 							$elementTag      = $item['element'];
 							$elementName     = $item['directElement'];
 							$elementPosition = $item['elementPosition'];
-							$elementText     = $item['text'];
-							break;
-						case 4:
-							$elementText     = $item['text'];
-							break;
-						case 5:
-							$elementText     = $item['text'];
 							break;
 						case 6:
 							$elementNumber   = $item['elementPlace'];
-							$elementText     = $item['text'];
 							break;
 					}
 					$elementText = "<div class='percentPointerClass'>".$elementText."</div>";
@@ -108,29 +100,30 @@ try {
 						if ( $elementNumber < 0 ) {
 							$replaces = 0;
 							/**********************************************************/
-							if ( $elementName == 'img' )     //element is image
-							{
-								if ( $elementPosition == 0 )    //if position before
-								{
-									$editedContent = preg_replace( '~<' . $elementName . '( |>|\/>){1}?~', '<placeholderForAd><' . $elementName . '$1', $editedContent, - 1, $replaces );
-								} elseif ( $elementPosition == 1 )    //if position after
-								{
-									$editedContent = preg_replace( '~<' . $elementName . '([^>]*?)(\/>|>){1}~',
+							if ( $elementName == 'img' ) {     //element is image
+								if ( $elementPosition == 0 ) {    //if position before
+									$editedContent = preg_replace( '~<' . $elementName . '( |>|\/>){1}?~i', '<placeholderForAd><' . $elementName . '$1', $editedContent, - 1, $replaces );
+								} elseif ( $elementPosition == 1 ) {    //if position after
+									$editedContent = preg_replace( '~<' . $elementName . '([^>]*?)(\/>|>){1}~i',
 										'<' . $elementName . ' $1 $2<placeholderForAd>', $editedContent, - 1, $replaces );
 								}
-							} else    // non-image element
-							{
-								if ( $elementPosition == 0 )    //if position before
-								{
-									$editedContent = preg_replace( '~<' . $elementName . '( |>){1}?~', '<placeholderForAd><' . $elementName . '$1', $editedContent, - 1, $replaces );
-								} elseif ( $elementPosition == 1 )    //if position after
-								{
-									$editedContent = preg_replace( '~<( )*\/( )*' . $elementName . '( )*>~', '</' . $elementName . '><placeholderForAd>', $editedContent, - 1, $replaces );
+							} else {    // non-image element
+								if ( $elementPosition == 0 ) {    //if position before
+									$editedContent = preg_replace( '~<' . $elementName . '( |>){1}?~i', '<placeholderForAd><' . $elementName . '$1', $editedContent, - 1, $replaces );
+								} elseif ( $elementPosition == 1 ) {    //if position after
+									$editedContent = preg_replace( '~<( )*\/( )*' . $elementName . '( )*>~i', '</' . $elementName . '><placeholderForAd>', $editedContent, - 1, $replaces );
 								}
 							}
 							$editedContent = preg_replace( '~<placeholderForAd>~', '', $editedContent, $replaces + $elementNumber );
-							$editedContent = preg_replace( '~<placeholderForAd>~', '<placeholderForAdDop>', $editedContent, 1, $countReplaces );
-							$editedContent = preg_replace( '~<placeholderForAd>~', '', $editedContent );
+
+							$quotesCheck = preg_match("~\<blockquote[^>]*?\>(\s|\S)*?\<placeholderForAd\>(\s|\S)*?\<\/blockquote\>~i", $editedContent, $qm);
+							if (!empty($quotesCheck)) {
+								$editedContent = preg_replace( '~(\<blockquote[^>]*?\>(\s|\S)*?\<placeholderForAd\>(\s|\S)*?\<\/blockquote\>)~i', '$1<placeholderForAdDop>', $editedContent, 1, $countReplaces );
+								$editedContent = preg_replace( '~<placeholderForAd>~', '', $editedContent );
+                            } else {
+								$editedContent = preg_replace( '~<placeholderForAd>~', '<placeholderForAdDop>', $editedContent, 1, $countReplaces );
+								$editedContent = preg_replace( '~<placeholderForAd>~', '', $editedContent );
+                            }
 							/**********************************************************/
 						} else {
 							if ( $elementName == 'img' )     //element is image
@@ -154,7 +147,13 @@ try {
 								}
 							}
 							$editedContent = preg_replace( '~<placeholderForAd>~', '', $editedContent, $elementNumber - 1 );
-							$editedContent = preg_replace( '~<placeholderForAd>~', '<placeholderForAdDop>', $editedContent, 1, $countReplaces );
+							$quotesCheck = preg_match("~\<blockquote[^>]*?\>(\s|\S)*?\<placeholderForAd\>(\s|\S)*?\<\/blockquote\>~i", $editedContent, $qm);
+							if (!empty($quotesCheck)) {
+								$editedContent = preg_replace( '~(\<blockquote[^>]*?\>(\s|\S)*?\<placeholderForAd\>(\s|\S)*?\<\/blockquote\>)~i', '$1<placeholderForAdDop>', $editedContent, 1, $countReplaces );
+								$editedContent = preg_replace( '~<placeholderForAd>~', '', $editedContent );
+							} else {
+								$editedContent = preg_replace( '~<placeholderForAd>~', '<placeholderForAdDop>', $editedContent, 1, $countReplaces );
+							}
 						}
 					} elseif ( $item['setting_type'] == 2 ) {       //for repeatable block
 						if ( $elementPosition == 0 )    //if position before

@@ -173,6 +173,7 @@ try {
 					$excludedPagesCheckArray[1] = explode(",", $excludedPagesCheck);
 					$excludedPagesCheckArray[2] = explode("\n", $excludedPagesCheck);
 					$excludedPagesCheckArray[3] = explode(";", $excludedPagesCheck);
+					$excludedPagesCheckArray[4] = explode(" ", $excludedPagesCheck);
 
 					foreach ($excludedPagesCheckArray AS $k => $item) {
 					    if (count($item) > $maxCountDelimiter) {

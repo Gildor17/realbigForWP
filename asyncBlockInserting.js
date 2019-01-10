@@ -56,12 +56,18 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                         sumResult = currentElement.length + blockSettingArray[i]["elementPlace"];
                         if (sumResult >= 0 && sumResult < currentElement.length) {
                             currentElement = currentElement[sumResult];
+                            if (currentElement.parentElement.tagName.toLowerCase() == "blockquote") {
+                                currentElement = currentElement.parentElement;
+                            }
                             currentElementChecker = true;
                         }
                     } else {
                         sumResult = blockSettingArray[i]["elementPlace"] - 1;
                         if (sumResult < currentElement.length) {
                             currentElement = currentElement[sumResult];
+                            if (currentElement.parentElement.tagName.toLowerCase() == "blockquote") {
+                                currentElement = currentElement.parentElement;
+                            }
                             currentElementChecker = true;
                         }
                     }
@@ -89,6 +95,9 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                             for (var i1 = 0; i1 < currentElement.length; i1++) {
                                 if (!blockSettingArray[i]["element"] || currentElement[i1].tagName.toLowerCase() == blockSettingArray[i]["element"].toLowerCase()) {
                                     currentElement = currentElement[i1];
+                                    if (currentElement.parentElement.tagName.toLowerCase() == "blockquote") {
+                                        currentElement = currentElement.parentElement;
+                                    }
                                     currentElementChecker = true;
                                     break;
                                 }
@@ -117,6 +126,9 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                     if (curElement.getElementsByTagName("p").length > 0) {
                         let elementNumber = Math.round(curElement.getElementsByTagName("p").length/2);
                         curElement = curElement.getElementsByTagName("p")[elementNumber];
+                        if (curElement.parentElement.tagName.toLowerCase() == "blockquote") {
+                            curElement = curElement.parentElement;
+                        }
                         if (curElement != undefined && curElement != null) {
                             curElement.parentNode.insertBefore(elementToAdd, curElement.nextSibling);
                             blockSettingArray.splice(i, 1);
@@ -315,9 +327,17 @@ function percentInserter(lordOfElements, containerFor6th) {
                                                 numberToUse = j;
                                             }
                                             if (previousChildrenLength==0||((currentChildrenLength - Math.round(previousChildrenLength/2)) >= textNeedyLength)) {
-                                                lordOfElements.children[i].children[numberToUse].parentNode.insertBefore(elementToAdd, lordOfElements.children[i].children[j1]);
+                                                if (lordOfElements.children[i].children[numberToUse].parentElement.tagName.toLowerCase() == "blockquote") {
+                                                    lordOfElements.children[i].children[numberToUse].parentElement.parentNode.insertBefore(elementToAdd, lordOfElements.children[i].children[j1]);
+                                                } else {
+                                                    lordOfElements.children[i].children[numberToUse].parentNode.insertBefore(elementToAdd, lordOfElements.children[i].children[j1]);
+                                                }
                                             } else {
-                                                lordOfElements.children[i].children[numberToUse].parentNode.insertBefore(elementToAdd, lordOfElements.children[i].children[j1].nextSibling);
+                                                if (lordOfElements.children[i].children[numberToUse].parentElement.tagName.toLowerCase() == "blockquote") {
+                                                    lordOfElements.children[i].children[numberToUse].parentElement.parentNode.insertBefore(elementToAdd, lordOfElements.children[i].children[j1].nextSibling);
+                                                } else {
+                                                    lordOfElements.children[i].children[numberToUse].parentNode.insertBefore(elementToAdd, lordOfElements.children[i].children[j1].nextSibling);
+                                                }
                                             }
                                             lastICounterValue = i;
                                             lastJ1CounterValue = j1;
@@ -345,9 +365,17 @@ function percentInserter(lordOfElements, containerFor6th) {
                                     numberToUse = i;
                                 }
                                 if (previousChildrenLength==0||((currentChildrenLength - Math.round(previousChildrenLength/2)) >= textNeedyLength)) {
-                                    lordOfElements.children[numberToUse].parentNode.insertBefore(elementToAdd, lordOfElements.children[i]);
+                                    if (lordOfElements.children[numberToUse].parentElement.tagName.toLowerCase() == "blockquote") {
+                                        lordOfElements.children[numberToUse].parentElement.parentNode.insertBefore(elementToAdd, lordOfElements.children[i]);
+                                    } else {
+                                        lordOfElements.children[numberToUse].parentNode.insertBefore(elementToAdd, lordOfElements.children[i]);
+                                    }
                                 } else {
-                                    lordOfElements.children[numberToUse].parentNode.insertBefore(elementToAdd, lordOfElements.children[i].nextSibling);
+                                    if (lordOfElements.children[numberToUse].parentElement.tagName.toLowerCase() == "blockquote") {
+                                        lordOfElements.children[numberToUse].parentElement.parentNode.insertBefore(elementToAdd, lordOfElements.children[i].nextSibling);
+                                    } else {
+                                        lordOfElements.children[numberToUse].parentNode.insertBefore(elementToAdd, lordOfElements.children[i].nextSibling);
+                                    }
                                 }
                                 lastICounterValue = i;
                                 break;
