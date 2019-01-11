@@ -93,6 +93,11 @@ try {
 //						$elementText     = $item['text'];
 //                    }
 
+
+
+					$editedContent = preg_replace( '~(<blockquote[^>]*?\>)~i', '<bq_mark_begin>$1', $editedContent, -1);
+					$editedContent = preg_replace( '~(<\/blockquote\>)~i', '$1<bq_mark_end>', $editedContent, -1);
+
 					if ( $item['setting_type'] == 1 ) {       //for lonely block
 						if ( empty( $elementName ) || empty( $elementNumber ) || empty( $elementText ) ) {
 							continue;
@@ -115,15 +120,17 @@ try {
 								}
 							}
 							$editedContent = preg_replace( '~<placeholderForAd>~', '', $editedContent, $replaces + $elementNumber );
-
-							$quotesCheck = preg_match("~\<blockquote[^>]*?\>(\s|\S)*?\<placeholderForAd\>(\s|\S)*?\<\/blockquote\>~i", $editedContent, $qm);
+							$quotesCheck = preg_match("~(<bq_mark_begin>)(((?<!<bq_mark_end>)\s|(?<!<bq_mark_end>)\S)*?)(<placeholderForAd>)((\s|\S)*?)(<bq_mark_end>)~i", $editedContent, $qm);
 							if (!empty($quotesCheck)) {
-								$editedContent = preg_replace( '~(\<blockquote[^>]*?\>(\s|\S)*?\<placeholderForAd\>(\s|\S)*?\<\/blockquote\>)~i', '$1<placeholderForAdDop>', $editedContent, 1, $countReplaces );
-								$editedContent = preg_replace( '~<placeholderForAd>~', '', $editedContent );
-                            } else {
-								$editedContent = preg_replace( '~<placeholderForAd>~', '<placeholderForAdDop>', $editedContent, 1, $countReplaces );
-								$editedContent = preg_replace( '~<placeholderForAd>~', '', $editedContent );
-                            }
+								if ($elementPosition == 0) {
+									$editedContent = preg_replace("~(<bq_mark_begin>)((\s|\S)*?)(<placeholderForAd>)((\s|\S)*?)(<bq_mark_end>)~i", "<placeholderForAdDop>$1$2$5$7", $editedContent, 1, $countReplaces);
+								} elseif ($elementPosition == 1) {
+									$editedContent = preg_replace("~(<bq_mark_begin>)((\s|\S)*?)(<placeholderForAd>)((\s|\S)*?)(<bq_mark_end>)~i", "$1$2$5$7<placeholderForAdDop>", $editedContent, 1, $countReplaces);
+								}
+							} else {
+								$editedContent = preg_replace('~<placeholderForAd>~', '<placeholderForAdDop>', $editedContent, 1, $countReplaces);
+							}
+							$editedContent = preg_replace( '~<placeholderForAd>~', '', $editedContent );
 							/**********************************************************/
 						} else {
 							if ( $elementName == 'img' )     //element is image
@@ -136,8 +143,7 @@ try {
 									$editedContent = preg_replace( '~<' . $elementName . '([^>]*?)(\/>|>){1}~',
 										'<' . $elementName . ' $1 $2<placeholderForAd>', $editedContent, $elementNumber );
 								}
-							} else    // non-image element
-							{
+							} else {    // non-image element
 								if ( $elementPosition == 0 )    //if position before
 								{
 									$editedContent = preg_replace( '~<' . $elementName . '( |>){1}?~', '<placeholderForAd><' . $elementName . '$1', $editedContent, $elementNumber );
@@ -147,27 +153,39 @@ try {
 								}
 							}
 							$editedContent = preg_replace( '~<placeholderForAd>~', '', $editedContent, $elementNumber - 1 );
-							$quotesCheck = preg_match("~\<blockquote[^>]*?\>(\s|\S)*?\<placeholderForAd\>(\s|\S)*?\<\/blockquote\>~i", $editedContent, $qm);
+							$quotesCheck = preg_match("~(<bq_mark_begin>)(((?<!<bq_mark_end>)\s|(?<!<bq_mark_end>)\S)*?)(<placeholderForAd>)((\s|\S)*?)(<bq_mark_end>)~i", $editedContent, $qm);
+//							$quotesCheck1492 = preg_match_all("~(<bq_mark_begin>)((\s|\S)*?)(<placeholderForAd>)((\s|\S)*?)(<bq_mark_end>)~i", $editedContent, $qm1492);
+//							$quotesCheck2 = preg_match_all("~(\<bq_mark\>)~i", $editedContent, $qm2);
+//							$quotesCheck3 = preg_match_all("~\<blockquote[^>]*?\>{1}(\s|\S)*?(\<bq_mark\>)*?(\s|\S)*?\<placeholderForAd\>~i", $editedContent, $qm3);
+//							$quotesCheck4 = preg_match_all("~\<placeholderForAd\>~i", $editedContent, $qm4);
+//							$quotesCheck5 = preg_match_all("~(\<blockquote([^>]*?)\>)~i", $editedContent, $qm5);
+//							$quotesCheck6 = preg_match_all("~(\<blockquote([^>]*?)\>)((\s|\S)*)~i", $editedContent, $qm6);
+//							$quotesCheck7 = preg_match_all("~(\<blockquote([^>]*?)\>)((\s|\S)*?)(\<bq_mark\>)~i", $editedContent, $qm7);
+//							$quotesCheck71 = preg_match_all("~(\<blockquote([^>]*?)\>)((\s|\S)*?)(?!\<\/blockquote\>)*(\<placeholderForAd\>)~i", $editedContent, $qm71);
+//							$quotesCheck8 = preg_match_all("~(\<blockquote([^>]*?)\>)(\s|\S)*?(\<bq_mark\>)*?(\s|\S)*?~i", $editedContent, $qm8);
+//							$quotesCheck9 = preg_match_all("~(\<blockquote([^>]*?)\>)(\s|\S)*?(\<bq_mark\>)*?(\s|\S)*?\<placeholderForAd\>~i", $editedContent, $qm9);
+
 							if (!empty($quotesCheck)) {
-								$editedContent = preg_replace( '~(\<blockquote[^>]*?\>(\s|\S)*?\<placeholderForAd\>(\s|\S)*?\<\/blockquote\>)~i', '$1<placeholderForAdDop>', $editedContent, 1, $countReplaces );
-								$editedContent = preg_replace( '~<placeholderForAd>~', '', $editedContent );
+								if ($elementPosition == 0) {
+									$editedContent = preg_replace("~(<bq_mark_begin>)((\s|\S)*?)(<placeholderForAd>)((\s|\S)*?)(<bq_mark_end>)~i", "<placeholderForAdDop>$1$2$5$7", $editedContent,1, $countReplaces);
+                                } elseif ($elementPosition == 1) {
+									$editedContent = preg_replace("~(<bq_mark_begin>)((\s|\S)*?)(<placeholderForAd>)((\s|\S)*?)(<bq_mark_end>)~i", "$1$2$5$7<placeholderForAdDop>", $editedContent,1, $countReplaces);
+                                }
 							} else {
-								$editedContent = preg_replace( '~<placeholderForAd>~', '<placeholderForAdDop>', $editedContent, 1, $countReplaces );
+								$editedContent = preg_replace( '~<placeholderForAd>~', '<placeholderForAdDop>', $editedContent, 1, $countReplaces);
 							}
+							$editedContent = preg_replace( '~<placeholderForAd>~', '', $editedContent);
 						}
 					} elseif ( $item['setting_type'] == 2 ) {       //for repeatable block
-						if ( $elementPosition == 0 )    //if position before
-						{
+						if ( $elementPosition == 0 ) {    //if position before
 							$editedContent = preg_replace( '~<' . $elementName . '( |>){1}?~', '<placeholderForAd><' . $elementName . '$1', $editedContent );
-						} elseif ( $elementPosition == 1 )    //if position after
-						{
+						} elseif ( $elementPosition == 1 ) {    //if position after
 							$editedContent = preg_replace( '~<( )*\/( )*' . $elementName . '( )*>~', '</' . $elementName . '><placeholderForAd>', $editedContent );
 						}
 						$editedContent = preg_replace( '~<placeholderForAd>~', '', $editedContent, $elementNumber - 1 );        //first iteration
 						$editedContent = preg_replace( '~<placeholderForAd>~', '<placeholderForAdDop>', $editedContent, 1, $countReplaces );
 
-						for ( $i = 0; $i < $elementRepeats; $i ++ )     //repeats begin
-						{
+						for ( $i = 0; $i < $elementRepeats; $i ++ ) {     //repeats begin
 							$editedContent = preg_replace( '~<placeholderForAd>~', '', $editedContent, $elementStep - 1 );
 							$editedContent = preg_replace( '~<placeholderForAd>~', '<placeholderForAdDop>', $editedContent, 1, $countReplaces );
 						}
@@ -223,6 +241,9 @@ try {
 						$editedContent = $editedContent . '<placeholderForAd>';
 						$editedContent = preg_replace( '~<placeholderForAd>~', '<placeholderForAdDop>', $editedContent, - 1, $countReplaces );
 					}
+					$editedContent = preg_replace( '~<bq_mark_begin>~i', '', $editedContent, -1);
+					$editedContent = preg_replace( '~<bq_mark_end>~i', '', $editedContent, -1);
+
 					$editedContent = preg_replace( '~<placeholderForAdDop>~', $elementText, $editedContent );   //replacing right placeholders
 					$editedContent = preg_replace( '~<placeholderForAd>~', '', $editedContent );    //replacing all useless placeholders
 
