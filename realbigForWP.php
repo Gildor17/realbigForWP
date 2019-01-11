@@ -336,21 +336,20 @@ try {
 	/************* end blocks for text ************************************************************************************/
 	/********** using settings in texts ***********************************************************************************/
 	function RFWP_adBlocksToContentInsertingFunction($content) {
-		if (!empty($content)) {
-			if ($GLOBALS['mainPageStatus'] == 2 || is_page() || is_single() || is_singular() || is_archive()) {
-				global $wpdb;
+        if ($GLOBALS['mainPageStatus'] == 2 || is_page() || is_single() || is_singular() || is_archive()) {
+	        global $wpdb;
+	        if (!empty($content)) {
+		        $fromDb = $wpdb->get_results('SELECT * FROM '.$GLOBALS['wpPrefix'].'realbig_plugin_settings WGPS');
+            } else {
+		        $fromDb = $wpdb->get_results('SELECT * FROM '.$GLOBALS['wpPrefix'].'realbig_plugin_settings WGPS WHERE setting_type = 3');
+	        }
+            require_once( 'textEditing.php' );
+            $content = RFWP_addIcons( $fromDb, $content, 'content' );
 
-				$fromDb = $wpdb->get_results( 'SELECT * FROM ' . $GLOBALS['wpPrefix'] . 'realbig_plugin_settings WGPS' );
-				require_once( 'textEditing.php' );
-				$content = RFWP_addIcons( $fromDb, $content, 'content' );
-
-				return $content;
-			} else {
-				return $content;
-			}
-		} else {
-			return $content;
-		}
+            return $content;
+        } else {
+            return $content;
+        }
 	}
 	/*********** end of using settings in texts ***************************************************************************/
 	/*********** begin of token input area ********************************************************************************/
