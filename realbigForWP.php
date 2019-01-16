@@ -17,7 +17,7 @@ include ( dirname(__FILE__)."/textEditing.php");
 /*
 Plugin name:  Realbig Media
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.1.26.24
+Version:      0.1.26.25
 Author:       Realbig Team
 License:      GPLv2 or later
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
@@ -46,7 +46,7 @@ try {
 	if ( ! empty( $pluginData['Version'] ) ) {
 		$GLOBALS['realbigForWP_version'] = $pluginData['Version'];
 	} else {
-		$GLOBALS['realbigForWP_version'] = '0.1.26.24';
+		$GLOBALS['realbigForWP_version'] = '0.1.26.25';
 	}
 	$lastSuccessVersionGatherer = get_option( 'realbig_status_gatherer_version' );
 //	require_once( 'synchronising.php' );
@@ -210,7 +210,7 @@ try {
 //	$GLOBALS['wpOptionsCheckerSyncTime'] = $wpOptionsCheckerSyncTime;
 	function RFWP_syncFunctionAdd() {
 		wp_enqueue_script( 'synchronizationJS',
-			plugins_url() . '/realbigForWP/synchronizationJS.js',
+			dirname(__FILE__).'/synchronizationJS.js',
 			array( 'jquery' ),
 			$GLOBALS['realbigForWP_version'],
 			true );
@@ -218,7 +218,7 @@ try {
 
 	function RFWP_syncFunctionAdd1() {
 		wp_enqueue_script( 'asyncBlockInserting',
-			plugins_url() . '/realbigForWP/asyncBlockInserting.js',
+			plugins_url().'/'.basename(__DIR__).'/asyncBlockInserting.js',
 			array( 'jquery' ),
 			$GLOBALS['realbigForWP_version'],
 			false );
