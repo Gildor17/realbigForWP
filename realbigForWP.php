@@ -17,7 +17,7 @@ include ( dirname(__FILE__)."/textEditing.php");
 /*
 Plugin name:  Realbig Media
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.1.26.23
+Version:      0.1.26.25
 Author:       Realbig Team
 License:      GPLv2 or later
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
