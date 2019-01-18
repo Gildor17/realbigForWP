@@ -17,7 +17,7 @@ include ( dirname(__FILE__)."/textEditing.php");
 /*
 Plugin name:  Realbig Media
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.1.26.25
+Version:      0.1.26.23
 Author:       Realbig Team
 License:      GPLv2 or later
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
@@ -90,14 +90,14 @@ try {
 	/********** end of checking and creating tables ***********************************************************************/
 	/********** token gathering and adding "timeUpdate" field in wp_realbig_settings **************************************/
 	$token                 = RFWP_tokenChecking( $wpPrefix );
-	$lastSyncTimeTransient = get_transient( 'realbigPluginSyncAttempt' );
 
 	$unmarkSuccessfulUpdate      = $wpdb->get_var( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = "successUpdateMark"' );
 	$jsAutoSynchronizationStatus = $wpdb->get_var( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = "jsAutoSyncFails"' );
-	if ( isset( $jsAutoSynchronizationStatus ) && $jsAutoSynchronizationStatus > 4 && ! empty( $token ) && $token != 'no token' && $lastSyncTimeTransient == false ) {
-		$wpOptionsCheckerSyncTime = $wpdb->get_row( $wpdb->prepare( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = %s', [ "token_sync_time" ] ) );
-		RFWP_synchronize( $token, ( empty( $wpOptionsCheckerSyncTime ) ? null : $wpOptionsCheckerSyncTime ), true, $GLOBALS['table_prefix'], 'manual' );
-	}
+
+//	if ( isset( $jsAutoSynchronizationStatus ) && $jsAutoSynchronizationStatus > 4 && ! empty( $token ) && $token != 'no token' && $lastSyncTimeTransient == false ) {
+//		$wpOptionsCheckerSyncTime = $wpdb->get_row( $wpdb->prepare( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = %s', [ "token_sync_time" ] ) );
+//		RFWP_synchronize( $token, ( empty( $wpOptionsCheckerSyncTime ) ? null : $wpOptionsCheckerSyncTime ), true, $GLOBALS['table_prefix'], 'manual' );
+//	}
 //	/*** enumUpdate */ $resultEnumUpdate = RFWP_updateElementEnumValuesFunction(); /** enumUpdateEnd */
 	if ( $statusGatherer['realbig_plugin_settings_table'] == true && ( $statusGatherer['element_column_values'] == false || $lastSuccessVersionGatherer != $GLOBALS['realbigForWP_version'] ) ) {
 		/** enumUpdate */
@@ -226,42 +226,28 @@ try {
 
 	add_action( 'wp_enqueue_scripts', 'RFWP_syncFunctionAdd1', 100 );
 	$GLOBALS['stepCounter'] = 'zero';
-	if ( ! empty( $token ) && $token != 'no token' && $lastSyncTimeTransient == false ) {
-//		add_action( 'wp_enqueue_scripts', 'RFWP_syncFunctionAdd', 101 );
-		$activeSyncChecker      = get_transient( 'realbigSyncChecker' );
-		$GLOBALS['stepCounter'] = '1st';
-		if ( isset( $jsAutoSynchronizationStatus ) && empty( $activeSyncChecker ) ) {
-			$GLOBALS['stepCounter'] = '2nd_1';
-			set_transient( 'realbigSyncChecker', 'active', 10 );
-			if ( ! empty( $unmarkSuccessfulUpdate ) && $unmarkSuccessfulUpdate == 'error' ) {
-				$GLOBALS['stepCounter'] = '3rd_1';
-				$wpdb->update( $wpPrefix . 'realbig_settings', [
-					'optionName'  => 'jsAutoSyncFails',
-					'optionValue' => intval( $jsAutoSynchronizationStatus ) + 1
-				], [ 'optionName' => 'jsAutoSyncFails' ] );
-			} elseif ( ! empty( $unmarkSuccessfulUpdate ) && $unmarkSuccessfulUpdate == 'success' ) {
-				$GLOBALS['stepCounter'] = '3rd_2';
-				$wpdb->update( $wpPrefix . 'realbig_settings', [
-					'optionName'  => 'jsAutoSyncFails',
-					'optionValue' => 0
-				], [ 'optionName' => 'jsAutoSyncFails' ] );
-				$wpdb->update( $wpPrefix . 'realbig_settings', [ 'optionValue' => 'error' ], [ 'optionName' => 'successUpdateMark' ] );
-			} elseif ( empty( $unmarkSuccessfulUpdate ) ) {
-				$GLOBALS['stepCounter'] = '3rd_3';
-				$wpdb->update( $wpPrefix . 'realbig_settings', [
-					'optionName'  => 'jsAutoSyncFails',
-					'optionValue' => 0
-				], [ 'optionName' => 'jsAutoSyncFails' ] );
-				$wpdb->insert( $wpPrefix . 'realbig_settings', [
-					'optionName'  => 'successUpdateMark',
-					'optionValue' => 'error'
-				] );
-			}
-		} elseif ( ! isset( $jsAutoSynchronizationStatus ) ) {
-			$GLOBALS['stepCounter'] = '2nd_2';
-			$wpdb->insert( $wpPrefix . 'realbig_settings', [ 'optionName' => 'jsAutoSyncFails', 'optionValue' => 0 ] );
+	$lastSyncTimeTransient = get_transient('realbigPluginSyncAttempt');
+	$activeSyncTransient   = get_transient('realbigPluginSyncProcess');
+	if (!empty($token)&&$token!='no token'&&empty($activeSyncTransient)&&empty($lastSyncTimeTransient)) {
+		if (empty(wp_next_scheduled('rb_cron_hook'))) {
+			RFWP_cronAutoGatheringLaunch();
 		}
+//		else {
+//			if (!empty(wp_doing_cron())) {
+//				RFWP_cronAutoSyncDelete();
+//				RFWP_cronAutoGatheringLaunch();
+//            }
+//		}
+        else {
+            if (!empty(wp_doing_cron())) {
+	            RFWP_cronAutoSyncDelete();
+            }
+        }
 	}
+	if (!empty(wp_doing_cron())&&empty($activeSyncTransient)&&empty($lastSyncTimeTransient)) {
+		RFWP_autoSync();
+	}
+
 	/********** end autosync and JS text edit *****************************************************************************/
 	/********** adding AD code in head area *******************************************************************************/
 	add_action( 'wp_head', 'RFWP_AD_header_add', 0 );

@@ -190,7 +190,7 @@ try {
 	}
 
 	if ( ! function_exists( 'RFWP_tokenChecking' ) ) {
-		function RFWP_tokenChecking( $wpPrefix ) {
+		function RFWP_tokenChecking($wpPrefix) {
 			global $wpdb;
 
 			try {
@@ -213,8 +213,8 @@ try {
 		}
 	}
 
-	if ( ! function_exists( 'RFWP_tokenTimeUpdateChecking' ) ) {
-		function RFWP_tokenTimeUpdateChecking( $token, $wpPrefix ) {
+	if (!function_exists('RFWP_tokenTimeUpdateChecking')) {
+		function RFWP_tokenTimeUpdateChecking($token, $wpPrefix) {
 			global $wpdb;
 			try {
 				$timeUpdate = $wpdb->get_results( "SELECT timeUpdate FROM " . $wpPrefix . "realbig_settings WHERE optionName = 'token_sync_time'" );
@@ -244,7 +244,7 @@ try {
 		}
 	}
 
-	if ( ! function_exists( 'RFWP_statusGathererConstructor' ) ) {
+	if (!function_exists('RFWP_statusGathererConstructor')) {
 		function RFWP_statusGathererConstructor( $pointer ) {
 			global $wpdb;
 			try {
@@ -300,26 +300,42 @@ try {
 	}
 
 //	if ( ! empty( $jsAutoSynchronizationStatus ) && $jsAutoSynchronizationStatus < 5 && ! empty( $_POST['funcActivator'] ) && $_POST['funcActivator'] == 'ready' ) {
-	if (!empty($_POST["action"])&&$_POST["action"]=="heartbeat") {
-	    $succssfullSync = get_transient("realbigPluginSyncAttempt");
-	    if (empty($succssfullSync)) {
-		    $jsAutoSynchronizationStatus = intval( $wpdb->get_var( 'SELECT optionValue FROM ' . $GLOBALS['table_prefix'] . 'realbig_settings WHERE optionName = "jsAutoSyncFails"' ) );
-		    if (!empty($jsAutoSynchronizationStatus)&&$jsAutoSynchronizationStatus<5) {
-			    $activeSyncTransient = get_transient( 'realbigPluginSyncProcess' );
-			    if ( $activeSyncTransient == false ) {
-				    set_transient( 'realbigPluginSyncProcess', 'true', 30 );
-				    $wpOptionsCheckerSyncTime = $wpdb->get_row( $wpdb->prepare( 'SELECT optionValue FROM ' . $GLOBALS['table_prefix'] . 'realbig_settings WHERE optionName = %s', [ "token_sync_time" ] ) );
-				    if ( ! empty( $wpOptionsCheckerSyncTime ) ) {
-					    $wpOptionsCheckerSyncTime = get_object_vars( $wpOptionsCheckerSyncTime );
-				    }
-				    $token      = RFWP_tokenChecking( $GLOBALS['table_prefix'] );
-				    $ajaxResult = RFWP_synchronize( $token, $wpOptionsCheckerSyncTime, true, $GLOBALS['table_prefix'], 'ajax' );
-//	    echo $ajaxResult;
-			    }
-		    }
+//	if (!empty($_POST["action"])&&$_POST["action"]=="heartbeat") {
+
+    /** Auto Sync */
+	function RFWP_autoSync() {
+		set_transient('realbigPluginSyncProcess', 'true', 30);
+		global $wpdb;
+        $wpOptionsCheckerSyncTime = $wpdb->get_row($wpdb->prepare('SELECT optionValue FROM '.$GLOBALS['table_prefix'].'realbig_settings WHERE optionName = %s',[ "token_sync_time" ]));
+        if (!empty($wpOptionsCheckerSyncTime)) {
+            $wpOptionsCheckerSyncTime = get_object_vars($wpOptionsCheckerSyncTime);
+        }
+        $token      = RFWP_tokenChecking($GLOBALS['table_prefix']);
+        $ajaxResult = RFWP_synchronize($token, $wpOptionsCheckerSyncTime, true, $GLOBALS['table_prefix'], 'ajax');
+	}
+	/** End of auto Sync */
+
+	/** Creating Cron RB auto sync */
+	function RFWP_cronAutoGatheringLaunch() {
+        add_filter('cron_schedules', 'rb_addCronAutosync');
+        function rb_addCronAutosync($schedules) {
+            $schedules['autoSync'] = array(
+                'interval' => 5,
+                'display'  => esc_html__( 'autoSync' ),
+            );
+            return $schedules;
+        }
+
+        add_action( 'rb_cron_hook', 'rb_cron_exec' );
+        if (!($checkIt = wp_next_scheduled( 'rb_cron_hook' ))) {
+            wp_schedule_event( (time()+2), 'autoSync', 'rb_cron_hook' );
         }
 	}
-
+	function RFWP_cronAutoSyncDelete() {
+        $checkIt = wp_next_scheduled('rb_cron_hook');
+        wp_unschedule_event( $checkIt, 'rb_cron_hook' );
+	}
+	/** End of Creating Cron RB auto sync */
 }
 catch (Exception $ex)
 {
