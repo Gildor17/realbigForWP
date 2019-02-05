@@ -135,7 +135,7 @@ try {
 								$getRotator = $wpdb->get_var( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = "rotator"' );
 								if (!empty($getRotator)) {
 									$wpdb->update( $wpPrefix.'realbig_settings', ['optionName'  => 'rotator', 'optionValue' => $decodedToken['rotator']],
-                                    ['optionName' => 'domain']);
+                                    ['optionName' => 'rotator']);
 								} else {
 									$wpdb->insert( $wpPrefix.'realbig_settings', ['optionName'  => 'rotator', 'optionValue' => $decodedToken['rotator']]);
 								}
