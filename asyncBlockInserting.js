@@ -84,34 +84,26 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                         repeat = true;
                     }
                 } else if (blockSettingArray[i]["setting_type"] == 3) {
-                    let elementTypeSymbol = '';
-                    let elementSpaceSymbol = '';
-                    let elementName = '';
-                    let elementType = '';
-                    let elementTag  = '';
-
-                    currentElement = document.querySelector(blockSettingArray[i]["directElement"].trim());
-                    if (!currentElement) {
-                        elementTypeSymbol = blockSettingArray[i]["directElement"].search('#');
-                        if (elementTypeSymbol < 0) {
-                            elementTypeSymbol = blockSettingArray[i]["directElement"].search('.');
-                            elementType = 'class';
-                            elementName = elementName.replace('\s', '.');
-                            if (elementTypeSymbol < 0) {
-                                elementName = '.' + elementName;
+                    var elementType = blockSettingArray[i]["directElement"].charAt(0);
+                    var elementName = blockSettingArray[i]["directElement"].substring(1);
+                    if (elementType == '#') {
+                        currentElement = document.querySelector(elementType + elementName);
+                        currentElementChecker = true;
+                    } else if (elementType == '.') {
+                        currentElement = document.getElementsByClassName(elementName);
+                        if (currentElement.length > 0) {
+                            for (var i1 = 0; i1 < currentElement.length; i1++) {
+                                if (!blockSettingArray[i]["element"] || currentElement[i1].tagName.toLowerCase() == blockSettingArray[i]["element"].toLowerCase()) {
+                                    currentElement = currentElement[i1];
+                                    if (currentElement.parentElement.tagName.toLowerCase() == "blockquote") {
+                                        currentElement = currentElement.parentElement;
+                                    }
+                                    currentElementChecker = true;
+                                    break;
+                                }
                             }
-                            currentElement = document.querySelector(elementName);
-                        } else {
-                            elementType = 'id';
-                            elementName = blockSettingArray[i]["directElement"].subString(elementTypeSymbol);
-                            elementSpaceSymbol = elementName.search('\s');
-                            if (elementSpaceSymbol > 1) {
-                                elementName = elementName.substring(0, elementSpaceSymbol - 1);
-                            }
-                            currentElement = document.querySelector(elementName);
                         }
                     }
-
                     if (currentElement != undefined && currentElement != null && currentElementChecker) {
                         if (blockSettingArray[i]["elementPosition"] == 0) {
                             currentElement.parentNode.insertBefore(elementToAdd, currentElement);
@@ -124,42 +116,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                     } else {
                         repeat = true;
                     }
-                }
-                // else if (blockSettingArray[i]["setting_type"] == old_3) {
-                //     var elementType = blockSettingArray[i]["directElement"].charAt(0);
-                //     var elementName = blockSettingArray[i]["directElement"].substring(1);
-                //     if (elementType == '#') {
-                //         currentElement = document.querySelector(elementType + elementName);
-                //         currentElementChecker = true;
-                //     } else if (elementType == '.') {
-                //         currentElement = document.getElementsByClassName(elementName);
-                //         if (currentElement.length > 0) {
-                //             for (var i1 = 0; i1 < currentElement.length; i1++) {
-                //                 if (!blockSettingArray[i]["element"] || currentElement[i1].tagName.toLowerCase() == blockSettingArray[i]["element"].toLowerCase()) {
-                //                     currentElement = currentElement[i1];
-                //                     if (currentElement.parentElement.tagName.toLowerCase() == "blockquote") {
-                //                         currentElement = currentElement.parentElement;
-                //                     }
-                //                     currentElementChecker = true;
-                //                     break;
-                //                 }
-                //             }
-                //         }
-                //     }
-                //     if (currentElement != undefined && currentElement != null && currentElementChecker) {
-                //         if (blockSettingArray[i]["elementPosition"] == 0) {
-                //             currentElement.parentNode.insertBefore(elementToAdd, currentElement);
-                //         } else {
-                //             currentElement.parentNode.insertBefore(elementToAdd, currentElement.nextSibling);
-                //         }
-                //         blockSettingArray.splice(i, 1);
-                //         poolbackI = 1;
-                //         i--;
-                //     } else {
-                //         repeat = true;
-                //     }
-                // }
-                else if (blockSettingArray[i]["setting_type"] == 4) {
+                } else if (blockSettingArray[i]["setting_type"] == 4) {
                     parent_with_content.append(elementToAdd);
                     blockSettingArray.splice(i, 1);
                     poolbackI = 1;
@@ -328,15 +285,14 @@ function percentInserter(lordOfElements, containerFor6th) {
         var separatorResultCounter = 0;
         var lastICounterValue = 0;
         var lastJ1CounterValue = 0;
-        var possibleTagsArray = ["P", "H1", "H2", "H3", "H4", "H5", "H6", "DIV", "OL", "UL", "BLOCKQUOTE", "INDEX"];
-        let possibleTagsInCheck = ["DIV", "INDEX"];
+        var possibleTagsArray = ["P", "H1", "H2", "H3", "H4", "H5", "H6", "DIV", "OL", "UL", "BLOCKQUOTE"];
 
         if (!document.getElementById("markedSpan")) {
             textLength = 0;
             for (let i = 0; i < lordOfElements.children.length; i++) {
                 // if (lordOfElements.children[i].tagName!="SCRIPT"&&!lordOfElements.children[i].classList.contains("percentPointerClass")) {
                 if (possibleTagsArray.includes(lordOfElements.children[i].tagName)&&!lordOfElements.children[i].classList.contains("percentPointerClass")&&lordOfElements.children[i].id!="toc_container") {
-                    if (possibleTagsInCheck.includes(lordOfElements.children[i].tagName)) {
+                    if (lordOfElements.children[i].tagName=="DIV") {
                         if (lordOfElements.children[i].children.length > 1) {
                             for (let j = 0; j < lordOfElements.children[i].children.length; j++) {
                                 if (possibleTagsArray.includes(lordOfElements.children[i].children[j].tagName)&&!lordOfElements.children[i].children[j].classList.contains("percentPointerClass")&&lordOfElements.children[i].children[j].id!="toc_container") {
@@ -357,7 +313,7 @@ function percentInserter(lordOfElements, containerFor6th) {
                 textNeedyLength = Math.round(textLength * (containerFor6th[j]["elementPlace"]/100));
                 for (let i = lastICounterValue; i < lordOfElements.children.length; i++) {
                     if (possibleTagsArray.includes(lordOfElements.children[i].tagName)&&!lordOfElements.children[i].classList.contains("percentPointerClass")&&lordOfElements.children[i].id!="toc_container") {
-                        if (possibleTagsInCheck.includes(lordOfElements.children[i].tagName)) {
+                        if (lordOfElements.children[i].tagName=="DIV") {
                             if (lordOfElements.children[i].children.length > 0) {
                                 for (let j1 = lastJ1CounterValue; j1 < lordOfElements.children[i].children.length; j1++) {
                                     if (possibleTagsArray.includes(lordOfElements.children[i].children[j1].tagName)&&!lordOfElements.children[i].children[j1].classList.contains("percentPointerClass")&&lordOfElements.children[i].children[j1].id!="toc_container") {

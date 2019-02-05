@@ -254,21 +254,25 @@ try {
 
 	function RFWP_AD_header_add() {
 		global $wpdb;
-		$getDomain = $wpdb->get_var( 'SELECT optionValue FROM ' . $GLOBALS['wpPrefix'] . 'realbig_settings WHERE optionName = "domain"' );
+		$getDomain = 'any.realbig.media';
+		$getRotator = 'rotator';
+
+		$getOV = $wpdb->get_results( 'SELECT optionName, optionValue FROM ' . $GLOBALS['wpPrefix'] . 'realbig_settings WHERE optionName IN ("domain","rotator")');
+//		$getDomain = $wpdb->get_var( 'SELECT optionValue FROM ' . $GLOBALS['wpPrefix'] . 'realbig_settings WHERE optionName IN ("domain")');
+		foreach ($getOV AS $k => $item) {
+			if (!empty($item->optionValue)) {
+				if ($item->optionName == 'domain') {
+                    $getDomain = $item->optionValue;
+				} else {
+                    $getRotator = $item->optionValue;
+				}
+			}
+        }
 		require_once( 'textEditing.php' );
 		$headerParsingResult = RFWP_headerADInsertor();
 		if ( $headerParsingResult == true ) {
-			if ( ! empty( $getDomain ) && $getDomain != '' ) {
-				?>
-                <script type="text/javascript"> rbConfig = {start: performance.now()}; </script>
-                <script async="async" type="text/javascript" src="//<?php echo $getDomain ?>/rotator.min.js"></script>
-				<?php
-			} else {
-				?>
-                <script type="text/javascript"> rbConfig = {start: performance.now()}; </script>
-                <script async="async" type="text/javascript" src="//any.realbig.media/rotator.min.js"></script>
-				<?php
-			}
+            ?><script type="text/javascript"> rbConfig = {start: performance.now(),rotator:'<?php echo $getRotator ?>'}; </script>
+            <script async="async" type="text/javascript" src="//<?php echo $getDomain ?>/<?php echo $getRotator ?>.min.js"></script><?php
 		}
 	}
 
