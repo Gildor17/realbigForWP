@@ -60,6 +60,7 @@ try {
 							$elementTag      = $item['element'];
 							$elementName     = $item['directElement'];
 							$elementPosition = $item['elementPosition'];
+							$elementNumber   = $item['elementPlace'];
 							break;
 						case 6:
 							$elementNumber   = $item['elementPlace'];
@@ -257,10 +258,11 @@ try {
 						$editedContent = $previousEditedContent;
 					}
 				}
-				$editedContent = '<span id="content_pointer_id"></span>' . $editedContent;
+//				$editedContent = '<index>'.$editedContent.'</index>';
+				$editedContent = '<span id="content_pointer_id"></span>'.$editedContent;
 //			    $usedBlocks = [];
-				$creatingJavascriptParserForContent = RFWP_creatingJavascriptParserForContentFunction( $fromDb, $usedBlocks, $contentLength );
-				$editedContent                      = $editedContent . $creatingJavascriptParserForContent;
+				$creatingJavascriptParserForContent = RFWP_creatingJavascriptParserForContentFunction($fromDb, $usedBlocks, $contentLength);
+				$editedContent                      = $editedContent.$creatingJavascriptParserForContent;
 
                 return $editedContent;
 			} else {
@@ -325,83 +327,44 @@ try {
 				$resultHere = in_array( $item['id'], $usedBlocks );
 				if ( $resultHere == false ) {
 					$scriptingCode .= 'blockSettingArray[' . $k . '] = [];' . PHP_EOL;
-					if ( $item['setting_type'] == 1 ) {       //for lonely block
-						$scriptingCode .= 'blockSettingArray[' . $k . ']["setting_type"] = 1; ' . PHP_EOL;
+
+					if ( ! empty( $item['minSymbols'] ) && $item['minSymbols'] > 1 ) {
+						$scriptingCode .= 'blockSettingArray[' . $k . ']["minSymbols"] = ' . $item['minSymbols'] . '; ' . PHP_EOL;
+					} else {
+						$scriptingCode .= 'blockSettingArray[' . $k . ']["minSymbols"] = 0;' . PHP_EOL;
+					}
+					if ( ! empty( $item['minHeaders'] ) && $item['minHeaders'] > 1 ) {
+						$scriptingCode .= 'blockSettingArray[' . $k . ']["minHeaders"] = ' . $item['minHeaders'] . '; ' . PHP_EOL;
+					} else {
+						$scriptingCode .= 'blockSettingArray[' . $k . ']["minHeaders"] = 0;' . PHP_EOL;
+					}
+					$scriptingCode .= 'blockSettingArray[' . $k . ']["text"] = \'' . $item['text'] . '\'; ' . PHP_EOL;
+					$scriptingCode .= 'blockSettingArray[' . $k . ']["setting_type"] = '.$item['setting_type'].'; ' . PHP_EOL;
+					if       ( $item['setting_type'] == 1 ) {       //for ordinary block
+//						$scriptingCode .= 'blockSettingArray[' . $k . ']["setting_type"] = 1; ' . PHP_EOL;
 						$scriptingCode .= 'blockSettingArray[' . $k . ']["element"] = "' . $item['element'] . '"; ' . PHP_EOL;
 						$scriptingCode .= 'blockSettingArray[' . $k . ']["elementPosition"] = ' . $item['elementPosition'] . '; ' . PHP_EOL;
 						$scriptingCode .= 'blockSettingArray[' . $k . ']["elementPlace"] = ' . $item['elementPlace'] . '; ' . PHP_EOL;
-						$scriptingCode .= 'blockSettingArray[' . $k . ']["text"] = \'' . $item['text'] . '\'; ' . PHP_EOL;
-						if ( ! empty( $item['minSymbols'] ) && $item['minSymbols'] > 1 ) {
-							$scriptingCode .= 'blockSettingArray[' . $k . ']["minSymbols"] = ' . $item['minSymbols'] . '; ' . PHP_EOL;
-						} else {
-							$scriptingCode .= 'blockSettingArray[' . $k . ']["minSymbols"] = 0;';
-						}
-						if ( ! empty( $item['minHeaders'] ) && $item['minHeaders'] > 1 ) {
-							$scriptingCode .= 'blockSettingArray[' . $k . ']["minHeaders"] = ' . $item['minHeaders'] . '; ' . PHP_EOL;
-						} else {
-							$scriptingCode .= 'blockSettingArray[' . $k . ']["minHeaders"] = 0;';
-						}
 					} elseif ( $item['setting_type'] == 3 ) {       //for direct block
-						$scriptingCode .= 'blockSettingArray[' . $k . ']["setting_type"] = 3; ' . PHP_EOL;
+//						$scriptingCode .= 'blockSettingArray[' . $k . ']["setting_type"] = 3; ' . PHP_EOL;
 						$scriptingCode .= 'blockSettingArray[' . $k . ']["element"] = "' . $item['element'] . '"; ' . PHP_EOL;
 						$scriptingCode .= 'blockSettingArray[' . $k . ']["directElement"] = "' . $item['directElement'] . '"; ' . PHP_EOL;
 						$scriptingCode .= 'blockSettingArray[' . $k . ']["elementPosition"] = ' . $item['elementPosition'] . '; ' . PHP_EOL;
-						$scriptingCode .= 'blockSettingArray[' . $k . ']["text"] = \'' . $item['text'] . '\'; ' . PHP_EOL;
-						if ( ! empty( $item['minSymbols'] ) && $item['minSymbols'] > 1 ) {
-							$scriptingCode .= 'blockSettingArray[' . $k . ']["minSymbols"] = ' . $item['minSymbols'] . '; ' . PHP_EOL;
-						} else {
-							$scriptingCode .= 'blockSettingArray[' . $k . ']["minSymbols"] = 0;';
-						}
-						if ( ! empty( $item['minHeaders'] ) && $item['minHeaders'] > 1 ) {
-							$scriptingCode .= 'blockSettingArray[' . $k . ']["minHeaders"] = ' . $item['minHeaders'] . '; ' . PHP_EOL;
-						} else {
-							$scriptingCode .= 'blockSettingArray[' . $k . ']["minHeaders"] = 0;';
-						}
-					} elseif ( $item['setting_type'] == 4 ) {       //for end of content
-						$scriptingCode .= 'blockSettingArray[' . $k . ']["setting_type"] = 4; ' . PHP_EOL;
-						$scriptingCode .= 'blockSettingArray[' . $k . ']["text"] = \'' . $item['text'] . '\'; ' . PHP_EOL;
-						if ( ! empty( $item['minSymbols'] ) && $item['minSymbols'] > 1 ) {
-							$scriptingCode .= 'blockSettingArray[' . $k . ']["minSymbols"] = ' . $item['minSymbols'] . '; ' . PHP_EOL;
-						} else {
-							$scriptingCode .= 'blockSettingArray[' . $k . ']["minSymbols"] = 0;';
-						}
-						if ( ! empty( $item['minHeaders'] ) && $item['minHeaders'] > 1 ) {
-							$scriptingCode .= 'blockSettingArray[' . $k . ']["minHeaders"] = ' . $item['minHeaders'] . '; ' . PHP_EOL;
-						} else {
-							$scriptingCode .= 'blockSettingArray[' . $k . ']["minHeaders"] = 0;';
-						}
-					} elseif ( $item['setting_type'] == 5 ) {       //for middle of content
-						$scriptingCode .= 'blockSettingArray[' . $k . ']["setting_type"] = 5; ' . PHP_EOL;
-						$scriptingCode .= 'blockSettingArray[' . $k . ']["text"] = \'' . $item['text'] . '\'; ' . PHP_EOL;
-						if ( ! empty( $item['minSymbols'] ) && $item['minSymbols'] > 1 ) {
-							$scriptingCode .= 'blockSettingArray[' . $k . ']["minSymbols"] = ' . $item['minSymbols'] . '; ' . PHP_EOL;
-						} else {
-							$scriptingCode .= 'blockSettingArray[' . $k . ']["minSymbols"] = 0;' . PHP_EOL;
-						}
-						if ( ! empty( $item['minHeaders'] ) && $item['minHeaders'] > 1 ) {
-							$scriptingCode .= 'blockSettingArray[' . $k . ']["minHeaders"] = ' . $item['minHeaders'] . '; ' . PHP_EOL;
-						} else {
-							$scriptingCode .= 'blockSettingArray[' . $k . ']["minHeaders"] = 0;' . PHP_EOL;
-						}
-					} elseif ( $item['setting_type'] == 6 ) {       //for percentage
-						$scriptingCode .= 'blockSettingArray[' . $k . ']["setting_type"] = 6; ' . PHP_EOL;
 						$scriptingCode .= 'blockSettingArray[' . $k . ']["elementPlace"] = ' . $item['elementPlace'] . '; ' . PHP_EOL;
-						$scriptingCode .= 'blockSettingArray[' . $k . ']["text"] = \'' . $item['text'] . '\'; ' . PHP_EOL;
-						if ( ! empty( $item['minSymbols'] ) && $item['minSymbols'] > 1 ) {
-							$scriptingCode .= 'blockSettingArray[' . $k . ']["minSymbols"] = ' . $item['minSymbols'] . '; ' . PHP_EOL;
-						} else {
-							$scriptingCode .= 'blockSettingArray[' . $k . ']["minSymbols"] = 0;' . PHP_EOL;
-						}
-						if ( ! empty( $item['minHeaders'] ) && $item['minHeaders'] > 1 ) {
-							$scriptingCode .= 'blockSettingArray[' . $k . ']["minHeaders"] = ' . $item['minHeaders'] . '; ' . PHP_EOL;
-						} else {
-							$scriptingCode .= 'blockSettingArray[' . $k . ']["minHeaders"] = 0;' . PHP_EOL;
-						}
+					} elseif ( $item['setting_type'] == 4 ) {       //for end of content
+//						$scriptingCode .= 'blockSettingArray[' . $k . ']["setting_type"] = 4; ' . PHP_EOL;
+					} elseif ( $item['setting_type'] == 5 ) {       //for middle of content
+//						$scriptingCode .= 'blockSettingArray[' . $k . ']["setting_type"] = 5; ' . PHP_EOL;
+					} elseif ( $item['setting_type'] == 6 ) {       //for percentage
+//						$scriptingCode .= 'blockSettingArray[' . $k . ']["setting_type"] = 6; ' . PHP_EOL;
+						$scriptingCode .= 'blockSettingArray[' . $k . ']["elementPlace"] = ' . $item['elementPlace'] . '; ' . PHP_EOL;
 					}
 				}
 			}
 			$scriptingCode .= PHP_EOL;
 			$scriptingCode .= 'var jsInputerLaunch = 15;';
+			$scriptingCode .= PHP_EOL;
+			$scriptingCode .= 'var needleUrl = "'.plugins_url().'/'.basename(__DIR__).'/realbigForWP";';
 			$scriptingCode .= '</script>';
 //	        $scriptingCode .= 'syncChecker = '.$GLOBALS['wpdb']->get_var('SELECT optionValue FROM '.$GLOBALS['table_prefix'].'realbig_settings WHERE optionName = "jsAutoSyncFails"').';';
 //	        $scriptingCode .= 'syncStatus = '.$GLOBALS['wpdb']->get_var('SELECT optionValue FROM '.$GLOBALS['table_prefix'].'realbig_settings WHERE optionName = "successUpdateMark"').';';

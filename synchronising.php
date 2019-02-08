@@ -100,7 +100,7 @@ try {
 
 							// if no needly note, then create
 							$wpOptionsCheckerTokenValue = $wpdb->query( $wpdb->prepare( "SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", [ '_wpRealbigPluginToken' ] ) );
-							if ( empty( $wpOptionsCheckerTokenValue ) ) {
+							if (empty($wpOptionsCheckerTokenValue)) {
 								$wpdb->insert( $wpPrefix . 'realbig_settings', ['optionName'  => '_wpRealbigPluginToken', 'optionValue' => $tokenInput]);
 							} else {
 								$wpdb->update( $wpPrefix . 'realbig_settings', ['optionName'  => '_wpRealbigPluginToken', 'optionValue' => $tokenInput],
@@ -122,7 +122,7 @@ try {
                                     ['optionName' => 'pushCode']);
 								}
 							}
-							if (!empty($decodedToken['domain'])) {
+							if ( ! empty( $decodedToken['domain'] ) ) {
 								$getDomain = $wpdb->get_var( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = "domain"' );
 								if ( ! empty( $getDomain ) ) {
 									$wpdb->update( $wpPrefix . 'realbig_settings', ['optionName'  => 'domain', 'optionValue' => $decodedToken['domain']],
@@ -135,7 +135,7 @@ try {
 								$getRotator = $wpdb->get_var( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = "rotator"' );
 								if (!empty($getRotator)) {
 									$wpdb->update( $wpPrefix.'realbig_settings', ['optionName'  => 'rotator', 'optionValue' => $decodedToken['rotator']],
-                                    ['optionName' => 'rotator']);
+										['optionName' => 'rotator']);
 								} else {
 									$wpdb->insert( $wpPrefix.'realbig_settings', ['optionName'  => 'rotator', 'optionValue' => $decodedToken['rotator']]);
 								}
@@ -327,18 +327,17 @@ try {
 	/** Creating Cron RB auto sync */
 	function RFWP_cronAutoGatheringLaunch() {
         add_filter('cron_schedules', 'rb_addCronAutosync');
-        function rb_addCronAutosync($schedules) {
-            $schedules['autoSync'] = array(
-                'interval' => 5,
-                'display'  => esc_html__( 'autoSync' ),
-            );
-            return $schedules;
-        }
-
         add_action( 'rb_cron_hook', 'rb_cron_exec' );
         if (!($checkIt = wp_next_scheduled( 'rb_cron_hook' ))) {
-            wp_schedule_event( (time()+2), 'autoSync', 'rb_cron_hook' );
+            wp_schedule_event( time(), 'autoSync', 'rb_cron_hook' );
         }
+	}
+	function rb_addCronAutosync($schedules) {
+		$schedules['autoSync'] = array(
+			'interval' => 20,
+			'display'  => esc_html__( 'autoSync' ),
+		);
+		return $schedules;
 	}
 	function RFWP_cronAutoSyncDelete() {
         $checkIt = wp_next_scheduled('rb_cron_hook');

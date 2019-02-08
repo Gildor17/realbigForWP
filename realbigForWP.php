@@ -17,7 +17,7 @@ include ( dirname(__FILE__)."/textEditing.php");
 /*
 Plugin name:  Realbig Media
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.1.26.26
+Version:      0.1.26.27
 Author:       Realbig Team
 License:      GPLv2 or later
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
@@ -34,6 +34,37 @@ try {
 		$wpPrefix = $wpdb->base_prefix;
 	}
 	$GLOBALS['wpPrefix'] = $wpPrefix;
+
+	/***************** Cached AD blocks saving ***************************************************************************************/
+//	if (!empty($_POST)) {
+//		$penyok_stoparik = 0;
+//	}
+
+//	if (!empty($_POST)&&!empty($_POST['type'])&&$_POST['type']=="blocksGethering") {
+//	    $data = '';
+//	    if (!empty($_POST['data'])&&!empty($_POST['data2'])) {
+//	        $data = json_decode($_POST['data']);
+////	        $data1 = json_decode($_POST['data1']);
+//	        $data2 = json_decode($_POST['data2']);
+//        }
+//        foreach ($data->data AS $k => $item) {
+////	        $postCheck = get_post(['title' => $item->id]);
+////	        $postCheck = get_posts(['name' => 'text-about-horses']);
+//	        $postCheck = $wpdb->get_var($wpdb->prepare('SELECT id FROM '.$wpPrefix.'posts WHERE post_type = "page" AND post_title = %s', ['Text about horses']));
+////	        $postCheck1 = get_page_by_title(['text-about-horses', OBJECT, 'post']);
+////	        $postCheck = get_posts(['post_type' => 'flat_pm_block']);
+//            if (!empty($postCheck)) {
+//	            $postarr = ['post_content' => $item->code];
+//	            wp_update_post('', true);
+//            }
+//	        $postarr = ['post_content' => $item->code, 'post_title' => $item->id, 'post_status' => "publish", 'post_type' => 'rb_block', 'post_author' => get_current_user_id()];
+////	        $saveBlockResult = wp_insert_post($postarr, true);
+////	        if (is_int($saveBlockResult)) {
+////          }
+//        }
+//	    $penyok_stoparik = 0;
+//    }
+	/***************** End of cached AD blocks saving ***************************************************************************************/
 
 	$tableForCurrentPluginChecker = $wpdb->get_var( 'SHOW TABLES LIKE "' . $wpPrefix . 'realbig_plugin_settings"' );   //settings for block table checking
 	$tableForToken                = $wpdb->get_var( 'SHOW TABLES LIKE "' . $wpPrefix . 'realbig_settings"' );      //settings for token and other
@@ -131,6 +162,7 @@ try {
 				$usedUrl = $_SERVER["REQUEST_URI"];
 			}
 		}
+        $usedUrl = $_SERVER["HTTP_HOST"].$usedUrl;
 
 		if (is_admin()) {
 			$excludedPage = true;
@@ -224,7 +256,16 @@ try {
 			false );
 	}
 
+	function RFWP_syncFunctionAdd2() {
+		wp_enqueue_script( 'readyAdGather',
+			plugins_url().'/'.basename(__DIR__).'/readyAdGather.js',
+			array( 'jquery' ),
+			$GLOBALS['realbigForWP_version'],
+			false );
+	}
+
 	add_action( 'wp_enqueue_scripts', 'RFWP_syncFunctionAdd1', 100 );
+//	add_action( 'wp_enqueue_scripts', 'RFWP_syncFunctionAdd2', 11 );
 	$GLOBALS['stepCounter'] = 'zero';
 	$lastSyncTimeTransient = get_transient('realbigPluginSyncAttempt');
 	$activeSyncTransient   = get_transient('realbigPluginSyncProcess');
@@ -250,28 +291,25 @@ try {
 
 	/********** end autosync and JS text edit *****************************************************************************/
 	/********** adding AD code in head area *******************************************************************************/
-	add_action( 'wp_head', 'RFWP_AD_header_add', 0 );
-
 	function RFWP_AD_header_add() {
 		global $wpdb;
 		$getDomain = 'any.realbig.media';
 		$getRotator = 'rotator';
 
 		$getOV = $wpdb->get_results( 'SELECT optionName, optionValue FROM ' . $GLOBALS['wpPrefix'] . 'realbig_settings WHERE optionName IN ("domain","rotator")');
-//		$getDomain = $wpdb->get_var( 'SELECT optionValue FROM ' . $GLOBALS['wpPrefix'] . 'realbig_settings WHERE optionName IN ("domain")');
 		foreach ($getOV AS $k => $item) {
 			if (!empty($item->optionValue)) {
 				if ($item->optionName == 'domain') {
-                    $getDomain = $item->optionValue;
+					$getDomain = $item->optionValue;
 				} else {
-                    $getRotator = $item->optionValue;
+					$getRotator = $item->optionValue;
 				}
 			}
-        }
+		}
 		require_once( 'textEditing.php' );
 		$headerParsingResult = RFWP_headerADInsertor();
 		if ( $headerParsingResult == true ) {
-            ?><script type="text/javascript"> rbConfig = {start: performance.now(),rotator:'<?php echo $getRotator ?>'}; </script>
+			?><script type="text/javascript"> rbConfig = {start: performance.now(),rotator:'<?php echo $getRotator ?>'}; </script>
             <script async="async" type="text/javascript" src="//<?php echo $getDomain ?>/<?php echo $getRotator ?>.min.js"></script><?php
 		}
 	}
@@ -287,23 +325,27 @@ try {
 		}
 	}
 
-	$pushStatus = $wpdb->get_results( $wpdb->prepare( 'SELECT optionName, optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName IN (%s, %s)', [
-		"pushCode",
-		"pushStatus"
-	] ), ARRAY_A );
-	if ( ! empty( $pushStatus ) ) {
-		if ( $pushStatus[0]['optionName'] == 'pushStatus' ) {
-			$pushStatusValue = $pushStatus[0]['optionValue'];
-			$pushCode        = $pushStatus[1]['optionValue'];
-		} else {
-			$pushStatusValue = $pushStatus[1]['optionValue'];
-			$pushCode        = $pushStatus[0]['optionValue'];
+	if (!is_admin()) {
+		add_action( 'wp_head', 'RFWP_AD_header_add', 0 );
+		$pushStatus = $wpdb->get_results( $wpdb->prepare( 'SELECT optionName, optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName IN (%s, %s)', [
+			"pushCode",
+			"pushStatus"
+		] ), ARRAY_A );
+		if (!empty($pushStatus)) {
+			if ( $pushStatus[0]['optionName'] == 'pushStatus' ) {
+				$pushStatusValue = $pushStatus[0]['optionValue'];
+				$pushCode        = $pushStatus[1]['optionValue'];
+			} else {
+				$pushStatusValue = $pushStatus[1]['optionValue'];
+				$pushCode        = $pushStatus[0]['optionValue'];
+			}
 		}
-	}
-	if ( ! empty( $pushStatus ) && ! empty( $pushStatusValue ) && ! empty( $pushCode ) && count( $pushStatus ) == 2 && $pushStatusValue == 1 ) {
-		add_action( 'wp_head', 'RFWP_push_head_add', 0 );
-		$GLOBALS['pushCode'] = $pushCode;
-	}
+		if ( ! empty( $pushStatus ) && ! empty( $pushStatusValue ) && ! empty( $pushCode ) && count( $pushStatus ) == 2 && $pushStatusValue == 1 ) {
+			add_action( 'wp_head', 'RFWP_push_head_add', 0 );
+			$GLOBALS['pushCode'] = $pushCode;
+		}
+    }
+
 	/********** end of adding AD code in head area ************************************************************************/
 	/********** manual sync ***********************************************************************************************/
 //$blocksSettingsTableChecking = $wpdb->query('SELECT id FROM '.$wpPrefix.'realbig_plugin_settings');
@@ -328,6 +370,8 @@ try {
 	function RFWP_adBlocksToContentInsertingFunction($content) {
         if ($GLOBALS['mainPageStatus'] == 2 || is_page() || is_single() || is_singular() || is_archive()) {
 	        global $wpdb;
+//	        $cachedBlocks = get_posts(['post_type' => 'rb_block']);
+
 	        if (!empty($content)) {
 		        $fromDb = $wpdb->get_results('SELECT * FROM '.$GLOBALS['wpPrefix'].'realbig_plugin_settings WGPS');
             } else {
