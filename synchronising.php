@@ -100,13 +100,13 @@ try {
 
 							// if no needly note, then create
 							$wpOptionsCheckerTokenValue = $wpdb->query( $wpdb->prepare( "SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", [ '_wpRealbigPluginToken' ] ) );
-							if ( empty( $wpOptionsCheckerTokenValue ) ) {
+							if (empty($wpOptionsCheckerTokenValue)) {
 								$wpdb->insert( $wpPrefix . 'realbig_settings', ['optionName'  => '_wpRealbigPluginToken', 'optionValue' => $tokenInput]);
 							} else {
 								$wpdb->update( $wpPrefix . 'realbig_settings', ['optionName'  => '_wpRealbigPluginToken', 'optionValue' => $tokenInput],
                                 ['optionName' => '_wpRealbigPluginToken']);
 							}
-							if ( ! empty( $decodedToken['dataPush'] ) ) {
+							if (!empty($decodedToken['dataPush'])) {
 								$wpOptionsCheckerPushStatus = $wpdb->query( $wpdb->prepare( "SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", [ 'pushStatus' ] ) );
 								if ( empty( $wpOptionsCheckerPushStatus ) ) {
 									$wpdb->insert( $wpPrefix . 'realbig_settings', ['optionName'  => 'pushStatus', 'optionValue' => $decodedToken['dataPush']['pushStatus']]);
@@ -129,6 +129,15 @@ try {
                                     ['optionName' => 'domain']);
 								} else {
 									$wpdb->insert( $wpPrefix . 'realbig_settings', ['optionName'  => 'domain', 'optionValue' => $decodedToken['domain']]);
+								}
+							}
+							if (!empty($decodedToken['rotator'])) {
+								$getRotator = $wpdb->get_var( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = "rotator"' );
+								if (!empty($getRotator)) {
+									$wpdb->update( $wpPrefix.'realbig_settings', ['optionName'  => 'rotator', 'optionValue' => $decodedToken['rotator']],
+										['optionName' => 'rotator']);
+								} else {
+									$wpdb->insert( $wpPrefix.'realbig_settings', ['optionName'  => 'rotator', 'optionValue' => $decodedToken['rotator']]);
 								}
 							}
 							$GLOBALS['token'] = $tokenInput;

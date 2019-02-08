@@ -363,6 +363,8 @@ try {
 			}
 			$scriptingCode .= PHP_EOL;
 			$scriptingCode .= 'var jsInputerLaunch = 15;';
+			$scriptingCode .= PHP_EOL;
+			$scriptingCode .= 'var needleUrl = "'.plugins_url().'/'.basename(__DIR__).'/realbigForWP";';
 			$scriptingCode .= '</script>';
 //	        $scriptingCode .= 'syncChecker = '.$GLOBALS['wpdb']->get_var('SELECT optionValue FROM '.$GLOBALS['table_prefix'].'realbig_settings WHERE optionName = "jsAutoSyncFails"').';';
 //	        $scriptingCode .= 'syncStatus = '.$GLOBALS['wpdb']->get_var('SELECT optionValue FROM '.$GLOBALS['table_prefix'].'realbig_settings WHERE optionName = "successUpdateMark"').';';

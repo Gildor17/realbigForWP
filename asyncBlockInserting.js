@@ -89,27 +89,41 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                     let elementName = '';
                     let elementType = '';
                     let elementTag  = '';
+                    let directElement = blockSettingArray[i]["directElement"].trim();
 
-                    currentElement = document.querySelector(blockSettingArray[i]["directElement"].trim());
+                    if (directElement.search('#') > -1||(!blockSettingArray['element']||(
+                        blockSettingArray['element']&&directElement.search('.') > 0)))
+                    {
+                        currentElement = document.querySelector(directElement);
+                    }
                     if (!currentElement) {
-                        elementTypeSymbol = blockSettingArray[i]["directElement"].search('#');
+                        elementTypeSymbol = directElement.search('#');
                         if (elementTypeSymbol < 0) {
-                            elementTypeSymbol = blockSettingArray[i]["directElement"].search('.');
+                            elementTypeSymbol = directElement.search('.');
                             elementType = 'class';
-                            elementName = elementName.replace('\s', '.');
+                            elementName = directElement.replace('\s', '.');
                             if (elementTypeSymbol < 0) {
                                 elementName = '.' + elementName;
                             }
-                            currentElement = document.querySelector(elementName);
-                        } else {
-                            elementType = 'id';
-                            elementName = blockSettingArray[i]["directElement"].subString(elementTypeSymbol);
-                            elementSpaceSymbol = elementName.search('\s');
-                            if (elementSpaceSymbol > 1) {
-                                elementName = elementName.substring(0, elementSpaceSymbol - 1);
+                            if (blockSettingArray['element']) {
+                                elementName = blockSettingArray['element']+elementName;
                             }
                             currentElement = document.querySelector(elementName);
+                            if (currentElement) {
+                                currentElementChecker = true;
+                            }
+                        } else {
+                            elementType = 'id';
+                            elementName = directElement.subString(elementTypeSymbol);
+                            elementSpaceSymbol = elementName.search('\s');
+                            elementName = elementName.substring(0, elementSpaceSymbol - 1);
+                            currentElement = document.querySelector(elementName);
+                            if (currentElement) {
+                                currentElementChecker = true;
+                            }
                         }
+                    } else {
+                        currentElementChecker = true;
                     }
 
                     if (currentElement != undefined && currentElement != null && currentElementChecker) {
