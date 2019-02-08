@@ -222,9 +222,12 @@ try {
 					if (!empty($excludedPagesCheckArray)) {
 						foreach ($excludedPagesCheckArray AS $item) {
 							$item = trim($item);
+
 							if (!empty($item)) {
-								preg_match("~".$item."~", $usedUrl, $m);
-								if (count($m) > 0) {
+							    $m = -1;
+							    $m = strpos($usedUrl, $item);
+//								preg_match("~".$item."~ius", $usedUrl, $m);
+								if (is_integer($m)&&$m > -1) {
 									$excludedPage = true;
 								}
 							}
