@@ -7,8 +7,8 @@
  */
 
 include_once ( dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
-include_once ( dirname(__FILE__)."/../../../wp-admin/includes/upgrade.php" );
-include_once ( dirname(__FILE__).'/../../../wp-includes/wp-db.php');
+//include_once ( dirname(__FILE__)."/../../../wp-admin/includes/upgrade.php" );
+//include_once ( dirname(__FILE__).'/../../../wp-includes/wp-db.php');
 
 if (!defined("ABSPATH")) { exit;}
 
