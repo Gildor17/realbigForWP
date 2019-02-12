@@ -2,8 +2,8 @@
 
 //include ( dirname(__FILE__).'/../../../wp-load.php' );
 include_once ( dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
-include_once ( dirname(__FILE__)."/../../../wp-admin/includes/upgrade.php" );
-include_once ( dirname(__FILE__).'/../../../wp-includes/wp-db.php');
+//include_once ( dirname(__FILE__)."/../../../wp-admin/includes/upgrade.php" );
+//include_once ( dirname(__FILE__).'/../../../wp-includes/wp-db.php');
 
 /**
  * Created by PhpStorm.
@@ -176,21 +176,17 @@ ENGINE=InnoDB
 				if ( $enumTypeQuery['Type'] != $requiredElementColumnValues ) {
 					$wpdb->query( "ALTER TABLE " . $wpPrefix . "realbig_plugin_settings MODIFY `element` ENUM('p','li','ul','ol','blockquote','img','video','h1','h2','h3','h4','h5','h6') NULL DEFAULT NULL" );
 					$statusGatherer['element_column_values'] = false;
-
 					return $statusGatherer;
 				} else {
 					$statusGatherer['element_column_values'] = true;
-
 					return $statusGatherer;
 				}
 			} else {
 				$statusGatherer['element_column_values'] = false;
-
 				return $statusGatherer;
 			}
 		} catch ( Exception $e ) {
 			$statusGatherer['element_column_values'] = false;
-
 			return $statusGatherer;
 		}
 	}
@@ -204,7 +200,6 @@ ENGINE=InnoDB
 			if ( $rez != 4 ) {
 				$wpdb->query( 'ALTER TABLE ' . $wpPrefix . 'realbig_settings ADD `timeUpdate` TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP AFTER optionValue' );
 			}
-
 			return true;
 		} catch ( Exception $e ) {
 			return false;

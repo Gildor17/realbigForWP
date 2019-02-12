@@ -9,7 +9,7 @@
 
 //include ( dirname(__FILE__).'/../../../wp-load.php' );
 include_once ( dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
-include_once ( dirname(__FILE__)."/../../../wp-admin/includes/upgrade.php" );
+//include_once ( dirname(__FILE__)."/../../../wp-admin/includes/upgrade.php" );
 include ( dirname(__FILE__)."/update.php");
 include ( dirname(__FILE__)."/synchronising.php");
 include ( dirname(__FILE__)."/textEditing.php");
@@ -39,7 +39,7 @@ try {
 //	if (!empty($_POST)) {
 //		$penyok_stoparik = 0;
 //	}
-
+//
 //	if (!empty($_POST)&&!empty($_POST['type'])&&$_POST['type']=="blocksGethering") {
 //	    $data = '';
 //	    if (!empty($_POST['data'])&&!empty($_POST['data2'])) {
@@ -188,7 +188,7 @@ try {
 				if (isset($excludedMainPageCheck)) {
 					if ( $excludedMainPageCheck == 1 ) {
 						$mainPageStatus = 1;
-					} elseif ( $excludedMainPageCheck == 0 ) {
+					} elseif ($excludedMainPageCheck == 0) {
 						$mainPageStatus = 2;
 					}
 				}
@@ -283,12 +283,14 @@ try {
 //            }
 //		}
         else {
-            if (!empty(wp_doing_cron())) {
+//            if (!empty(wp_doing_cron())) {
+            if (!empty(apply_filters( 'wp_doing_cron', defined( 'DOING_CRON' ) && DOING_CRON ))) {
 	            RFWP_cronAutoSyncDelete();
             }
         }
 	}
-	if (!empty(wp_doing_cron())&&empty($activeSyncTransient)&&empty($lastSyncTimeTransient)) {
+	if (!empty(apply_filters('wp_doing_cron', defined('DOING_CRON')&&DOING_CRON))&&empty($activeSyncTransient)&&empty($lastSyncTimeTransient)) {
+//	if (!empty(wp_doing_cron())&&empty($activeSyncTransient)&&empty($lastSyncTimeTransient)) {
 		RFWP_autoSync();
 	}
 
@@ -380,8 +382,8 @@ try {
             } else {
 		        $fromDb = $wpdb->get_results('SELECT * FROM '.$GLOBALS['wpPrefix'].'realbig_plugin_settings WGPS WHERE setting_type = 3');
 	        }
-            require_once( 'textEditing.php' );
-            $content = RFWP_addIcons( $fromDb, $content, 'content' );
+            require_once('textEditing.php');
+            $content = RFWP_addIcons($fromDb, $content, 'content');
 
             return $content;
         } else {
@@ -390,22 +392,21 @@ try {
 	}
 	/*********** end of using settings in texts ***************************************************************************/
 	/*********** begin of token input area ********************************************************************************/
-	function RFWP_my_plugin_action_links( $links ) {
+	function RFWP_my_plugin_action_links($links) {
 		$links = array_merge( array( '<a href="' . esc_url( admin_url( '/admin.php?page=realbigForWP%2FrealbigForWP.php' ) ) . '">' . __( 'Settings', 'textdomain' ) . '</a>' ), $links );
-
 		return $links;
 	}
 
-	add_action( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'RFWP_my_plugin_action_links' );
+	add_action('plugin_action_links_' . plugin_basename( __FILE__ ), 'RFWP_my_plugin_action_links');
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	if ( is_admin() ) {
-		add_action( 'admin_menu', 'RFWP_my_pl_settings_menu_create' );
+	if (is_admin()) {
+		add_action('admin_menu', 'RFWP_my_pl_settings_menu_create');
 	}
 	function RFWP_my_pl_settings_menu_create() {
 		if ( strpos( $_SERVER['REQUEST_URI'], 'page=realbigForWP' ) ) {
-			add_menu_page( 'Your code sending configuration', 'realBIG', 'administrator', __FILE__, 'RFWP_TokenSync', get_site_url() . '/wp-content/plugins/realbigForWP/assets/realbig_plugin_hover.png' );
+			add_menu_page( 'Your code sending configuration', 'realBIG', 'administrator', __FILE__, 'RFWP_TokenSync', plugins_url().'/'.basename(__DIR__).'/assets/realbig_plugin_hover.png' );
 		} else {
-			add_menu_page( 'Your code sending configuration', 'realBIG', 'administrator', __FILE__, 'RFWP_TokenSync', get_site_url() . '/wp-content/plugins/realbigForWP/assets/realbig_plugin_standart.png' );
+			add_menu_page( 'Your code sending configuration', 'realBIG', 'administrator', __FILE__, 'RFWP_TokenSync', plugins_url().'/'.basename(__DIR__).'/assets/realbig_plugin_standart.png' );
 		}
 //		add_menu_page( 'Your code sending configuration', 'realBIG', 'administrator', __FILE__, 'RFWP_TokenSync', get_site_url().'/wp-content/plugins/realbigForWP/assets/realbig_plugin_hover.png' );
 		add_action( 'admin_init', 'RFWP_register_mysettings' );
@@ -504,6 +505,7 @@ catch (Exception $ex)
     } catch (Exception $exIex) {
     } catch (Error $erIex) { }
 
+//	include_once ( dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
 	deactivate_plugins(plugin_basename( __FILE__ ));
 	?><div style="margin-left: 200px; border: 3px solid red"><?php echo $ex; ?></div><?php
 }
@@ -533,6 +535,7 @@ catch (Error $er)
 	} catch (Exception $exIex) {
 	} catch (Error $erIex) { }
 
+//	include_once ( dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
 	deactivate_plugins(plugin_basename( __FILE__ ));
     ?><div style="margin-left: 200px; border: 3px solid red"><?php echo $er; ?></div><?php
 }
