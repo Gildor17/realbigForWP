@@ -39,7 +39,7 @@ try {
 //	if (!empty($_POST)) {
 //		$penyok_stoparik = 0;
 //	}
-
+//
 //	if (!empty($_POST)&&!empty($_POST['type'])&&$_POST['type']=="blocksGethering") {
 //	    $data = '';
 //	    if (!empty($_POST['data'])&&!empty($_POST['data2'])) {
@@ -382,8 +382,8 @@ try {
             } else {
 		        $fromDb = $wpdb->get_results('SELECT * FROM '.$GLOBALS['wpPrefix'].'realbig_plugin_settings WGPS WHERE setting_type = 3');
 	        }
-            require_once( 'textEditing.php' );
-            $content = RFWP_addIcons( $fromDb, $content, 'content' );
+            require_once('textEditing.php');
+            $content = RFWP_addIcons($fromDb, $content, 'content');
 
             return $content;
         } else {
@@ -392,16 +392,15 @@ try {
 	}
 	/*********** end of using settings in texts ***************************************************************************/
 	/*********** begin of token input area ********************************************************************************/
-	function RFWP_my_plugin_action_links( $links ) {
+	function RFWP_my_plugin_action_links($links) {
 		$links = array_merge( array( '<a href="' . esc_url( admin_url( '/admin.php?page=realbigForWP%2FrealbigForWP.php' ) ) . '">' . __( 'Settings', 'textdomain' ) . '</a>' ), $links );
-
 		return $links;
 	}
 
-	add_action( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'RFWP_my_plugin_action_links' );
+	add_action('plugin_action_links_' . plugin_basename( __FILE__ ), 'RFWP_my_plugin_action_links');
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	if ( is_admin() ) {
-		add_action( 'admin_menu', 'RFWP_my_pl_settings_menu_create' );
+	if (is_admin()) {
+		add_action('admin_menu', 'RFWP_my_pl_settings_menu_create');
 	}
 	function RFWP_my_pl_settings_menu_create() {
 		if ( strpos( $_SERVER['REQUEST_URI'], 'page=realbigForWP' ) ) {
