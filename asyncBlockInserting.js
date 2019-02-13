@@ -1,8 +1,6 @@
 //var jsInputerLaunch = 0;
 
 function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
-    // var currentPathFFile2 = path.dirname(__filename);
-
     try {
         var content_pointer = document.getElementById("content_pointer_id");
         var parent_with_content = content_pointer.parentElement;
@@ -138,42 +136,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                     } else {
                         repeat = true;
                     }
-                }
-                // else if (blockSettingArray[i]["setting_type"] == old_3) {
-                //     var elementType = blockSettingArray[i]["directElement"].charAt(0);
-                //     var elementName = blockSettingArray[i]["directElement"].substring(1);
-                //     if (elementType == '#') {
-                //         currentElement = document.querySelector(elementType + elementName);
-                //         currentElementChecker = true;
-                //     } else if (elementType == '.') {
-                //         currentElement = document.getElementsByClassName(elementName);
-                //         if (currentElement.length > 0) {
-                //             for (var i1 = 0; i1 < currentElement.length; i1++) {
-                //                 if (!blockSettingArray[i]["element"] || currentElement[i1].tagName.toLowerCase() == blockSettingArray[i]["element"].toLowerCase()) {
-                //                     currentElement = currentElement[i1];
-                //                     if (currentElement.parentElement.tagName.toLowerCase() == "blockquote") {
-                //                         currentElement = currentElement.parentElement;
-                //                     }
-                //                     currentElementChecker = true;
-                //                     break;
-                //                 }
-                //             }
-                //         }
-                //     }
-                //     if (currentElement != undefined && currentElement != null && currentElementChecker) {
-                //         if (blockSettingArray[i]["elementPosition"] == 0) {
-                //             currentElement.parentNode.insertBefore(elementToAdd, currentElement);
-                //         } else {
-                //             currentElement.parentNode.insertBefore(elementToAdd, currentElement.nextSibling);
-                //         }
-                //         blockSettingArray.splice(i, 1);
-                //         poolbackI = 1;
-                //         i--;
-                //     } else {
-                //         repeat = true;
-                //     }
-                // }
-                else if (blockSettingArray[i]["setting_type"] == 4) {
+                } else if (blockSettingArray[i]["setting_type"] == 4) {
                     parent_with_content.append(elementToAdd);
                     blockSettingArray.splice(i, 1);
                     poolbackI = 1;
@@ -247,10 +210,12 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
 
 function asyncFunctionLauncher() {
     if (window.jsInputerLaunch !== undefined&&jsInputerLaunch == 15) {
+        // if () {
         asyncBlocksInsertingFunction(blockSettingArray, contentLength);
+        // }
     } else {
         setTimeout(function () {
-            asyncFunctionLauncher()
+            asyncFunctionLauncher();
         }, 50)
     }
 }

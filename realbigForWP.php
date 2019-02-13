@@ -9,7 +9,7 @@
 
 //include ( dirname(__FILE__).'/../../../wp-load.php' );
 include_once ( dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
-//include_once ( dirname(__FILE__)."/../../../wp-admin/includes/upgrade.php" );
+include_once ( dirname(__FILE__)."/../../../wp-admin/includes/upgrade.php" );
 include ( dirname(__FILE__)."/update.php");
 include ( dirname(__FILE__)."/synchronising.php");
 include ( dirname(__FILE__)."/textEditing.php");
