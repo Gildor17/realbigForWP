@@ -1,7 +1,7 @@
 <?php
 
 include_once ( dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
-//include_once ( dirname(__FILE__)."/../../../wp-admin/includes/upgrade.php" );
+include_once ( dirname(__FILE__)."/../../../wp-admin/includes/upgrade.php" );
 
 /**
  * Created by PhpStorm.
@@ -68,34 +68,6 @@ try {
 					}
 					$elementText = "<div class='percentPointerClass'>".$elementText."</div>";
 
-//					if ( $item['setting_type'] == 1 ) {       //for lonely block
-//						$elementName     = $item['element'];
-//						$elementPosition = $item['elementPosition'];
-//						$elementNumber   = $item['elementPlace'];
-//						$elementText     = $item['text'];
-//					} elseif ( $item['setting_type'] == 2 ) {       //for repeatable block
-//						$elementName     = $item['element'];
-//						$elementPosition = $item['elementPosition'];
-//						$elementNumber   = $item['firstPlace'];
-//						$elementRepeats  = $item['elementCount'] - 1;
-//						$elementStep     = $item['elementStep'];
-//						$elementText     = $item['text'];
-//					} elseif ( $item['setting_type'] == 3 ) {       //for direct block
-//						$elementTag      = $item['element'];
-//						$elementName     = $item['directElement'];
-//						$elementPosition = $item['elementPosition'];
-//						$elementText     = $item['text'];
-//					} elseif ( $item['setting_type'] == 4 ) {       //for end of content
-//						$elementText = $item['text'];
-//					} elseif ( $item['setting_type'] == 5 ) {       //for middle of content
-//						$elementText = $item['text'];
-//					} elseif ( $item['setting_type'] == 6 ) {
-//						$elementNumber   = $item['elementPlace'];
-//						$elementText     = $item['text'];
-//                    }
-
-
-
 					$editedContent = preg_replace( '~(<blockquote[^>]*?\>)~i', '<bq_mark_begin>$1', $editedContent, -1);
 					$editedContent = preg_replace( '~(<\/blockquote\>)~i', '$1<bq_mark_end>', $editedContent, -1);
 
@@ -154,23 +126,21 @@ try {
 								}
 							}
 							$editedContent = preg_replace( '~<placeholderForAd>~', '', $editedContent, $elementNumber - 1 );
-							$quotesCheck = preg_match("~(<bq_mark_begin>)(((?<!<bq_mark_end>)\s|(?<!<bq_mark_end>)\S)*?)(<placeholderForAd>)((\s|\S)*?)(<bq_mark_end>)~i", $editedContent, $qm);
-//							$quotesCheck1492 = preg_match_all("~(<bq_mark_begin>)((\s|\S)*?)(<placeholderForAd>)((\s|\S)*?)(<bq_mark_end>)~i", $editedContent, $qm1492);
-//							$quotesCheck2 = preg_match_all("~(\<bq_mark\>)~i", $editedContent, $qm2);
-//							$quotesCheck3 = preg_match_all("~\<blockquote[^>]*?\>{1}(\s|\S)*?(\<bq_mark\>)*?(\s|\S)*?\<placeholderForAd\>~i", $editedContent, $qm3);
-//							$quotesCheck4 = preg_match_all("~\<placeholderForAd\>~i", $editedContent, $qm4);
-//							$quotesCheck5 = preg_match_all("~(\<blockquote([^>]*?)\>)~i", $editedContent, $qm5);
-//							$quotesCheck6 = preg_match_all("~(\<blockquote([^>]*?)\>)((\s|\S)*)~i", $editedContent, $qm6);
-//							$quotesCheck7 = preg_match_all("~(\<blockquote([^>]*?)\>)((\s|\S)*?)(\<bq_mark\>)~i", $editedContent, $qm7);
-//							$quotesCheck71 = preg_match_all("~(\<blockquote([^>]*?)\>)((\s|\S)*?)(?!\<\/blockquote\>)*(\<placeholderForAd\>)~i", $editedContent, $qm71);
-//							$quotesCheck8 = preg_match_all("~(\<blockquote([^>]*?)\>)(\s|\S)*?(\<bq_mark\>)*?(\s|\S)*?~i", $editedContent, $qm8);
-//							$quotesCheck9 = preg_match_all("~(\<blockquote([^>]*?)\>)(\s|\S)*?(\<bq_mark\>)*?(\s|\S)*?\<placeholderForAd\>~i", $editedContent, $qm9);
+//							$quotesCheck = preg_match("~(<bq_mark_begin>)(((?<!<bq_mark_end>)\s|(?<!<bq_mark_end>)\S)*?)(<placeholderForAd>)((\s|\S)*?)(<bq_mark_end>)~i", $editedContent, $qm);
+							$quotesCheck = preg_match("~(<bq_mark_begin>)(((?<!<bq_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<bq_mark_end>)~i", $editedContent, $qm);
 
 							if (!empty($quotesCheck)) {
+//								$tty = preg_match('~(<bq_mark_begin>)((\s|\S)*?)(<placeholderForAd>)((\s|\S)*?)(<bq_mark_end>)~i', $editedContent, $mtm);
+
 								if ($elementPosition == 0) {
-									$editedContent = preg_replace("~(<bq_mark_begin>)((\s|\S)*?)(<placeholderForAd>)((\s|\S)*?)(<bq_mark_end>)~i", "<placeholderForAdDop>$1$2$5$7", $editedContent,1, $countReplaces);
+//									$editedContent = preg_replace('~(<bq_mark_begin>)((\s|\S)*?)(<placeholderForAd>)((\s|\S)*?)(<bq_mark_end>)~i', '<placeholderForAdDop>$1$2$5$7', $editedContent,1, $countReplaces);
+//									$editedContent = preg_replace('~(<bq_mark_begin>)([\s|\S]*?)(<placeholderForAd>)([\s\S]*?)(<bq_mark_end>)~i', '<placeholderForAdDop>$0', $editedContent, 1, $countReplaces);
+									$editedContent = preg_replace('~(<bq_mark_begin>)(((?<!<bq_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<bq_mark_end>)~i', '<placeholderForAdDop>$0', $editedContent, 1, $countReplaces);
+//									$editedContent = preg_replace('~(<bq_mark_begin>)(((?<!<bq_mark_end>)(\s|\S))*?)(<placeholderForAd>)((\s|\S)*?)(<bq_mark_end>)~i', '<placeholderForAdDop>$0', $editedContent, 1, $countReplaces);
                                 } elseif ($elementPosition == 1) {
-									$editedContent = preg_replace("~(<bq_mark_begin>)((\s|\S)*?)(<placeholderForAd>)((\s|\S)*?)(<bq_mark_end>)~i", "$1$2$5$7<placeholderForAdDop>", $editedContent,1, $countReplaces);
+//									$editedContent = preg_replace("~(<bq_mark_begin>)((\s|\S)*?)(<placeholderForAd>)((\s|\S)*?)(<bq_mark_end>)~i", "$0<placeholderForAdDop>", $editedContent,1, $countReplaces);
+									$editedContent = preg_replace("~(<bq_mark_begin>)(((?<!<bq_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<bq_mark_end>)~i", "$0<placeholderForAdDop>", $editedContent,1, $countReplaces);
+//									$editedContent = preg_replace("~(<bq_mark_begin>)(((?<!<bq_mark_end>)(\s|\S))*?)(<placeholderForAd>)((\s|\S)*?)(<bq_mark_end>)~i", "$0<placeholderForAdDop>", $editedContent,1, $countReplaces);
                                 }
 							} else {
 								$editedContent = preg_replace( '~<placeholderForAd>~', '<placeholderForAdDop>', $editedContent, 1, $countReplaces);
@@ -218,9 +188,6 @@ try {
 									'~<' . $directElementTag . ' ([^>]*?)(( |\'|\"){1})' . $thisElementName . '(( |\'|\"){1})([^>]*?)>~',
 									'<placeholderForAd><' . $directElementTag . ' $1 $2' . $thisElementName . '$4 $6>', $editedContent, 1 );
 							}
-							//					$editedContent = preg_replace(
-							//						'~< ([0-9a-z]*?) ([^>]*?) '.$thisElementName.' ([^>]*?)>~',
-							//						'<placeholderForAd><$1 $2 '.$thisElementName.' $3>', $editedContent);
 						} elseif ( $elementPosition == 1 ) {       //if position after
 							if ( $directElementTag == null ) {
 								$usedTag = preg_match( '~<([0-9a-z]+?) ([^>]*?)(( |\'|\"){1})' . $thisElementName . '(( |\'|\"){1})([^>]*?)>((\s|\S)*?)<\/([0-9a-z]+?)>~', $editedContent, $m1 );
@@ -346,17 +313,11 @@ try {
 						$scriptingCode .= 'blockSettingArray[' . $k . ']["elementPosition"] = ' . $item['elementPosition'] . '; ' . PHP_EOL;
 						$scriptingCode .= 'blockSettingArray[' . $k . ']["elementPlace"] = ' . $item['elementPlace'] . '; ' . PHP_EOL;
 					} elseif ( $item['setting_type'] == 3 ) {       //for direct block
-//						$scriptingCode .= 'blockSettingArray[' . $k . ']["setting_type"] = 3; ' . PHP_EOL;
 						$scriptingCode .= 'blockSettingArray[' . $k . ']["element"] = "' . $item['element'] . '"; ' . PHP_EOL;
 						$scriptingCode .= 'blockSettingArray[' . $k . ']["directElement"] = "' . $item['directElement'] . '"; ' . PHP_EOL;
 						$scriptingCode .= 'blockSettingArray[' . $k . ']["elementPosition"] = ' . $item['elementPosition'] . '; ' . PHP_EOL;
 						$scriptingCode .= 'blockSettingArray[' . $k . ']["elementPlace"] = ' . $item['elementPlace'] . '; ' . PHP_EOL;
-					} elseif ( $item['setting_type'] == 4 ) {       //for end of content
-//						$scriptingCode .= 'blockSettingArray[' . $k . ']["setting_type"] = 4; ' . PHP_EOL;
-					} elseif ( $item['setting_type'] == 5 ) {       //for middle of content
-//						$scriptingCode .= 'blockSettingArray[' . $k . ']["setting_type"] = 5; ' . PHP_EOL;
 					} elseif ( $item['setting_type'] == 6 ) {       //for percentage
-//						$scriptingCode .= 'blockSettingArray[' . $k . ']["setting_type"] = 6; ' . PHP_EOL;
 						$scriptingCode .= 'blockSettingArray[' . $k . ']["elementPlace"] = ' . $item['elementPlace'] . '; ' . PHP_EOL;
 					}
 				}
@@ -366,11 +327,6 @@ try {
 			$scriptingCode .= PHP_EOL;
 			$scriptingCode .= 'var needleUrl = "'.plugins_url().'/'.basename(__DIR__).'/realbigForWP";';
 			$scriptingCode .= '</script>';
-//	        $scriptingCode .= 'syncChecker = '.$GLOBALS['wpdb']->get_var('SELECT optionValue FROM '.$GLOBALS['table_prefix'].'realbig_settings WHERE optionName = "jsAutoSyncFails"').';';
-//	        $scriptingCode .= 'syncStatus = '.$GLOBALS['wpdb']->get_var('SELECT optionValue FROM '.$GLOBALS['table_prefix'].'realbig_settings WHERE optionName = "successUpdateMark"').';';
-//            $scriptingCode .= 'stepCounter = '.$GLOBALS['stepCounter'].';';
-//	        $scriptingCode .= '</script>';
-//	        $scriptingCode .= 'asyncBlocksInsertingFunction(blockSettingArray, contentLength)</script>';
 
 			return $scriptingCode;
 		} catch ( Exception $e ) {
