@@ -17,7 +17,7 @@ include ( dirname(__FILE__)."/textEditing.php");
 /*
 Plugin name:  Realbig Media
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.1.26.28
+Version:      0.1.26.29
 Author:       Realbig Team
 License:      GPLv2 or later
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
@@ -36,34 +36,6 @@ try {
 	$GLOBALS['wpPrefix'] = $wpPrefix;
 
 	/***************** Cached AD blocks saving ***************************************************************************************/
-//	if (!empty($_POST)) {
-//		$penyok_stoparik = 0;
-//	}
-//
-//	if (!empty($_POST)&&!empty($_POST['type'])&&$_POST['type']=="blocksGethering") {
-//	    $data = '';
-//	    if (!empty($_POST['data'])&&!empty($_POST['data2'])) {
-//	        $data = json_decode($_POST['data']);
-////	        $data1 = json_decode($_POST['data1']);
-//	        $data2 = json_decode($_POST['data2']);
-//        }
-//        foreach ($data->data AS $k => $item) {
-////	        $postCheck = get_post(['title' => $item->id]);
-////	        $postCheck = get_posts(['name' => 'text-about-horses']);
-//	        $postCheck = $wpdb->get_var($wpdb->prepare('SELECT id FROM '.$wpPrefix.'posts WHERE post_type = "page" AND post_title = %s', ['Text about horses']));
-////	        $postCheck1 = get_page_by_title(['text-about-horses', OBJECT, 'post']);
-////	        $postCheck = get_posts(['post_type' => 'flat_pm_block']);
-//            if (!empty($postCheck)) {
-//	            $postarr = ['post_content' => $item->code];
-//	            wp_update_post('', true);
-//            }
-//	        $postarr = ['post_content' => $item->code, 'post_title' => $item->id, 'post_status' => "publish", 'post_type' => 'rb_block', 'post_author' => get_current_user_id()];
-////	        $saveBlockResult = wp_insert_post($postarr, true);
-////	        if (is_int($saveBlockResult)) {
-////          }
-//        }
-//	    $penyok_stoparik = 0;
-//    }
 	/***************** End of cached AD blocks saving ***************************************************************************************/
 
 	$tableForCurrentPluginChecker = $wpdb->get_var( 'SHOW TABLES LIKE "' . $wpPrefix . 'realbig_plugin_settings"' );   //settings for block table checking
@@ -77,7 +49,7 @@ try {
 	if ( ! empty( $pluginData['Version'] ) ) {
 		$GLOBALS['realbigForWP_version'] = $pluginData['Version'];
 	} else {
-		$GLOBALS['realbigForWP_version'] = '0.1.26.28';
+		$GLOBALS['realbigForWP_version'] = '0.1.26.29';
 	}
 	$lastSuccessVersionGatherer = get_option( 'realbig_status_gatherer_version' );
 //	require_once( 'synchronising.php' );
@@ -125,11 +97,6 @@ try {
 	$unmarkSuccessfulUpdate      = $wpdb->get_var( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = "successUpdateMark"' );
 	$jsAutoSynchronizationStatus = $wpdb->get_var( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = "jsAutoSyncFails"' );
 
-//	if ( isset( $jsAutoSynchronizationStatus ) && $jsAutoSynchronizationStatus > 4 && ! empty( $token ) && $token != 'no token' && $lastSyncTimeTransient == false ) {
-//		$wpOptionsCheckerSyncTime = $wpdb->get_row( $wpdb->prepare( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = %s', [ "token_sync_time" ] ) );
-//		RFWP_synchronize( $token, ( empty( $wpOptionsCheckerSyncTime ) ? null : $wpOptionsCheckerSyncTime ), true, $GLOBALS['table_prefix'], 'manual' );
-//	}
-//	/*** enumUpdate */ $resultEnumUpdate = RFWP_updateElementEnumValuesFunction(); /** enumUpdateEnd */
 	if ( $statusGatherer['realbig_plugin_settings_table'] == true && ( $statusGatherer['element_column_values'] == false || $lastSuccessVersionGatherer != $GLOBALS['realbigForWP_version'] ) ) {
 		/** enumUpdate */
 		$statusGatherer = RFWP_updateElementEnumValuesFunction( $wpPrefix, $statusGatherer );
@@ -276,21 +243,13 @@ try {
 		if (empty(wp_next_scheduled('rb_cron_hook'))) {
 			RFWP_cronAutoGatheringLaunch();
 		}
-//		else {
-//			if (!empty(wp_doing_cron())) {
-//				RFWP_cronAutoSyncDelete();
-//				RFWP_cronAutoGatheringLaunch();
-//            }
-//		}
         else {
-//            if (!empty(wp_doing_cron())) {
             if (!empty(apply_filters( 'wp_doing_cron', defined( 'DOING_CRON' ) && DOING_CRON ))) {
 	            RFWP_cronAutoSyncDelete();
             }
         }
 	}
 	if (!empty(apply_filters('wp_doing_cron', defined('DOING_CRON')&&DOING_CRON))&&empty($activeSyncTransient)&&empty($lastSyncTimeTransient)) {
-//	if (!empty(wp_doing_cron())&&empty($activeSyncTransient)&&empty($lastSyncTimeTransient)) {
 		RFWP_autoSync();
 	}
 
