@@ -13,7 +13,7 @@ include_once ( dirname(__FILE__)."/../../../wp-admin/includes/upgrade.php" );
 try {
 	if (!defined("ABSPATH")) { exit;}
 
-	function RFWP_addIcons( $fromDb, $content, $contentType, $usedBlocks = null ) {
+	function RFWP_addIcons( $fromDb, $content, $contentType, $cachedBlocks) {
 		try {
 			$editedContent         = $content;
 			$previousEditedContent = $editedContent;
@@ -21,28 +21,36 @@ try {
 			$usedBlocks            = [];
 			$objArray              = [];
 
-			if ( ! empty( $fromDb ) ) {
+			if (!empty($fromDb)) {
 				$contentLength = mb_strlen( strip_tags( $content ), 'utf-8' );
-				foreach ( $fromDb AS $k => $item ) {
+				foreach ($fromDb AS $k => $item) {
 					$countReplaces = 0;
 					if ( is_object( $item ) ) {
 						$item = get_object_vars( $item );
 					}
-					if ( empty( $item['setting_type'] ) ) {
+					if (empty($item['setting_type'])) {
 						continue;
 					}
-					if ( ! empty( $item['minHeaders'] ) && $item['minHeaders'] > 0 ) {
-						$headersMatchesResult = preg_match_all( '~<(h1|h2|h3|h4|h5|h6)~', $content, $headM );
-						$headersMatchesResult = count( $headM[0] );
+					if (!empty($item['minHeaders']) && $item['minHeaders'] > 0) {
+						$headersMatchesResult = preg_match_all('~<(h1|h2|h3|h4|h5|h6)~', $content, $headM);
+						$headersMatchesResult = count($headM[0]);
 						$headersMatchesResult += 1;
 					}
-					if ( ! empty( $item['minHeaders'] ) && ! empty( $headersMatchesResult ) && $item['minHeaders'] > 0 && $item['minHeaders'] > $headersMatchesResult ) {
+					if (!empty($item['minHeaders']) && ! empty($headersMatchesResult) && $item['minHeaders'] > 0 && $item['minHeaders'] > $headersMatchesResult) {
 						continue;
-					} elseif ( ! empty( $item['minSymbols'] ) && $item['minSymbols'] > 0 && $item['minSymbols'] > $contentLength ) {
+					} elseif (!empty($item['minSymbols']) && $item['minSymbols'] > 0 && $item['minSymbols'] > $contentLength) {
 						continue;
 					}
 
-					$elementText     = $item['text'];
+					if (!empty($cachedBlocks)) {
+                        foreach ($cachedBlocks AS $k1 => $item1) {
+	                        if ($item1->post_title==$item['block_number']) {
+		                        $elementText = $item1->post_content;
+                            }
+                        }
+                    } else {
+						$elementText     = $item['text'];
+					}
 					switch ($item['setting_type']) {
 						case 1:
 							$elementName     = $item['element'];
@@ -96,7 +104,7 @@ try {
 							$quotesCheck = preg_match("~(<bq_mark_begin>)(((?<!<bq_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<bq_mark_end>)~i", $editedContent, $qm);
 							if (!empty($quotesCheck)) {
 								if ($elementPosition == 0) {
-									$editedContent = preg_replace('~(<bq_mark_begin>)(((?<!<bq_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<bq_mark_end>)~i', '<placeholderForAdDop>$0', $editedContent, 1, $countReplaces);
+									$editedContent = preg_replace('~(<bq_mark_begin>)(((?<!<bq_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<bq_mark_end>)~i', '<placeholderForAdDop>$0', $editedContent,1, $countReplaces);
 								} elseif ($elementPosition == 1) {
 									$editedContent = preg_replace("~(<bq_mark_begin>)(((?<!<bq_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<bq_mark_end>)~i", "$0<placeholderForAdDop>", $editedContent,1, $countReplaces);
 								}
@@ -106,13 +114,10 @@ try {
 							$editedContent = preg_replace( '~<placeholderForAd>~', '', $editedContent );
 							/**********************************************************/
 						} else {
-							if ( $elementName == 'img' )     //element is image
-							{
-								if ( $elementPosition == 0 )    //if position before
-								{
+							if ( $elementName == 'img' ) {     //element is image
+								if ( $elementPosition == 0 ) {   //if position before
 									$editedContent = preg_replace( '~<' . $elementName . '( |>|\/>){1}?~', '<placeholderForAd><' . $elementName . '$1', $editedContent, $elementNumber );
-								} elseif ( $elementPosition == 1 )    //if position after
-								{
+								} elseif ( $elementPosition == 1 ) {   //if position after
 									$editedContent = preg_replace( '~<' . $elementName . '([^>]*?)(\/>|>){1}~',
 										'<' . $elementName . ' $1 $2<placeholderForAd>', $editedContent, $elementNumber );
 								}
@@ -164,8 +169,7 @@ try {
 							$thisElementType = 'id';
 						}
 
-						if ( $elementPosition == 0 )    //if position before
-						{
+						if ( $elementPosition == 0 ) {   //if position before
 							if ( $directElementTag == null ) {
 								$usedTag = preg_match( '~<([0-9a-z]+?) ([^>]*?)(( |\'|\"){1})' . $thisElementName . '(( |\'|\"){1})([^>]*?)>~', $editedContent, $m1 );
 								if ( ! empty( $m1[1] ) ) {
@@ -204,17 +208,16 @@ try {
 					$editedContent = preg_replace( '~<placeholderForAdDop>~', $elementText, $editedContent );   //replacing right placeholders
 					$editedContent = preg_replace( '~<placeholderForAd>~', '', $editedContent );    //replacing all useless placeholders
 
-					if ( ! empty( $editedContent ) ) {
+					if (!empty($editedContent)) {
 						$previousEditedContent = $editedContent;
-						if ( ! empty( $countReplaces ) && $countReplaces > 0 ) {
-							$usedBlocks[ $usedBlocksCounter ] = $item['id'];
+						if (!empty($countReplaces)&&$countReplaces > 0) {
+							$usedBlocks[$usedBlocksCounter] = $item['id'];
 							$usedBlocksCounter ++;
 						}
 					} else {
 						$editedContent = $previousEditedContent;
 					}
 				}
-//				$editedContent = '<index>'.$editedContent.'</index>';
 				$editedContent = '<span id="content_pointer_id"></span>'.$editedContent;
 //			    $usedBlocks = [];
 				$creatingJavascriptParserForContent = RFWP_creatingJavascriptParserForContentFunction($fromDb, $usedBlocks, $contentLength);
@@ -224,9 +227,27 @@ try {
 			} else {
 				return $editedContent;
 			}
-		} catch ( Exception $e ) {
+		} catch (Exception $e) {
 			return $content;
 		}
+	}
+
+	function RFWP_wp_is_mobile() {
+		if (empty($_SERVER['HTTP_USER_AGENT'])) {
+			$is_mobile = false;
+		} elseif (strpos($_SERVER['HTTP_USER_AGENT'], 'Mobile') !== false
+		           || strpos($_SERVER['HTTP_USER_AGENT'], 'Android') !== false
+		           || strpos($_SERVER['HTTP_USER_AGENT'], 'Silk/') !== false
+		           || strpos($_SERVER['HTTP_USER_AGENT'], 'Kindle') !== false
+		           || strpos($_SERVER['HTTP_USER_AGENT'], 'BlackBerry') !== false
+		           || strpos($_SERVER['HTTP_USER_AGENT'], 'Opera Mini') !== false
+		           || strpos($_SERVER['HTTP_USER_AGENT'], 'Opera Mobi') !== false) {
+			$is_mobile = true;
+		} else {
+			$is_mobile = false;
+		}
+
+		return apply_filters( 'wp_is_mobile', $is_mobile );
 	}
 
 	function RFWP_headerADInsertor() {
@@ -237,14 +258,14 @@ try {
 			$themeHeaderFileOpen = file_get_contents( 'wp-content/themes/' . $wp_cur_theme_name . '/header.php' );
 
 			$checkedHeader = preg_match( '~rbConfig=\{start\:performance\.now\(\)\}~iu', $themeHeaderFileOpen, $m );
-			if ( count( $m ) == 0 ) {
+			if (count($m) == 0) {
 				$result = true;
 			} else {
 				$result = false;
 			}
 
 			return $result;
-		} catch ( Exception $e ) {
+		} catch (Exception $e) {
 			return false;
 		}
 	}
@@ -257,7 +278,7 @@ try {
 			$themeHeaderFileOpen = file_get_contents( 'wp-content/themes/' . $wp_cur_theme_name . '/header.php' );
 
 			$checkedHeader = preg_match( '~realpush.media/pushJs~', $themeHeaderFileOpen, $m );
-			if ( count( $m ) == 0 ) {
+			if ( count($m) == 0) {
 				$result = true;
 			} else {
 				$result = false;
@@ -269,15 +290,17 @@ try {
 		}
 	}
 
-	function RFWP_creatingJavascriptParserForContentFunction( $fromDb, $usedBlocks, $contentLength ) {
+	function RFWP_creatingJavascriptParserForContentFunction($fromDb, $usedBlocks, $contentLength) {
 		try {
+//		    $needleUrl = plugins_url().'/'.basename(__DIR__).'/connectTestFile';
+//		    $needleUrl = basename(__DIR__).'/connectTestFile';
 			$scriptingCode = '
             <script>
             var blockSettingArray = [];
             var contentLength = ' . $contentLength . ';
             ';
-			foreach ( $fromDb AS $k => $item ) {
-				if ( is_object( $item ) ) {
+			foreach ($fromDb AS $k => $item ) {
+				if (is_object( $item ) ) {
 					$item = get_object_vars( $item );
 				}
 				$resultHere = in_array( $item['id'], $usedBlocks );
@@ -314,7 +337,17 @@ try {
 			$scriptingCode .= PHP_EOL;
 			$scriptingCode .= 'var jsInputerLaunch = 15;';
 			$scriptingCode .= PHP_EOL;
-			$scriptingCode .= 'var needleUrl = "'.plugins_url().'/'.basename(__DIR__).'/realbigForWP";';
+//			$scriptingCode .= 'var needleUrl = "'.plugins_url().'/'.basename(__DIR__).'/realbigForWP/";';
+//			$scriptingCode .= 'var needleUrl = "'.$needleUrl.'";';
+//			$scriptingCode .= PHP_EOL;
+//			if (!empty(RFWP_wp_is_mobile())) {
+//				$scriptingCode .= 'var isMobile = 1;';
+//				?><!--<script>console.log('mob')</script>--><?php
+//			} else {
+//				$scriptingCode .= 'var isMobile = 0;';
+//				?><!--<script>console.log('NE_mob')</script>--><?php
+//			}
+//			$scriptingCode .= PHP_EOL;
 			$scriptingCode .= '</script>';
 
 			return $scriptingCode;

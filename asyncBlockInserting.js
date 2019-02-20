@@ -21,11 +21,19 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
         var currentElementChecker = false;
         let containerFor6th = [];
 
+        function getFromConstructions(currentElement) {
+            if (currentElement.parentElement.tagName.toLowerCase() == "blockquote") {
+                currentElement = currentElement.parentElement;
+            } else if (["tr","td","th","thead","tbody","table"].includes(currentElement.parentElement.tagName.toLowerCase())) {
+                currentElement = currentElement.parentElement;
+                while (["tr", "td", "th", "thead", "tbody", "table"].includes(currentElement.parentElement.tagName.toLowerCase())) {
+                    currentElement = currentElement.parentElement;
+                }
+            }
+            return currentElement;
+        }
+
         for (var i = 0; i < blockSettingArray.length; i++) {
-            // if (poolbackI == 1) {
-            //     i--;
-            //     poolbackI = 0;
-            // }
             currentElementChecker = false;
             try {
                 elementToAdd = document.createElement("div");
@@ -54,19 +62,19 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                         sumResult = currentElement.length + blockSettingArray[i]["elementPlace"];
                         if (sumResult >= 0 && sumResult < currentElement.length) {
                             currentElement = currentElement[sumResult];
-                            if (currentElement.parentElement.tagName.toLowerCase() == "blockquote") {
-                                currentElement = currentElement.parentElement;
+                            currentElement = getFromConstructions(currentElement);
+                            if (!empty(currentElement)) {
+                                currentElementChecker = true;
                             }
-                            currentElementChecker = true;
                         }
                     } else {
                         sumResult = blockSettingArray[i]["elementPlace"] - 1;
                         if (sumResult < currentElement.length) {
                             currentElement = currentElement[sumResult];
-                            if (currentElement.parentElement.tagName.toLowerCase() == "blockquote") {
-                                currentElement = currentElement.parentElement;
+                            currentElement = getFromConstructions(currentElement);
+                            if (!empty(currentElement)) {
+                                currentElementChecker = true;
                             }
-                            currentElementChecker = true;
                         }
                     }
                     if (currentElement != undefined && currentElement != null && currentElementChecker) {
@@ -90,8 +98,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                     let directElement = blockSettingArray[i]["directElement"].trim();
 
                     if (directElement.search('#') > -1||(!blockSettingArray['element']||(
-                        blockSettingArray['element']&&directElement.search('.') > 0)))
-                    {
+                        blockSettingArray['element']&&directElement.search('.') > 0))) {
                         currentElement = document.querySelector(directElement);
                     }
                     if (!currentElement) {
@@ -142,15 +149,13 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                     poolbackI = 1;
                     i--;
                 } else if (blockSettingArray[i]["setting_type"] == 5) {
-                    let curElement = document.getElementById("content_pointer_id").parentElement;
-                    if (curElement.getElementsByTagName("p").length > 0) {
-                        let elementNumber = Math.round(curElement.getElementsByTagName("p").length/2);
-                        curElement = curElement.getElementsByTagName("p")[elementNumber];
-                        if (curElement.parentElement.tagName.toLowerCase() == "blockquote") {
-                            curElement = curElement.parentElement;
-                        }
-                        if (curElement != undefined && curElement != null) {
-                            curElement.parentNode.insertBefore(elementToAdd, curElement.nextSibling);
+                    let currentElement = document.getElementById("content_pointer_id").parentElement;
+                    if (currentElement.getElementsByTagName("p").length > 0) {
+                        let elementNumber = Math.round(currentElement.getElementsByTagName("p").length/2);
+                        currentElement = currentElement.getElementsByTagName("p")[elementNumber];
+                        currentElement = getFromConstructions(currentElement);
+                        if (currentElement != undefined && currentElement != null) {
+                            currentElement.parentNode.insertBefore(elementToAdd, currentElement.nextSibling);
                             blockSettingArray.splice(i, 1);
                             poolbackI = 1;
                             i--;

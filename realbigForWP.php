@@ -17,7 +17,7 @@ include ( dirname(__FILE__)."/textEditing.php");
 /*
 Plugin name:  Realbig Media
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.1.26.29
+Version:      0.1.26.30
 Author:       Realbig Team
 License:      GPLv2 or later
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
@@ -30,30 +30,36 @@ try {
 	global $table_prefix;
 
 	$wpPrefix = $table_prefix;
-	if ( empty( $wpPrefix ) ) {
+	if (empty($wpPrefix)) {
 		$wpPrefix = $wpdb->base_prefix;
 	}
 	$GLOBALS['wpPrefix'] = $wpPrefix;
 
 	/***************** Cached AD blocks saving ***************************************************************************************/
-	/***************** End of cached AD blocks saving ***************************************************************************************/
-
-	$tableForCurrentPluginChecker = $wpdb->get_var( 'SHOW TABLES LIKE "' . $wpPrefix . 'realbig_plugin_settings"' );   //settings for block table checking
-	$tableForToken                = $wpdb->get_var( 'SHOW TABLES LIKE "' . $wpPrefix . 'realbig_settings"' );      //settings for token and other
-
-	if (!empty($_POST['statusRefresher'])||empty($tableForToken)||empty($tableForCurrentPluginChecker)) {
-		delete_option( 'realbig_status_gatherer_version' );
+	if (!empty($_POST)) {
+		$penyok_stoparik = 0;
 	}
 
-	$pluginData = get_plugin_data( __FILE__ );
-	if ( ! empty( $pluginData['Version'] ) ) {
+	if (empty(get_transient('rb_cache_timeout'))&&!empty($_POST)&&!empty($_POST['type'])&&$_POST['type']=="blocksGethering") {
+		include_once (dirname(__FILE__).'/connectTestFile.php');
+    }
+	/***************** End of cached AD blocks saving ***************************************************************************************/
+	$tableForCurrentPluginChecker = $wpdb->get_var('SHOW TABLES LIKE "' . $wpPrefix . 'realbig_plugin_settings"');   //settings for block table checking
+	$tableForToken                = $wpdb->get_var('SHOW TABLES LIKE "' . $wpPrefix . 'realbig_settings"');      //settings for token and other
+
+	if (!empty($_POST['statusRefresher'])||empty($tableForToken)||empty($tableForCurrentPluginChecker)) {
+		delete_option('realbig_status_gatherer_version');
+	}
+
+	$pluginData = get_plugin_data(__FILE__);
+	if (!empty($pluginData['Version'])) {
 		$GLOBALS['realbigForWP_version'] = $pluginData['Version'];
 	} else {
-		$GLOBALS['realbigForWP_version'] = '0.1.26.29';
+		$GLOBALS['realbigForWP_version'] = '0.1.26.30';
 	}
 	$lastSuccessVersionGatherer = get_option( 'realbig_status_gatherer_version' );
 //	require_once( 'synchronising.php' );
-	$statusGatherer             = RFWP_statusGathererConstructor( true );
+	$statusGatherer             = RFWP_statusGathererConstructor(true);
 	/***************** updater code ***************************************************************************************/
 	require 'plugin-update-checker/plugin-update-checker.php';
 	$myUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
@@ -97,17 +103,22 @@ try {
 	$unmarkSuccessfulUpdate      = $wpdb->get_var( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = "successUpdateMark"' );
 	$jsAutoSynchronizationStatus = $wpdb->get_var( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = "jsAutoSyncFails"' );
 
-	if ( $statusGatherer['realbig_plugin_settings_table'] == true && ( $statusGatherer['element_column_values'] == false || $lastSuccessVersionGatherer != $GLOBALS['realbigForWP_version'] ) ) {
+//	if ( isset( $jsAutoSynchronizationStatus ) && $jsAutoSynchronizationStatus > 4 && ! empty( $token ) && $token != 'no token' && $lastSyncTimeTransient == false ) {
+//		$wpOptionsCheckerSyncTime = $wpdb->get_row( $wpdb->prepare( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = %s', [ "token_sync_time" ] ) );
+//		RFWP_synchronize( $token, ( empty( $wpOptionsCheckerSyncTime ) ? null : $wpOptionsCheckerSyncTime ), true, $GLOBALS['table_prefix'], 'manual' );
+//	}
+//	/*** enumUpdate */ $resultEnumUpdate = RFWP_updateElementEnumValuesFunction(); /** enumUpdateEnd */
+	if ($statusGatherer['realbig_plugin_settings_table'] == true && ($statusGatherer['element_column_values'] == false || $lastSuccessVersionGatherer != $GLOBALS['realbigForWP_version'])) {
 		/** enumUpdate */
-		$statusGatherer = RFWP_updateElementEnumValuesFunction( $wpPrefix, $statusGatherer );
+		$statusGatherer = RFWP_updateElementEnumValuesFunction($wpPrefix, $statusGatherer);
 		/** enumUpdateEnd */
 	}
-	if ( ! empty( $statusGatherer ) ) {
-		if ( ! in_array( false, $statusGatherer ) ) {
-			if ( ! empty( $lastSuccessVersionGatherer ) ) {
-				update_option( 'realbig_status_gatherer_version', $GLOBALS['realbigForWP_version'], 'no' );
+	if (!empty($statusGatherer)) {
+		if (!in_array(false, $statusGatherer)) {
+			if (!empty($lastSuccessVersionGatherer)) {
+				update_option('realbig_status_gatherer_version', $GLOBALS['realbigForWP_version'], 'no');
 			} else {
-				add_option( 'realbig_status_gatherer_version', $GLOBALS['realbigForWP_version'], '', 'no' );
+				add_option('realbig_status_gatherer_version', $GLOBALS['realbigForWP_version'], '', 'no');
 			}
 		}
 		$statusGathererJson = json_encode( $statusGatherer );
@@ -231,11 +242,21 @@ try {
 			plugins_url().'/'.basename(__DIR__).'/readyAdGather.js',
 			array( 'jquery' ),
 			$GLOBALS['realbigForWP_version'],
-			false );
+			true );
 	}
 
-	add_action( 'wp_enqueue_scripts', 'RFWP_syncFunctionAdd1', 100 );
-//	add_action( 'wp_enqueue_scripts', 'RFWP_syncFunctionAdd2', 11 );
+	if (!is_admin()) {
+		add_action('wp_enqueue_scripts', 'RFWP_syncFunctionAdd1', 10);
+		if (!empty(RFWP_wp_is_mobile())) {
+			$cacheTimeout = get_transient('rb_mobile_cache_timeout');
+		} else {
+			$cacheTimeout = get_transient('rb_desktop_cache_timeout');
+		}
+		if (empty($cacheTimeout)) {
+			add_action('wp_enqueue_scripts', 'RFWP_syncFunctionAdd2', 11);
+		}
+    }
+
 	$GLOBALS['stepCounter'] = 'zero';
 	$lastSyncTimeTransient = get_transient('realbigPluginSyncAttempt');
 	$activeSyncTransient   = get_transient('realbigPluginSyncProcess');
@@ -243,13 +264,21 @@ try {
 		if (empty(wp_next_scheduled('rb_cron_hook'))) {
 			RFWP_cronAutoGatheringLaunch();
 		}
+//		else {
+//			if (!empty(wp_doing_cron())) {
+//				RFWP_cronAutoSyncDelete();
+//				RFWP_cronAutoGatheringLaunch();
+//            }
+//		}
         else {
+//            if (!empty(wp_doing_cron())) {
             if (!empty(apply_filters( 'wp_doing_cron', defined( 'DOING_CRON' ) && DOING_CRON ))) {
 	            RFWP_cronAutoSyncDelete();
             }
         }
 	}
 	if (!empty(apply_filters('wp_doing_cron', defined('DOING_CRON')&&DOING_CRON))&&empty($activeSyncTransient)&&empty($lastSyncTimeTransient)) {
+//	if (!empty(wp_doing_cron())&&empty($activeSyncTransient)&&empty($lastSyncTimeTransient)) {
 		RFWP_autoSync();
 	}
 
@@ -270,6 +299,17 @@ try {
 				}
 			}
 		}
+
+        $httpsCheck = is_ssl();
+		if (!empty($httpsCheck)) {
+		    $prefix = "HTTPS";
+        } else {
+			$prefix = "HTTP";
+		}
+		$rotatorUrl = $prefix."://".$getDomain."/".$getRotator.".min.js";
+//		$rotatorUrl = "HTTPS://ex.ua";
+		$GLOBALS['rotatorUrl'] = $rotatorUrl;
+
 		require_once( 'textEditing.php' );
 		$headerParsingResult = RFWP_headerADInsertor();
 		if ( $headerParsingResult == true ) {
@@ -304,7 +344,7 @@ try {
 				$pushCode        = $pushStatus[0]['optionValue'];
 			}
 		}
-		if ( ! empty( $pushStatus ) && ! empty( $pushStatusValue ) && ! empty( $pushCode ) && count( $pushStatus ) == 2 && $pushStatusValue == 1 ) {
+		if (!empty($pushStatus) && ! empty($pushStatusValue)&& ! empty( $pushCode ) && count( $pushStatus ) == 2 && $pushStatusValue == 1 ) {
 			add_action( 'wp_head', 'RFWP_push_head_add', 0 );
 			$GLOBALS['pushCode'] = $pushCode;
 		}
@@ -334,7 +374,19 @@ try {
 	function RFWP_adBlocksToContentInsertingFunction($content) {
         if ($GLOBALS['mainPageStatus'] == 2 || is_page() || is_single() || is_singular() || is_archive()) {
 	        global $wpdb;
-//	        $cachedBlocks = get_posts(['post_type' => 'rb_block']);
+
+	        $rotatorUrl = $GLOBALS['rotatorUrl'];
+	        $rotatorResponce = wp_safe_remote_head($rotatorUrl, ['timeout' => 1]);
+
+	        $cachedBlocks = '';
+	        if (!is_array($rotatorResponce)||(!empty($rotatorResponce['response']['code'])&&$rotatorResponce['response']['code']!=200)) {
+	            ?><script>console.log('using cache')</script><?php
+		        if (!empty(RFWP_wp_is_mobile())) {
+			        $cachedBlocks = get_posts(['post_type' => 'rb_block_mobile']);
+		        } else {
+			        $cachedBlocks = get_posts(['post_type' => 'rb_block_desktop']);
+		        }
+	        }
 
 	        if (!empty($content)) {
 		        $fromDb = $wpdb->get_results('SELECT * FROM '.$GLOBALS['wpPrefix'].'realbig_plugin_settings WGPS');
@@ -342,7 +394,7 @@ try {
 		        $fromDb = $wpdb->get_results('SELECT * FROM '.$GLOBALS['wpPrefix'].'realbig_plugin_settings WGPS WHERE setting_type = 3');
 	        }
             require_once('textEditing.php');
-            $content = RFWP_addIcons($fromDb, $content, 'content');
+            $content = RFWP_addIcons($fromDb, $content, 'content', $cachedBlocks);
 
             return $content;
         } else {
@@ -377,8 +429,15 @@ try {
 	}
 
 	function RFWP_TokenSync() {
-	    $sign = 0;
-	    try {
+		global $wpdb;
+		global $wpPrefix;
+		$sign = 0;
+		$blocksCounter = 1;
+//		$postsGather = $wpdb->get_results('SELECT post_title FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_desktop","rb_block_mobile")');
+		$postsGatherDesktop = $wpdb->get_results('SELECT post_title FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_desktop")');
+		$postsGatherMobile  = $wpdb->get_results('SELECT post_title FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_mobile" )');
+
+		try {
 		    $deacErrorGather = $GLOBALS['wpdb']->get_row('SELECT optionValue, timeUpdate FROM ' . $GLOBALS["wpPrefix"] . 'realbig_settings WHERE optionName = "deactError"', ARRAY_A);
 
 		    if (!empty($deacErrorGather)) {
@@ -404,10 +463,10 @@ try {
                 <input type="checkbox" name="statusRefresher" id="statusRefresher">
                 <br>
 <!--	            --><?// if (empty($GLOBALS['problematic_table_status'])): ?>
-	            <? if (!empty($GLOBALS['problematic_table_status'])): ?>
+	            <?php if (!empty($GLOBALS['problematic_table_status'])): ?>
                     <label for="manuallyTableCreating">создать таблицу вручную</label>
                     <input type="checkbox" name="manuallyTableCreating" id="manuallyTableCreatingId">
-	            <? endif; ?>
+	            <?php endif; ?>
 				<?php submit_button( 'Синхронизировать', 'primary', 'saveTokenButton' ) ?>
 				<?php if ( ! empty( $GLOBALS['tokenStatusMessage'] ) ): ?>
                     <div name="rezultDiv" style="font-size: 16px"><?php echo $GLOBALS['tokenStatusMessage'] ?></div>
@@ -420,18 +479,36 @@ try {
                 1: <?php echo( ! empty( $GLOBALS['connection_request_rezult_1'] ) ? $GLOBALS['connection_request_rezult_1'] : 'empty' ) ?></div>
             <div>Статус соединения
                 общий: <?php echo( ! empty( $GLOBALS['connection_request_rezult'] ) ? $GLOBALS['connection_request_rezult'] : 'empty' ) ?></div>
-            <? if (!empty($GLOBALS['manuallyTableCreatingResult'])): ?>
+            <?php if (!empty($GLOBALS['manuallyTableCreatingResult'])): ?>
                 <div>Table creating: <?php echo $GLOBALS['manuallyTableCreatingResult']; ?></div>
-            <? endif; ?>
-            <? if (!empty($deacErrorGather)): ?>
+            <?php endif; ?>
+            <?php if (!empty($deacErrorGather)): ?>
                 <div style="border: 1px solid grey; width: max-content; margin-top: 20px; padding: 5px">
                     Инфо о последней деактивации:
                     <div>
-                        Update Time: <?= $deacTime?> <br>
-                        Error: <?= $deacError?> <br>
+                        Update Time: <?php echo $deacTime?> <br>
+                        Error: <?php echo $deacError?> <br>
                     </div>
                 </div>
-            <? endif; ?>
+            <?php endif; ?>
+            <?php if (!empty($postsGatherDesktop)||!empty($postsGatherMobile)):?>
+                <div style="border: 1px solid grey; width: max-content; margin-top: 20px; padding: 5px">
+                    Количество закешированных блоков: <?php echo count($postsGatherDesktop)+count($postsGatherMobile) ?>.<br>
+                    ИД десктопных:
+                    <div>
+                        <?php foreach ($postsGatherDesktop AS $item): ?>
+                        <?php echo $blocksCounter++; ?>: <?php echo $item->post_title ?>;
+                        <?php endforeach; ?>
+                    </div>
+                    <?php $blocksCounter = 1; ?>
+                    ИД мобильных:
+                    <div>
+		                <?php foreach ($postsGatherMobile AS $item): ?>
+			            <?php echo $blocksCounter++; ?>: <?php echo $item->post_title ?>;
+		                <?php endforeach; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
         </div>
         <!--        <div style="width: 100px; height: 20px; border: 1px solid black; background-color: royalblue"></div>-->
 		<?php
