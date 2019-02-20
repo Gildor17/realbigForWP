@@ -141,6 +141,10 @@ try {
 								}
 							}
 							$GLOBALS['token'] = $tokenInput;
+
+                            delete_transient('rb_mobile_cache_timeout' );
+							delete_transient('rb_desktop_cache_timeout');
+
 						} catch ( Exception $e ) {
 							$GLOBALS['tokenStatusMessage'] = $e;
 							$unsuccessfullAjaxSyncAttempt  = 1;
