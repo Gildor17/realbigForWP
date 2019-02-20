@@ -1,3 +1,7 @@
+var nReadyBlock = false;
+// var nReadyBlock = true;
+// var penyok_stoparik = 0;
+
 function sendReadyBlocksNew(blocks) {
     let xhttp = new XMLHttpRequest();
     let sendData = 'type=blocksGethering&data='+blocks;
@@ -10,16 +14,6 @@ function sendReadyBlocksNew(blocks) {
     xhttp.open("POST", ajaxurl, true);
     xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
     xhttp.send(sendData);
-}
-
-if (document.readyState === "complete" || (document.readyState !== "loading" && !document.documentElement.doScroll)) {
-    timeBeforeGathering();
-} else {
-    document.addEventListener("DOMContentLoaded", timeBeforeGathering, false);
-}
-
-function timeBeforeGathering() {
-    setTimeout(gatherReadyBlocks,2000);
 }
 
 function gatherReadyBlocks() {
@@ -38,10 +32,29 @@ function gatherReadyBlocks() {
         }
         blocks += "]}";
 
-        // if (!needleUrl) {
-        //     needleUrl = "//"+document.domain+"/wp-content/plugins/realbigForWP/realbigForWP";
-        // }
-
         sendReadyBlocksNew(blocks);
     }
 }
+
+function timeBeforeGathering() {
+    let gatheredBlocks = document.getElementsByClassName('content_rb');
+    for (let i = 0; i < gatheredBlocks.length; i++) {
+        if (!gatheredBlocks[i]['dataset']["state"]) {
+            nReadyBlock = true;
+            break;
+        }
+    }
+    if (nReadyBlock == true) {
+        nReadyBlock = false;
+        setTimeout(timeBeforeGathering,2000);
+    } else {
+        gatherReadyBlocks();
+    }
+}
+
+if (document.readyState === "complete" || (document.readyState !== "loading" && !document.documentElement.doScroll)) {
+    timeBeforeGathering();
+} else {
+    document.addEventListener("DOMContentLoaded", timeBeforeGathering, false);
+}
+

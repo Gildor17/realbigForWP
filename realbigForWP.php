@@ -344,7 +344,7 @@ try {
 				$pushCode        = $pushStatus[0]['optionValue'];
 			}
 		}
-		if ( ! empty( $pushStatus ) && ! empty( $pushStatusValue ) && ! empty( $pushCode ) && count( $pushStatus ) == 2 && $pushStatusValue == 1 ) {
+		if (!empty($pushStatus) && ! empty($pushStatusValue)&& ! empty( $pushCode ) && count( $pushStatus ) == 2 && $pushStatusValue == 1 ) {
 			add_action( 'wp_head', 'RFWP_push_head_add', 0 );
 			$GLOBALS['pushCode'] = $pushCode;
 		}
