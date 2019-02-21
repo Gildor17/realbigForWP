@@ -221,6 +221,8 @@ try {
 					}
 					$editedContent = preg_replace( '~<bq_mark_begin>~i', '', $editedContent, -1);
 					$editedContent = preg_replace( '~<bq_mark_end>~i', '', $editedContent, -1);
+					$editedContent = preg_replace( '~<tab_mark_begin>~i', '', $editedContent, -1);
+					$editedContent = preg_replace( '~<tab_mark_end>~i', '', $editedContent, -1);
 
 					$editedContent = preg_replace( '~<placeholderForAdDop>~', $elementText, $editedContent );   //replacing right placeholders
 					$editedContent = preg_replace( '~<placeholderForAd>~', '', $editedContent );    //replacing all useless placeholders
