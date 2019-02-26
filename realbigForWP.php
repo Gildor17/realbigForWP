@@ -12,7 +12,7 @@ include ( dirname(__FILE__)."/textEditing.php");
 /*
 Plugin name:  Realbig Media
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.1.26.34
+Version:      0.1.26.35
 Author:       Realbig Team
 License:      GPLv2 or later
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
@@ -51,7 +51,7 @@ try {
 	if (!empty($pluginData['Version'])) {
 		$GLOBALS['realbigForWP_version'] = $pluginData['Version'];
 	} else {
-		$GLOBALS['realbigForWP_version'] = '0.1.26.34';
+		$GLOBALS['realbigForWP_version'] = '0.1.26.35';
 	}
 	$lastSuccessVersionGatherer = get_option( 'realbig_status_gatherer_version' );
 //	require_once( 'synchronising.php' );
@@ -143,20 +143,24 @@ try {
 		} elseif (!empty($usedUrl)) {
 			$excludedMainPageCheck = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", ['excludedMainPage']));
 
-			preg_match_all("~(\/|\\\)([^\/^\\\]+)~", get_home_url(), $m);
+//			preg_match_all("~(\/|\\\)([^\/^\\\]+)~", get_home_url(), $m);
 
 			$homeStatus = false;
-			if (!empty($usedUrl)&&!empty($m)) {
-				if ($usedUrl=="/"||$usedUrl==get_home_url()."/") {
-					$homeStatus = true;
-				} else {
-					foreach ($m[0] AS $item) {
-						if ($usedUrl==$item."/") {
-							$homeStatus = true;
-						}
-					}
-				}
-			}
+			if (!empty(is_home())||!empty(is_front_page())) {
+				$homeStatus = true;
+            }
+
+//			if (!empty($usedUrl)&&!empty($m)) {
+//				if ($usedUrl=="/"||$usedUrl==get_home_url()."/") {
+//					$homeStatus = true;
+//				} else {
+//					foreach ($m[0] AS $item) {
+//						if ($usedUrl==$item."/") {
+//							$homeStatus = true;
+//						}
+//					}
+//				}
+//			}
 
 			if ($homeStatus==true) {
 				if (isset($excludedMainPageCheck)) {
