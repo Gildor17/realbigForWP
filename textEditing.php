@@ -1,5 +1,7 @@
 <?php
 
+if (!defined("ABSPATH")) { exit;}
+
 include_once ( dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
 include_once ( dirname(__FILE__)."/../../../wp-admin/includes/upgrade.php" );
 
@@ -11,7 +13,6 @@ include_once ( dirname(__FILE__)."/../../../wp-admin/includes/upgrade.php" );
  */
 
 try {
-	if (!defined("ABSPATH")) { exit;}
 
 	function RFWP_addIcons( $fromDb, $content, $contentType, $cachedBlocks) {
 		try {

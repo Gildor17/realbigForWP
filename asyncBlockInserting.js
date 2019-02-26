@@ -20,6 +20,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
         var repeat = false;
         var currentElementChecker = false;
         let containerFor6th = [];
+        let posCurrentElement;
 
         function getFromConstructions(currentElement) {
             if (currentElement.parentElement.tagName.toLowerCase() == "blockquote") {
@@ -32,13 +33,28 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
             }
             return currentElement;
         }
+        
+        function initTargetToInsert(blockSettingArray) {
+            let posCurrentElement;
+            if (blockSettingArray[i]["elementPosition"] == 0) {
+                posCurrentElement = currentElement;
+                currentElement.style.marginTop = '0px';
+            } else {
+                posCurrentElement = currentElement.nextSibling;
+                currentElement.style.marginBottom = '0px';
+            }
+
+            return posCurrentElement;
+        }
 
         for (var i = 0; i < blockSettingArray.length; i++) {
             currentElementChecker = false;
             try {
                 elementToAdd = document.createElement("div");
                 elementToAdd.classList.add("percentPointerClass");
+                elementToAdd.style.margin = '5px 0px';
                 elementToAdd.innerHTML = blockSettingArray[i]["text"];
+                elementToAdd.style.display = 'block';
                 if (blockSettingArray[i]["minHeaders"] > 0) {
                     var termorarity_parent_with_content = parent_with_content;
                     var termorarity_parent_with_content_length = 0;
@@ -78,11 +94,14 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                         }
                     }
                     if (currentElement != undefined && currentElement != null && currentElementChecker) {
-                        if (blockSettingArray[i]["elementPosition"] == 0) {
-                            currentElement.parentNode.insertBefore(elementToAdd, currentElement);
-                        } else {
-                            currentElement.parentNode.insertBefore(elementToAdd, currentElement.nextSibling);
-                        }
+                        posCurrentElement = initTargetToInsert(blockSettingArray);
+                        // if (blockSettingArray[i]["elementPosition"] == 0) {
+                        //     currentElement.parentNode.insertBefore(elementToAdd, currentElement);
+                        // } else {
+                        //     currentElement.parentNode.insertBefore(elementToAdd, currentElement.nextSibling);
+                        // }
+                        currentElement.parentNode.insertBefore(elementToAdd, posCurrentElement);
+
                         blockSettingArray.splice(i, 1);
                         poolbackI = 1;
                         i--;
@@ -132,11 +151,14 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                     }
 
                     if (currentElement != undefined && currentElement != null && currentElementChecker) {
-                        if (blockSettingArray[i]["elementPosition"] == 0) {
-                            currentElement.parentNode.insertBefore(elementToAdd, currentElement);
-                        } else {
-                            currentElement.parentNode.insertBefore(elementToAdd, currentElement.nextSibling);
-                        }
+                        posCurrentElement = initTargetToInsert(blockSettingArray);
+                        // if (blockSettingArray[i]["elementPosition"] == 0) {
+                        //     currentElement.parentNode.insertBefore(elementToAdd, currentElement);
+                        // } else {
+                        //     currentElement.parentNode.insertBefore(elementToAdd, currentElement.nextSibling);
+                        // }
+                        currentElement.parentNode.insertBefore(elementToAdd, posCurrentElement);
+
                         blockSettingArray.splice(i, 1);
                         poolbackI = 1;
                         i--;
@@ -355,6 +377,7 @@ function percentInserter(lordOfElements, containerFor6th) {
                                                 numberToUse = j;
                                             }
                                             if (previousChildrenLength==0||((currentChildrenLength - Math.round(previousChildrenLength/2)) >= textNeedyLength)) {
+
                                                 if (lordOfElements.children[i].children[numberToUse].parentElement.tagName.toLowerCase() == "blockquote") {
                                                     lordOfElements.children[i].children[numberToUse].parentElement.parentNode.insertBefore(elementToAdd, lordOfElements.children[i].children[j1]);
                                                 } else {

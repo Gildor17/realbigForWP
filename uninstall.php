@@ -6,11 +6,11 @@
  * Time: 11:10
  */
 
+if (!defined("ABSPATH")) { exit;}
+
 include_once ( dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
 include_once ( dirname(__FILE__)."/../../../wp-admin/includes/upgrade.php" );
 include_once ( dirname(__FILE__).'/../../../wp-includes/wp-db.php');
-
-if (!defined("ABSPATH")) { exit;}
 
 if(defined('WP_UNINSTALL_PLUGIN') ) {
 	global $wpdb;
