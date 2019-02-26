@@ -1,5 +1,7 @@
 <?php
 
+if (!defined("ABSPATH")) { exit;}
+
 try {
     $penyok_stoparik = 0;
     if (!empty(RFWP_wp_is_mobile())) {

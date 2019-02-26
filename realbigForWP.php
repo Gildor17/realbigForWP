@@ -1,11 +1,6 @@
 <?php
 
-//include_once( ABSPATH . 'wp-load.php' );
-//include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
-//include_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-//include ( ABSPATH . "wp-content/plugins/realbigForWP/update.php");
-//include ( ABSPATH . "wp-content/plugins/realbigForWP/synchronising.php");
-//include ( ABSPATH . "wp-content/plugins/realbigForWP/textEditing.php");
+if (!defined("ABSPATH")) { exit;}
 
 //include ( dirname(__FILE__).'/../../../wp-load.php' );
 include_once ( dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
@@ -17,14 +12,13 @@ include ( dirname(__FILE__)."/textEditing.php");
 /*
 Plugin name:  Realbig Media
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.1.26.33
+Version:      0.1.26.34
 Author:       Realbig Team
 License:      GPLv2 or later
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
 */
 
 try {
-	if (!defined("ABSPATH")) { exit;}
 	/** **************************************************************************************************************** **/
 	global $wpdb;
 	global $table_prefix;
@@ -34,6 +28,8 @@ try {
 		$wpPrefix = $wpdb->base_prefix;
 	}
 	$GLOBALS['wpPrefix'] = $wpPrefix;
+
+//	set_query_var("gaf");
 
 	/***************** Cached AD blocks saving ***************************************************************************************/
 	if (!empty($_POST)) {
@@ -55,7 +51,7 @@ try {
 	if (!empty($pluginData['Version'])) {
 		$GLOBALS['realbigForWP_version'] = $pluginData['Version'];
 	} else {
-		$GLOBALS['realbigForWP_version'] = '0.1.26.32';
+		$GLOBALS['realbigForWP_version'] = '0.1.26.34';
 	}
 	$lastSuccessVersionGatherer = get_option( 'realbig_status_gatherer_version' );
 //	require_once( 'synchronising.php' );
