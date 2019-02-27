@@ -79,7 +79,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                         if (sumResult >= 0 && sumResult < currentElement.length) {
                             currentElement = currentElement[sumResult];
                             currentElement = getFromConstructions(currentElement);
-                            if (!empty(currentElement)) {
+                            if (currentElement) {
                                 currentElementChecker = true;
                             }
                         }
@@ -88,7 +88,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                         if (sumResult < currentElement.length) {
                             currentElement = currentElement[sumResult];
                             currentElement = getFromConstructions(currentElement);
-                            if (!empty(currentElement)) {
+                            if (currentElement) {
                                 currentElementChecker = true;
                             }
                         }
