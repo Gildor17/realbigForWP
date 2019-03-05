@@ -52,7 +52,7 @@ try {
 				}
 				if (!empty($jsonToken)&&!is_wp_error($jsonToken)) {
 					$decodedToken                  = json_decode( $jsonToken, true );
-					$sanitisedMessage =
+//					$sanitisedMessage =
 					$GLOBALS['tokenStatusMessage'] = $decodedToken['message'];
 					if ( $requestType == 'ajax' ) {
 						$ajaxResult = $decodedToken['message'];
@@ -81,7 +81,7 @@ try {
 
 								    if (!empty($decodedToken['excludedMainPage'])) {
 									    $sanitisedExcludedMainPages = sanitize_text_field($decodedToken['excludedMainPage']);
-									    if (is_integer($sanitisedExcludedMainPages)) {
+									    if (intval($sanitisedExcludedMainPages)) {
 									        if (strlen($sanitisedExcludedMainPages) > 1) {
 										        $sanitisedExcludedMainPages = '';
 									        }

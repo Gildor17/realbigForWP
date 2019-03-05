@@ -241,6 +241,15 @@ try {
 
 	add_action('parse_query', 'RFWP_excludedPageCheck', 100);
 	/********** end of checking requested page for excluding **************************************************************/
+//	add_filter('the_content', 'RFWP_wof', 5001);
+//
+//    function RFWP_wof($content) {
+//        $penyok_stoparik = 0;
+//
+//        return $content;
+//
+//    }
+
 	/********** autosync and JS text edit *********************************************************************************/
 //	$GLOBALS['wpOptionsCheckerSyncTime'] = $wpOptionsCheckerSyncTime;
 	function RFWP_syncFunctionAdd() {
@@ -399,7 +408,7 @@ try {
 	/************* end blocks for text ************************************************************************************/
 	/********** using settings in texts ***********************************************************************************/
 	function RFWP_adBlocksToContentInsertingFunction($content) {
-        if (is_page() || is_single() || is_singular() || is_archive()) {
+        if (is_home()||is_front_page()||is_page() || is_single() || is_singular() || is_archive()) {
 	        global $wpdb;
 
 	        $rotatorUrl = $GLOBALS['rotatorUrl'];
