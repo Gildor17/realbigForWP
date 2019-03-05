@@ -3,8 +3,9 @@
 if (!defined("ABSPATH")) { exit;}
 
 //include ( dirname(__FILE__).'/../../../wp-load.php' );
-include_once ( dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
-include_once ( dirname(__FILE__)."/../../../wp-admin/includes/upgrade.php" );
+require_once ( dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
+//include_once ( dirname(__FILE__)."/../../../wp-admin/includes/upgrade.php" );
+//include_once ( dirname(__FILE__).'/../../../wp-includes/wp-db.php');
 include ( dirname(__FILE__)."/update.php");
 include ( dirname(__FILE__)."/synchronising.php");
 include ( dirname(__FILE__)."/textEditing.php");
@@ -29,15 +30,14 @@ try {
 	}
 	$GLOBALS['wpPrefix'] = $wpPrefix;
 
-//	set_query_var("gaf");
+	$GLOBALS['excludedPagesChecked'] = false;
 
 	/***************** Cached AD blocks saving ***************************************************************************************/
-	if (!empty($_POST)) {
-		$penyok_stoparik = 0;
-	}
-
-	if (empty(get_transient('rb_cache_timeout'))&&!empty($_POST)&&!empty($_POST['type'])&&$_POST['type']=="blocksGethering") {
-		include_once (dirname(__FILE__).'/connectTestFile.php');
+	if (empty(get_transient('rb_cache_timeout'))&&!empty($_POST)&&!empty($_POST['type'])) {
+	    $sanitisedPostType = sanitize_text_field($_POST['type']);
+	    if (!empty($sanitisedPostType)&&$sanitisedPostType=="blocksGethering") {
+		    include_once (dirname(__FILE__).'/connectTestFile.php');
+        }
     }
 	/***************** End of cached AD blocks saving ***************************************************************************************/
 	$tableForCurrentPluginChecker = $wpdb->get_var('SHOW TABLES LIKE "' . $wpPrefix . 'realbig_plugin_settings"');   //settings for block table checking
@@ -53,7 +53,7 @@ try {
 	} else {
 		$GLOBALS['realbigForWP_version'] = '0.1.26.37';
 	}
-	$lastSuccessVersionGatherer = get_option( 'realbig_status_gatherer_version' );
+	$lastSuccessVersionGatherer = get_option('realbig_status_gatherer_version');
 //	require_once( 'synchronising.php' );
 	$statusGatherer             = RFWP_statusGathererConstructor(true);
 	/***************** updater code ***************************************************************************************/
@@ -70,13 +70,13 @@ try {
 		$GLOBALS['manuallyTableCreatingResult'] = RFWP_manuallyTablesCreation($wpPrefix);
     }
 
-	if ( $statusGatherer['realbig_plugin_settings_table'] == false || $statusGatherer['realbig_settings_table'] == false || $lastSuccessVersionGatherer != $GLOBALS['realbigForWP_version'] ) {
+	if ($statusGatherer['realbig_plugin_settings_table'] == false || $statusGatherer['realbig_settings_table'] == false || $lastSuccessVersionGatherer != $GLOBALS['realbigForWP_version']) {
 //		$tableForCurrentPluginChecker = $wpdb->get_var( 'SHOW TABLES LIKE "' . $wpPrefix . 'realbig_plugin_settings"' );   //settings for block table checking
 //		$tableForToken                = $wpdb->get_var( 'SHOW TABLES LIKE "' . $wpPrefix . 'realbig_settings"' );      //settings for token and other
 //        $GLOBALS['problematic_table_status'] = $tableForCurrentPluginChecker;
-		$statusGatherer = RFWP_dbTablesCreateFunction( $tableForCurrentPluginChecker, $tableForToken, $wpPrefix, $statusGatherer );
+		$statusGatherer = RFWP_dbTablesCreateFunction($tableForCurrentPluginChecker, $tableForToken, $wpPrefix, $statusGatherer);
 
-		$resultingTableCheck = $wpdb->get_var( 'SHOW TABLES LIKE "' . $wpPrefix . 'realbig_plugin_settings"' );
+		$resultingTableCheck = $wpdb->get_var('SHOW TABLES LIKE "' . $wpPrefix . 'realbig_plugin_settings"');
 		if (empty($resultingTableCheck)) {
 			$GLOBALS['problematic_table_status'] = true;
 		}
@@ -126,100 +126,130 @@ try {
 	}
 	/********** end of token gathering and adding "timeUpdate" field in wp_realbig_settings *******************************/
 	/********** checking requested page for excluding *********************************************************************/
-	try {
-		$excludedPage = false;
-		$mainPageStatus = 0;
-		if (!empty($_SERVER["REDIRECT_URL"])) {
-			$usedUrl = $_SERVER["REDIRECT_URL"];
-		} else {
-			if (!empty($_SERVER["REQUEST_URI"])) {
-				$usedUrl = $_SERVER["REQUEST_URI"];
-			}
-		}
-        $usedUrl = $_SERVER["HTTP_HOST"].$usedUrl;
+	function RFWP_excludedPageCheck($args) {
+		try {
+		    if (empty($GLOBALS['excludedPagesChecked'])) {
+			    global $wpdb;
+			    global $wpPrefix;
 
-		if (is_admin()) {
-			$excludedPage = true;
-		} elseif (!empty($usedUrl)) {
-			$excludedMainPageCheck = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", ['excludedMainPage']));
+			    $excludedPage = false;
+			    $mainPageStatus = 0;
+			    if (!empty($_SERVER["REDIRECT_URL"])) {
+				    $usedUrl = $_SERVER["REDIRECT_URL"];
+			    } else {
+				    if (!empty($_SERVER["REQUEST_URI"])) {
+					    $usedUrl = $_SERVER["REQUEST_URI"];
+				    }
+			    }
+			    $usedUrl = $_SERVER["HTTP_HOST"].$usedUrl;
 
-			$homeStatus = false;
-			if (!empty(is_home())||!empty(is_front_page())) {
-				$homeStatus = true;
-			} else {
-				preg_match_all("~(\/|\\\)([^\/^\\\]+)~", get_home_url(), $m);
+			    /** Test zone *********/
+//		add_action('parse_query', 'mainPageCheck');
 
-				if (!empty($usedUrl)&&!empty($m)) {
-					if ($usedUrl=="/"||$usedUrl==get_home_url()."/") {
-						$homeStatus = true;
-					} else {
-						foreach ($m[0] AS $item) {
-							if ($usedUrl==$item."/") {
-								$homeStatus = true;
-							}
-						}
-					}
-				}
-			}
+//        do_action('posts_selection');
+			    /** End of test zone **/
 
+			    if (is_admin()) {
+				    $excludedPage = true;
+			    } elseif (!empty($usedUrl)) {
+				    $excludedMainPageCheck = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", ['excludedMainPage']));
 
-			if ($homeStatus==true) {
-				if (isset($excludedMainPageCheck)) {
-					if ( $excludedMainPageCheck == 1 ) {
-						$mainPageStatus = 1;
-					} elseif ($excludedMainPageCheck == 0) {
-						$mainPageStatus = 2;
-					}
-				}
-			}
+				    $homeStatus = false;
+				    if (is_home()||is_front_page()) {
+					    $homeStatus = true;
+				    } else {
+					    preg_match_all("~(\/|\\\)([^\/^\\\]+)~", get_home_url(), $m);
 
-			if ($mainPageStatus == 1) {
-				$excludedPage = true;
-			} elseif ($mainPageStatus == 0) {
-				$excludedPagesCheck = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", ['excludedPages']));
+					    if (!empty($usedUrl)&&!empty($m)) {
+						    if ($usedUrl=="/"||$usedUrl==get_home_url()."/") {
+							    $homeStatus = true;
+						    } else {
+							    foreach ($m[0] AS $item) {
+								    if ($usedUrl==$item."/") {
+									    $homeStatus = true;
+								    }
+							    }
+						    }
+					    }
+				    }
 
-				if (!empty($excludedPagesCheck)) {
-				    $excludedDelimiter = 0;
-				    $maxCountDelimiter = 0;
-					$excludedPagesCheckArray[1] = explode(",", $excludedPagesCheck);
-					$excludedPagesCheckArray[2] = explode("\n", $excludedPagesCheck);
-					$excludedPagesCheckArray[3] = explode(";", $excludedPagesCheck);
-					$excludedPagesCheckArray[4] = explode(" ", $excludedPagesCheck);
+				    if ($homeStatus==true) {
+					    if (isset($excludedMainPageCheck)) {
+						    if ( $excludedMainPageCheck == 1 ) {
+							    $mainPageStatus = 1;
+						    } elseif ($excludedMainPageCheck == 0) {
+							    $mainPageStatus = 2;
+						    }
+					    }
+				    }
 
-					foreach ($excludedPagesCheckArray AS $k => $item) {
-					    if (count($item) > $maxCountDelimiter) {
-					        $maxCountDelimiter = count($item);
-					        $excludedDelimiter = $k;
-                        }
-                    }
-                    if ($excludedDelimiter > 0) {
-	                    $excludedPagesCheckArray = $excludedPagesCheckArray[$excludedDelimiter];
-                    } else {
-	                    $excludedPagesCheckArray = $excludedPagesCheck;
-                    }
+				    if ($mainPageStatus == 1) {
+					    $excludedPage = true;
+				    } elseif ($mainPageStatus == 0) {
+					    $excludedPagesCheck = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", ['excludedPages']));
 
-					if (!empty($excludedPagesCheckArray)) {
-						foreach ($excludedPagesCheckArray AS $item) {
-							$item = trim($item);
+					    if (!empty($excludedPagesCheck)) {
+						    $excludedDelimiter = 0;
+						    $maxCountDelimiter = 0;
+						    $excludedPagesCheckArray[1] = explode(",", $excludedPagesCheck);
+						    $excludedPagesCheckArray[2] = explode("\n", $excludedPagesCheck);
+						    $excludedPagesCheckArray[3] = explode(";", $excludedPagesCheck);
+						    $excludedPagesCheckArray[4] = explode(" ", $excludedPagesCheck);
 
-							if (!empty($item)) {
-							    $m = -1;
-							    $m = strpos($usedUrl, $item);
+						    foreach ($excludedPagesCheckArray AS $k => $item) {
+							    if (count($item) > $maxCountDelimiter) {
+								    $maxCountDelimiter = count($item);
+								    $excludedDelimiter = $k;
+							    }
+						    }
+						    if ($excludedDelimiter > 0) {
+							    $excludedPagesCheckArray = $excludedPagesCheckArray[$excludedDelimiter];
+						    } else {
+							    $excludedPagesCheckArray = $excludedPagesCheck;
+						    }
+
+						    if (!empty($excludedPagesCheckArray)) {
+							    foreach ($excludedPagesCheckArray AS $item) {
+								    $item = trim($item);
+
+								    if (!empty($item)) {
+									    $m = -1;
+									    $m = strpos($usedUrl, $item);
 //								preg_match("~".$item."~ius", $usedUrl, $m);
-								if (is_integer($m)&&$m > -1) {
-									$excludedPage = true;
-								}
-							}
-						}
-					}
-				}
-			}
+									    if (is_integer($m)&&$m > -1) {
+										    $excludedPage = true;
+									    }
+								    }
+							    }
+						    }
+					    }
+				    }
+			    }
+			    if (empty($excludedPage)) {
+				    RFWP_js_add();
+				    add_filter('the_content', 'RFWP_adBlocksToContentInsertingFunction', 5000);
+			    }
+			    $GLOBALS['excludedPagesChecked'] = true;
+		    }
+
+			return $args;
+		} catch (Exception $excludedE) {
+			$excludedPage = false;
+			return $args;
 		}
-	} catch (Exception $excludedE) {
-		$excludedPage = false;
 	}
-	$GLOBALS['mainPageStatus'] = $mainPageStatus;
+
+	add_action('parse_query', 'RFWP_excludedPageCheck', 100);
 	/********** end of checking requested page for excluding **************************************************************/
+//	add_filter('the_content', 'RFWP_wof', 5001);
+//
+//    function RFWP_wof($content) {
+//        $penyok_stoparik = 0;
+//
+//        return $content;
+//
+//    }
+
 	/********** autosync and JS text edit *********************************************************************************/
 //	$GLOBALS['wpOptionsCheckerSyncTime'] = $wpOptionsCheckerSyncTime;
 	function RFWP_syncFunctionAdd() {
@@ -246,16 +276,16 @@ try {
 			true );
 	}
 
-	if (!is_admin()) {
-		add_action('wp_enqueue_scripts', 'RFWP_syncFunctionAdd1', 10);
-		if (!empty(RFWP_wp_is_mobile())) {
-			$cacheTimeout = get_transient('rb_mobile_cache_timeout');
-		} else {
-			$cacheTimeout = get_transient('rb_desktop_cache_timeout');
-		}
-		if (empty($cacheTimeout)) {
-			add_action('wp_enqueue_scripts', 'RFWP_syncFunctionAdd2', 11);
-		}
+    function RFWP_js_add() {
+        add_action('wp_enqueue_scripts', 'RFWP_syncFunctionAdd1', 10);
+        if (!empty(RFWP_wp_is_mobile())) {
+            $cacheTimeout = get_transient('rb_mobile_cache_timeout');
+        } else {
+            $cacheTimeout = get_transient('rb_desktop_cache_timeout');
+        }
+        if (empty($cacheTimeout)) {
+            add_action('wp_enqueue_scripts', 'RFWP_syncFunctionAdd2', 11);
+        }
     }
 
 	$GLOBALS['stepCounter'] = 'zero';
@@ -282,7 +312,6 @@ try {
 //	if (!empty(wp_doing_cron())&&empty($activeSyncTransient)&&empty($lastSyncTimeTransient)) {
 		RFWP_autoSync();
 	}
-
 	/********** end autosync and JS text edit *****************************************************************************/
 	/********** adding AD code in head area *******************************************************************************/
 	function RFWP_AD_header_add() {
@@ -354,26 +383,32 @@ try {
 	/********** end of adding AD code in head area ************************************************************************/
 	/********** manual sync ***********************************************************************************************/
 //$blocksSettingsTableChecking = $wpdb->query('SELECT id FROM '.$wpPrefix.'realbig_plugin_settings');
-	if ( strpos( $GLOBALS['PHP_SELF'], 'wp-admin' ) != false ) {
-		$wpOptionsCheckerSyncTime = $wpdb->get_row( $wpdb->prepare( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = %s', [ "token_sync_time" ] ) );
-		if ( ! empty( $_POST['tokenInput'] ) ) {
-			$sameTokenResult = false;
-			RFWP_synchronize( $_POST['tokenInput'], ( empty( $wpOptionsCheckerSyncTime ) ? null : $wpOptionsCheckerSyncTime ), $sameTokenResult, $wpPrefix, 'manual' );
+	if (strpos($GLOBALS['PHP_SELF'], 'wp-admin')!= false) {
+		$wpOptionsCheckerSyncTime = $wpdb->get_row($wpdb->prepare('SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = %s', [ "token_sync_time" ]));
+		if (!empty($_POST['tokenInput'])) {
+			$sanitized_token = sanitize_text_field($_POST['tokenInput']);
+		    if (RFWP_tokenMDValidate($sanitized_token)==true) {
+			    $sameTokenResult = false;
+			    RFWP_synchronize($sanitized_token, (empty($wpOptionsCheckerSyncTime) ? null : $wpOptionsCheckerSyncTime), $sameTokenResult, $wpPrefix, 'manual');
+		    } else {
+			    $GLOBALS['tokenStatusMessage'] = 'Неверный формат токена';
+		    }
 //			deactivate_plugins(plugin_basename( __FILE__ ));
 		} elseif ( $GLOBALS['token'] == 'no token' ) {
 			$GLOBALS['tokenStatusMessage'] = 'Введите токен';
 		}
-		RFWP_tokenTimeUpdateChecking( $GLOBALS['token'], $wpPrefix );
+		RFWP_tokenTimeUpdateChecking($GLOBALS['token'], $wpPrefix);
 	}
 	/********** end of manual sync ****************************************************************************************/
 	/************* blocks for text ****************************************************************************************/
-	if ($mainPageStatus == 2||empty($excludedPage)) {
-		add_filter( 'the_content', 'RFWP_adBlocksToContentInsertingFunction', 5000 );
-	}
+//	if ($mainPageStatus == 2||empty($excludedPage)) {
+//	if (empty($excludedPage)) {
+//		add_filter( 'the_content', 'RFWP_adBlocksToContentInsertingFunction', 5000 );
+//	}
 	/************* end blocks for text ************************************************************************************/
 	/********** using settings in texts ***********************************************************************************/
 	function RFWP_adBlocksToContentInsertingFunction($content) {
-        if ($GLOBALS['mainPageStatus'] == 2 || is_page() || is_single() || is_singular() || is_archive()) {
+        if (is_home()||is_front_page()||is_page() || is_single() || is_singular() || is_archive()) {
 	        global $wpdb;
 
 	        $rotatorUrl = $GLOBALS['rotatorUrl'];
@@ -415,18 +450,18 @@ try {
 		add_action('admin_menu', 'RFWP_my_pl_settings_menu_create');
 	}
 	function RFWP_my_pl_settings_menu_create() {
-		if ( strpos( $_SERVER['REQUEST_URI'], 'page=realbigForWP' ) ) {
+		if (strpos($_SERVER['REQUEST_URI'], 'page=realbigForWP')) {
 			add_menu_page( 'Your code sending configuration', 'realBIG', 'administrator', __FILE__, 'RFWP_TokenSync', plugins_url().'/'.basename(__DIR__).'/assets/realbig_plugin_hover.png' );
 		} else {
 			add_menu_page( 'Your code sending configuration', 'realBIG', 'administrator', __FILE__, 'RFWP_TokenSync', plugins_url().'/'.basename(__DIR__).'/assets/realbig_plugin_standart.png' );
 		}
 //		add_menu_page( 'Your code sending configuration', 'realBIG', 'administrator', __FILE__, 'RFWP_TokenSync', get_site_url().'/wp-content/plugins/realbigForWP/assets/realbig_plugin_hover.png' );
-		add_action( 'admin_init', 'RFWP_register_mysettings' );
+		add_action('admin_init', 'RFWP_register_mysettings');
 	}
 
 	function RFWP_register_mysettings() {
-		register_setting( 'sending_zone', 'token_value_input' );
-		register_setting( 'sending_zone', 'token_value_send' );
+		register_setting('sending_zone', 'token_value_input');
+		register_setting('sending_zone', 'token_value_send' );
 	}
 
 	function RFWP_TokenSync() {

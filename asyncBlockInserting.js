@@ -7,8 +7,6 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
         var lordOfElements = parent_with_content;
         parent_with_content = parent_with_content.parentElement;
 
-        // percentSeparator(lordOfElements);
-
         var newElement = document.createElement("div");
         var elementToAdd;
         var poolbackI = 0;
@@ -95,11 +93,6 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                     }
                     if (currentElement != undefined && currentElement != null && currentElementChecker) {
                         posCurrentElement = initTargetToInsert(blockSettingArray);
-                        // if (blockSettingArray[i]["elementPosition"] == 0) {
-                        //     currentElement.parentNode.insertBefore(elementToAdd, currentElement);
-                        // } else {
-                        //     currentElement.parentNode.insertBefore(elementToAdd, currentElement.nextSibling);
-                        // }
                         currentElement.parentNode.insertBefore(elementToAdd, posCurrentElement);
 
                         blockSettingArray.splice(i, 1);
@@ -152,11 +145,6 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
 
                     if (currentElement != undefined && currentElement != null && currentElementChecker) {
                         posCurrentElement = initTargetToInsert(blockSettingArray);
-                        // if (blockSettingArray[i]["elementPosition"] == 0) {
-                        //     currentElement.parentNode.insertBefore(elementToAdd, currentElement);
-                        // } else {
-                        //     currentElement.parentNode.insertBefore(elementToAdd, currentElement.nextSibling);
-                        // }
                         currentElement.parentNode.insertBefore(elementToAdd, posCurrentElement);
 
                         blockSettingArray.splice(i, 1);

@@ -2,11 +2,6 @@
 
 if (!defined("ABSPATH")) { exit;}
 
-//include ( dirname(__FILE__).'/../../../wp-load.php' );
-include_once ( dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
-include_once ( dirname(__FILE__)."/../../../wp-admin/includes/upgrade.php" );
-include_once ( dirname(__FILE__).'/../../../wp-includes/wp-db.php');
-
 /**
  * Created by PhpStorm.
  * User: furio
@@ -42,6 +37,7 @@ CREATE TABLE `" . $wpPrefix . "realbig_plugin_settings`
 COLLATE='utf8_general_ci'
 ENGINE=InnoDB   
 ";
+			    require_once (dirname(__FILE__)."/../../../wp-admin/includes/upgrade.php");
 			    dbDelta($sql);
             }
             if (empty($wpdb->last_error)) {
@@ -128,6 +124,7 @@ CREATE TABLE `" . $wpPrefix . "realbig_plugin_settings`
 COLLATE='utf8_general_ci'
 ENGINE=InnoDB   
 ";
+			    require_once (dirname(__FILE__)."/../../../wp-admin/includes/upgrade.php");
 				dbDelta($sql, true);
 				add_option( 'realbigForWP_version', $GLOBALS['realbigForWP_version'] );
 //				if (!empty($wpdb->get_var( 'SHOW TABLES LIKE "' . $wpPrefix . 'realbig_plugin_settings"' ))) {

@@ -2,9 +2,6 @@
 
 if (!defined("ABSPATH")) { exit;}
 
-include_once ( dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
-include_once ( dirname(__FILE__)."/../../../wp-admin/includes/upgrade.php" );
-
 /**
  * Created by PhpStorm.
  * User: user
@@ -17,6 +14,9 @@ try {
 	function RFWP_addIcons( $fromDb, $content, $contentType, $cachedBlocks) {
 		try {
 			$editedContent         = $content;
+
+//			$editedContent = '<index>'.$editedContent.'</index>';
+
 			$previousEditedContent = $editedContent;
 			$usedBlocksCounter     = 0;
 			$usedBlocks            = [];

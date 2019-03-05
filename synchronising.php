@@ -8,11 +8,6 @@
 
 if (!defined("ABSPATH")) { exit;}
 
-//include ( dirname(__FILE__).'/../../../wp-load.php' );
-include_once ( dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
-include_once ( dirname(__FILE__)."/../../../wp-admin/includes/upgrade.php" );
-include_once ( dirname(__FILE__).'/../../../wp-includes/wp-db.php');
-
 try {
 
 	global $wpdb;
@@ -57,99 +52,124 @@ try {
 				}
 				if (!empty($jsonToken)&&!is_wp_error($jsonToken)) {
 					$decodedToken                  = json_decode( $jsonToken, true );
+//					$sanitisedMessage =
 					$GLOBALS['tokenStatusMessage'] = $decodedToken['message'];
 					if ( $requestType == 'ajax' ) {
 						$ajaxResult = $decodedToken['message'];
 					}
-					if (!empty($decodedToken)&&($decodedToken['status']=='success'||$decodedToken['status']=='empty_success')) {
-						try {
-							if (!empty($decodedToken['data'])) {
-								wp_cache_flush();
-								$excludedPagesCheck = $wpdb->query( $wpdb->prepare( "SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", [ 'excludedPages' ]));
-								if (!isset($decodedToken['excludedPages'])) {
-									$decodedToken['excludedPages'] = "";
-								}
-								if (empty($excludedPagesCheck)) {
-									$wpdb->insert($wpPrefix.'realbig_settings', ['optionName'  => 'excludedPages', 'optionValue' => $decodedToken['excludedPages']]);
-                                } else {
-									$wpdb->update( $wpPrefix.'realbig_settings', ['optionName'  => 'excludedPages', 'optionValue' => $decodedToken['excludedPages']],
-                                    ['optionName'  => 'excludedPages']);
-                                }
+					if (!empty($decodedToken)) {
+					    $sanitisedStatus = sanitize_text_field($decodedToken['status']);
+					    if ($sanitisedStatus=='success'||$sanitisedStatus=='empty_success') {
+						    try {
+							    if (!empty($decodedToken['data'])) {
+								    wp_cache_flush();
+								    if (!empty($decodedToken['excludedPages'])) {
+								        $sanitisedExcludedPages = sanitize_text_field($decodedToken['excludedPages']);
+                                    } else {
+									    $sanitisedExcludedPages = '';
+                                    }
+								    $excludedPagesCheck = $wpdb->query( $wpdb->prepare( "SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", [ 'excludedPages' ]));
+//								    if (!isset($decodedToken['excludedPages'])) {
+//									    $decodedToken['excludedPages'] = "";
+//								    }
+								    if (empty($excludedPagesCheck)) {
+									    $wpdb->insert($wpPrefix.'realbig_settings', ['optionName'  => 'excludedPages', 'optionValue' => $sanitisedExcludedPages]);
+								    } else {
+									    $wpdb->update( $wpPrefix.'realbig_settings', ['optionName'  => 'excludedPages', 'optionValue' => $sanitisedExcludedPages],
+										    ['optionName'  => 'excludedPages']);
+								    }
 
-								$excludedMainPageCheck = $wpdb->query( $wpdb->prepare( "SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", [ 'excludedMainPage' ]));
-								if (isset($decodedToken['excludedMainPage'])) {
-									if (empty($excludedMainPageCheck)) {
-										$wpdb->insert($wpPrefix.'realbig_settings', ['optionName'  => 'excludedMainPage', 'optionValue' => $decodedToken['excludedMainPage']]);
-									} else {
-										$wpdb->update( $wpPrefix.'realbig_settings', ['optionName'  => 'excludedMainPage', 'optionValue' => $decodedToken['excludedMainPage']],
-											['optionName'  => 'excludedMainPage']);
-									}
-								}
+								    if (!empty($decodedToken['excludedMainPage'])) {
+									    $sanitisedExcludedMainPages = sanitize_text_field($decodedToken['excludedMainPage']);
+									    if (intval($sanitisedExcludedMainPages)) {
+									        if (strlen($sanitisedExcludedMainPages) > 1) {
+										        $sanitisedExcludedMainPages = '';
+									        }
+                                        } else {
+										    $sanitisedExcludedMainPages = '';
+                                        }
+								    } else {
+									    $sanitisedExcludedMainPages = '';
+								    }
+								    $excludedMainPageCheck = $wpdb->query( $wpdb->prepare( "SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", [ 'excludedMainPage' ]));
+								    if (isset($decodedToken['excludedMainPage'])) {
+									    if (empty($excludedMainPageCheck)) {
+										    $wpdb->insert($wpPrefix.'realbig_settings', ['optionName'  => 'excludedMainPage', 'optionValue' => $sanitisedExcludedMainPages]);
+									    } else {
+										    $wpdb->update($wpPrefix.'realbig_settings', ['optionName'  => 'excludedMainPage', 'optionValue' => $sanitisedExcludedMainPages],
+											    ['optionName'  => 'excludedMainPage']);
+									    }
+								    }
 
-								$counter = 0;
-							    $wpdb->query( 'DELETE FROM ' . $wpPrefix . 'realbig_plugin_settings');
-								$sqlTokenSave = "INSERT INTO " . $wpPrefix . "realbig_plugin_settings (text, block_number, setting_type, element, directElement, elementPosition, elementPlace, firstPlace, elementCount, elementStep, minSymbols, minHeaders) VALUES ";
-								foreach ( $decodedToken['data'] AS $k => $item ) {
-								    $counter ++;
-								    $sqlTokenSave .= ( $counter != 1 ? ", " : "" ) . "('" . $item['text'] . "', " . (int) $item['block_number'] . ", " . (int) $item['setting_type'] . ", '" . htmlspecialchars( $item['element'] ) . "', '" . htmlspecialchars( $item['directElement'] ) . "', " . (int) $item['elementPosition'] . ", " . (int) $item['elementPlace'] . ", " . (int) $item['firstPlace'] . ", " . (int) $item['elementCount'] . ", " . (int) $item['elementStep'] . ", " . (int) $item['minSymbols'] . ", " . (int) $item['minHeaders'] . ")";
+								    $counter = 0;
+								    $wpdb->query( 'DELETE FROM ' . $wpPrefix . 'realbig_plugin_settings');
+								    $sqlTokenSave = "INSERT INTO " . $wpPrefix . "realbig_plugin_settings (text, block_number, setting_type, element, directElement, elementPosition, elementPlace, firstPlace, elementCount, elementStep, minSymbols, minHeaders) VALUES ";
+								    foreach ( $decodedToken['data'] AS $k => $item ) {
+									    $counter ++;
+									    $sqlTokenSave .= ( $counter != 1 ? ", " : "" ) . "('" . $item['text'] . "', " . (int) sanitize_text_field($item['block_number']) . ", " . (int) sanitize_text_field($item['setting_type']) . ", '" . sanitize_text_field( $item['element'] ) . "', '" . sanitize_text_field( $item['directElement'] ) . "', " . (int) sanitize_text_field($item['elementPosition']) . ", " . (int) sanitize_text_field($item['elementPlace']) . ", " . (int) sanitize_text_field($item['firstPlace']) . ", " . (int) sanitize_text_field($item['elementCount']) . ", " . (int) sanitize_text_field($item['elementStep']) . ", " . (int) sanitize_text_field($item['minSymbols']) . ", " . (int) sanitize_text_field($item['minHeaders']) . ")";
+								    }
+								    $sqlTokenSave .= " ON DUPLICATE KEY UPDATE text = values(text), setting_type = values(setting_type), element = values(element), directElement = values(directElement), elementPosition = values(elementPosition), elementPlace = values(elementPlace), firstPlace = values(firstPlace), elementCount = values(elementCount), elementStep = values(elementStep), minSymbols = values(minSymbols), minHeaders = values(minHeaders) ";
+								    $wpdb->query( $sqlTokenSave );
+							    } elseif (empty($decodedToken['data'])&&sanitize_text_field($decodedToken['status']) == "empty_success") {
+								    $wpdb->query( 'DELETE FROM ' . $wpPrefix . 'realbig_plugin_settings');
 							    }
-							    $sqlTokenSave .= " ON DUPLICATE KEY UPDATE text = values(text), setting_type = values(setting_type), element = values(element), directElement = values(directElement), elementPosition = values(elementPosition), elementPlace = values(elementPlace), firstPlace = values(firstPlace), elementCount = values(elementCount), elementStep = values(elementStep), minSymbols = values(minSymbols), minHeaders = values(minHeaders) ";
-								$wpdb->query( $sqlTokenSave );
-							} elseif (empty($decodedToken['data'])&&$decodedToken['status'] == "empty_success") {
-								$wpdb->query( 'DELETE FROM ' . $wpPrefix . 'realbig_plugin_settings');
-							}
 
-							// if no needly note, then create
-							$wpOptionsCheckerTokenValue = $wpdb->query( $wpdb->prepare( "SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", [ '_wpRealbigPluginToken' ] ) );
-							if (empty($wpOptionsCheckerTokenValue)) {
-								$wpdb->insert( $wpPrefix . 'realbig_settings', ['optionName'  => '_wpRealbigPluginToken', 'optionValue' => $tokenInput]);
-							} else {
-								$wpdb->update( $wpPrefix . 'realbig_settings', ['optionName'  => '_wpRealbigPluginToken', 'optionValue' => $tokenInput],
-                                ['optionName' => '_wpRealbigPluginToken']);
-							}
-							if (!empty($decodedToken['dataPush'])) {
-								$wpOptionsCheckerPushStatus = $wpdb->query( $wpdb->prepare( "SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", [ 'pushStatus' ] ) );
-								if ( empty( $wpOptionsCheckerPushStatus ) ) {
-									$wpdb->insert( $wpPrefix . 'realbig_settings', ['optionName'  => 'pushStatus', 'optionValue' => $decodedToken['dataPush']['pushStatus']]);
-								} else {
-									$wpdb->update( $wpPrefix . 'realbig_settings', ['optionName'  => 'pushStatus', 'optionValue' => $decodedToken['dataPush']['pushStatus']],
-                                    ['optionName' => 'pushStatus']);
-								}
-								$wpOptionsCheckerPushCode = $wpdb->query( $wpdb->prepare( "SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", [ 'pushCode' ] ) );
-								if ( empty( $wpOptionsCheckerPushCode ) ) {
-									$wpdb->insert( $wpPrefix . 'realbig_settings', ['optionName'  => 'pushCode', 'optionValue' => $decodedToken['dataPush']['pushCode']]);
-								} else {
-									$wpdb->update( $wpPrefix . 'realbig_settings', ['optionName'  => 'pushCode', 'optionValue' => $decodedToken['dataPush']['pushCode']],
-                                    ['optionName' => 'pushCode']);
-								}
-							}
-							if ( ! empty( $decodedToken['domain'] ) ) {
-								$getDomain = $wpdb->get_var( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = "domain"' );
-								if ( ! empty( $getDomain ) ) {
-									$wpdb->update( $wpPrefix . 'realbig_settings', ['optionName'  => 'domain', 'optionValue' => $decodedToken['domain']],
-                                    ['optionName' => 'domain']);
-								} else {
-									$wpdb->insert( $wpPrefix . 'realbig_settings', ['optionName'  => 'domain', 'optionValue' => $decodedToken['domain']]);
-								}
-							}
-							if (!empty($decodedToken['rotator'])) {
-								$getRotator = $wpdb->get_var( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = "rotator"' );
-								if (!empty($getRotator)) {
-									$wpdb->update( $wpPrefix.'realbig_settings', ['optionName'  => 'rotator', 'optionValue' => $decodedToken['rotator']],
-										['optionName' => 'rotator']);
-								} else {
-									$wpdb->insert( $wpPrefix.'realbig_settings', ['optionName'  => 'rotator', 'optionValue' => $decodedToken['rotator']]);
-								}
-							}
-							$GLOBALS['token'] = $tokenInput;
+							    // if no needly note, then create
+							    $wpOptionsCheckerTokenValue = $wpdb->query( $wpdb->prepare( "SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", [ '_wpRealbigPluginToken' ] ) );
+							    if (empty($wpOptionsCheckerTokenValue)) {
+								    $wpdb->insert( $wpPrefix . 'realbig_settings', ['optionName'  => '_wpRealbigPluginToken', 'optionValue' => $tokenInput]);
+							    } else {
+								    $wpdb->update( $wpPrefix . 'realbig_settings', ['optionName'  => '_wpRealbigPluginToken', 'optionValue' => $tokenInput],
+									    ['optionName' => '_wpRealbigPluginToken']);
+							    }
+							    if (!empty($decodedToken['dataPush'])) {
+							        $sanitisedPushStatus = sanitize_text_field($decodedToken['dataPush']['pushStatus']);
+							        $sanitisedPushData = sanitize_text_field($decodedToken['dataPush']['pushCode']);
+								    $wpOptionsCheckerPushStatus = $wpdb->query( $wpdb->prepare( "SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", [ 'pushStatus' ] ) );
+								    if (empty($wpOptionsCheckerPushStatus)) {
+									    $wpdb->insert( $wpPrefix . 'realbig_settings', ['optionName'  => 'pushStatus', 'optionValue' => $sanitisedPushStatus]);
+								    } else {
+									    $wpdb->update( $wpPrefix . 'realbig_settings', ['optionName'  => 'pushStatus', 'optionValue' => $sanitisedPushStatus],
+										    ['optionName' => 'pushStatus']);
+								    }
+								    $wpOptionsCheckerPushCode = $wpdb->query( $wpdb->prepare( "SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", [ 'pushCode' ] ) );
+								    if ( empty( $wpOptionsCheckerPushCode ) ) {
+									    $wpdb->insert( $wpPrefix . 'realbig_settings', ['optionName'  => 'pushCode', 'optionValue' => $sanitisedPushData]);
+								    } else {
+									    $wpdb->update( $wpPrefix . 'realbig_settings', ['optionName'  => 'pushCode', 'optionValue' => $sanitisedPushData],
+										    ['optionName' => 'pushCode']);
+								    }
+							    }
+							    if ( ! empty( $decodedToken['domain'] ) ) {
+							        $sanitisedDomain = sanitize_text_field($decodedToken['domain']);
+								    $getDomain = $wpdb->get_var( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = "domain"' );
+								    if ( ! empty( $getDomain ) ) {
+									    $wpdb->update( $wpPrefix . 'realbig_settings', ['optionName'  => 'domain', 'optionValue' => $sanitisedDomain],
+										    ['optionName' => 'domain']);
+								    } else {
+									    $wpdb->insert( $wpPrefix . 'realbig_settings', ['optionName'  => 'domain', 'optionValue' => $sanitisedDomain]);
+								    }
+							    }
+							    if (!empty($decodedToken['rotator'])) {
+							        $sanitisedRotator = sanitize_text_field($decodedToken['rotator']);
+								    $getRotator = $wpdb->get_var( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = "rotator"' );
+								    if (!empty($getRotator)) {
+									    $wpdb->update( $wpPrefix.'realbig_settings', ['optionName'  => 'rotator', 'optionValue' => $decodedToken['rotator']],
+										    ['optionName' => 'rotator']);
+								    } else {
+									    $wpdb->insert( $wpPrefix.'realbig_settings', ['optionName'  => 'rotator', 'optionValue' => $decodedToken['rotator']]);
+								    }
+							    }
+							    $GLOBALS['token'] = $tokenInput;
 
-                            delete_transient('rb_mobile_cache_timeout' );
-							delete_transient('rb_desktop_cache_timeout');
+							    delete_transient('rb_mobile_cache_timeout' );
+							    delete_transient('rb_desktop_cache_timeout');
 
-						} catch ( Exception $e ) {
-							$GLOBALS['tokenStatusMessage'] = $e;
-							$unsuccessfullAjaxSyncAttempt  = 1;
-						}
+						    } catch ( Exception $e ) {
+							    $GLOBALS['tokenStatusMessage'] = $e;
+							    $unsuccessfullAjaxSyncAttempt  = 1;
+						    }
+                        }
 					}
 				} else {
 					$decodedToken                  = null;
@@ -211,8 +231,8 @@ try {
 				$GLOBALS['tokenStatusMessage'] = null;
 				$token                         = $wpdb->get_results( "SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = '_wpRealbigPluginToken'" );
 
-				if ( ! empty( $token ) ) {
-					$token            = get_object_vars( $token[0] );
+				if (!empty($token)) {
+					$token            = get_object_vars($token[0]);
 					$GLOBALS['token'] = $token['optionValue'];
 					$token            = $token['optionValue'];
 				} else {
@@ -221,21 +241,35 @@ try {
 				}
 
 				return $token;
-			} catch ( Exception $e ) {
+			} catch (Exception $e) {
 				return 'no token';
 			}
 		}
 	}
+
+	if ( ! function_exists( 'RFWP_tokenMDValidate' ) ) {
+	    function RFWP_tokenMDValidate($token) {
+	        if (strlen($token) != 32) {
+		        return false;
+            }
+            preg_match('~[^0-9a-z]+~', $token, $validateMatch);
+	        if (!empty($validateMatch)) {
+		        return false;
+	        }
+
+            return true;
+        }
+    }
 
 	if (!function_exists('RFWP_tokenTimeUpdateChecking')) {
 		function RFWP_tokenTimeUpdateChecking($token, $wpPrefix) {
 			global $wpdb;
 			try {
 				$timeUpdate = $wpdb->get_results( "SELECT timeUpdate FROM " . $wpPrefix . "realbig_settings WHERE optionName = 'token_sync_time'" );
-				if ( empty( $timeUpdate ) ) {
-					$updateResult = RFWP_wpRealbigSettingsTableUpdateFunction( $wpPrefix );
-					if ( $updateResult == true ) {
-						$timeUpdate = $wpdb->get_results( "SELECT timeUpdate FROM " . $wpPrefix . "realbig_settings WHERE optionName = 'token_sync_time'" );
+				if (empty($timeUpdate)) {
+					$updateResult = RFWP_wpRealbigSettingsTableUpdateFunction($wpPrefix);
+					if ($updateResult == true) {
+						$timeUpdate = $wpdb->get_results("SELECT timeUpdate FROM " . $wpPrefix . "realbig_settings WHERE optionName = 'token_sync_time'");
 					}
 				}
 				if (!empty($token)&&$token != 'no token'&&((!empty($GLOBALS['tokenStatusMessage'])&&($GLOBALS['tokenStatusMessage'] == 'Синхронизация прошла успешно' || $GLOBALS['tokenStatusMessage'] == 'Не нашло позиций для блоков на указанном сайте, добавьте позиции для сайтов на странице настроек плагина')) || empty($GLOBALS['tokenStatusMessage'])) && !empty($timeUpdate)) {
@@ -252,18 +286,18 @@ try {
 					$GLOBALS['tokenTimeUpdate'] = 'never';
 					$GLOBALS['statusColor']     = 'red';
 				}
-			} catch ( Exception $e ) {
+			} catch (Exception $e) {
 				echo $e;
 			}
 		}
 	}
 
 	if (!function_exists('RFWP_statusGathererConstructor')) {
-		function RFWP_statusGathererConstructor( $pointer ) {
+		function RFWP_statusGathererConstructor($pointer) {
 			global $wpdb;
 			try {
 				$statusGatherer        = [];
-				$realbigStatusGatherer = get_option( 'realbig_status_gatherer' );
+				$realbigStatusGatherer = get_option('realbig_status_gatherer');
 
 				if ( $pointer == false ) {
 					$statusGatherer['element_column_values']           = false;
@@ -271,7 +305,7 @@ try {
 					$statusGatherer['realbig_plugin_settings_table']   = false;
 					$statusGatherer['realbig_settings_table']          = false;
 					$statusGatherer['realbig_plugin_settings_columns'] = false;
-					if ( ! empty( $realbigStatusGatherer ) ) {
+					if (!empty($realbigStatusGatherer)) {
 						$statusGatherer['update_status_gatherer'] = true;
 					} else {
 						$statusGatherer['update_status_gatherer'] = false;
@@ -279,9 +313,9 @@ try {
 
 					return $statusGatherer;
 				} else {
-					if ( ! empty( $realbigStatusGatherer ) ) {
+					if (!empty($realbigStatusGatherer)) {
 //	        $realbigStatusGatherer = $errorVariable;
-						$realbigStatusGatherer                             = json_decode( $realbigStatusGatherer, true );
+						$realbigStatusGatherer                             = json_decode($realbigStatusGatherer, true);
 						$statusGatherer['element_column_values']           = $realbigStatusGatherer['element_column_values'];
 						$statusGatherer['old_tables_removed']              = $realbigStatusGatherer['old_tables_removed'];
 						$statusGatherer['realbig_plugin_settings_table']   = $realbigStatusGatherer['realbig_plugin_settings_table'];
@@ -317,7 +351,9 @@ try {
 //	if (!empty($_POST["action"])&&$_POST["action"]=="heartbeat") {
 
     /** Auto Sync */
-	function RFWP_autoSync() {
+	if (!function_exists('RFWP_statusGathererConstructor')) { }
+
+		function RFWP_autoSync() {
 		set_transient('realbigPluginSyncProcess', 'true', 30);
 		global $wpdb;
         $wpOptionsCheckerSyncTime = $wpdb->get_row($wpdb->prepare('SELECT optionValue FROM '.$GLOBALS['table_prefix'].'realbig_settings WHERE optionName = %s',[ "token_sync_time" ]));
