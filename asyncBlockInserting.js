@@ -109,9 +109,13 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                     let elementTag  = '';
                     let directElement = blockSettingArray[i]["directElement"].trim();
 
-                    if (directElement.search('#') > -1||(!blockSettingArray['element']||(
-                        blockSettingArray['element']&&directElement.search('.') > 0))) {
-                        currentElement = document.querySelector(directElement);
+                    if (directElement.search('#') > -1||(!blockSettingArray[i]['element']||(
+                        blockSettingArray[i]['element']&&directElement.search('.') > 0))) {
+                        if (blockSettingArray[i]['elementPlace'] > 1) {
+                            currentElement = document.querySelectorAll(directElement)[blockSettingArray[i]['elementPlace']];
+                        } else {
+                            currentElement = document.querySelector(directElement);
+                        }
                     }
                     if (!currentElement) {
                         elementTypeSymbol = directElement.search('#');
@@ -119,13 +123,18 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                             elementTypeSymbol = directElement.search('.');
                             elementType = 'class';
                             elementName = directElement.replace('\s', '.');
-                            if (elementTypeSymbol < 0) {
+                            if (elementTypeSymbol < 1) {
                                 elementName = '.' + elementName;
+                            } else {
+                                if (blockSettingArray[i]['element']) {
+                                    elementName = blockSettingArray[i]['element']+elementName;
+                                }
                             }
-                            if (blockSettingArray['element']) {
-                                elementName = blockSettingArray['element']+elementName;
+                            if (blockSettingArray[i]['elementPlace'] > 1) {
+                                currentElement = document.querySelectorAll(elementName)[blockSettingArray[i]['elementPlace']];
+                            } else {
+                                currentElement = document.querySelector(elementName);
                             }
-                            currentElement = document.querySelector(elementName);
                             if (currentElement) {
                                 currentElementChecker = true;
                             }
