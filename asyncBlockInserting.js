@@ -45,7 +45,41 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
             return posCurrentElement;
         }
 
+        function directClassElementDetecting(blockSettingArray, directElement) {
+            let findQuery = 0;
+            let directClassElementResult = [];
+
+            if (blockSettingArray[i]['elementPlace'] > 1) {
+                currentElement = document.querySelectorAll(directElement);
+                if (currentElement.length > 0) {
+                    if (currentElement.length > blockSettingArray[i]['elementPlace']) {
+                        currentElement = currentElement[blockSettingArray[i]['elementPlace']-1];
+                    } else if (currentElement.length < blockSettingArray[i]['elementPlace']) {
+                        currentElement = currentElement[currentElement.length - 1];
+                    } else {
+                        findQuery = 1;
+                    }
+                }
+            } else if (blockSettingArray[i]['elementPlace'] < 0) {
+                currentElement = document.querySelectorAll(directElement);
+                if (currentElement.length > 0) {
+                    if ((currentElement.length + blockSettingArray[i]['elementPlace'] + 1) > 0) {
+                        currentElement = currentElement[currentElement.length + blockSettingArray[i]['elementPlace']];
+                    } else {
+                        findQuery = 1;
+                    }
+                }
+            } else {
+                findQuery = 1;
+            }
+            directClassElementResult['findQuery'] = findQuery;
+            directClassElementResult['currentElement'] = currentElement;
+
+            return directClassElementResult;
+        }
+
         for (var i = 0; i < blockSettingArray.length; i++) {
+            currentElement = null;
             currentElementChecker = false;
             try {
                 elementToAdd = document.createElement("div");
@@ -107,17 +141,24 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                     let elementName = '';
                     let elementType = '';
                     let elementTag  = '';
+                    let findQuery = 0;
+                    let directClassResult = [];
                     let directElement = blockSettingArray[i]["directElement"].trim();
 
-                    if (directElement.search('#') > -1||(!blockSettingArray[i]['element']||(
-                        blockSettingArray[i]['element']&&directElement.search('.') > 0))) {
-                        if (blockSettingArray[i]['elementPlace'] > 1) {
-                            currentElement = document.querySelectorAll(directElement)[blockSettingArray[i]['elementPlace']];
-                        } else {
-                            currentElement = document.querySelector(directElement);
-                        }
+                    if (directElement.search('#') > -1) {
+                        findQuery = 1;
+                    } else if ((directElement.search('#') < 0)&&(!blockSettingArray[i]['element']||
+                        (blockSettingArray[i]['element']&&directElement.search('.') > 0))) {
+
+                        directClassResult = directClassElementDetecting(blockSettingArray, directElement);
+                        findQuery = directClassResult['findQuery'];
+                        currentElement = directClassResult['currentElement'];
+                    }
+                    if (findQuery == 1) {
+                        currentElement = document.querySelector(directElement);
                     }
                     if (!currentElement) {
+                        findQuery = 0;
                         elementTypeSymbol = directElement.search('#');
                         if (elementTypeSymbol < 0) {
                             elementTypeSymbol = directElement.search('.');
@@ -130,11 +171,15 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                                     elementName = blockSettingArray[i]['element']+elementName;
                                 }
                             }
-                            if (blockSettingArray[i]['elementPlace'] > 1) {
-                                currentElement = document.querySelectorAll(elementName)[blockSettingArray[i]['elementPlace']];
-                            } else {
+
+                            directClassResult = directClassElementDetecting(blockSettingArray, elementName);
+                            findQuery = directClassResult['findQuery'];
+                            currentElement = directClassResult['currentElement'];
+
+                            if (findQuery == 1) {
                                 currentElement = document.querySelector(elementName);
                             }
+
                             if (currentElement) {
                                 currentElementChecker = true;
                             }
