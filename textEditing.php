@@ -43,15 +43,14 @@ try {
 						continue;
 					}
 
+					$elementText     = $item['text'];
 					if (!empty($cachedBlocks)) {
                         foreach ($cachedBlocks AS $k1 => $item1) {
 	                        if ($item1->post_title==$item['block_number']) {
 		                        $elementText = $item1->post_content;
                             }
                         }
-                    } else {
-						$elementText     = $item['text'];
-					}
+                    }
 					switch ($item['setting_type']) {
 						case 1:
 							$elementName     = $item['element'];
