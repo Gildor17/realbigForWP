@@ -13,7 +13,7 @@ include ( dirname(__FILE__)."/textEditing.php");
 /*
 Plugin name:  Realbig Media
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.1.26.39
+Version:      0.1.26.40
 Author:       Realbig Team
 License:      GPLv2 or later
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
@@ -51,7 +51,7 @@ try {
 	if (!empty($pluginData['Version'])) {
 		$GLOBALS['realbigForWP_version'] = $pluginData['Version'];
 	} else {
-		$GLOBALS['realbigForWP_version'] = '0.1.26.39';
+		$GLOBALS['realbigForWP_version'] = '0.1.26.40';
 	}
 	$lastSuccessVersionGatherer = get_option('realbig_status_gatherer_version');
 //	require_once( 'synchronising.php' );
@@ -330,13 +330,14 @@ try {
 			}
 		}
 
-        $httpsCheck = is_ssl();
-		if (!empty($httpsCheck)) {
-		    $prefix = "HTTPS";
-        } else {
-			$prefix = "HTTP";
-		}
-		$rotatorUrl = $prefix."://".$getDomain."/".$getRotator.".min.js";
+//        $httpsCheck = is_ssl();
+//		if (!empty($httpsCheck)) {
+//		    $prefix = "HTTPS";
+//        } else {
+//			$prefix = "HTTP";
+//		}
+//		$rotatorUrl = $prefix."://".$getDomain."/".$getRotator.".min.js";
+		$rotatorUrl = "https://".$getDomain."/".$getRotator.".min.js";
 //		$rotatorUrl = "HTTPS://ex.ua";
 		$GLOBALS['rotatorUrl'] = $rotatorUrl;
 
@@ -467,84 +468,157 @@ try {
 	function RFWP_TokenSync() {
 		global $wpdb;
 		global $wpPrefix;
-		$sign = 0;
 		$blocksCounter = 1;
 //		$postsGather = $wpdb->get_results('SELECT post_title FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_desktop","rb_block_mobile")');
 		$postsGatherDesktop = $wpdb->get_results('SELECT post_title FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_desktop")');
 		$postsGatherMobile  = $wpdb->get_results('SELECT post_title FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_mobile" )');
 
 		try {
-		    $deacErrorGather = $GLOBALS['wpdb']->get_row('SELECT optionValue, timeUpdate FROM ' . $GLOBALS["wpPrefix"] . 'realbig_settings WHERE optionName = "deactError"', ARRAY_A);
+		    $rbSettings = $wpdb->get_results('SELECT optionName, optionValue, timeUpdate FROM ' . $GLOBALS["wpPrefix"] . 'realbig_settings WHERE optionName IN ("deactError","domain","excludedMainPage","excludedPages","pushStatus")', ARRAY_A);
 
-		    if (!empty($deacErrorGather)) {
-			    $deacError = $deacErrorGather["optionValue"];
-			    $deacTime = $deacErrorGather["timeUpdate"];
+		    if (!empty($rbSettings)) {
+		        foreach ($rbSettings AS $k=>$item) {
+		            if ($item['optionName']=='domain') {
+			            $usedDomain = $item["optionValue"];
+		            } elseif ($item['optionName']=='deactError') {
+			            $deacError = $item["optionValue"];
+			            $deacTime = $item["timeUpdate"];
+                    } elseif ($item['optionName']=='excludedMainPage') {
+		                if (!empty($item["optionValue"])) {
+			                $excludedMainPage = 'Да';
+                        } else {
+			                $excludedMainPage = 'Нет';
+		                }
+                    } elseif ($item['optionName']=='excludedPages') {
+			            $excludedPage = $item["optionValue"];
+                    } elseif ($item['optionName']=='pushStatus') {
+			            if (!empty($item["optionValue"])) {
+				            $pushStatus = 'Да';
+			            } else {
+				            $pushStatus = 'Нет';
+			            }
+                    }
+                }
             }
 	    } catch (Exception $e) {
-	        $deacError = "error gathering error";
+			$usedDomain = "domain gathering error";
+			$deacError = "error gathering error";
 	        $deacTime = "error gathering error";
+			$excludedMainPage = "main page gathering error";
+			$excludedPage = "pages gathering error";
+			$pushStatus = "error gathering error";
         }
 		?>
-        <div class="wrap col-md-12">
-            <form method="post" name="tokenForm" id="tokenFormId">
-                <label><span style="font-size: 16px">Токен</span><br/>
-                    <input name="tokenInput" id="tokenInputId" value="<?php echo $GLOBALS['token'] ?>"
-                           style="min-width: 280px"
-                           required>
-                    <label style="font-size: 16px; margin-left: 10px; color: <?php echo $GLOBALS['statusColor'] ?> ">Время
-                        последней синхронизации: <?php echo $GLOBALS['tokenTimeUpdate'] ?></label>
-                </label>
-                <br>
-                <label for="statusRefresher">обновить проверку</label>
-                <input type="checkbox" name="statusRefresher" id="statusRefresher">
-                <br>
-<!--	            --><?// if (empty($GLOBALS['problematic_table_status'])): ?>
-	            <?php if (!empty($GLOBALS['problematic_table_status'])): ?>
-                    <label for="manuallyTableCreating">создать таблицу вручную</label>
-                    <input type="checkbox" name="manuallyTableCreating" id="manuallyTableCreatingId">
+        <style>
+            .separated-blocks {
+                display: inline-table;
+                margin-right:10px;
+            }
+            .element-separator {
+                margin: 10px 0;
+            }
+            .squads-blocks {
+                border: 1px solid grey;
+                width: max-content;
+                margin-top: 20px;
+                padding: 5px;
+            }
+        </style>
+        <div class="wrap">
+            <div class="separated-blocks">
+                <form method="post" name="tokenForm" id="tokenFormId">
+                    <label><span class="element-separator" style="font-size: 16px">Токен</span><br/>
+                        <input class="element-separator" name="tokenInput" id="tokenInputId" value="<?php echo $GLOBALS['token'] ?>"
+                               style="min-width: 280px"
+                               required>
+                        <label class="element-separator" style="font-size: 16px; margin-left: 10px; color: <?php echo $GLOBALS['statusColor'] ?> ">Время
+                            последней синхронизации: <?php echo $GLOBALS['tokenTimeUpdate'] ?></label>
+                    </label>
+                    <br>
+                    <div class="element-separator">
+                        <label for="statusRefresher">обновить проверку</label>
+                        <input type="checkbox" name="statusRefresher" id="statusRefresher">
+                    </div>
+                    <br>
+                    <!--	            --><?// if (empty($GLOBALS['problematic_table_status'])): ?>
+		            <?php if (!empty($GLOBALS['problematic_table_status'])): ?>
+                        <label for="manuallyTableCreating">создать таблицу вручную</label>
+                        <input type="checkbox" name="manuallyTableCreating" id="manuallyTableCreatingId">
+		            <?php endif; ?>
+		            <?php submit_button( 'Синхронизировать', 'primary', 'saveTokenButton' ) ?>
+		            <?php if ( ! empty( $GLOBALS['tokenStatusMessage'] ) ): ?>
+                        <div name="rezultDiv" style="font-size: 16px"><?php echo $GLOBALS['tokenStatusMessage'] ?></div>
+		            <?php endif; ?>
+                </form>
+            </div>
+            <div class="separated-blocks">
+                <div class="squads-blocks">
+                    <div>Надписи ниже нужны для тестировки</div>
+                    <div>Статус соединения
+                        1: <?php echo( ! empty( $GLOBALS['connection_request_rezult_1'] ) ? $GLOBALS['connection_request_rezult_1'] : 'empty' ) ?></div>
+                    <div>Статус соединения
+                        общий: <?php echo( ! empty( $GLOBALS['connection_request_rezult'] ) ? $GLOBALS['connection_request_rezult'] : 'empty' ) ?></div>
+	                <?php if (!empty($GLOBALS['manuallyTableCreatingResult'])): ?>
+                        <div>Table creating: <?php echo $GLOBALS['manuallyTableCreatingResult']; ?></div>
+	                <?php endif; ?>
+                </div>
+	            <?php if (!empty($rbSettings)): ?>
+		            <?php if (!empty($deacError)): ?>
+                        <div class="squads-blocks">
+                            Инфо о последней деактивации:
+                            <div>
+                                Update Time: <?php echo $deacTime?> <br>
+                                Error: <?php echo $deacError?> <br>
+                            </div>
+                        </div>
+		            <? endif; ?>
+		            <?php if (!empty($usedDomain)): ?>
+                        <div class="squads-blocks">
+                            Инфо о домене:
+                            <div>
+                                Используемый домен: <span style="color: green"><?php echo $usedDomain?></span>. <br>
+                            </div>
+                        </div>
+		            <? endif; ?>
+		            <?php if (!empty($postsGatherDesktop)||!empty($postsGatherMobile)):?>
+                        <div class="squads-blocks">
+                            Количество закешированных блоков: <?php echo count($postsGatherDesktop)+count($postsGatherMobile) ?>.<br>
+                            <div class="separated-blocks">
+                                ИД десктопных:
+					            <?php foreach ($postsGatherDesktop AS $item): ?>
+                                    <div>
+	                                    <?php echo $blocksCounter++; ?>: <?php echo $item->post_title ?>;
+                                    </div>
+					            <?php endforeach; ?>
+                            </div>
+				            <?php $blocksCounter = 1; ?>
+                            <div class="separated-blocks">
+                                ИД мобильных:
+                                <?php foreach ($postsGatherMobile AS $item): ?>
+                                    <div>
+                                        <?php echo $blocksCounter++; ?>: <?php echo $item->post_title ?>;
+                                    </div>
+					            <?php endforeach; ?>
+                            </div>
+                        </div>
+		            <?php endif; ?>
+		            <?php if (!empty($excludedMainPage)):?>
+                        <div class="squads-blocks">
+                            Главная страница исключена: <?php echo $excludedMainPage ?>.<br>
+                        </div>
+		            <?php endif; ?>
+		            <?php if (!empty($excludedPage)):?>
+                        <div class="squads-blocks">
+                            Исключенные страницы: <?php echo $excludedPage ?>.<br>
+                        </div>
+		            <?php endif; ?>
+		            <?php if (!empty($pushStatus)):?>
+                        <div class="squads-blocks">
+                            Вставлять в хедер PUSH-код: <?php echo $pushStatus ?>.<br>
+                        </div>
+		            <?php endif; ?>
 	            <?php endif; ?>
-				<?php submit_button( 'Синхронизировать', 'primary', 'saveTokenButton' ) ?>
-				<?php if ( ! empty( $GLOBALS['tokenStatusMessage'] ) ): ?>
-                    <div name="rezultDiv" style="font-size: 16px"><?php echo $GLOBALS['tokenStatusMessage'] ?></div>
-				<?php endif; ?>
-            </form>
-            <br>
-
-            <div>Надписи ниже нужны для тестировки</div>
-            <div>Статус соединения
-                1: <?php echo( ! empty( $GLOBALS['connection_request_rezult_1'] ) ? $GLOBALS['connection_request_rezult_1'] : 'empty' ) ?></div>
-            <div>Статус соединения
-                общий: <?php echo( ! empty( $GLOBALS['connection_request_rezult'] ) ? $GLOBALS['connection_request_rezult'] : 'empty' ) ?></div>
-            <?php if (!empty($GLOBALS['manuallyTableCreatingResult'])): ?>
-                <div>Table creating: <?php echo $GLOBALS['manuallyTableCreatingResult']; ?></div>
-            <?php endif; ?>
-            <?php if (!empty($deacErrorGather)): ?>
-                <div style="border: 1px solid grey; width: max-content; margin-top: 20px; padding: 5px">
-                    Инфо о последней деактивации:
-                    <div>
-                        Update Time: <?php echo $deacTime?> <br>
-                        Error: <?php echo $deacError?> <br>
-                    </div>
-                </div>
-            <?php endif; ?>
-            <?php if (!empty($postsGatherDesktop)||!empty($postsGatherMobile)):?>
-                <div style="border: 1px solid grey; width: max-content; margin-top: 20px; padding: 5px">
-                    Количество закешированных блоков: <?php echo count($postsGatherDesktop)+count($postsGatherMobile) ?>.<br>
-                    ИД десктопных:
-                    <div>
-                        <?php foreach ($postsGatherDesktop AS $item): ?>
-                        <?php echo $blocksCounter++; ?>: <?php echo $item->post_title ?>;
-                        <?php endforeach; ?>
-                    </div>
-                    <?php $blocksCounter = 1; ?>
-                    ИД мобильных:
-                    <div>
-		                <?php foreach ($postsGatherMobile AS $item): ?>
-			            <?php echo $blocksCounter++; ?>: <?php echo $item->post_title ?>;
-		                <?php endforeach; ?>
-                    </div>
-                </div>
-            <?php endif; ?>
+            </div>
         </div>
         <!--        <div style="width: 100px; height: 20px; border: 1px solid black; background-color: royalblue"></div>-->
 		<?php
