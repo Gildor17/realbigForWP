@@ -13,7 +13,7 @@ include ( dirname(__FILE__)."/textEditing.php");
 /*
 Plugin name:  Realbig Media
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.1.26.40
+Version:      0.1.26.41
 Author:       Realbig Team
 License:      GPLv2 or later
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
@@ -51,7 +51,7 @@ try {
 	if (!empty($pluginData['Version'])) {
 		$GLOBALS['realbigForWP_version'] = $pluginData['Version'];
 	} else {
-		$GLOBALS['realbigForWP_version'] = '0.1.26.40';
+		$GLOBALS['realbigForWP_version'] = '0.1.26.41';
 	}
 	$lastSuccessVersionGatherer = get_option('realbig_status_gatherer_version');
 //	require_once( 'synchronising.php' );
@@ -540,7 +540,7 @@ try {
                         <input type="checkbox" name="statusRefresher" id="statusRefresher">
                     </div>
                     <br>
-                    <!--	            --><?// if (empty($GLOBALS['problematic_table_status'])): ?>
+                    <!--	            --><?php// if (empty($GLOBALS['problematic_table_status'])): ?>
 		            <?php if (!empty($GLOBALS['problematic_table_status'])): ?>
                         <label for="manuallyTableCreating">создать таблицу вручную</label>
                         <input type="checkbox" name="manuallyTableCreating" id="manuallyTableCreatingId">
@@ -571,7 +571,7 @@ try {
                                 Error: <?php echo $deacError?> <br>
                             </div>
                         </div>
-		            <? endif; ?>
+		            <?php endif; ?>
 		            <?php if (!empty($usedDomain)): ?>
                         <div class="squads-blocks">
                             Инфо о домене:
@@ -579,7 +579,7 @@ try {
                                 Используемый домен: <span style="color: green"><?php echo $usedDomain?></span>. <br>
                             </div>
                         </div>
-		            <? endif; ?>
+		            <?php endif; ?>
 		            <?php if (!empty($postsGatherDesktop)||!empty($postsGatherMobile)):?>
                         <div class="squads-blocks">
                             Количество закешированных блоков: <?php echo count($postsGatherDesktop)+count($postsGatherMobile) ?>.<br>
