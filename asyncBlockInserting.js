@@ -148,7 +148,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                     if (directElement.search('#') > -1) {
                         findQuery = 1;
                     } else if ((directElement.search('#') < 0)&&(!blockSettingArray[i]['element']||
-                        (blockSettingArray[i]['element']&&directElement.search('.') > 0))) {
+                        (blockSettingArray[i]['element']&&directElement.indexOf('.') > 0))) {
 
                         directClassResult = directClassElementDetecting(blockSettingArray, directElement);
                         findQuery = directClassResult['findQuery'];
@@ -161,7 +161,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                         findQuery = 0;
                         elementTypeSymbol = directElement.search('#');
                         if (elementTypeSymbol < 0) {
-                            elementTypeSymbol = directElement.search('.');
+                            elementTypeSymbol = directElement.indexOf('.');
                             elementType = 'class';
                             elementName = directElement.replace(/\s/, '.');
                             if (elementTypeSymbol < 1) {
