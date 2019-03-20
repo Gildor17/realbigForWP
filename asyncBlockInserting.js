@@ -163,7 +163,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                         if (elementTypeSymbol < 0) {
                             elementTypeSymbol = directElement.search('.');
                             elementType = 'class';
-                            elementName = directElement.replace('\s', '.');
+                            elementName = directElement.replace(/\s/, '.');
                             if (elementTypeSymbol < 1) {
                                 elementName = '.' + elementName;
                             } else {
