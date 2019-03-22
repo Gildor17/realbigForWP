@@ -13,7 +13,7 @@ include ( dirname(__FILE__)."/textEditing.php");
 /*
 Plugin name:  Realbig Media
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.1.26.44
+Version:      0.1.26.45
 Author:       Realbig Team
 License:      GPLv2 or later
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
@@ -51,7 +51,7 @@ try {
 	if (!empty($pluginData['Version'])) {
 		$GLOBALS['realbigForWP_version'] = $pluginData['Version'];
 	} else {
-		$GLOBALS['realbigForWP_version'] = '0.1.26.44';
+		$GLOBALS['realbigForWP_version'] = '0.1.26.45';
 	}
 	$lastSuccessVersionGatherer = get_option('realbig_status_gatherer_version');
 //	require_once( 'synchronising.php' );
@@ -126,11 +126,11 @@ try {
 	}
 	/********** end of token gathering and adding "timeUpdate" field in wp_realbig_settings *******************************/
 	/********** checking requested page for excluding *********************************************************************/
-	function RFWP_excludedPageCheck($args) {
+//	function RFWP_excludedPageCheck($args) {
 		try {
 		    if (empty($GLOBALS['excludedPagesChecked'])) {
-			    global $wpdb;
-			    global $wpPrefix;
+//			    global $wpdb;
+//			    global $wpPrefix;
 
 			    $excludedPage = false;
 			    $mainPageStatus = 0;
@@ -153,29 +153,30 @@ try {
 				    $excludedPage = true;
 			    } elseif (!empty($usedUrl)) {
 				    $excludedMainPageCheck = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", ['excludedMainPage']));
+				    $GLOBALS['$excludedMainPageCheck'] = $excludedMainPageCheck;
 
 				    $homeStatus = false;
-				    if (is_home()||is_front_page()) {
-					    $homeStatus = true;
-				    } else {
-					    preg_match_all("~(\/|\\\)([^\/^\\\]+)~", get_home_url(), $m);
+//				    if (is_home()||is_front_page()) {
+//					    $homeStatus = true;
+//				    } else {
+                    preg_match_all("~(\/|\\\)([^\/^\\\]+)~", get_home_url(), $m);
 
-					    if (!empty($usedUrl)&&!empty($m)) {
-						    if ($usedUrl=="/"||$usedUrl==get_home_url()."/") {
-							    $homeStatus = true;
-						    } else {
-							    foreach ($m[0] AS $item) {
-								    if ($usedUrl==$item."/") {
-									    $homeStatus = true;
-								    }
-							    }
-						    }
-					    }
-				    }
+                    if (!empty($usedUrl)&&!empty($m)) {
+                        if ($usedUrl=="/"||$usedUrl==get_home_url()."/") {
+                            $homeStatus = true;
+                        } else {
+                            foreach ($m[0] AS $item) {
+                                if ($usedUrl==$item."/") {
+                                    $homeStatus = true;
+                                }
+                            }
+                        }
+                    }
+//				    }
 
 				    if ($homeStatus==true) {
 					    if (isset($excludedMainPageCheck)) {
-						    if ( $excludedMainPageCheck == 1 ) {
+						    if ($excludedMainPageCheck == 1) {
 							    $mainPageStatus = 1;
 						    } elseif ($excludedMainPageCheck == 0) {
 							    $mainPageStatus = 2;
@@ -225,21 +226,21 @@ try {
 					    }
 				    }
 			    }
-			    if (empty($excludedPage)) {
-				    RFWP_js_add();
-				    add_filter('the_content', 'RFWP_adBlocksToContentInsertingFunction', 5000);
-			    }
+//			    if (empty($excludedPage)) {
+//				    RFWP_js_add();
+//				    add_filter('the_content', 'RFWP_adBlocksToContentInsertingFunction', 5000);
+//			    }
 			    $GLOBALS['excludedPagesChecked'] = true;
 		    }
 
-			return $args;
+//			return $args;
 		} catch (Exception $excludedE) {
 			$excludedPage = false;
-			return $args;
+//			return $args;
 		}
-	}
+//	}
 
-	add_action('parse_query', 'RFWP_excludedPageCheck', 100);
+//	add_action('parse_query', 'RFWP_excludedPageCheck', 100);
 	/********** end of checking requested page for excluding **************************************************************/
 //	add_filter('the_content', 'RFWP_wof', 5001);
 //
@@ -403,13 +404,14 @@ try {
 	/********** end of manual sync ****************************************************************************************/
 	/************* blocks for text ****************************************************************************************/
 //	if ($mainPageStatus == 2||empty($excludedPage)) {
-//	if (empty($excludedPage)) {
-//		add_filter( 'the_content', 'RFWP_adBlocksToContentInsertingFunction', 5000 );
-//	}
+	if (empty($excludedPage)) {
+		RFWP_js_add();
+		add_filter( 'the_content', 'RFWP_adBlocksToContentInsertingFunction', 5000 );
+	}
 	/************* end blocks for text ************************************************************************************/
 	/********** using settings in texts ***********************************************************************************/
 	function RFWP_adBlocksToContentInsertingFunction($content) {
-        if (is_home()||is_front_page()||is_page() || is_single() || is_singular() || is_archive()) {
+        if ((is_page()||is_single()||is_singular()||is_archive())||((is_home()||is_front_page())&&empty($GLOBALS['$excludedMainPageCheck']))) {
 	        global $wpdb;
 
 	        $rotatorUrl = $GLOBALS['rotatorUrl'];
