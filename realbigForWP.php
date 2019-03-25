@@ -3,17 +3,17 @@
 if (!defined("ABSPATH")) { exit;}
 
 //include ( dirname(__FILE__).'/../../../wp-load.php' );
-require_once ( dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
+require_once (dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
 //include_once ( dirname(__FILE__)."/../../../wp-admin/includes/upgrade.php" );
 //include_once ( dirname(__FILE__).'/../../../wp-includes/wp-db.php');
-include ( dirname(__FILE__)."/update.php");
-include ( dirname(__FILE__)."/synchronising.php");
-include ( dirname(__FILE__)."/textEditing.php");
+include (dirname(__FILE__)."/update.php");
+include (dirname(__FILE__)."/synchronising.php");
+include (dirname(__FILE__)."/textEditing.php");
 
 /*
 Plugin name:  Realbig Media
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.1.26.46
+Version:      0.1.26.47
 Author:       Realbig Team
 License:      GPLv2 or later
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
@@ -51,7 +51,7 @@ try {
 	if (!empty($pluginData['Version'])) {
 		$GLOBALS['realbigForWP_version'] = $pluginData['Version'];
 	} else {
-		$GLOBALS['realbigForWP_version'] = '0.1.26.46';
+		$GLOBALS['realbigForWP_version'] = '0.1.26.47';
 	}
 	$lastSuccessVersionGatherer = get_option('realbig_status_gatherer_version');
 //	require_once( 'synchronising.php' );
@@ -342,7 +342,7 @@ try {
 //		$rotatorUrl = "HTTPS://ex.ua";
 		$GLOBALS['rotatorUrl'] = $rotatorUrl;
 
-		require_once( 'textEditing.php' );
+		require_once (dirname(__FILE__)."/textEditing.php");
 		$headerParsingResult = RFWP_headerADInsertor();
 		if ( $headerParsingResult == true ) {
 			?><script type="text/javascript"> rbConfig = {start: performance.now(),rotator:'<?php echo $getRotator ?>'}; </script>
@@ -351,7 +351,7 @@ try {
 	}
 
 	function RFWP_push_head_add() {
-		require_once( 'textEditing.php' );
+		require_once (dirname(__FILE__)."/textEditing.php");
 		$headerParsingResult = RFWP_headerPushInsertor();
 		if ( $headerParsingResult == true ) {
 			?>
@@ -434,7 +434,7 @@ try {
             } else {
 		        $fromDb = $wpdb->get_results('SELECT * FROM '.$GLOBALS['wpPrefix'].'realbig_plugin_settings WGPS WHERE setting_type = 3');
 	        }
-            require_once('textEditing.php');
+            require_once (dirname(__FILE__)."/textEditing.php");
             $content = RFWP_addIcons($fromDb, $content, 'content', $cachedBlocks);
 
             return $content;
