@@ -13,7 +13,7 @@ include (dirname(__FILE__)."/textEditing.php");
 /*
 Plugin name:  Realbig Media
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.1.26.47
+Version:      0.1.26.48
 Author:       Realbig Team
 License:      GPLv2 or later
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
@@ -33,7 +33,8 @@ try {
 	$GLOBALS['excludedPagesChecked'] = false;
 
 	/***************** Cached AD blocks saving ***************************************************************************************/
-	if (empty(get_transient('rb_cache_timeout'))&&!empty($_POST)&&!empty($_POST['type'])) {
+	$rb_cache_timeout = get_transient('rb_cache_timeout');
+	if (empty($rb_cache_timeout)&&!empty($_POST)&&!empty($_POST['type'])) {
 	    $sanitisedPostType = sanitize_text_field($_POST['type']);
 	    if (!empty($sanitisedPostType)&&$sanitisedPostType=="blocksGethering") {
 		    include_once (dirname(__FILE__).'/connectTestFile.php');
@@ -51,7 +52,7 @@ try {
 	if (!empty($pluginData['Version'])) {
 		$GLOBALS['realbigForWP_version'] = $pluginData['Version'];
 	} else {
-		$GLOBALS['realbigForWP_version'] = '0.1.26.47';
+		$GLOBALS['realbigForWP_version'] = '0.1.26.48';
 	}
 	$lastSuccessVersionGatherer = get_option('realbig_status_gatherer_version');
 //	require_once( 'synchronising.php' );
@@ -264,9 +265,9 @@ try {
 	function RFWP_syncFunctionAdd1() {
 		wp_enqueue_script( 'asyncBlockInserting',
 			plugins_url().'/'.basename(__DIR__).'/asyncBlockInserting.js',
-			array( 'jquery' ),
+			array('jquery'),
 			$GLOBALS['realbigForWP_version'],
-			false );
+			false);
 	}
 
 	function RFWP_syncFunctionAdd2() {
@@ -279,7 +280,8 @@ try {
 
     function RFWP_js_add() {
         add_action('wp_enqueue_scripts', 'RFWP_syncFunctionAdd1', 10);
-        if (!empty(RFWP_wp_is_mobile())) {
+        $mobileCheck = RFWP_wp_is_mobile();
+        if (!empty($mobileCheck)) {
             $cacheTimeout = get_transient('rb_mobile_cache_timeout');
         } else {
             $cacheTimeout = get_transient('rb_desktop_cache_timeout');
@@ -293,7 +295,8 @@ try {
 	$lastSyncTimeTransient = get_transient('realbigPluginSyncAttempt');
 	$activeSyncTransient   = get_transient('realbigPluginSyncProcess');
 	if (!empty($token)&&$token!='no token'&&empty($activeSyncTransient)&&empty($lastSyncTimeTransient)) {
-		if (empty(wp_next_scheduled('rb_cron_hook'))) {
+	    $nextSchedulerCheck = wp_next_scheduled('rb_cron_hook');
+		if (empty($nextSchedulerCheck)) {
 			RFWP_cronAutoGatheringLaunch();
 		}
 //		else {
@@ -422,7 +425,8 @@ try {
 	        $cachedBlocks = '';
 	        if (!is_array($rotatorResponce)||(!empty($rotatorResponce['response']['code'])&&$rotatorResponce['response']['code']!=200)) {
 	            ?><script>console.log('using cache')</script><?php
-		        if (!empty(RFWP_wp_is_mobile())) {
+                $mobileCheck = RFWP_wp_is_mobile();
+		        if (!empty($mobileCheck)) {
 			        $cachedBlocks = get_posts(['post_type' => 'rb_block_mobile']);
 		        } else {
 			        $cachedBlocks = get_posts(['post_type' => 'rb_block_desktop']);
