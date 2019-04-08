@@ -43,7 +43,7 @@ try {
 						$GLOBALS['connection_request_rezult_1'] = 'Connection error: ' . $error;
 						$unsuccessfullAjaxSyncAttempt           = 1;
                     }
-				} catch ( Exception $e ) {
+				} catch (Exception $e) {
 					$GLOBALS['tokenStatusMessage'] = $e['message'];
 					if ( $requestType == 'ajax' ) {
 						$ajaxResult = $e['message'];
@@ -160,6 +160,18 @@ try {
 									    $wpdb->insert( $wpPrefix.'realbig_settings', ['optionName'  => 'rotator', 'optionValue' => $decodedToken['rotator']]);
 								    }
 							    }
+							    /** Excluded page types */
+							    if (!empty($decodedToken['excludedPageTypes'])) {
+							        $excludedPageTypes = sanitize_text_field($decodedToken['excludedPageTypes']);
+								    $getExcludedPageTypes = $wpdb->get_var('SELECT optionValue FROM '.$wpPrefix.'realbig_settings WHERE optionName = "excludedPageTypes"');
+								    if (!empty($getExcludedPageTypes)) {
+									    $wpdb->update($wpPrefix.'realbig_settings', ['optionName'=>'excludedPageTypes', 'optionValue'=>$excludedPageTypes],
+										    ['optionName' => 'excludedPageTypes']);
+								    } else {
+									    $wpdb->insert($wpPrefix.'realbig_settings', ['optionName'=>'excludedPageTypes', 'optionValue'=>$excludedPageTypes]);
+								    }
+							    }
+							    /** End of excluded page types */
 							    $GLOBALS['token'] = $tokenInput;
 
 							    delete_transient('rb_mobile_cache_timeout' );
@@ -346,6 +358,25 @@ try {
 			}
 		}
 	}
+
+	function RFWP_getPageTypes() {
+        return [
+            'is_home' => 'is_home',
+            'is_front_page' => 'is_front_page',
+            'is_page' => 'is_page',
+            'is_single' => 'is_single',
+            'is_singular' => 'is_singular',
+            'is_archive' => 'is_archive',
+        ];
+//		return [
+//			1 => 'is_home',
+//			2 => 'is_front_page',
+//			3 => 'is_page',
+//			4 => 'is_single',
+//			5 => 'is_singular',
+//			6 => 'is_archive',
+//		];
+    }
 
 //	if ( ! empty( $jsAutoSynchronizationStatus ) && $jsAutoSynchronizationStatus < 5 && ! empty( $_POST['funcActivator'] ) && $_POST['funcActivator'] == 'ready' ) {
 //	if (!empty($_POST["action"])&&$_POST["action"]=="heartbeat") {

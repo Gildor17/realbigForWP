@@ -10,12 +10,48 @@ if (!defined("ABSPATH")) { exit;}
  */
 
 try {
+    function RFWP_gatheringContentLength($content, $isRepeated=null) {
+	    $contentForLength = '';
+	    $contentLength = 0;
+	    $cuttedContent = $content;
+	    $listOfTags = [];
+	    $listOfTags['unavailable'] = ['ins','script','style'];
+	    $listOfTags['available'] = ['p','div','span','blockquote','table','ul','ol','h1','h2','h3','h4','h5','h6','strong',];
+	    $listOfSymbolsForEcranising = '(\/|\$|\^|\.|\,|\&|\||\(|\)|\+|\-|\*|\?|\!|\[|\]|\{|\}|\<|\>|\\\){1}';
+        if (empty($isRepeated)) {
+            foreach ($listOfTags AS $affiliation => $listItems) {
+                for ($lc = 0; $lc < count($listItems); $lc++) {
+	                $cycler = 1;
+                    $tg1 = $listItems[$lc];
+                    $pattern1 = '~(<'.$tg1.'>|<'.$tg1.'\s[^>]*?>)(((?!<'.$tg1.'>)(?!<'.$tg1.'\s[^>]*?>))[\s\S]*?)(<\/'.$tg1.'>)~';
 
-	function RFWP_addIcons( $fromDb, $content, $contentType, $cachedBlocks) {
+                    while (!empty($cycler)) {
+	                    preg_match($pattern1, $cuttedContent, $clMatch);
+	                    if (!empty($clMatch[0])) {
+		                    if ($affiliation == 'available') {
+			                    $contentForLength .= $clMatch[0];
+		                    }
+		                    $resItem = preg_replace('~'.$listOfSymbolsForEcranising.'~', '\\\$1', $clMatch[0], -1, $crc);
+		                    $cuttedContent = preg_replace('~'.$resItem.'~', '', $cuttedContent, 1,$repCount);
+		                    $cycler = 1;
+	                    } else {
+	                        $cycler = 0;
+                        }
+                    }
+                }
+            }
+
+	        $contentLength = mb_strlen(strip_tags($contentForLength), 'utf-8');
+	        return $contentLength;
+        } else {
+	        return $contentLength;
+        }
+    }
+
+	function RFWP_addIcons($fromDb, $content, $contentType, $cachedBlocks) {
 		try {
 			$editedContent         = $content;
-
-//			$editedContent = '<index>'.$editedContent.'</index>';
+			$contentLength         = 0;
 
 			$previousEditedContent = $editedContent;
 			$usedBlocksCounter     = 0;
@@ -23,8 +59,16 @@ try {
 			$objArray              = [];
 
 			if (!empty($fromDb)) {
-				$contentLength = mb_strlen( strip_tags( $content ), 'utf-8' );
-				foreach ($fromDb AS $k => $item) {
+			    /** New system for content length checking **/
+				$contentLength = RFWP_gatheringContentLength($content);
+				/** End of new system for content length checking **/
+				if ($contentLength < 1) {
+					$contentLength = mb_strlen(strip_tags($content), 'utf-8');
+                }
+
+//				$contentLengthOld = mb_strlen(strip_tags($content), 'utf-8');
+/*              ?><script>console.log('new content:'+<?php echo $contentLength ?>);console.log('old content:'+<?php echo $contentLengthOld ?>);</script><?php  */
+ 				foreach ($fromDb AS $k => $item) {
 					$countReplaces = 0;
 					if ( is_object( $item ) ) {
 						$item = get_object_vars( $item );
