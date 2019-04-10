@@ -106,12 +106,12 @@ try {
 								    $sqlTokenSave = "INSERT INTO " . $wpPrefix . "realbig_plugin_settings (text, block_number, setting_type, element, directElement, elementPosition, elementPlace, firstPlace, elementCount, elementStep, minSymbols, minHeaders) VALUES ";
 								    foreach ( $decodedToken['data'] AS $k => $item ) {
 									    $counter ++;
-									    $sqlTokenSave .= ( $counter != 1 ? ", " : "" ) . "('" . $item['text'] . "', " . (int) sanitize_text_field($item['block_number']) . ", " . (int) sanitize_text_field($item['setting_type']) . ", '" . sanitize_text_field( $item['element'] ) . "', '" . sanitize_text_field( $item['directElement'] ) . "', " . (int) sanitize_text_field($item['elementPosition']) . ", " . (int) sanitize_text_field($item['elementPlace']) . ", " . (int) sanitize_text_field($item['firstPlace']) . ", " . (int) sanitize_text_field($item['elementCount']) . ", " . (int) sanitize_text_field($item['elementStep']) . ", " . (int) sanitize_text_field($item['minSymbols']) . ", " . (int) sanitize_text_field($item['minHeaders']) . ")";
+									    $sqlTokenSave .= ($counter != 1 ? ", " : "") . "('" . $item['text'] . "', " . (int) sanitize_text_field($item['block_number']) . ", " . (int) sanitize_text_field($item['setting_type']) . ", '" . sanitize_text_field($item['element']) . "', '" . sanitize_text_field( $item['directElement'] ) . "', " . (int) sanitize_text_field($item['elementPosition']) . ", " . (int) sanitize_text_field($item['elementPlace']) . ", " . (int) sanitize_text_field($item['firstPlace']) . ", " . (int) sanitize_text_field($item['elementCount']) . ", " . (int) sanitize_text_field($item['elementStep']) . ", " . (int) sanitize_text_field($item['minSymbols']) . ", " . (int) sanitize_text_field($item['minHeaders']) . ")";
 								    }
 								    $sqlTokenSave .= " ON DUPLICATE KEY UPDATE text = values(text), setting_type = values(setting_type), element = values(element), directElement = values(directElement), elementPosition = values(elementPosition), elementPlace = values(elementPlace), firstPlace = values(firstPlace), elementCount = values(elementCount), elementStep = values(elementStep), minSymbols = values(minSymbols), minHeaders = values(minHeaders) ";
-								    $wpdb->query( $sqlTokenSave );
+								    $wpdb->query($sqlTokenSave);
 							    } elseif (empty($decodedToken['data'])&&sanitize_text_field($decodedToken['status']) == "empty_success") {
-								    $wpdb->query( 'DELETE FROM ' . $wpPrefix . 'realbig_plugin_settings');
+								    $wpdb->query('DELETE FROM '.$wpPrefix.'realbig_plugin_settings');
 							    }
 
 							    // if no needly note, then create
@@ -133,17 +133,17 @@ try {
 										    ['optionName' => 'pushStatus']);
 								    }
 								    $wpOptionsCheckerPushCode = $wpdb->query( $wpdb->prepare( "SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", [ 'pushCode' ] ) );
-								    if ( empty( $wpOptionsCheckerPushCode ) ) {
+								    if (empty($wpOptionsCheckerPushCode)) {
 									    $wpdb->insert( $wpPrefix . 'realbig_settings', ['optionName'  => 'pushCode', 'optionValue' => $sanitisedPushData]);
 								    } else {
 									    $wpdb->update( $wpPrefix . 'realbig_settings', ['optionName'  => 'pushCode', 'optionValue' => $sanitisedPushData],
 										    ['optionName' => 'pushCode']);
 								    }
 							    }
-							    if ( ! empty( $decodedToken['domain'] ) ) {
+							    if (!empty($decodedToken['domain'])) {
 							        $sanitisedDomain = sanitize_text_field($decodedToken['domain']);
 								    $getDomain = $wpdb->get_var( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = "domain"' );
-								    if ( ! empty( $getDomain ) ) {
+								    if (!empty($getDomain)) {
 									    $wpdb->update( $wpPrefix . 'realbig_settings', ['optionName'  => 'domain', 'optionValue' => $sanitisedDomain],
 										    ['optionName' => 'domain']);
 								    } else {
@@ -161,10 +161,10 @@ try {
 								    }
 							    }
 							    /** Excluded page types */
-							    if (!empty($decodedToken['excludedPageTypes'])) {
+							    if (isset($decodedToken['excludedPageTypes'])) {
 							        $excludedPageTypes = sanitize_text_field($decodedToken['excludedPageTypes']);
 								    $getExcludedPageTypes = $wpdb->get_var('SELECT optionValue FROM '.$wpPrefix.'realbig_settings WHERE optionName = "excludedPageTypes"');
-								    if (!empty($getExcludedPageTypes)) {
+								    if (isset($getExcludedPageTypes)) {
 									    $wpdb->update($wpPrefix.'realbig_settings', ['optionName'=>'excludedPageTypes', 'optionValue'=>$excludedPageTypes],
 										    ['optionName' => 'excludedPageTypes']);
 								    } else {
@@ -201,19 +201,19 @@ try {
 				}
 
 				try {
-					set_transient( 'realbigPluginSyncAttempt', $decodedToken['status'], 300 );
-					if ( $decodedToken['status'] == 'success' ) {
-						if ( empty( $wpOptionsCheckerSyncTime ) ) {
+					set_transient('realbigPluginSyncAttempt', $decodedToken['status'], 300);
+					if ($decodedToken['status'] == 'success') {
+						if (empty($wpOptionsCheckerSyncTime)) {
 							$wpdb->insert( $wpPrefix . 'realbig_settings', ['optionName'  => 'token_sync_time', 'optionValue' => time()]);
 						} else {
 							$wpdb->update( $wpPrefix . 'realbig_settings', ['optionName'  => 'token_sync_time', 'optionValue' => time()],
                             ['optionName' => 'token_sync_time']);
 						}
 					}
-				} catch ( Exception $e ) {
+				} catch (Exception $e) {
 					echo $e;
 				}
-				if ( $requestType == 'ajax' ) {
+				if ($requestType == 'ajax') {
 					if ( empty( $ajaxResult ) ) {
 						return 'error';
 					} else {
@@ -222,10 +222,10 @@ try {
 				} else {
 					wp_cache_flush();
                 }
-			} catch ( Exception $e ) {
+			} catch (Exception $e) {
 				echo $e;
-				if ( $requestType == 'ajax' ) {
-					if ( empty( $ajaxResult ) ) {
+				if ($requestType == 'ajax') {
+					if (empty($ajaxResult)) {
 						return 'error';
 					} else {
 						return $ajaxResult;
@@ -235,13 +235,13 @@ try {
 		}
 	}
 
-	if ( ! function_exists( 'RFWP_tokenChecking' ) ) {
+	if (!function_exists('RFWP_tokenChecking')) {
 		function RFWP_tokenChecking($wpPrefix) {
 			global $wpdb;
 
 			try {
 				$GLOBALS['tokenStatusMessage'] = null;
-				$token                         = $wpdb->get_results( "SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = '_wpRealbigPluginToken'" );
+				$token                         = $wpdb->get_results("SELECT optionValue FROM ".$wpPrefix."realbig_settings WHERE optionName = '_wpRealbigPluginToken'");
 
 				if (!empty($token)) {
 					$token            = get_object_vars($token[0]);
@@ -259,7 +259,7 @@ try {
 		}
 	}
 
-	if ( ! function_exists( 'RFWP_tokenMDValidate' ) ) {
+	if (!function_exists('RFWP_tokenMDValidate')) {
 	    function RFWP_tokenMDValidate($token) {
 	        if (strlen($token) != 32) {
 		        return false;
