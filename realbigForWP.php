@@ -13,7 +13,7 @@ include (dirname(__FILE__)."/textEditing.php");
 /*
 Plugin name:  Realbig Media
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.1.26.48
+Version:      0.1.26.49
 Author:       Realbig Team
 License:      GPLv2 or later
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
@@ -52,7 +52,7 @@ try {
 	if (!empty($pluginData['Version'])) {
 		$GLOBALS['realbigForWP_version'] = $pluginData['Version'];
 	} else {
-		$GLOBALS['realbigForWP_version'] = '0.1.26.48';
+		$GLOBALS['realbigForWP_version'] = '0.1.26.49';
 	}
 	$lastSuccessVersionGatherer = get_option('realbig_status_gatherer_version');
 //	require_once( 'synchronising.php' );
@@ -137,24 +137,31 @@ try {
 			    $mainPageStatus = 0;
 			    if (!empty($_SERVER["REDIRECT_URL"])) {
 				    $usedUrl = $_SERVER["REDIRECT_URL"];
-			    } else {
-				    if (!empty($_SERVER["REQUEST_URI"])) {
-					    $usedUrl = $_SERVER["REQUEST_URI"];
-				    }
 			    }
-			    $usedUrl = $_SERVER["HTTP_HOST"].$usedUrl;
+                if (!empty($_SERVER["REQUEST_URI"])) {
+                    $usedUrl2 = $_SERVER["REQUEST_URI"];
+                }
+			    $usedUrl1[0] = $_SERVER["HTTP_HOST"].$usedUrl;
+			    $usedUrl1[1] = $_SERVER["HTTP_HOST"].$usedUrl2;
 
 			    /** Test zone *********/
 //		add_action('parse_query', 'mainPageCheck');
-
+/*                ?><script>console.log('redi:<?php echo $_SERVER["REDIRECT_URL"] ?>;');console.log('req:<?php echo $_SERVER["REQUEST_URI"] ?>;');console.log('http:<?php echo $_SERVER["HTTP_HOST"] ?>;');</script><?php  */
 //        do_action('posts_selection');
 			    /** End of test zone **/
 
 			    if (is_admin()) {
 				    $excludedPage = true;
 			    } elseif (!empty($usedUrl)) {
-				    $excludedMainPageCheck = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", ['excludedMainPage']));
-				    $GLOBALS['$excludedMainPageCheck'] = $excludedMainPageCheck;
+				    $pageChecksDb = $wpdb->get_results($wpdb->prepare("SELECT optionValue, optionName FROM " . $wpPrefix . "realbig_settings WHERE optionName IN (%s,%s,%s)", ['excludedMainPage','excludedPages','excludedPageTypes']), ARRAY_A);
+				    $pageChecks = [];
+				    foreach ($pageChecksDb AS $k => $item) {
+					    $pageChecks[$item['optionName']] = $item['optionValue'];
+                    }
+                    $GLOBALS['pageChecks'] = $pageChecks;
+
+//				    $excludedMainPageCheck = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", ['excludedMainPage']));
+//				    $GLOBALS['$excludedMainPageCheck'] = $excludedMainPageCheck;
 
 				    $homeStatus = false;
 //				    if (is_home()||is_front_page()) {
@@ -162,24 +169,38 @@ try {
 //				    } else {
                     preg_match_all("~(\/|\\\)([^\/^\\\]+)~", get_home_url(), $m);
 
-                    if (!empty($usedUrl)&&!empty($m)) {
-                        if ($usedUrl=="/"||$usedUrl==get_home_url()."/") {
-                            $homeStatus = true;
-                        } else {
-                            foreach ($m[0] AS $item) {
-                                if ($usedUrl==$item."/") {
-                                    $homeStatus = true;
-                                }
-                            }
-                        }
+                    foreach ($usedUrl1 AS $usedUrl) {
+	                    if (!empty($usedUrl)&&!empty($m)) {
+		                    if ($usedUrl=="/"||$usedUrl==get_home_url()."/") {
+			                    $homeStatus = true;
+			                    break;
+		                    } else {
+			                    foreach ($m[0] AS $item) {
+				                    if ($usedUrl==$item."/") {
+					                    $homeStatus = true;
+					                    break;
+				                    }
+			                    }
+		                    }
+	                    }
                     }
 //				    }
 
+//				    if ($homeStatus==true) {
+//					    if (isset($excludedMainPageCheck)) {
+//						    if ($excludedMainPageCheck == 1) {
+//							    $mainPageStatus = 1;
+//						    } elseif ($excludedMainPageCheck == 0) {
+//							    $mainPageStatus = 2;
+//						    }
+//					    }
+//				    }
+
 				    if ($homeStatus==true) {
-					    if (isset($excludedMainPageCheck)) {
-						    if ($excludedMainPageCheck == 1) {
+					    if (isset($pageChecks['excludedMainPage'])) {
+						    if ($pageChecks['excludedMainPage'] == 1) {
 							    $mainPageStatus = 1;
-						    } elseif ($excludedMainPageCheck == 0) {
+						    } elseif ($pageChecks['excludedMainPage'] == 0) {
 							    $mainPageStatus = 2;
 						    }
 					    }
@@ -188,15 +209,15 @@ try {
 				    if ($mainPageStatus == 1) {
 					    $excludedPage = true;
 				    } elseif ($mainPageStatus == 0) {
-					    $excludedPagesCheck = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", ['excludedPages']));
+//					    $excludedPagesCheck = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", ['excludedPages']));
 
-					    if (!empty($excludedPagesCheck)) {
+					    if (!empty($pageChecks['excludedPages'])) {
 						    $excludedDelimiter = 0;
 						    $maxCountDelimiter = 0;
-						    $excludedPagesCheckArray[1] = explode(",", $excludedPagesCheck);
-						    $excludedPagesCheckArray[2] = explode("\n", $excludedPagesCheck);
-						    $excludedPagesCheckArray[3] = explode(";", $excludedPagesCheck);
-						    $excludedPagesCheckArray[4] = explode(" ", $excludedPagesCheck);
+						    $excludedPagesCheckArray[1] = explode(",", $pageChecks['excludedPages']);
+						    $excludedPagesCheckArray[2] = explode("\n", $pageChecks['excludedPages']);
+						    $excludedPagesCheckArray[3] = explode(";", $pageChecks['excludedPages']);
+						    $excludedPagesCheckArray[4] = explode(" ", $pageChecks['excludedPages']);
 
 						    foreach ($excludedPagesCheckArray AS $k => $item) {
 							    if (count($item) > $maxCountDelimiter) {
@@ -207,20 +228,28 @@ try {
 						    if ($excludedDelimiter > 0) {
 							    $excludedPagesCheckArray = $excludedPagesCheckArray[$excludedDelimiter];
 						    } else {
-							    $excludedPagesCheckArray = $excludedPagesCheck;
+							    $excludedPagesCheckArray = $pageChecks['excludedPages'];
 						    }
 
 						    if (!empty($excludedPagesCheckArray)) {
 							    foreach ($excludedPagesCheckArray AS $item) {
 								    $item = trim($item);
+								    $item1 = preg_replace('~\\\~','\/', $item);
+								    $item2 = preg_replace('~\/~','\\', $item);
 
 								    if (!empty($item)) {
 									    $m = -1;
-									    $m = strpos($usedUrl, $item);
-//								preg_match("~".$item."~ius", $usedUrl, $m);
-									    if (is_integer($m)&&$m > -1) {
-										    $excludedPage = true;
-									    }
+									    foreach ($usedUrl1 AS $usedUrl) {
+										    $m1 = strpos($usedUrl, $item1);
+										    if (is_integer($m1)&&$m1 > -1) {
+											    $excludedPage = true;
+											    break;
+										    }
+                                        }
+//      								preg_match("~".$item."~ius", $usedUrl, $m);
+//									    if (is_integer($m)&&$m > -1) {
+//										    $excludedPage = true;
+//									    }
 								    }
 							    }
 						    }
@@ -251,7 +280,6 @@ try {
 //        return $content;
 //
 //    }
-
 	/********** autosync and JS text edit *********************************************************************************/
 //	$GLOBALS['wpOptionsCheckerSyncTime'] = $wpOptionsCheckerSyncTime;
 	function RFWP_syncFunctionAdd() {
@@ -359,7 +387,7 @@ try {
 		if ( $headerParsingResult == true ) {
 			?>
             <script charset="utf-8" async
-                    src="https://realpush.media/pushJs/<?php echo $GLOBALS['pushCode'] ?>.js"></script>
+                src="https://realpush.media/pushJs/<?php echo $GLOBALS['pushCode'] ?>.js"></script>
 			<?php
 		}
 	}
@@ -414,37 +442,71 @@ try {
 	/************* end blocks for text ************************************************************************************/
 	/********** using settings in texts ***********************************************************************************/
 	function RFWP_adBlocksToContentInsertingFunction($content) {
-	    if ((is_home()||is_front_page())&&!empty($GLOBALS['$excludedMainPageCheck'])) {
+		$pasingAllowed = true;
+		$arrayOfCheckedTypes = [
+			'is_home' => is_home(),
+			'is_front_page' => is_front_page(),
+			'is_page' => is_page(),
+			'is_single' => is_single(),
+			'is_singular' => is_singular(),
+			'is_archive' => is_archive(),
+		];
+
+	    if ((!empty($arrayOfCheckedTypes['is_home'])||!empty($arrayOfCheckedTypes['is_front_page']))&&!empty($GLOBALS['pageChecks']['excludedMainPage'])) {
 		    return $content;
-	    } elseif (is_page()||is_single()||is_singular()||is_archive()||is_home()||is_front_page()) {
-	        global $wpdb;
+	    } elseif (in_array(true, $arrayOfCheckedTypes)) {
+	        if (!empty($GLOBALS['pageChecks']['excludedPageTypes'])) {
+		        $excludedPageTypesString = $GLOBALS['pageChecks']['excludedPageTypes'];
+//		        $pageTypes = RFWP_getPageTypes();
+		        $excludedPageTypes = explode(',', $excludedPageTypesString);
+		        foreach ($excludedPageTypes AS $k => $item) {
+		            unset($arrayOfCheckedTypes[$item]);
+		        }
+//		        for ($cou = 0; $cou < count($pageTypes); $cou++) {
+//			        if (!empty(substr($excludedPageTypesString, $cou, 1))) {
+//			            unset($arrayOfCheckedTypes[$pageTypes[$cou+1]]);
+//				        array_push($excludedPageTypes, $pageTypes[$cou+1]);
+//			        }
+//		        }
 
-	        $rotatorUrl = $GLOBALS['rotatorUrl'];
-	        $rotatorResponce = wp_safe_remote_head($rotatorUrl, ['timeout' => 1]);
-
-	        $cachedBlocks = '';
-	        if (!is_array($rotatorResponce)||(!empty($rotatorResponce['response']['code'])&&$rotatorResponce['response']['code']!=200)) {
-	            ?><script>console.log('using cache')</script><?php
-                $mobileCheck = RFWP_wp_is_mobile();
-		        if (!empty($mobileCheck)) {
-			        $cachedBlocks = get_posts(['post_type' => 'rb_block_mobile']);
-		        } else {
-			        $cachedBlocks = get_posts(['post_type' => 'rb_block_desktop']);
+		        if (!in_array(true, $arrayOfCheckedTypes)) {
+			        $pasingAllowed = false;
 		        }
 	        }
 
-	        if (!empty($content)) {
-		        $fromDb = $wpdb->get_results('SELECT * FROM '.$GLOBALS['wpPrefix'].'realbig_plugin_settings WGPS');
-            } else {
-		        $fromDb = $wpdb->get_results('SELECT * FROM '.$GLOBALS['wpPrefix'].'realbig_plugin_settings WGPS WHERE setting_type = 3');
-	        }
-            require_once (dirname(__FILE__)."/textEditing.php");
-            $content = RFWP_addIcons($fromDb, $content, 'content', $cachedBlocks);
+		    if (!empty($pasingAllowed)) {
+//		    if (is_page()||is_single()||is_singular()||is_archive()||is_home()||is_front_page()) {
+			    global $wpdb;
 
-            return $content;
-        } else {
-            return $content;
-        }
+			    $rotatorUrl = $GLOBALS['rotatorUrl'];
+			    $rotatorResponce = wp_safe_remote_head($rotatorUrl, ['timeout' => 1]);
+
+			    $cachedBlocks = '';
+			    if (!is_array($rotatorResponce)||(!empty($rotatorResponce['response']['code'])&&$rotatorResponce['response']['code']!=200)) {
+				    ?><script>console.log('using cache')</script><?php
+				    $mobileCheck = RFWP_wp_is_mobile();
+				    if (!empty($mobileCheck)) {
+					    $cachedBlocks = get_posts(['post_type' => 'rb_block_mobile']);
+				    } else {
+					    $cachedBlocks = get_posts(['post_type' => 'rb_block_desktop']);
+				    }
+			    }
+
+			    if (!empty($content)) {
+				    $fromDb = $wpdb->get_results('SELECT * FROM '.$GLOBALS['wpPrefix'].'realbig_plugin_settings WGPS');
+			    } else {
+				    $fromDb = $wpdb->get_results('SELECT * FROM '.$GLOBALS['wpPrefix'].'realbig_plugin_settings WGPS WHERE setting_type = 3');
+			    }
+			    require_once (dirname(__FILE__)."/textEditing.php");
+			    $content = RFWP_addIcons($fromDb, $content, 'content', $cachedBlocks);
+
+			    return $content;
+		    } else {
+			    return $content;
+		    }
+	    } else {
+		    return $content;
+	    }
 	}
 	/*********** end of using settings in texts ***************************************************************************/
 	/*********** begin of token input area ********************************************************************************/
@@ -482,7 +544,7 @@ try {
 		$postsGatherMobile  = $wpdb->get_results('SELECT post_title FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_mobile" )');
 
 		try {
-		    $rbSettings = $wpdb->get_results('SELECT optionName, optionValue, timeUpdate FROM ' . $GLOBALS["wpPrefix"] . 'realbig_settings WHERE optionName IN ("deactError","domain","excludedMainPage","excludedPages","pushStatus")', ARRAY_A);
+		    $rbSettings = $wpdb->get_results('SELECT optionName, optionValue, timeUpdate FROM ' . $GLOBALS["wpPrefix"] . 'realbig_settings WHERE optionName IN ("deactError","domain","excludedMainPage","excludedPages","pushStatus","excludedPageTypes")', ARRAY_A);
 
 		    if (!empty($rbSettings)) {
 		        foreach ($rbSettings AS $k=>$item) {
@@ -499,6 +561,9 @@ try {
 		                }
                     } elseif ($item['optionName']=='excludedPages') {
 			            $excludedPage = $item["optionValue"];
+                    } elseif ($item['optionName']=='excludedPageTypes'&&!empty($item["optionValue"])) {
+			            $excludedPageTypes = explode(',',$item["optionValue"]);
+                        $penyok_stoparik = 0;
                     } elseif ($item['optionName']=='pushStatus') {
 			            if (!empty($item["optionValue"])) {
 				            $pushStatus = 'Да';
@@ -515,6 +580,7 @@ try {
 			$excludedMainPage = "main page gathering error";
 			$excludedPage = "pages gathering error";
 			$pushStatus = "error gathering error";
+			$excludedPageTypes = "error gathering types";
         }
 		?>
         <style>
@@ -530,6 +596,9 @@ try {
                 width: max-content;
                 margin-top: 20px;
                 padding: 5px;
+            }
+            .o-lists {
+                margin: 5px 5px 5px 1em;
             }
         </style>
         <div class="wrap">
@@ -622,6 +691,19 @@ try {
 		            <?php if (!empty($pushStatus)):?>
                         <div class="squads-blocks">
                             Вставлять в хедер PUSH-код: <?php echo $pushStatus ?>.<br>
+                        </div>
+		            <?php endif; ?>
+		            <?php if (!empty($excludedPageTypes)):?>
+                    <?php $counter = 1; ?>
+                        <div class="squads-blocks">
+                            Исключенные типы страниц:
+                            <ol class="o-lists">
+                            <?php foreach ($excludedPageTypes AS $k => $item): ?>
+                                <li>
+                                    <?php echo $item ?>;
+                                </li>
+                            <?php endforeach; ?>
+                            </ol>
                         </div>
 		            <?php endif; ?>
 	            <?php endif; ?>
