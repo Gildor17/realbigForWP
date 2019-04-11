@@ -164,10 +164,9 @@ try {
 							    if (isset($decodedToken['excludedPageTypes'])) {
 							        $excludedPageTypes = sanitize_text_field($decodedToken['excludedPageTypes']);
 								    $getExcludedPageTypes = $wpdb->get_var('SELECT optionValue FROM '.$wpPrefix.'realbig_settings WHERE optionName = "excludedPageTypes"');
-								    if (isset($getExcludedPageTypes)) {
-									    $wpdb->update($wpPrefix.'realbig_settings', ['optionName'=>'excludedPageTypes', 'optionValue'=>$excludedPageTypes],
-										    ['optionName' => 'excludedPageTypes']);
-								    } else {
+                                    $updateResult = $wpdb->update($wpPrefix.'realbig_settings', ['optionName'=>'excludedPageTypes', 'optionValue'=>$excludedPageTypes],
+                                        ['optionName' => 'excludedPageTypes']);
+                                    if ($updateResult==false) {
 									    $wpdb->insert($wpPrefix.'realbig_settings', ['optionName'=>'excludedPageTypes', 'optionValue'=>$excludedPageTypes]);
 								    }
 							    }
