@@ -9,11 +9,10 @@
 if (!defined("ABSPATH")) { exit;}
 
 try {
-
 	global $wpdb;
 
-	if ( ! function_exists( 'RFWP_synchronize' ) ) {
-		function RFWP_synchronize( $tokenInput, $wpOptionsCheckerSyncTime, $sameTokenResult, $wpPrefix, $requestType ) {
+	if (!function_exists('RFWP_synchronize')) {
+		function RFWP_synchronize($tokenInput, $wpOptionsCheckerSyncTime, $sameTokenResult, $wpPrefix, $requestType) {
 			global $wpdb;
 			$unsuccessfullAjaxSyncAttempt = 0;
 
@@ -33,7 +32,7 @@ try {
 //					$jsonToken = wp_remote_post($url, $dataForSending);
 					if (!is_wp_error($jsonToken)) {
 						$jsonToken = $jsonToken['body'];
-						if ( ! empty( $jsonToken ) ) {
+						if (!empty($jsonToken)) {
 							$GLOBALS['connection_request_rezult']   = 1;
 							$GLOBALS['connection_request_rezult_1'] = 'success';
 						}
@@ -163,10 +162,11 @@ try {
 							    /** Excluded page types */
 							    if (isset($decodedToken['excludedPageTypes'])) {
 							        $excludedPageTypes = sanitize_text_field($decodedToken['excludedPageTypes']);
-								    $getExcludedPageTypes = $wpdb->get_var('SELECT optionValue FROM '.$wpPrefix.'realbig_settings WHERE optionName = "excludedPageTypes"');
-                                    $updateResult = $wpdb->update($wpPrefix.'realbig_settings', ['optionName'=>'excludedPageTypes', 'optionValue'=>$excludedPageTypes],
-                                        ['optionName' => 'excludedPageTypes']);
-                                    if ($updateResult==false) {
+								    $getExcludedPageTypes = $wpdb->get_var('SELECT id FROM '.$wpPrefix.'realbig_settings WHERE optionName = "excludedPageTypes"');
+								    if (!empty($getExcludedPageTypes)) {
+									    $updateResult = $wpdb->update($wpPrefix.'realbig_settings', ['optionName'=>'excludedPageTypes', 'optionValue'=>$excludedPageTypes],
+										    ['optionName' => 'excludedPageTypes']);
+                                    } else {
 									    $wpdb->insert($wpPrefix.'realbig_settings', ['optionName'=>'excludedPageTypes', 'optionValue'=>$excludedPageTypes]);
 								    }
 							    }
@@ -276,17 +276,17 @@ try {
 		function RFWP_tokenTimeUpdateChecking($token, $wpPrefix) {
 			global $wpdb;
 			try {
-				$timeUpdate = $wpdb->get_results( "SELECT timeUpdate FROM " . $wpPrefix . "realbig_settings WHERE optionName = 'token_sync_time'" );
+				$timeUpdate = $wpdb->get_results("SELECT timeUpdate FROM ".$wpPrefix."realbig_settings WHERE optionName = 'token_sync_time'");
 				if (empty($timeUpdate)) {
 					$updateResult = RFWP_wpRealbigSettingsTableUpdateFunction($wpPrefix);
 					if ($updateResult == true) {
-						$timeUpdate = $wpdb->get_results("SELECT timeUpdate FROM " . $wpPrefix . "realbig_settings WHERE optionName = 'token_sync_time'");
+						$timeUpdate = $wpdb->get_results("SELECT timeUpdate FROM ".$wpPrefix."realbig_settings WHERE optionName = 'token_sync_time'");
 					}
 				}
 				if (!empty($token)&&$token != 'no token'&&((!empty($GLOBALS['tokenStatusMessage'])&&($GLOBALS['tokenStatusMessage'] == 'Синхронизация прошла успешно' || $GLOBALS['tokenStatusMessage'] == 'Не нашло позиций для блоков на указанном сайте, добавьте позиции для сайтов на странице настроек плагина')) || empty($GLOBALS['tokenStatusMessage'])) && !empty($timeUpdate)) {
 //				if (!empty($token)&&$token!='no token'&&!empty($timeUpdate)) {
-					if ( ! empty( $timeUpdate ) ) {
-						$timeUpdate                 = get_object_vars( $timeUpdate[0] );
+					if (!empty($timeUpdate)) {
+						$timeUpdate                 = get_object_vars($timeUpdate[0]);
 						$GLOBALS['tokenTimeUpdate'] = $timeUpdate['timeUpdate'];
 						$GLOBALS['statusColor']     = 'green';
 					} else {
@@ -348,10 +348,10 @@ try {
 						return $statusGatherer;
 					}
 				}
-			} catch ( Exception $exception ) {
+			} catch (Exception $exception) {
 				return $statusGatherer = [];
 //        $catchedException = true;
-			} catch ( Error $error ) {
+			} catch (Error $error) {
 				return $statusGatherer = [];
 //		$catchedError = true;
 			}

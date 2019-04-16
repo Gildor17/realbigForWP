@@ -66,7 +66,7 @@ ENGINE=InnoDB
 			if ( ! empty( $blocksTable ) && ! empty( $newBlocksTable ) ) {
 				$wpdb->query( 'DROP TABLE `WpRealbigPluginSettings`' );
 			}
-			if ( ! empty( $settingsTable ) && ! empty( $newSettingsTable ) ) {
+			if (!empty($settingsTable) && !empty($newSettingsTable)) {
 				$oldSettingTableData = $wpdb->get_results( 'SELECT * FROM realbigSettings' );
 				if ( ! empty( $oldSettingTableData[0] ) ) {
 					$oldSettingTableData = get_object_vars( $oldSettingTableData[0] );
@@ -97,7 +97,7 @@ ENGINE=InnoDB
 		}
 	}
 
-	function RFWP_dbTablesCreateFunction( $tableForCurrentPluginChecker, $tableForToken, $wpPrefix, $statusGatherer ) {
+	function RFWP_dbTablesCreateFunction($tableForCurrentPluginChecker, $tableForToken, $wpPrefix, $statusGatherer) {
 	    global $wpdb;
 		try {
 			if (empty($tableForCurrentPluginChecker)) {
