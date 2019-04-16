@@ -117,6 +117,9 @@ try {
 						case 6:
 							$elementNumber   = $item['elementPlace'];
 							break;
+						case 7:
+							$elementNumber   = $item['elementPlace'];
+							break;
 					}
 					$elementText = "<div class='percentPointerClass'>".$elementText."</div>";
 
@@ -125,15 +128,15 @@ try {
 					$editedContent = preg_replace( '~(<table[^>]*?\>)~i', '<tab_mark_begin>$1', $editedContent, -1);
 					$editedContent = preg_replace( '~(<\/table\>)~i', '$1<tab_mark_end>', $editedContent, -1);
 
-					if ( $item['setting_type'] == 1 ) {       //for lonely block
-						if ( empty( $elementName ) || empty( $elementNumber ) || empty( $elementText ) ) {
+					if ($item['setting_type'] == 1) {       //for lonely block
+						if (empty($elementName)||empty($elementNumber)||empty($elementText)) {
 							continue;
 						}
-						if ( $elementNumber < 0 ) {
+						if ($elementNumber < 0) {
 							$replaces = 0;
 							/**********************************************************/
-							if ( $elementName == 'img' ) {     //element is image
-								if ( $elementPosition == 0 ) {    //if position before
+							if ($elementName == 'img') {     //element is image
+								if ($elementPosition == 0) {    //if position before
 									$editedContent = preg_replace( '~<' . $elementName . '( |>|\/>){1}?~i', '<placeholderForAd><' . $elementName . '$1', $editedContent, - 1, $replaces );
 								} elseif ( $elementPosition == 1 ) {    //if position after
 									$editedContent = preg_replace( '~<' . $elementName . '([^>]*?)(\/>|>){1}~i',
@@ -245,7 +248,7 @@ try {
 						} elseif ( $elementPosition == 1 ) {       //if position after
 							if ( $directElementTag == null ) {
 								$usedTag = preg_match( '~<([0-9a-z]+?) ([^>]*?)(( |\'|\"){1})' . $thisElementName . '(( |\'|\"){1})([^>]*?)>((\s|\S)*?)<\/([0-9a-z]+?)>~', $editedContent, $m1 );
-								if ( ! empty( $m1[1] ) ) {
+								if (!empty($m1[1])) {
 									$directElementTag = $m1[1];
 								}
 							}
@@ -257,7 +260,7 @@ try {
 						}
 						$editedContent = preg_replace( '~<placeholderForAd>~', '<placeholderForAdDop>', $editedContent, - 1, $countReplaces );
 					} elseif ( $item['setting_type'] == 4 ) {       //for end of content
-						if ( empty( $elementText ) ) {
+						if (empty($elementText)) {
 							continue;
 						}
 						$editedContent = $editedContent . '<placeholderForAd>';
@@ -380,19 +383,19 @@ try {
 					} else {
 						$scriptingCode .= 'blockSettingArray[' . $k . ']["minHeaders"] = 0;' . PHP_EOL;
 					}
-					$scriptingCode .= 'blockSettingArray[' . $k . ']["text"] = \'' . $item['text'] . '\'; ' . PHP_EOL;
-					$scriptingCode .= 'blockSettingArray[' . $k . ']["setting_type"] = '.$item['setting_type'].'; ' . PHP_EOL;
-					if       ( $item['setting_type'] == 1 ) {       //for ordinary block
+					$scriptingCode     .= 'blockSettingArray[' . $k . ']["text"] = \'' . $item['text'] . '\'; ' . PHP_EOL;
+					$scriptingCode     .= 'blockSettingArray[' . $k . ']["setting_type"] = '.$item['setting_type'].'; ' . PHP_EOL;
+					if       ($item['setting_type'] == 1) {       //for ordinary block
 //						$scriptingCode .= 'blockSettingArray[' . $k . ']["setting_type"] = 1; ' . PHP_EOL;
 						$scriptingCode .= 'blockSettingArray[' . $k . ']["element"] = "' . $item['element'] . '"; ' . PHP_EOL;
 						$scriptingCode .= 'blockSettingArray[' . $k . ']["elementPosition"] = ' . $item['elementPosition'] . '; ' . PHP_EOL;
 						$scriptingCode .= 'blockSettingArray[' . $k . ']["elementPlace"] = ' . $item['elementPlace'] . '; ' . PHP_EOL;
-					} elseif ( $item['setting_type'] == 3 ) {       //for direct block
+					} elseif ($item['setting_type'] == 3) {       //for direct block
 						$scriptingCode .= 'blockSettingArray[' . $k . ']["element"] = "' . $item['element'] . '"; ' . PHP_EOL;
 						$scriptingCode .= 'blockSettingArray[' . $k . ']["directElement"] = "' . $item['directElement'] . '"; ' . PHP_EOL;
 						$scriptingCode .= 'blockSettingArray[' . $k . ']["elementPosition"] = ' . $item['elementPosition'] . '; ' . PHP_EOL;
 						$scriptingCode .= 'blockSettingArray[' . $k . ']["elementPlace"] = ' . $item['elementPlace'] . '; ' . PHP_EOL;
-					} elseif ( $item['setting_type'] == 6 ) {       //for percentage
+					} elseif (in_array($item['setting_type'],[6,7])) {       //for percentage
 						$scriptingCode .= 'blockSettingArray[' . $k . ']["elementPlace"] = ' . $item['elementPlace'] . '; ' . PHP_EOL;
 					}
 				}
@@ -418,7 +421,6 @@ try {
 			return '';
 		}
 	}
-
 }
 catch (Exception $ex)
 {

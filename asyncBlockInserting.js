@@ -18,6 +18,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
         var repeat = false;
         var currentElementChecker = false;
         let containerFor6th = [];
+        let containerFor7th = [];
         let posCurrentElement;
 
         function getFromConstructions(currentElement) {
@@ -259,10 +260,45 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                         i--;
                     }
                 //    vidpravutu v vidstiinuk dlya 6ho tipa
+                } else if (blockSettingArray[i]["setting_type"] == 7) {
+                    if (containerFor7th.length > 0) {
+                        for (let j = 0; j < containerFor7th.length; j++) {
+                            if (containerFor7th[j]["elementPlace"]<blockSettingArray[i]["elementPlace"]) {
+                                // continue;
+                                if (j == containerFor7th.length-1) {
+                                    containerFor7th.push(blockSettingArray[i]);
+                                    blockSettingArray.splice(i, 1);
+                                    poolbackI = 1;
+                                    i--;
+                                    break;
+                                }
+                            } else {
+                                for (let k = containerFor7th.length-1; k > j-1; k--) {
+                                    containerFor7th[k + 1] = containerFor7th[k];
+                                }
+                                containerFor7th[j] = blockSettingArray[i];
+                                blockSettingArray.splice(i, 1);
+                                poolbackI = 1;
+                                i--;
+                                break;
+                            }
+                        }
+                    } else {
+                        containerFor7th.push(blockSettingArray[i]);
+                        blockSettingArray.splice(i, 1);
+                        poolbackI = 1;
+                        i--;
+                    }
+                //    vidpravutu v vidstiinuk dlya 6ho tipa
                 }
             } catch (e) { }
         }
-        percentInserter(lordOfElements, containerFor6th);
+        if (containerFor6th.length > 0) {
+            percentInserter(lordOfElements, containerFor6th);
+        }
+        if (containerFor7th.length > 0) {
+            symbolInserter(lordOfElements, containerFor7th);
+        }
         let stopper = 0;
 
         window.addEventListener('load', function () {
@@ -359,6 +395,106 @@ function percentSeparator(lordOfElements) {
             separatorResult[separatorResultCounter] = separator[i];
             separatorResultCounter++;
         }
+    }
+}
+
+function symbolInserter(lordOfElements, containerFor7th) {
+    try {
+        var separator = lordOfElements.children;
+        var lordOfElementsResult = 0;
+        var lordOfElementsTextResult = "";
+        var textLength;
+        let tlArray = [];
+        let tlArrayCou = 0;
+        var currentChildrenLength = 0;
+        var possibleTagsArray = ["P", "H1", "H2", "H3", "H4", "H5", "H6", "DIV", "OL", "UL", "BLOCKQUOTE", "INDEX"];
+        let possibleTagsInCheck = ["DIV", "INDEX"];
+        let numberToUse = 0;
+        let previousBreak = 0;
+        let cycle_1_val;
+        let cycle_2_val;
+        let needleLength;
+        let currentSumLength;
+        let elementToAdd;
+
+        if (!document.getElementById("markedSpan1")) {
+            textLength = 0;
+            for (let i = 0; i < lordOfElements.children.length; i++) {
+                // if (lordOfElements.children[i].tagName!="SCRIPT"&&!lordOfElements.children[i].classList.contains("percentPointerClass")) {
+                if (possibleTagsArray.includes(lordOfElements.children[i].tagName)&&!lordOfElements.children[i].classList.contains("percentPointerClass")&&lordOfElements.children[i].id!="toc_container") {
+                    if (possibleTagsInCheck.includes(lordOfElements.children[i].tagName)) {
+                        if (lordOfElements.children[i].children.length > 1) {
+                            for (let j = 0; j < lordOfElements.children[i].children.length; j++) {
+                                if (possibleTagsArray.includes(lordOfElements.children[i].children[j].tagName)&&!lordOfElements.children[i].children[j].classList.contains("percentPointerClass")&&lordOfElements.children[i].children[j].id!="toc_container") {
+                                    textLength = textLength + lordOfElements.children[i].children[j].innerText.length;
+                                    tlArray[tlArrayCou] = [];
+                                    tlArray[tlArrayCou]['tag'] = lordOfElements.children[i].children[j].tagName;
+                                    tlArray[tlArrayCou]['length'] = lordOfElements.children[i].children[j].innerText.length;
+                                    tlArray[tlArrayCou]['element'] = lordOfElements.children[i].children[j];
+                                    tlArrayCou++;
+                                }
+                            }
+                        }
+                    } else {
+                        textLength = textLength + lordOfElements.children[i].innerText.length;
+                        tlArray[tlArrayCou] = [];
+                        tlArray[tlArrayCou]['tag'] = lordOfElements.children[i].tagName;
+                        tlArray[tlArrayCou]['length'] = lordOfElements.children[i].innerText.length;
+                        tlArray[tlArrayCou]['element'] = lordOfElements.children[i];
+                        tlArrayCou++;
+                    }
+                }
+            }
+
+            for (let i = 0; i < containerFor7th.length; i++) {
+                previousBreak = 0;
+                currentChildrenLength = 0;
+                currentSumLength = 0;
+                needleLength = Math.abs(containerFor7th[i]['elementPlace']);
+
+                elementToAdd = document.createElement("div");
+                elementToAdd.classList.add("percentPointerClass");
+                elementToAdd.innerHTML = containerFor7th[i]["text"];
+
+                if (containerFor7th[i]['elementPlace'] < 0) {
+                    for (let j = tlArray.length-1; j > -1; j--) {
+                        currentSumLength = currentSumLength + tlArray[j]['length'];
+                        if (needleLength < currentSumLength) {
+                            tlArray[j]['element'].parentNode.insertBefore(elementToAdd, tlArray[j]['element']);
+                            break;
+                        } else {
+                            if (j == 0) {
+                                tlArray[j]['element'].parentNode.insertBefore(elementToAdd, tlArray[tlArray.length-1]['element'].nextSibling);
+                                break;
+                            }
+                        }
+                    }
+                } else if (containerFor7th[i]['elementPlace'] == 0) {
+                    tlArray[0]['element'].parentNode.insertBefore(elementToAdd, tlArray[0]['element']);
+                } else {
+                    for (let j = 0; j < tlArray.length; j++) {
+                        currentSumLength = currentSumLength + tlArray[j]['length'];
+                        if (needleLength < currentSumLength) {
+                            tlArray[j]['element'].parentNode.insertBefore(elementToAdd, tlArray[j]['element'].nextSibling);
+                            break;
+                        } else {
+                            if (j == tlArray.length-1) {
+                                tlArray[j]['element'].parentNode.insertBefore(elementToAdd, tlArray[j]['element'].nextSibling);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            //~~~~~~~~~~~~~~~~~~~~~
+
+            var spanMarker = document.createElement("span");
+            spanMarker.setAttribute("id", "markedSpan1");
+            lordOfElements.prepend(spanMarker);
+        }
+    } catch (e) {
+        console.log(e);
     }
 }
 
