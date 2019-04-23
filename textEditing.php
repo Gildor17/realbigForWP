@@ -92,6 +92,12 @@ try {
                         foreach ($cachedBlocks AS $k1 => $item1) {
 	                        if ($item1->post_title==$item['block_number']) {
 		                        $elementText = $item1->post_content;
+		                        $correctElementText = preg_replace('~/script~', '/scr\'+\'ipt', $elementText);
+		                        if (!empty($correctElementText)) {
+			                        $elementText = $correctElementText;
+                                }
+		                        $fromDb[$k]->text = $elementText;
+		                        break;
                             }
                         }
                     }
