@@ -11,10 +11,11 @@ include (dirname(__FILE__)."/synchronising.php");
 include (dirname(__FILE__)."/textEditing.php");
 
 /*
-Plugin name:  Realbig Media
+Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.1.26.53
+Version:      0.1.26.60
 Author:       Realbig Team
+Author URI:   https://realbig.media
 License:      GPLv2 or later
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
 */
@@ -107,7 +108,7 @@ try {
 	if (!empty($pluginData['Version'])) {
 		$GLOBALS['realbigForWP_version'] = $pluginData['Version'];
 	} else {
-		$GLOBALS['realbigForWP_version'] = '0.1.26.53';
+		$GLOBALS['realbigForWP_version'] = '0.1.26.60';
 	}
 	$lastSuccessVersionGatherer = get_option('realbig_status_gatherer_version');
 //	require_once( 'synchronising.php' );
