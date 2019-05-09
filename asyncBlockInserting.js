@@ -216,11 +216,18 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                 } else if (blockSettingArray[i]["setting_type"] == 5) {
                     let currentElement = document.getElementById("content_pointer_id").parentElement;
                     if (currentElement.getElementsByTagName("p").length > 0) {
-                        let elementNumber = Math.round(currentElement.getElementsByTagName("p").length/2);
-                        currentElement = currentElement.getElementsByTagName("p")[elementNumber];
+                        let pCount = currentElement.getElementsByTagName("p").length;
+                        let elementNumber = Math.round(pCount/2);
+                        if (pCount > 1) {
+                            currentElement = currentElement.getElementsByTagName("p")[elementNumber+1];
+                        }
                         currentElement = getFromConstructions(currentElement);
                         if (currentElement != undefined && currentElement != null) {
-                            currentElement.parentNode.insertBefore(elementToAdd, currentElement.nextSibling);
+                            if (pCount > 1) {
+                                currentElement.parentNode.insertBefore(elementToAdd, currentElement);
+                            } else {
+                                currentElement.parentNode.insertBefore(elementToAdd, currentElement.nextSibling);
+                            }
                             blockSettingArray.splice(i, 1);
                             poolbackI = 1;
                             i--;
@@ -289,10 +296,13 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                         poolbackI = 1;
                         i--;
                     }
-                //    vidpravutu v vidstiinuk dlya 6ho tipa
+                //    vidpravutu v vidstiinuk dlya 7ho tipa
                 }
             } catch (e) { }
         }
+
+        // percentSeparator(lordOfElements);
+
         if (containerFor6th.length > 0) {
             percentInserter(lordOfElements, containerFor6th);
         }

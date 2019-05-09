@@ -18,6 +18,7 @@ try {
 
 			try {
 //			$url = 'https://realbigweb/api/wp-get-settings';     // orig web post
+//			$url = 'https://beta.realbig.media/api/wp-get-settings';     // beta post
 			$url = 'https://realbig.media/api/wp-get-settings';     // orig post
 
                 /** for WP request **/
