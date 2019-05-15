@@ -17,7 +17,7 @@ try {
 	    $listOfTags = [];
 	    $listOfTags['unavailable'] = ['ins','script','style'];
 	    $listOfTags['available'] = ['p','div','span','blockquote','table','ul','ol','h1','h2','h3','h4','h5','h6','strong',];
-	    $listOfSymbolsForEcranising = '(\/|\$|\^|\.|\,|\&|\||\(|\)|\+|\-|\*|\?|\!|\[|\]|\{|\}|\<|\>|\\\){1}';
+	    $listOfSymbolsForEcranising = '(\/|\$|\^|\.|\,|\&|\||\(|\)|\+|\-|\*|\?|\!|\[|\]|\{|\}|\<|\>|\\\|\~){1}';
         if (empty($isRepeated)) {
             foreach ($listOfTags AS $affiliation => $listItems) {
                 for ($lc = 0; $lc < count($listItems); $lc++) {
