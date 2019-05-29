@@ -336,6 +336,99 @@ function asyncFunctionLauncher() {
 }
 asyncFunctionLauncher();
 
+function old_asyncInsertingsInsertingFunction(insertingsArray) {
+    let currentElementForInserting = 0;
+    let positionElement = 0;
+    let position = 0;
+    let insertToAdd = 0;
+    let repeatSearch = 0;
+    if (insertingsArray&&insertingsArray.length > 0) {
+        for (let i = 0; i < insertingsArray.length; i++) {
+            if (!insertingsArray[i]['used']||(insertingsArray[i]['used']&&inserinsertingsArray[i]['used']==0)) {
+                positionElement = insertingsArray[i]['position_element'];
+                position = insertingsArray[i]['position'];
+                // insertToAdd = document.createElement('div');
+                // insertToAdd = document.createElement("<div class='addedInserting'>"+insertingsArray[i]['content']+"</div>");
+                // insertToAdd.classList.add('addedInserting');
+                // insertToAdd.innerHTML = insertingsArray[i]['content'];
+                // insertToAdd.innerHTML = insertToAdd.innerHTML.replace(/\\\'/,'\'',);
+                insertToAdd = insertingsArray[i]['content'];
+
+                currentElementForInserting = document.querySelector(positionElement);
+                if (currentElementForInserting) {
+                    if (position==0) {
+                        // jQuery(currentElementForInserting).html(insertToAdd);
+                        // currentElementForInserting.parentNode.insertBefore(insertToAdd, currentElementForInserting);
+                        insertingsArray[i]['used'] = 1;
+                    } else {
+                        // jQuery(currentElementForInserting).html(insertToAdd);
+                        // currentElementForInserting.parentNode.insertBefore(insertToAdd, currentElementForInserting.nextSibling);
+                        insertingsArray[i]['used'] = 1;
+                    }
+                }
+            }
+        }
+    }
+    if (repeatSearch == 1) {
+        setTimeout(function () {
+            asyncInsertingsInsertingFunction(insertingsArray);
+        }, 50)
+    }
+}
+
+function asyncInsertingsInsertingFunction(insertingsArray) {
+    let currentElementForInserting = 0;
+    let currentElementToMove = 0;
+    let positionElement = 0;
+    let position = 0;
+    let insertToAdd = 0;
+    let postId = 0;
+    let repeatSearch = 0;
+    if (insertingsArray&&insertingsArray.length > 0) {
+        for (let i = 0; i < insertingsArray.length; i++) {
+            if (!insertingsArray[i]['used']||(insertingsArray[i]['used']&&inserinsertingsArray[i]['used']==0)) {
+                positionElement = insertingsArray[i]['position_element'];
+                position = insertingsArray[i]['position'];
+                insertToAdd = insertingsArray[i]['content'];
+                postId = insertingsArray[i]['postId'];
+
+                currentElementForInserting = document.querySelector(positionElement);
+
+                currentElementToMove = document.querySelector('.coveredInsertings[data-id="'+postId+'"]');
+                if (currentElementForInserting) {
+                    if (position==0) {
+                        currentElementForInserting.parentNode.insertBefore(currentElementToMove, currentElementForInserting);
+                        currentElementToMove.classList.remove('coveredInsertings');
+                        insertingsArray[i]['used'] = 1;
+                    } else {
+                        currentElementForInserting.parentNode.insertBefore(currentElementToMove, currentElementForInserting.nextSibling);
+                        currentElementToMove.classList.remove('coveredInsertings');
+                        insertingsArray[i]['used'] = 1;
+                    }
+                } else {
+                    repeatSearch = 1;
+                }
+            }
+        }
+    }
+    if (repeatSearch == 1) {
+        setTimeout(function () {
+            asyncInsertingsInsertingFunction(insertingsArray);
+        }, 50)
+    }
+}
+
+function insertingsFunctionLaunch() {
+    if (window.jsInsertingsLaunch !== undefined&&jsInsertingsLaunch == 25) {
+        asyncInsertingsInsertingFunction(insertingsArray);
+    } else {
+        setTimeout(function () {
+            insertingsFunctionLaunch();
+        }, 50)
+    }
+}
+insertingsFunctionLaunch();
+
 function percentSeparator(lordOfElements) {
     var separator = lordOfElements.children;
     var lordOfElementsResult = 0;
