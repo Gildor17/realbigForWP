@@ -13,7 +13,7 @@ include (dirname(__FILE__)."/textEditing.php");
 /*
 Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.1.26.61
+Version:      0.1.26.62
 Author:       Realbig Team
 Author URI:   https://realbig.media
 License:      GPLv2 or later
@@ -27,6 +27,11 @@ try {
 	$devMode = false;
 	$GLOBALS['dev_mode'] = $devMode;
 
+//	global $wp_query;
+//	global $post;
+//
+//	$penyok_stoparik = 0;
+
 	if (empty(apply_filters('wp_doing_cron', defined('DOING_CRON')&&DOING_CRON))) {
 		require_once (dirname(__FILE__)."/../../../wp-includes/pluggable.php");
 		$curUserCan = current_user_can('activate_plugins');
@@ -37,10 +42,14 @@ try {
 		$wpPrefix = $wpdb->base_prefix;
 	}
 	$GLOBALS['wpPrefix'] = $wpPrefix;
-
 	$GLOBALS['excludedPagesChecked'] = false;
+	if (empty(apply_filters('wp_doing_cron', defined('DOING_CRON') && DOING_CRON))&&empty(is_admin())) {
+		$GLOBALS['liveInternet'] = [];
+//		$GLOBALS['liveInternet']['status'] = 'disabled';
+	}
 
 	/***************** Test zone ******************************************************************************************/
+	/** Kill rb connection emulation */
     // 1 - ok connection; 2 - error connection;
     if (!empty($GLOBALS['dev_mode'])) {
 	    $kill_rb_db = $wpdb->get_results('SELECT id,optionValue FROM '.$wpPrefix.'realbig_settings WHERE optionName = "kill_rb"', ARRAY_A);
@@ -79,7 +88,15 @@ try {
 	$kill_rb = 0;
 
 	$GLOBALS['kill_rb'] = $kill_rb;
-
+	/** End of kill rb connection emulation */
+	/** Some manipulations with posts */
+	if (is_admin()&&empty(apply_filters('wp_doing_cron', defined('DOING_CRON')&&DOING_CRON))) {
+//		$oldInserts = get_posts(['post_type' => 'rb_block_desktop','numberposts' => 100]);
+//		$oldInsertsIds = array_column($oldInserts,'id');
+//
+//		$penyok_stoparik = 0;
+	}
+	/** End of some manipulations with posts */
 	/***************** End of test zone ***********************************************************************************/
 	/***************** Cached AD blocks saving ***************************************************************************************/
 //	$rb_cache_timeout = get_transient('rb_cache_timeout');
@@ -108,7 +125,7 @@ try {
 	if (!empty($pluginData['Version'])) {
 		$GLOBALS['realbigForWP_version'] = $pluginData['Version'];
 	} else {
-		$GLOBALS['realbigForWP_version'] = '0.1.26.61';
+		$GLOBALS['realbigForWP_version'] = '0.1.26.62';
 	}
 	$lastSuccessVersionGatherer = get_option('realbig_status_gatherer_version');
 //	require_once( 'synchronising.php' );
@@ -446,6 +463,7 @@ try {
 				}
 			}
 		}
+		unset($k, $item);
 
 //        $httpsCheck = is_ssl();
 //		if (!empty($httpsCheck)) {
@@ -485,26 +503,85 @@ try {
 		}
 	}
 
-	if (!is_admin()) {
-		add_action('wp_head', 'RFWP_AD_header_add', 0);
-		$pushStatus = $wpdb->get_results($wpdb->prepare('SELECT optionName, optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName IN (%s, %s)', [
-			"pushCode",
-			"pushStatus"
-		]), ARRAY_A);
-		if (!empty($pushStatus)) {
-			if ($pushStatus[0]['optionName'] == 'pushStatus') {
-				$pushStatusValue = $pushStatus[0]['optionValue'];
-				$pushCode        = $pushStatus[1]['optionValue'];
-			} else {
-				$pushStatusValue = $pushStatus[1]['optionValue'];
-				$pushCode        = $pushStatus[0]['optionValue'];
-			}
-		}
-		if (!empty($pushStatus)&&!empty($pushStatusValue)&&!empty($pushCode)&&count($pushStatus)==2&&$pushStatusValue==1) {
-			add_action('wp_head', 'RFWP_push_head_add', 0);
-			$GLOBALS['pushCode'] = $pushCode;
-		}
+	function RFWP_liveInternet_add($content) {
+	    $penyok_stoparik = 0;
+	    ?><?php //echo $GLOBALS['liveInternetCode'] ?><?php
     }
+
+    function RFWP_inserts_head_add() {
+	    $contentToAdd = RFWP_insertsToString('head');
+	    $stringToAdd = '';
+	    foreach ($contentToAdd['header'] AS $k=>$item) {
+	        $stringToAdd .= $item['content'];
+        }
+        ?><?php echo $stringToAdd ?><?php
+    }
+
+//	function RFWP_liveInternet_add($content) {
+//	    $content = $GLOBALS['liveInternet']['code'].$content;
+//	    return $content;
+//    }
+
+//	function RFWP_liveInternet_add($content) {
+//	    $content = $content.$GLOBALS['liveInternet']['code'];
+//	    return $content;
+//    }
+
+		// new
+	if (!is_admin()&&empty(apply_filters('wp_doing_cron', defined('DOING_CRON')&&DOING_CRON))) {
+		add_action('wp_head', 'RFWP_AD_header_add', 0);
+		$separatedStatuses = [];
+		$statuses = $wpdb->get_results($wpdb->prepare('SELECT optionName, optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName IN (%s, %s, %s, %s)', [
+			"pushCode",
+			"pushStatus",
+			"liveInternetCode",
+			"activeLiveInterner"
+		]), ARRAY_A);
+		if (!empty($statuses)) {
+		    foreach ($statuses AS $k => $item) {
+			    $separatedStatuses[$item['optionName']] = $item['optionValue'];
+            }
+			if (!empty($separatedStatuses)&&!empty($separatedStatuses['pushCode'])&&isset($separatedStatuses['pushStatus'])&&$separatedStatuses['pushStatus']==1) {
+				add_action('wp_head', 'RFWP_push_head_add', 0);
+				$GLOBALS['pushCode'] = $separatedStatuses['pushCode'];
+            }
+            if (!empty($separatedStatuses)&&!empty($separatedStatuses['liveInternetCode'])&&isset($separatedStatuses['activeLiveInterner'])&&$separatedStatuses['activeLiveInterner']==1) {
+	            add_action('wp_head', 'RFWP_liveInternet_add', 100);
+	            $liveInternetCode = htmlspecialchars_decode($separatedStatuses['liveInternetCode']);
+//	            $GLOBALS['liveInternetCode'] = htmlspecialchars_decode($separatedStatuses['liveInternetCode']);
+	            if (!empty($liveInternetCode)) {
+//		            $GLOBALS['liveInternet']['status'] = 'enabled';
+		            $GLOBALS['liveInternet']['code'] = $liveInternetCode;
+//		            add_action('the_content', 'RFWP_liveInternet_add', 0);
+//		            add_action('the_title', 'RFWP_liveInternet_add', 0);
+	            }
+//	            $GLOBALS['liveInternetCode'] = $separatedStatuses['liveInternetCode'];
+            }
+		}
+		add_action('wp_head', 'RFWP_inserts_head_add', 0);
+	}
+
+//    // actual
+//	if (!is_admin()) {
+//		add_action('wp_head', 'RFWP_AD_header_add', 0);
+//		$pushStatus = $wpdb->get_results($wpdb->prepare('SELECT optionName, optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName IN (%s, %s)', [
+//			"pushCode",
+//			"pushStatus"
+//		]), ARRAY_A);
+//		if (!empty($pushStatus)) {
+//			if ($pushStatus[0]['optionName'] == 'pushStatus') {
+//				$pushStatusValue = $pushStatus[0]['optionValue'];
+//				$pushCode        = $pushStatus[1]['optionValue'];
+//			} else {
+//				$pushStatusValue = $pushStatus[1]['optionValue'];
+//				$pushCode        = $pushStatus[0]['optionValue'];
+//			}
+//		}
+//		if (!empty($pushStatus)&&!empty($pushStatusValue)&&!empty($pushCode)&&count($pushStatus)==2&&$pushStatusValue==1) {
+//			add_action('wp_head', 'RFWP_push_head_add', 0);
+//			$GLOBALS['pushCode'] = $pushCode;
+//		}
+//    }
 
 	/********** end of adding AD code in head area ************************************************************************/
 	/********** manual sync ***********************************************************************************************/
@@ -531,12 +608,32 @@ try {
 	/************* blocks for text ****************************************************************************************/
 //	if ($mainPageStatus == 2||empty($excludedPage)) {
 	if (empty(apply_filters('wp_doing_cron', defined('DOING_CRON')&&DOING_CRON))&&empty($excludedPage)) {
-		RFWP_js_add();
-		add_filter('the_content', 'RFWP_adBlocksToContentInsertingFunction', 5000);
+//		RFWP_js_add();
+		add_filter('the_content', 'RFWP_adBlocksToContentInsertingFunction', 500);
 	}
+
+//	insertings body add
+    if (empty(apply_filters('wp_doing_cron', defined('DOING_CRON')&&DOING_CRON))&&!is_admin()) {
+	    RFWP_js_add();
+	    add_filter('the_content', 'RFWP_insertingsToContentAddingFunction', 501);
+    }
+
 	/************* end blocks for text ************************************************************************************/
+	/************* adding insertings in text *****************************************************/
+    function RFWP_insertingsToContentAddingFunction($content) {
+        $penyok_stoparik = 0;
+        $insertings = RFWP_insertsToString('body');
+
+	    $content = RFWP_insertingsToContent($content, $insertings);
+        return $content;
+    }
+	/************* adding insertings in text *****************************************************/
 	/********** using settings in texts ***********************************************************************************/
 	function RFWP_adBlocksToContentInsertingFunction($content) {
+
+		global $wp_query;
+		global $post;
+
 		$pasingAllowed = true;
 		$arrayOfCheckedTypes = [
 			'is_home' => is_home(),
@@ -545,6 +642,7 @@ try {
 			'is_single' => is_single(),
 			'is_singular' => is_singular(),
 			'is_archive' => is_archive(),
+            'is_category' => is_category(),
 		];
 
 	    if ((!empty($arrayOfCheckedTypes['is_home'])||!empty($arrayOfCheckedTypes['is_front_page']))&&!empty($GLOBALS['pageChecks']['excludedMainPage'])) {
@@ -613,6 +711,8 @@ try {
 //
 //			    }
 
+                $inserts = RFWP_insertsToString('body');
+
 			    $rotatorUrl = $GLOBALS['rotatorUrl'];
 			    $rotatorResponce = wp_safe_remote_head($rotatorUrl, ['timeout' => 1]);
 
@@ -621,7 +721,7 @@ try {
 				    ?><script>console.log('using cache')</script><?php
 				    $mobileCheck = RFWP_wp_is_mobile();
 				    if (!empty($mobileCheck)) {
-					    $cachedBlocks = get_posts(['post_type' => 'rb_block_mobile']);
+					    $cachedBlocks = get_posts(['post_type' => 'rb_block_mobile','numberposts' => 100]);
 				    } else {
 					    $cachedBlocks = get_posts(['post_type' => 'rb_block_desktop','numberposts' => 100]);
 				    }
@@ -633,7 +733,7 @@ try {
 				    $fromDb = $wpdb->get_results('SELECT * FROM '.$GLOBALS['wpPrefix'].'realbig_plugin_settings WGPS WHERE setting_type = 3');
 			    }
 			    require_once (dirname(__FILE__)."/textEditing.php");
-			    $content = RFWP_addIcons($fromDb, $content, 'content', $cachedBlocks);
+			    $content = RFWP_addIcons($fromDb, $content, 'content', $cachedBlocks, $inserts);
 
 			    return $content;
 		    } else {

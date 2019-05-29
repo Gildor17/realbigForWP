@@ -108,6 +108,7 @@ try {
 									    $counter ++;
 									    $sqlTokenSave .= ($counter != 1 ? ", " : "") . "('" . $item['text'] . "', " . (int) sanitize_text_field($item['block_number']) . ", " . (int) sanitize_text_field($item['setting_type']) . ", '" . sanitize_text_field($item['element']) . "', '" . sanitize_text_field( $item['directElement'] ) . "', " . (int) sanitize_text_field($item['elementPosition']) . ", " . (int) sanitize_text_field($item['elementPlace']) . ", " . (int) sanitize_text_field($item['firstPlace']) . ", " . (int) sanitize_text_field($item['elementCount']) . ", " . (int) sanitize_text_field($item['elementStep']) . ", " . (int) sanitize_text_field($item['minSymbols']) . ", " . (int) sanitize_text_field($item['minHeaders']) . ")";
 								    }
+								    unset($k, $item);
 								    $sqlTokenSave .= " ON DUPLICATE KEY UPDATE text = values(text), setting_type = values(setting_type), element = values(element), directElement = values(directElement), elementPosition = values(elementPosition), elementPlace = values(elementPlace), firstPlace = values(firstPlace), elementCount = values(elementCount), elementStep = values(elementStep), minSymbols = values(minSymbols), minHeaders = values(minHeaders) ";
 								    $wpdb->query($sqlTokenSave);
 							    } elseif (empty($decodedToken['data'])&&sanitize_text_field($decodedToken['status']) == "empty_success") {
@@ -172,6 +173,62 @@ try {
 								    }
 							    }
 							    /** End of excluded page types */
+							    /** Live internet code */
+//							    if (isset($decodedToken['liveInternetCode'])) {
+//							        $liveInternetCode = sanitize_text_field($decodedToken['liveInternetCode']);
+//								    $getLiveInternetCode = $wpdb->get_var('SELECT id FROM '.$wpPrefix.'realbig_settings WHERE optionName = "liveInternetCode"');
+//								    if (!empty($getLiveInternetCode)) {
+//									    $updateResult = $wpdb->update($wpPrefix.'realbig_settings', ['optionName'=>'liveInternetCode', 'optionValue'=>$liveInternetCode],
+//										    ['optionName' => 'liveInternetCode']);
+//                                    } else {
+//									    $wpdb->insert($wpPrefix.'realbig_settings', ['optionName'=>'liveInternetCode', 'optionValue'=>$liveInternetCode]);
+//								    }
+//							    }
+							    /** End of live internet code */
+							    /** Live internet active check */
+//							    if (isset($decodedToken['activeLiveInterner'])) {
+//							        $activeLiveInternet = sanitize_text_field($decodedToken['activeLiveInterner']);
+//								    $getActiveLiveInternet = $wpdb->get_var('SELECT id FROM '.$wpPrefix.'realbig_settings WHERE optionName = "activeLiveInterner"');
+//								    if (!empty($getLiveInternetCode)) {
+//									    $updateResult = $wpdb->update($wpPrefix.'realbig_settings', ['optionName'=>'activeLiveInterner', 'optionValue'=>$activeLiveInternet],
+//										    ['optionName' => 'activeLiveInterner']);
+//                                    } else {
+//									    $wpdb->insert($wpPrefix.'realbig_settings', ['optionName'=>'activeLiveInterner', 'optionValue'=>$activeLiveInternet]);
+//								    }
+//							    }
+							    /** End of live internet active check */
+							    /** Insertings */
+							    if (!empty($decodedToken['insertings'])) {
+								    $insertings = $decodedToken['insertings'];
+                                    $oldInserts = get_posts(['post_type' => 'rb_inserting','numberposts' => 100]);
+                                    if (!empty($oldInserts)&&in_array($insertings['status'],['ok','empty'])) {
+	                                    foreach ($oldInserts AS $k => $item) {
+		                                    wp_delete_post($item->ID);
+                                        }
+	                                    unset($k, $item);
+                                    }
+
+							        if ($insertings['status']='ok') {
+							            foreach ($insertings['data'] AS $k=>$item) {
+							                $content_for_post = 'begin_of_header_code'.$item['headerField'].'end_of_header_code&begin_of_body_code'.$item['bodyField'].'end_of_body_code';
+
+								            $postarr = [
+									            'post_content' => $content_for_post,
+									            'post_title'   => $item['position_element'],
+									            'post_excerpt' => $item['position'],
+									            'post_name'    => $item['name'],
+									            'post_status'  => "publish",
+									            'post_type'    => 'rb_inserting',
+									            'post_author'  => 0
+								            ];
+								            require_once(dirname(__FILE__ ) . "/../../../wp-includes/pluggable.php");
+								            $saveInsertResult = wp_insert_post($postarr, true);
+                                        }
+								        unset($k, $item);
+							        }
+                                }
+							    /** End of insertings */
+
 							    $GLOBALS['token'] = $tokenInput;
 
 							    delete_transient('rb_mobile_cache_timeout' );
@@ -367,6 +424,7 @@ try {
             'is_single' => 'is_single',
             'is_singular' => 'is_singular',
             'is_archive' => 'is_archive',
+            'is_category' => 'is_category',
         ];
 //		return [
 //			1 => 'is_home',

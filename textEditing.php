@@ -11,44 +11,53 @@ if (!defined("ABSPATH")) { exit;}
 
 try {
     function RFWP_gatheringContentLength($content, $isRepeated=null) {
-	    $contentForLength = '';
-	    $contentLength = 0;
-	    $cuttedContent = $content;
-	    $listOfTags = [];
-	    $listOfTags['unavailable'] = ['ins','script','style'];
-	    $listOfTags['available'] = ['p','div','span','blockquote','table','ul','ol','h1','h2','h3','h4','h5','h6','strong',];
-	    $listOfSymbolsForEcranising = '(\/|\$|\^|\.|\,|\&|\||\(|\)|\+|\-|\*|\?|\!|\[|\]|\{|\}|\<|\>|\\\|\~){1}';
-        if (empty($isRepeated)) {
-            foreach ($listOfTags AS $affiliation => $listItems) {
-                for ($lc = 0; $lc < count($listItems); $lc++) {
-	                $cycler = 1;
-                    $tg1 = $listItems[$lc];
-                    $pattern1 = '~(<'.$tg1.'>|<'.$tg1.'\s[^>]*?>)(((?!<'.$tg1.'>)(?!<'.$tg1.'\s[^>]*?>))[\s\S]*?)(<\/'.$tg1.'>)~';
+        try {
+	        $contentForLength = '';
+	        $contentLength = 0;
+	        $cuttedContent = $content;
+	        $listOfTags = [];
+	        $listOfTags['unavailable'] = ['ins','script','style'];
+	        $listOfTags['available'] = ['p','div','span','blockquote','table','ul','ol','h1','h2','h3','h4','h5','h6','strong',];
+	        $listOfSymbolsForEcranising = '(\/|\$|\^|\.|\,|\&|\||\(|\)|\+|\-|\*|\?|\!|\[|\]|\{|\}|\<|\>|\\\|\~){1}';
+	        if (empty($isRepeated)) {
+		        foreach ($listOfTags AS $affiliation => $listItems) {
+			        for ($lc = 0; $lc < count($listItems); $lc++) {
+				        $cycler = 1;
+				        $tg1 = $listItems[$lc];
+				        $pattern1 = '~(<'.$tg1.'>|<'.$tg1.'\s[^>]*?>)(((?!<'.$tg1.'>)(?!<'.$tg1.'\s[^>]*?>))[\s\S]*?)(<\/'.$tg1.'>)~';
 
-                    while (!empty($cycler)) {
-	                    preg_match($pattern1, $cuttedContent, $clMatch);
-	                    if (!empty($clMatch[0])) {
-		                    if ($affiliation == 'available') {
-			                    $contentForLength .= $clMatch[0];
-		                    }
-		                    $resItem = preg_replace('~'.$listOfSymbolsForEcranising.'~', '\\\$1', $clMatch[0], -1, $crc);
-		                    $cuttedContent = preg_replace('~'.$resItem.'~', '', $cuttedContent, 1,$repCount);
-		                    $cycler = 1;
-	                    } else {
-	                        $cycler = 0;
-                        }
-                    }
-                }
-            }
+				        while (!empty($cycler)) {
+					        preg_match($pattern1, $cuttedContent, $clMatch);
+					        if (!empty($clMatch[0])) {
+						        if ($affiliation == 'available') {
+							        $contentForLength .= $clMatch[0];
+						        }
+						        // if nothing help, change system to array with loop type
+//		                    $resItem = preg_replace('~'.$listOfSymbolsForEcranising.'~', '\\\$1', $clMatch[0], -1, $crc);
+//		                    $cuttedContent = preg_replace('~'.$resItem.'~', '', $cuttedContent, 1,$repCount);
+						        $resItem = preg_replace_callback('~'.$listOfSymbolsForEcranising.'~', function ($matches) {return '\\'.$matches[1];}, $clMatch[0], -1, $crc);
+						        $cuttedContent = preg_replace_callback('~'.$resItem.'~', function () {return '';}, $cuttedContent, 1,$repCount);
+						        $cycler = 1;
+					        } else {
+						        $cycler = 0;
+					        }
+				        }
+			        }
+		        }
 
-	        $contentLength = mb_strlen(strip_tags($contentForLength), 'utf-8');
-	        return $contentLength;
-        } else {
-	        return $contentLength;
+		        $contentLength = mb_strlen(strip_tags($contentForLength), 'utf-8');
+		        return $contentLength;
+	        } else {
+		        return $contentLength;
+	        }
+        } catch (Exception $ex1) {
+	        return 0;
+        } catch (Error $er1) {
+	        return 0;
         }
     }
 
-	function RFWP_addIcons($fromDb, $content, $contentType, $cachedBlocks) {
+	function RFWP_addIcons($fromDb, $content, $contentType, $cachedBlocks, $inserts) {
 		try {
 			$editedContent         = $content;
 			$contentLength         = 0;
@@ -361,6 +370,132 @@ try {
 			return false;
 		}
 	}
+
+	/** Insertings to end of content adding **********/
+	function original_RFWP_insertingsToContent($content, $insertings) {
+        $jsScriptString = '';
+        $currentItemContent = '';
+        $insertings = $insertings['body'];
+        $counter = 0;
+
+        $jsScriptString .= '<script>'.PHP_EOL;
+		$jsScriptString .= 'var insertingsArray = [];'.PHP_EOL;
+        // move blocks in lopp and add to js string
+        foreach ($insertings AS $k=>$item) {
+            if (!empty($item['content'])) {
+	            if (empty($item['position_element'])) {
+		            $content .= $item['content'];
+	            } else {
+		            $jsScriptString .= 'insertingsArray['.$counter.'] = [];'.PHP_EOL;
+		            $currentItemContent = $item['content'];
+		            $currentItemContent = preg_replace('~(\'|\")~','\\\$1',$currentItemContent);
+		            $currentItemContent = preg_replace('~(\r\n)~','',$currentItemContent);
+		            $currentItemContent = preg_replace('~(\<\/script\>)~','</scr"+"ipt>',$currentItemContent);
+		            $jsScriptString .= 'insertingsArray['.$counter.'][\'content\'] = "'.$currentItemContent.'"'.PHP_EOL;
+		            $jsScriptString .= 'insertingsArray['.$counter.'][\'position_element\'] = "'.$item['position_element'].'"'.PHP_EOL;
+		            $jsScriptString .= 'insertingsArray['.$counter.'][\'position\'] = "'.$item['position'].'"'.PHP_EOL;
+
+		            $counter++;
+	            }
+            }
+        }
+		$jsScriptString .= 'var jsInsertingsLaunch = 25;'.PHP_EOL;
+		$jsScriptString .= '</script>';
+
+		$content .= $jsScriptString;
+
+		return $content;
+    }
+
+	function RFWP_insertingsToContent($content, $insertings) {
+        $jsScriptString = '';
+		$cssScriptString = '';
+        $currentItemContent = '';
+        $insertings = $insertings['body'];
+        $counter = 0;
+
+		$cssScriptString .= '<style>
+    .coveredInsertings {
+//        max-height: 1px;
+//        max-width: 1px;
+    }
+</style>';
+
+		$jsScriptString .= '<script>'.PHP_EOL;
+		$jsScriptString .= 'var insertingsArray = [];'.PHP_EOL;
+        // move blocks in lopp and add to js string
+        foreach ($insertings AS $k=>$item) {
+            if (!empty($item['content'])) {
+	            if (empty($item['position_element'])) {
+		            $content .= '<div class="addedInserting">'.$item['content'].'</div>';
+	            } else {
+		            $content .= '<div class="addedInserting coveredInsertings" data-id="'.$item['postId'].'">'.$item['content'].'</div>';
+
+		            $jsScriptString .= 'insertingsArray['.$counter.'] = [];'.PHP_EOL;
+		            $currentItemContent = $item['content'];
+		            $currentItemContent = preg_replace('~(\'|\")~','\\\$1',$currentItemContent);
+		            $currentItemContent = preg_replace('~(\r\n)~','',$currentItemContent);
+		            $currentItemContent = preg_replace('~(\<\/script\>)~','</scr"+"ipt>',$currentItemContent);
+		            $jsScriptString .= 'insertingsArray['.$counter.'][\'content\'] = "'.$currentItemContent.'"'.PHP_EOL;
+		            $jsScriptString .= 'insertingsArray['.$counter.'][\'position_element\'] = "'.$item['position_element'].'"'.PHP_EOL;
+		            $jsScriptString .= 'insertingsArray['.$counter.'][\'position\'] = "'.$item['position'].'"'.PHP_EOL;
+		            $jsScriptString .= 'insertingsArray['.$counter.'][\'postId\'] = "'.$item['postId'].'"'.PHP_EOL;
+
+		            $counter++;
+	            }
+            }
+        }
+		$jsScriptString .= 'var jsInsertingsLaunch = 25;'.PHP_EOL;
+		$jsScriptString .= '</script>';
+
+		$content .= $cssScriptString.$jsScriptString;
+
+		return $content;
+    }
+	/** End of insertings to end of content adding ***/
+
+	function RFWP_insertsToString($type) {
+        global $wpdb;
+        $result = [];
+        $result['header'] = [];
+		$result['body'] = [];
+
+        try {
+            $posts = get_posts(['post_type' => 'rb_inserting','numberposts' => 100]);
+            if (!empty($posts)) {
+                $counter = 0;
+                if ($type=='header') {
+	                $gatheredHeader = '';
+	                foreach ($posts AS $k=>$item) {
+		                $result['header'][$counter] = [];
+		                // here should be a regex with gathering from package and decoding
+		                $gatheredHeader = $item->post_content;
+		                $gatheredHeader = preg_match('~begin_of_header_code([\s\S]*?)end_of_header_code~',$gatheredHeader,$headerMatches);
+		                $gatheredHeader = htmlspecialchars_decode($headerMatches[1]);
+                        $result['header'][$counter]['content'] = $gatheredHeader;
+                        $counter++;
+                    }
+                } else {
+	                $gatheredBody = '';
+	                $gatheredBodyPosition_element = '';
+	                $gatheredBodyPosition = '';
+	                foreach ($posts AS $k=>$item) {
+		                $result['body'][$counter] = [];
+		                // here should be a regex with gathering from package and decoding
+		                $gatheredBody = $item->post_content;
+		                $gatheredBody = preg_match('~begin_of_body_code([\s\S]*?)end_of_body_code~',$gatheredBody,$bodyMatches);
+		                $gatheredBody = htmlspecialchars_decode($bodyMatches[1]);
+		                $result['body'][$counter]['content'] = $gatheredBody;
+		                $result['body'][$counter]['position_element'] = $item->post_title;
+		                $result['body'][$counter]['position'] = $item->post_excerpt;
+		                $result['body'][$counter]['postId'] = $item->ID;
+		                $counter++;
+	                }
+                }
+            }
+        } catch (Exception $e) {}
+        return $result;
+    }
 
 	function RFWP_creatingJavascriptParserForContentFunction($fromDb, $usedBlocks, $contentLength) {
 		try {
