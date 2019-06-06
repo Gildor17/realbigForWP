@@ -18,8 +18,8 @@ try {
 
 			try {
 //			$url = 'https://realbigweb/api/wp-get-settings';     // orig web post
-//			$url = 'https://beta.realbig.media/api/wp-get-settings';     // beta post
-			$url = 'https://realbig.media/api/wp-get-settings';     // orig post
+			$url = 'https://beta.realbig.media/api/wp-get-settings';     // beta post
+//			$url = 'https://realbig.media/api/wp-get-settings';     // orig post
 
                 /** for WP request **/
 				$dataForSending = [
@@ -103,13 +103,24 @@ try {
 
 								    $counter = 0;
 								    $wpdb->query( 'DELETE FROM ' . $wpPrefix . 'realbig_plugin_settings');
-								    $sqlTokenSave = "INSERT INTO " . $wpPrefix . "realbig_plugin_settings (text, block_number, setting_type, element, directElement, elementPosition, elementPlace, firstPlace, elementCount, elementStep, minSymbols, minHeaders) VALUES ";
+								    $sqlTokenSave = "INSERT INTO " . $wpPrefix . "realbig_plugin_settings (text, block_number, setting_type, element, directElement, elementPosition, elementPlace, firstPlace, elementCount, elementStep, minSymbols, minHeaders, onCategories, offCategories, onTags, offTags) VALUES ";
 								    foreach ( $decodedToken['data'] AS $k => $item ) {
+//								        foreach ($item AS $k1 => $item1) {
+//								            if (in_array($k1, ['onCategories', 'offCategories', 'onTags', 'offTags'])) {
+//								                if (empty($item1)) {
+//								                    $item[$k1] = 'null';
+//                                                }
+//                                            }
+//                                        }
+//									    unset($k1, $item1);
+//
+									    $penyok_stoparik = 0;
+
 									    $counter ++;
-									    $sqlTokenSave .= ($counter != 1 ? ", " : "") . "('" . $item['text'] . "', " . (int) sanitize_text_field($item['block_number']) . ", " . (int) sanitize_text_field($item['setting_type']) . ", '" . sanitize_text_field($item['element']) . "', '" . sanitize_text_field( $item['directElement'] ) . "', " . (int) sanitize_text_field($item['elementPosition']) . ", " . (int) sanitize_text_field($item['elementPlace']) . ", " . (int) sanitize_text_field($item['firstPlace']) . ", " . (int) sanitize_text_field($item['elementCount']) . ", " . (int) sanitize_text_field($item['elementStep']) . ", " . (int) sanitize_text_field($item['minSymbols']) . ", " . (int) sanitize_text_field($item['minHeaders']) . ")";
+									    $sqlTokenSave .= ($counter != 1 ? ", " : "") . "('" . $item['text'] . "', " . (int) sanitize_text_field($item['block_number']) . ", " . (int) sanitize_text_field($item['setting_type']) . ", '" . sanitize_text_field($item['element']) . "', '" . sanitize_text_field( $item['directElement'] ) . "', " . (int) sanitize_text_field($item['elementPosition']) . ", " . (int) sanitize_text_field($item['elementPlace']) . ", " . (int) sanitize_text_field($item['firstPlace']) . ", " . (int) sanitize_text_field($item['elementCount']) . ", " . (int) sanitize_text_field($item['elementStep']) . ", " . (int) sanitize_text_field($item['minSymbols']) . ", " . (int) sanitize_text_field($item['minHeaders']).", '".sanitize_text_field($item['onCategories'])."', '".sanitize_text_field($item['offCategories'])."', '".sanitize_text_field($item['onTags'])."', '".sanitize_text_field($item['offTags'])."')";
 								    }
 								    unset($k, $item);
-								    $sqlTokenSave .= " ON DUPLICATE KEY UPDATE text = values(text), setting_type = values(setting_type), element = values(element), directElement = values(directElement), elementPosition = values(elementPosition), elementPlace = values(elementPlace), firstPlace = values(firstPlace), elementCount = values(elementCount), elementStep = values(elementStep), minSymbols = values(minSymbols), minHeaders = values(minHeaders) ";
+								    $sqlTokenSave .= " ON DUPLICATE KEY UPDATE text = values(text), setting_type = values(setting_type), element = values(element), directElement = values(directElement), elementPosition = values(elementPosition), elementPlace = values(elementPlace), firstPlace = values(firstPlace), elementCount = values(elementCount), elementStep = values(elementStep), minSymbols = values(minSymbols), minHeaders = values(minHeaders), minHeaders = values(onCategories), minHeaders = values(offCategories), minHeaders = values(onTags), minHeaders = values(offTags) ";
 								    $wpdb->query($sqlTokenSave);
 							    } elseif (empty($decodedToken['data'])&&sanitize_text_field($decodedToken['status']) == "empty_success") {
 								    $wpdb->query('DELETE FROM '.$wpPrefix.'realbig_plugin_settings');
@@ -219,7 +230,10 @@ try {
 									            'post_name'    => $item['name'],
 									            'post_status'  => "publish",
 									            'post_type'    => 'rb_inserting',
-									            'post_author'  => 0
+									            'post_author'  => 0,
+									            'pinged'       => $item['limitationUse'],
+//									            'pinged'       => 12,
+//									            'post_content_filtered' => 12,
 								            ];
 								            require_once(dirname(__FILE__ ) . "/../../../wp-includes/pluggable.php");
 								            $saveInsertResult = wp_insert_post($postarr, true);
@@ -289,6 +303,108 @@ try {
 					}
 				}
 			}
+		}
+	}
+
+	if (!function_exists('RFWP_savingCodeForCache')) {
+		function RFWP_savingCodeForCache($blocksAd=null) {
+			global $wpdb;
+			global $wpPrefix;
+//            global $token;
+            $resultTypes = [];
+
+            try {
+    			$url = 'https://realbigweb/api/wp-get-ads';     // orig web post
+//                $url = 'https://beta.realbig.media/api/wp-get-ads';     // beta post
+    //			$url = 'https://realbig.media/api/wp-get-ads';     // orig post
+
+	            $dataForSending = [
+		            'body'  => [
+//			            'token'    => $token,
+			            'blocksAd' => $blocksAd
+		            ]
+	            ];
+
+//	            $jsonResult = wp_safe_remote_post($url, $dataForSending);
+                $jsonToken = wp_remote_post($url, $dataForSending);
+
+                if (!empty($jsonResult)&&!is_wp_error($jsonResult)) {
+                    $decodedResult = json_decode($jsonResult, true);
+                    if (!empty($decodedResult)) {
+	                    $sanitisedStatus = sanitize_text_field($decodedResult['status']);
+	                    if ($sanitisedStatus=='success') {
+	                        $resultData = $decodedResult['data'];
+
+		                    $resultTypes['mobile'] = false;
+		                    $resultTypes['desktop'] = false;
+		                    $resultTypes['universal'] = false;
+
+		                    foreach ($resultData AS $rk => $ritem) {
+	                            switch ($ritem['type']) {
+                                    case 'mobile':
+	                                    $postCheckMobile  = $wpdb->get_var($wpdb->prepare('SELECT id FROM '.$wpPrefix.'posts WHERE post_type = %s AND post_title = %s',['rb_block_mobile',$ritem['blockId']]));
+	                                    $resultTypes['mobile'] = true;
+	                                    break;
+                                    case 'desktop':
+	                                    $postCheckDesktop = $wpdb->get_var($wpdb->prepare('SELECT id FROM '.$wpPrefix.'posts WHERE post_type = %s AND post_title = %s',['rb_block_desktop',$ritem['blockId']]));
+	                                    $resultTypes['desktop'] = true;
+	                                    break;
+                                    case 'universal':
+	                                    $postCheckMobile  = $wpdb->get_var($wpdb->prepare('SELECT id FROM '.$wpPrefix.'posts WHERE post_type = %s AND post_title = %s',['rb_block_mobile',$ritem['blockId']]));
+	                                    $postCheckDesktop = $wpdb->get_var($wpdb->prepare('SELECT id FROM '.$wpPrefix.'posts WHERE post_type = %s AND post_title = %s',['rb_block_desktop',$ritem['blockId']]));
+	                                    $resultTypes['universal'] = true;
+	                                    break;
+                                }
+
+		                        if (!empty($postCheckMobile)) {
+			                        $postarr = ['ID' => $postCheckMobile, 'post_content' => $ritem['code']];
+			                        $updateBlockResultMobile = wp_update_post($postarr, true);
+		                        } else {
+			                        $postarr = [
+				                        'post_content' => $ritem['code'],
+				                        'post_title'   => $ritem['blockId'],
+				                        'post_status'  => "publish",
+				                        'post_type'    => 'rb_block_mobile',
+				                        'post_author'  => 0
+			                        ];
+			                        require_once(dirname(__FILE__ )."/../../../wp-includes/pluggable.php");
+			                        $saveBlockResultMobile = wp_insert_post($postarr, true);
+		                        }
+		                        if (!empty($postCheckDesktop)) {
+			                        $postarr = ['ID' => $postCheckDesktop, 'post_content' => $ritem['code']];
+			                        $updateBlockResultDesktop = wp_update_post($postarr, true);
+		                        } else {
+			                        $postarr = [
+				                        'post_content' => $ritem['code'],
+				                        'post_title'   => $ritem['blockId'],
+				                        'post_status'  => "publish",
+				                        'post_type'    => 'rb_block_desktop',
+				                        'post_author'  => 0
+			                        ];
+			                        require_once(dirname(__FILE__ )."/../../../wp-includes/pluggable.php");
+			                        $saveBlockResultDesktop = wp_insert_post($postarr, true);
+		                        }
+	                        }
+                            unset($rk,$ritem);
+
+		                    set_transient('rb_cache_timeout', '60', 60);
+		                    if (!empty($resultTypes['mobile'])&&empty($resultTypes['desktop'])) {
+			                    set_transient('rb_mobile_cache_timeout', '60', 60*60);
+                            } elseif (empty($resultTypes['mobile'])&&!empty($resultTypes['desktop'])) {
+			                    set_transient('rb_desktop_cache_timeout', '60', 60*60);
+                            } elseif (empty($resultTypes['mobile'])&&empty($resultTypes['desktop'])&&!empty($resultTypes['universal'])) {
+			                    set_transient('rb_mobile_cache_timeout', '60', 60*60);
+			                    set_transient('rb_desktop_cache_timeout', '60', 60*60);
+                            }
+		                    delete_transient('rb_active_cache');
+	                    }
+                    }
+                }
+	            return true;
+            } catch (Exception $e) {
+                delete_transient('rb_active_cache');
+	            return false;
+            }
 		}
 	}
 
@@ -416,62 +532,62 @@ try {
 		}
 	}
 
-	function RFWP_getPageTypes() {
-        return [
-            'is_home' => 'is_home',
-            'is_front_page' => 'is_front_page',
-            'is_page' => 'is_page',
-            'is_single' => 'is_single',
-            'is_singular' => 'is_singular',
-            'is_archive' => 'is_archive',
-            'is_category' => 'is_category',
-        ];
-//		return [
-//			1 => 'is_home',
-//			2 => 'is_front_page',
-//			3 => 'is_page',
-//			4 => 'is_single',
-//			5 => 'is_singular',
-//			6 => 'is_archive',
-//		];
-    }
+	if (!function_exists('RFWP_autoSync')) {
+		function RFWP_getPageTypes() {
+			return [
+				'is_home' => 'is_home',
+				'is_front_page' => 'is_front_page',
+				'is_page' => 'is_page',
+				'is_single' => 'is_single',
+				'is_singular' => 'is_singular',
+				'is_archive' => 'is_archive',
+				'is_category' => 'is_category',
+			];
+		}
+	}
 
 //	if ( ! empty( $jsAutoSynchronizationStatus ) && $jsAutoSynchronizationStatus < 5 && ! empty( $_POST['funcActivator'] ) && $_POST['funcActivator'] == 'ready' ) {
 //	if (!empty($_POST["action"])&&$_POST["action"]=="heartbeat") {
 
     /** Auto Sync */
-	if (!function_exists('RFWP_statusGathererConstructor')) { }
-
+	if (!function_exists('RFWP_autoSync')) {
 		function RFWP_autoSync() {
-		set_transient('realbigPluginSyncProcess', 'true', 30);
-		global $wpdb;
-        $wpOptionsCheckerSyncTime = $wpdb->get_row($wpdb->prepare('SELECT optionValue FROM '.$GLOBALS['table_prefix'].'realbig_settings WHERE optionName = %s',[ "token_sync_time" ]));
-        if (!empty($wpOptionsCheckerSyncTime)) {
-            $wpOptionsCheckerSyncTime = get_object_vars($wpOptionsCheckerSyncTime);
-        }
-        $token      = RFWP_tokenChecking($GLOBALS['table_prefix']);
-        $ajaxResult = RFWP_synchronize($token, $wpOptionsCheckerSyncTime, true, $GLOBALS['table_prefix'], 'ajax');
+			set_transient('realbigPluginSyncProcess', 'true', 30);
+			global $wpdb;
+			$wpOptionsCheckerSyncTime = $wpdb->get_row($wpdb->prepare('SELECT optionValue FROM '.$GLOBALS['table_prefix'].'realbig_settings WHERE optionName = %s',[ "token_sync_time" ]));
+			if (!empty($wpOptionsCheckerSyncTime)) {
+				$wpOptionsCheckerSyncTime = get_object_vars($wpOptionsCheckerSyncTime);
+			}
+			$token      = RFWP_tokenChecking($GLOBALS['table_prefix']);
+			$ajaxResult = RFWP_synchronize($token, $wpOptionsCheckerSyncTime, true, $GLOBALS['table_prefix'], 'ajax');
+		}
 	}
 	/** End of auto Sync */
 
 	/** Creating Cron RB auto sync */
-	function RFWP_cronAutoGatheringLaunch() {
-        add_filter('cron_schedules', 'rb_addCronAutosync');
-        add_action( 'rb_cron_hook', 'rb_cron_exec' );
-        if (!($checkIt = wp_next_scheduled( 'rb_cron_hook' ))) {
-            wp_schedule_event( time(), 'autoSync', 'rb_cron_hook' );
-        }
+	if (!function_exists('RFWP_cronAutoGatheringLaunch')) {
+		function RFWP_cronAutoGatheringLaunch() {
+			add_filter('cron_schedules', 'rb_addCronAutosync');
+			add_action( 'rb_cron_hook', 'rb_cron_exec' );
+			if (!($checkIt = wp_next_scheduled( 'rb_cron_hook' ))) {
+				wp_schedule_event( time(), 'autoSync', 'rb_cron_hook' );
+			}
+		}
 	}
-	function rb_addCronAutosync($schedules) {
-		$schedules['autoSync'] = array(
-			'interval' => 20,
-			'display'  => esc_html__( 'autoSync' ),
-		);
-		return $schedules;
+	if (!function_exists('rb_addCronAutosync')) {
+		function rb_addCronAutosync($schedules) {
+			$schedules['autoSync'] = array(
+				'interval' => 20,
+				'display'  => esc_html__( 'autoSync' ),
+			);
+			return $schedules;
+		}
 	}
-	function RFWP_cronAutoSyncDelete() {
-        $checkIt = wp_next_scheduled('rb_cron_hook');
-        wp_unschedule_event( $checkIt, 'rb_cron_hook' );
+	if (!function_exists('RFWP_cronAutoSyncDelete')) {
+		function RFWP_cronAutoSyncDelete() {
+			$checkIt = wp_next_scheduled('rb_cron_hook');
+			wp_unschedule_event( $checkIt, 'rb_cron_hook' );
+		}
 	}
 	/** End of Creating Cron RB auto sync */
 }

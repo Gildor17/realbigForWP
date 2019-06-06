@@ -57,15 +57,27 @@ try {
         }
     }
 
-	function RFWP_addIcons($fromDb, $content, $contentType, $cachedBlocks, $inserts) {
+	function RFWP_addIcons($fromDb, $content, $contentType, $cachedBlocks, $inserts=null) {
 		try {
+
+			global $wp_query;
+			global $post;
+
 			$editedContent         = $content;
 			$contentLength         = 0;
+
+			$getPageTags = get_the_tags(get_the_ID());
+			$getPageCategories = get_the_category(get_the_ID());
 
 			$previousEditedContent = $editedContent;
 			$usedBlocksCounter     = 0;
 			$usedBlocks            = [];
 			$objArray              = [];
+			$onCategoriesArray = [];
+			$offCategoriesArray = [];
+			$onTagsArray = [];
+			$offTagsArray = [];
+
 
 			if (!empty($fromDb)) {
 			    /** New system for content length checking **/
@@ -96,12 +108,117 @@ try {
 						continue;
 					}
 
-					$elementText     = $item['text'];
+				    /************************************* */
+				    if (!empty($getPageCategories)) {
+					    $passAllowed = false;
+					    $passRejected = false;
+
+					    foreach ($getPageCategories AS $k1 => $item1) {
+					        $getPageCategories[$k1] = trim($getPageCategories[$k1]);
+						    $getPageCategories[$k1] = strtolower($getPageCategories[$k1]);
+                        }
+						unset($k1,$item1);
+
+						if (!empty($item['onCategories'])) {
+						    $onCategoriesArray = explode(':',trim($item['onCategories']));
+						    if (!empty($onCategoriesArray)&&count($onCategoriesArray) > 0) {
+						        foreach ($onCategoriesArray AS $k1 => $item1) {
+						            $currentCategory = trim($item1);
+						            $currentCategory = strtolower($currentCategory);
+
+						            if (in_array($currentCategory, $getPageCategories)) {
+							            $passAllowed = true;
+							            break;
+                                    }
+                                }
+                                unset($k1,$item1);
+						        if (!empty($passAllowed)) {
+						            $passAllowed = false;
+						            continue;
+                                }
+                            }
+                        } elseif (!empty($item['offCategories'])) {
+							$offCategoriesArray = explode(':',trim($item['offCategories']));
+							if (!empty($offCategoriesArray)&&count($offCategoriesArray) > 0) {
+								foreach ($offCategoriesArray AS $k1 => $item1) {
+									$currentCategory = trim($item1);
+									$currentCategory = strtolower($currentCategory);
+
+									if (in_array($currentCategory, $getPageCategories)) {
+										$passRejected = true;
+										break;
+									}
+								}
+								unset($k1,$item1);
+								if (!empty($passRejected)) {
+									$passRejected = false;
+									continue;
+								}
+							}
+						}
+                    }
+
+				    /************************************* */
+
+				    if (!empty($getPageTags)) {
+					    $passAllowed = false;
+					    $passRejected = false;
+
+					    foreach ($getPageTags AS $k1 => $item1) {
+							$getPageTags[$k1] = trim($getPageTags[$k1]);
+							$getPageTags[$k1] = strtolower($getPageTags[$k1]);
+                        }
+						unset($k1,$item1);
+
+						if (!empty($item['onTags'])) {
+							$onTagsArray = explode(':',trim($item['onTags']));
+						    if (!empty($onTagsArray)&&count($onTagsArray) > 0) {
+						        foreach ($onTagsArray AS $k1 => $item1) {
+						            $currentTag = trim($item1);
+							        $currentTag = strtolower($currentTag);
+
+						            if (in_array($currentTag, $getPageTags)) {
+							            $passAllowed = true;
+							            break;
+                                    }
+                                }
+                                unset($k1,$item1);
+						        if (!empty($passAllowed)) {
+						            $passAllowed = false;
+						            continue;
+                                }
+                            }
+                        } elseif (!empty($item['offTags'])) {
+							$offTagsArray = explode(':',trim($item['offTags']));
+							if (!empty($offTagsArray)&&count($offTagsArray) > 0) {
+								foreach ($offTagsArray AS $k1 => $item1) {
+									$currentTag = trim($item1);
+									$currentTag = strtolower($currentTag);
+
+									if (in_array($currentTag, $getPageTags)) {
+										$passRejected = true;
+										break;
+									}
+								}
+								unset($k1,$item1);
+								if (!empty($passRejected)) {
+									$passRejected = false;
+									continue;
+								}
+							}
+						}
+                    }
+				    /************************************* */
+
+				    $elementText     = $item['text'];
 					if (!empty($cachedBlocks)) {
                         foreach ($cachedBlocks AS $k1 => $item1) {
 	                        if ($item1->post_title==$item['block_number']) {
-		                        $elementText = $item1->post_content;
-		                        $correctElementText = preg_replace('~/script~', '/scr\'+\'ipt', $elementText);
+//		                        $elementText = $item1->post_content;
+		                        $elementText = preg_replace('~\<\/div\>~', htmlspecialchars_decode($item1->post_content).'</div>', $elementText);
+
+//		                        $correctElementText = preg_replace('~/script~', '/scr\'+\'ipt', $elementText);
+//		                        $correctElementText = preg_replace('~\<script~', '<scr\'+\'ipt', $elementText);
 		                        if (!empty($correctElementText)) {
 			                        $elementText = $correctElementText;
                                 }
@@ -136,9 +253,10 @@ try {
 							$elementNumber   = $item['elementPlace'];
 							break;
 					}
-					$elementText = "<div class='percentPointerClass'>".$elementText."</div>";
+					$fromDb[$k]->text = "<div class='percentPointerClass marked coveredAd' data-id='".$item['id']."'>".$elementText."</div>";
+				    $elementText = "<div class='percentPointerClass' data-id='".$item['id']."'>".$elementText."</div>";
 
-					$editedContent = preg_replace( '~(<blockquote[^>]*?\>)~i', '<bq_mark_begin>$1', $editedContent, -1);
+				    $editedContent = preg_replace( '~(<blockquote[^>]*?\>)~i', '<bq_mark_begin>$1', $editedContent, -1);
 					$editedContent = preg_replace( '~(<\/blockquote\>)~i', '$1<bq_mark_end>', $editedContent, -1);
 					$editedContent = preg_replace( '~(<table[^>]*?\>)~i', '<tab_mark_begin>$1', $editedContent, -1);
 					$editedContent = preg_replace( '~(<\/table\>)~i', '$1<tab_mark_end>', $editedContent, -1);
@@ -432,11 +550,11 @@ try {
 		            $content .= '<div class="addedInserting coveredInsertings" data-id="'.$item['postId'].'">'.$item['content'].'</div>';
 
 		            $jsScriptString .= 'insertingsArray['.$counter.'] = [];'.PHP_EOL;
-		            $currentItemContent = $item['content'];
-		            $currentItemContent = preg_replace('~(\'|\")~','\\\$1',$currentItemContent);
-		            $currentItemContent = preg_replace('~(\r\n)~','',$currentItemContent);
-		            $currentItemContent = preg_replace('~(\<\/script\>)~','</scr"+"ipt>',$currentItemContent);
-		            $jsScriptString .= 'insertingsArray['.$counter.'][\'content\'] = "'.$currentItemContent.'"'.PHP_EOL;
+//		            $currentItemContent = $item['content'];
+//		            $currentItemContent = preg_replace('~(\'|\")~','\\\$1',$currentItemContent);
+//		            $currentItemContent = preg_replace('~(\r\n)~','',$currentItemContent);
+//		            $currentItemContent = preg_replace('~(\<\/script\>)~','</scr"+"ipt>',$currentItemContent);
+//		            $jsScriptString .= 'insertingsArray['.$counter.'][\'content\'] = "'.$currentItemContent.'"'.PHP_EOL;
 		            $jsScriptString .= 'insertingsArray['.$counter.'][\'position_element\'] = "'.$item['position_element'].'"'.PHP_EOL;
 		            $jsScriptString .= 'insertingsArray['.$counter.'][\'position\'] = "'.$item['position'].'"'.PHP_EOL;
 		            $jsScriptString .= 'insertingsArray['.$counter.'][\'postId\'] = "'.$item['postId'].'"'.PHP_EOL;
@@ -454,14 +572,18 @@ try {
     }
 	/** End of insertings to end of content adding ***/
 
-	function RFWP_insertsToString($type) {
+	function RFWP_insertsToString($type, $filter=null) {
         global $wpdb;
         $result = [];
         $result['header'] = [];
 		$result['body'] = [];
 
         try {
-            $posts = get_posts(['post_type' => 'rb_inserting','numberposts' => 100]);
+            if (isset($filter)&&in_array($filter, [0,1])) {
+	            $posts = get_posts(['post_type' => 'rb_inserting','ping_status' => $filter,'numberposts' => 100]);
+            } else {
+	            $posts = get_posts(['post_type' => 'rb_inserting','numberposts' => 100]);
+            }
             if (!empty($posts)) {
                 $counter = 0;
                 if ($type=='header') {
@@ -501,6 +623,15 @@ try {
 		try {
 //		    $needleUrl = plugins_url().'/'.basename(__DIR__).'/connectTestFile';
 //		    $needleUrl = basename(__DIR__).'/connectTestFile';
+            $contentBeforeScript = ''.PHP_EOL;
+            $cssCode = ''.PHP_EOL;
+            $cssCode .='<style>
+    .coveredAd {
+        max-height: 1px;
+        max-width:  1px;
+        overflow: hidden;
+    } 
+</style>';
 			$scriptingCode = '
             <script>
             var blockSettingArray = [];
@@ -512,6 +643,7 @@ try {
 				}
 				$resultHere = in_array( $item['id'], $usedBlocks );
 				if ( $resultHere == false ) {
+				    $contentBeforeScript .= $item['text'].PHP_EOL;
 					$scriptingCode .= 'blockSettingArray[' . $k . '] = [];' . PHP_EOL;
 
 					if ( ! empty( $item['minSymbols'] ) && $item['minSymbols'] > 1 ) {
@@ -524,7 +656,8 @@ try {
 					} else {
 						$scriptingCode .= 'blockSettingArray[' . $k . ']["minHeaders"] = 0;' . PHP_EOL;
 					}
-					$scriptingCode     .= 'blockSettingArray[' . $k . ']["text"] = \'' . $item['text'] . '\'; ' . PHP_EOL;
+					$scriptingCode     .= 'blockSettingArray[' . $k . ']["id"] = \'' . $item['id'] . '\'; ' . PHP_EOL;
+//					$scriptingCode     .= 'blockSettingArray[' . $k . ']["text"] = \'' . $item['text'] . '\'; ' . PHP_EOL;
 					$scriptingCode     .= 'blockSettingArray[' . $k . ']["setting_type"] = '.$item['setting_type'].'; ' . PHP_EOL;
 					if       ($item['setting_type'] == 1) {       //for ordinary block
 //						$scriptingCode .= 'blockSettingArray[' . $k . ']["setting_type"] = 1; ' . PHP_EOL;
@@ -557,6 +690,7 @@ try {
 //			$scriptingCode .= PHP_EOL;
 			$scriptingCode .= '</script>';
 
+			$scriptingCode = $contentBeforeScript.$cssCode.$scriptingCode;
 			return $scriptingCode;
 		} catch ( Exception $e ) {
 			return '';
