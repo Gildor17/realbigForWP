@@ -18,8 +18,8 @@ try {
 
 			try {
 //			$url = 'https://realbigweb/api/wp-get-settings';     // orig web post
-			$url = 'https://beta.realbig.media/api/wp-get-settings';     // beta post
-//			$url = 'https://realbig.media/api/wp-get-settings';     // orig post
+//			$url = 'https://beta.realbig.media/api/wp-get-settings';     // beta post
+			$url = 'https://realbig.media/api/wp-get-settings';     // orig post
 
                 /** for WP request **/
 				$dataForSending = [
@@ -232,7 +232,7 @@ try {
 									            'post_type'    => 'rb_inserting',
 									            'post_author'  => 0,
 									            'pinged'       => $item['limitationUse'],
-//									            'pinged'       => 12,
+//									            'ping_status'  => $item['limitationUse'],
 //									            'post_content_filtered' => 12,
 								            ];
 								            require_once(dirname(__FILE__ ) . "/../../../wp-includes/pluggable.php");
@@ -285,7 +285,7 @@ try {
 					echo $e;
 				}
 				if ($requestType == 'ajax') {
-					if ( empty( $ajaxResult ) ) {
+					if (empty($ajaxResult)) {
 						return 'error';
 					} else {
 						return $ajaxResult;
@@ -314,9 +314,9 @@ try {
             $resultTypes = [];
 
             try {
-    			$url = 'https://realbigweb/api/wp-get-ads';     // orig web post
+//    			$url = 'https://realbigweb/api/wp-get-ads';     // orig web post
 //                $url = 'https://beta.realbig.media/api/wp-get-ads';     // beta post
-    //			$url = 'https://realbig.media/api/wp-get-ads';     // orig post
+    			$url = 'https://realbig.media/api/wp-get-ads';     // orig post
 
 	            $dataForSending = [
 		            'body'  => [
@@ -325,11 +325,12 @@ try {
 		            ]
 	            ];
 
-//	            $jsonResult = wp_safe_remote_post($url, $dataForSending);
-                $jsonToken = wp_remote_post($url, $dataForSending);
+	            $jsonResult = wp_safe_remote_post($url, $dataForSending);
+//	            $jsonResult = wp_remote_post($url, $dataForSending);
 
                 if (!empty($jsonResult)&&!is_wp_error($jsonResult)) {
-                    $decodedResult = json_decode($jsonResult, true);
+//                    $decodedResult = json_decode($jsonResult, true);
+                    $decodedResult = json_decode($jsonResult['body'], true);
                     if (!empty($decodedResult)) {
 	                    $sanitisedStatus = sanitize_text_field($decodedResult['status']);
 	                    if ($sanitisedStatus=='success') {

@@ -33,8 +33,8 @@ try {
 							        $contentForLength .= $clMatch[0];
 						        }
 						        // if nothing help, change system to array with loop type
-//		                    $resItem = preg_replace('~'.$listOfSymbolsForEcranising.'~', '\\\$1', $clMatch[0], -1, $crc);
-//		                    $cuttedContent = preg_replace('~'.$resItem.'~', '', $cuttedContent, 1,$repCount);
+//                                $resItem = preg_replace('~'.$listOfSymbolsForEcranising.'~', '\\\$1', $clMatch[0], -1, $crc);
+//                                $cuttedContent = preg_replace('~'.$resItem.'~', '', $cuttedContent, 1,$repCount);
 						        $resItem = preg_replace_callback('~'.$listOfSymbolsForEcranising.'~', function ($matches) {return '\\'.$matches[1];}, $clMatch[0], -1, $crc);
 						        $cuttedContent = preg_replace_callback('~'.$resItem.'~', function () {return '';}, $cuttedContent, 1,$repCount);
 						        $cycler = 1;
@@ -77,7 +77,8 @@ try {
 			$offCategoriesArray = [];
 			$onTagsArray = [];
 			$offTagsArray = [];
-
+			$pageCategories = [];
+			$pageTags = [];
 
 			if (!empty($fromDb)) {
 			    /** New system for content length checking **/
@@ -87,14 +88,40 @@ try {
 					$contentLength = mb_strlen(strip_tags($content), 'utf-8');
                 }
 
+				if (!empty($getPageCategories)) {
+					$ctCounter = 0;
+
+					foreach ($getPageCategories AS $k1 => $item1) {
+						$pageCategories[$ctCounter] = $item1->name;
+						$pageCategories[$ctCounter] = trim($pageCategories[$ctCounter]);
+						$pageCategories[$ctCounter] = strtolower($pageCategories[$ctCounter]);
+						$ctCounter++;
+					}
+					unset($k1,$item1);
+				}
+				if (!empty($getPageTags)) {
+					$ctCounter = 0;
+
+					foreach ($getPageTags AS $k1 => $item1) {
+						$pageTags[$ctCounter] = $item1->name;
+						$pageTags[$ctCounter] = trim($pageTags[$ctCounter]);
+						$pageTags[$ctCounter] = strtolower($pageTags[$ctCounter]);
+						$ctCounter++;
+					}
+					unset($k1,$item1);
+				}
+
 //				$contentLengthOld = mb_strlen(strip_tags($content), 'utf-8');
 /*              ?><script>console.log('new content:'+<?php echo $contentLength ?>);console.log('old content:'+<?php echo $contentLengthOld ?>);</script><?php  */
  				foreach ($fromDb AS $k => $item) {
 					$countReplaces = 0;
-					if ( is_object( $item ) ) {
+
+				    if ( is_object( $item ) ) {
 						$item = get_object_vars( $item );
 					}
 					if (empty($item['setting_type'])) {
+						$usedBlocks[$usedBlocksCounter] = $item['id'];
+						$usedBlocksCounter ++;
 						continue;
 					}
 					if (!empty($item['minHeaders']) && $item['minHeaders'] > 0) {
@@ -103,111 +130,113 @@ try {
 						$headersMatchesResult += 1;
 					}
 					if (!empty($item['minHeaders']) && ! empty($headersMatchesResult) && $item['minHeaders'] > 0 && $item['minHeaders'] > $headersMatchesResult) {
+						$usedBlocks[$usedBlocksCounter] = $item['id'];
+						$usedBlocksCounter ++;
 						continue;
 					} elseif (!empty($item['minSymbols']) && $item['minSymbols'] > 0 && $item['minSymbols'] > $contentLength) {
+						$usedBlocks[$usedBlocksCounter] = $item['id'];
+						$usedBlocksCounter ++;
 						continue;
 					}
 
 				    /************************************* */
-				    if (!empty($getPageCategories)) {
-					    $passAllowed = false;
-					    $passRejected = false;
+                    $passAllowed = false;
+                    $passRejected = false;
 
-					    foreach ($getPageCategories AS $k1 => $item1) {
-					        $getPageCategories[$k1] = trim($getPageCategories[$k1]);
-						    $getPageCategories[$k1] = strtolower($getPageCategories[$k1]);
+                    if (!empty($item['onCategories'])) {
+                        if (empty($pageCategories)) {
+	                        $usedBlocks[$usedBlocksCounter] = $item['id'];
+	                        $usedBlocksCounter ++;
+	                        continue;
                         }
-						unset($k1,$item1);
+                        $onCategoriesArray = explode(':',trim($item['onCategories']));
+                        if (!empty($onCategoriesArray)&&count($onCategoriesArray) > 0) {
+                            foreach ($onCategoriesArray AS $k1 => $item1) {
+                                $currentCategory = trim($item1);
+                                $currentCategory = strtolower($currentCategory);
 
-						if (!empty($item['onCategories'])) {
-						    $onCategoriesArray = explode(':',trim($item['onCategories']));
-						    if (!empty($onCategoriesArray)&&count($onCategoriesArray) > 0) {
-						        foreach ($onCategoriesArray AS $k1 => $item1) {
-						            $currentCategory = trim($item1);
-						            $currentCategory = strtolower($currentCategory);
-
-						            if (in_array($currentCategory, $getPageCategories)) {
-							            $passAllowed = true;
-							            break;
-                                    }
-                                }
-                                unset($k1,$item1);
-						        if (!empty($passAllowed)) {
-						            $passAllowed = false;
-						            continue;
+                                if (in_array($currentCategory, $pageCategories)) {
+                                    $passAllowed = true;
+                                    break;
                                 }
                             }
-                        } elseif (!empty($item['offCategories'])) {
-							$offCategoriesArray = explode(':',trim($item['offCategories']));
-							if (!empty($offCategoriesArray)&&count($offCategoriesArray) > 0) {
-								foreach ($offCategoriesArray AS $k1 => $item1) {
-									$currentCategory = trim($item1);
-									$currentCategory = strtolower($currentCategory);
+                            unset($k1,$item1);
+                            if (empty($passAllowed)) {
+	                            $usedBlocks[$usedBlocksCounter] = $item['id'];
+	                            $usedBlocksCounter ++;
+	                            continue;
+                            }
+                        }
+                    } elseif (!empty($item['offCategories'])&&!empty($pageCategories)) {
+	                    $offCategoriesArray = explode(':',trim($item['offCategories']));
+                        if (!empty($offCategoriesArray)&&count($offCategoriesArray) > 0) {
+                            foreach ($offCategoriesArray AS $k1 => $item1) {
+                                $currentCategory = trim($item1);
+                                $currentCategory = strtolower($currentCategory);
 
-									if (in_array($currentCategory, $getPageCategories)) {
-										$passRejected = true;
-										break;
-									}
-								}
-								unset($k1,$item1);
-								if (!empty($passRejected)) {
-									$passRejected = false;
-									continue;
-								}
-							}
-						}
+                                if (in_array($currentCategory, $pageCategories)) {
+                                    $passRejected = true;
+                                    break;
+                                }
+                            }
+                            unset($k1,$item1);
+                            if (!empty($passRejected)) {
+	                            $usedBlocks[$usedBlocksCounter] = $item['id'];
+	                            $usedBlocksCounter ++;
+	                            continue;
+                            }
+                        }
                     }
 
 				    /************************************* */
+                    $passAllowed = false;
+                    $passRejected = false;
 
-				    if (!empty($getPageTags)) {
-					    $passAllowed = false;
-					    $passRejected = false;
+                    if (!empty($item['onTags'])) {
+	                    if (empty($pageTags)) {
+		                    $usedBlocks[$usedBlocksCounter] = $item['id'];
+		                    $usedBlocksCounter ++;
+		                    continue;
+	                    }
+	                    $onTagsArray = explode(':',trim($item['onTags']));
+                        if (!empty($onTagsArray)&&count($onTagsArray) > 0) {
+                            foreach ($onTagsArray AS $k1 => $item1) {
+                                $currentTag = trim($item1);
+                                $currentTag = strtolower($currentTag);
 
-					    foreach ($getPageTags AS $k1 => $item1) {
-							$getPageTags[$k1] = trim($getPageTags[$k1]);
-							$getPageTags[$k1] = strtolower($getPageTags[$k1]);
-                        }
-						unset($k1,$item1);
-
-						if (!empty($item['onTags'])) {
-							$onTagsArray = explode(':',trim($item['onTags']));
-						    if (!empty($onTagsArray)&&count($onTagsArray) > 0) {
-						        foreach ($onTagsArray AS $k1 => $item1) {
-						            $currentTag = trim($item1);
-							        $currentTag = strtolower($currentTag);
-
-						            if (in_array($currentTag, $getPageTags)) {
-							            $passAllowed = true;
-							            break;
-                                    }
-                                }
-                                unset($k1,$item1);
-						        if (!empty($passAllowed)) {
-						            $passAllowed = false;
-						            continue;
+                                if (in_array($currentTag, $pageTags)) {
+                                    $passAllowed = true;
+                                    break;
                                 }
                             }
-                        } elseif (!empty($item['offTags'])) {
-							$offTagsArray = explode(':',trim($item['offTags']));
-							if (!empty($offTagsArray)&&count($offTagsArray) > 0) {
-								foreach ($offTagsArray AS $k1 => $item1) {
-									$currentTag = trim($item1);
-									$currentTag = strtolower($currentTag);
+                            unset($k1,$item1);
+                            if (empty($passAllowed)) {
+	                            $usedBlocks[$usedBlocksCounter] = $item['id'];
+	                            $usedBlocksCounter ++;
+	                            continue;
+                            }
+                        }
+                    } elseif (!empty($item['offTags'])&&!empty($pageTags)) {
+	                    $offTagsArray = explode(':',trim($item['offTags']));
+                        if (!empty($offTagsArray)&&count($offTagsArray) > 0) {
+                            foreach ($offTagsArray AS $k1 => $item1) {
+                                $currentTag = trim($item1);
+                                $currentTag = strtolower($currentTag);
 
-									if (in_array($currentTag, $getPageTags)) {
-										$passRejected = true;
-										break;
-									}
-								}
-								unset($k1,$item1);
-								if (!empty($passRejected)) {
-									$passRejected = false;
-									continue;
-								}
-							}
-						}
+                                if (in_array($currentTag, $pageTags)) {
+                                    $passRejected = true;
+                                    break;
+                                }
+                            }
+                            unset($k1,$item1);
+                            if (!empty($passRejected)) {
+	                            $usedBlocks[$usedBlocksCounter] = $item['id'];
+	                            $usedBlocksCounter ++;
+	                            continue;
+                            }
+                        }
                     }
+
 				    /************************************* */
 
 				    $elementText     = $item['text'];
@@ -263,6 +292,8 @@ try {
 
 					if ($item['setting_type'] == 1) {       //for lonely block
 						if (empty($elementName)||empty($elementNumber)||empty($elementText)) {
+							$usedBlocks[$usedBlocksCounter] = $item['id'];
+							$usedBlocksCounter ++;
 							continue;
 						}
 						if ($elementNumber < 0) {
@@ -353,6 +384,8 @@ try {
 						}
 					} elseif ( $item['setting_type'] == 33 ) {       //for direct element (temporary unused)
 						if ( empty( $elementName ) || empty( $elementText ) ) {
+							$usedBlocks[$usedBlocksCounter] = $item['id'];
+							$usedBlocksCounter ++;
 							continue;
 						}
 
@@ -394,6 +427,8 @@ try {
 						$editedContent = preg_replace( '~<placeholderForAd>~', '<placeholderForAdDop>', $editedContent, - 1, $countReplaces );
 					} elseif ( $item['setting_type'] == 4 ) {       //for end of content
 						if (empty($elementText)) {
+							$usedBlocks[$usedBlocksCounter] = $item['id'];
+							$usedBlocksCounter ++;
 							continue;
 						}
 						$editedContent = $editedContent . '<placeholderForAd>';
@@ -529,44 +564,47 @@ try {
         $jsScriptString = '';
 		$cssScriptString = '';
         $currentItemContent = '';
-        $insertings = $insertings['body'];
+//        $insertings = $insertings['body'];
+        $insertings = $GLOBALS['addInsertings']['body']['data'];
         $counter = 0;
 
-		$cssScriptString .= '<style>
+        if (!empty($insertings)) {
+	        $cssScriptString .= '<style>
     .coveredInsertings {
 //        max-height: 1px;
 //        max-width: 1px;
     }
 </style>';
 
-		$jsScriptString .= '<script>'.PHP_EOL;
-		$jsScriptString .= 'var insertingsArray = [];'.PHP_EOL;
-        // move blocks in lopp and add to js string
-        foreach ($insertings AS $k=>$item) {
-            if (!empty($item['content'])) {
-	            if (empty($item['position_element'])) {
-		            $content .= '<div class="addedInserting">'.$item['content'].'</div>';
-	            } else {
-		            $content .= '<div class="addedInserting coveredInsertings" data-id="'.$item['postId'].'">'.$item['content'].'</div>';
+	        $jsScriptString .= '<script>'.PHP_EOL;
+	        $jsScriptString .= 'var insertingsArray = [];'.PHP_EOL;
+	        // move blocks in lopp and add to js string
+	        foreach ($insertings AS $k=>$item) {
+		        if (!empty($item['content'])) {
+			        if (empty($item['position_element'])) {
+				        $content .= '<div class="addedInserting">'.$item['content'].'</div>';
+			        } else {
+				        $content .= '<div class="addedInserting coveredInsertings" data-id="'.$item['postId'].'">'.$item['content'].'</div>';
 
-		            $jsScriptString .= 'insertingsArray['.$counter.'] = [];'.PHP_EOL;
+				        $jsScriptString .= 'insertingsArray['.$k.'] = [];'.PHP_EOL;
 //		            $currentItemContent = $item['content'];
 //		            $currentItemContent = preg_replace('~(\'|\")~','\\\$1',$currentItemContent);
 //		            $currentItemContent = preg_replace('~(\r\n)~','',$currentItemContent);
 //		            $currentItemContent = preg_replace('~(\<\/script\>)~','</scr"+"ipt>',$currentItemContent);
-//		            $jsScriptString .= 'insertingsArray['.$counter.'][\'content\'] = "'.$currentItemContent.'"'.PHP_EOL;
-		            $jsScriptString .= 'insertingsArray['.$counter.'][\'position_element\'] = "'.$item['position_element'].'"'.PHP_EOL;
-		            $jsScriptString .= 'insertingsArray['.$counter.'][\'position\'] = "'.$item['position'].'"'.PHP_EOL;
-		            $jsScriptString .= 'insertingsArray['.$counter.'][\'postId\'] = "'.$item['postId'].'"'.PHP_EOL;
+//		            $jsScriptString .= 'insertingsArray['.$k.'][\'content\'] = "'.$currentItemContent.'"'.PHP_EOL;
+				        $jsScriptString .= 'insertingsArray['.$k.'][\'position_element\'] = "'.$item['position_element'].'"'.PHP_EOL;
+				        $jsScriptString .= 'insertingsArray['.$k.'][\'position\'] = "'.$item['position'].'"'.PHP_EOL;
+				        $jsScriptString .= 'insertingsArray['.$k.'][\'postId\'] = "'.$item['postId'].'"'.PHP_EOL;
 
-		            $counter++;
-	            }
-            }
+				        $counter++;
+			        }
+		        }
+	        }
+	        $jsScriptString .= 'var jsInsertingsLaunch = 25;'.PHP_EOL;
+	        $jsScriptString .= '</script>';
+
+	        $content .= $cssScriptString.$jsScriptString;
         }
-		$jsScriptString .= 'var jsInsertingsLaunch = 25;'.PHP_EOL;
-		$jsScriptString .= '</script>';
-
-		$content .= $cssScriptString.$jsScriptString;
 
 		return $content;
     }
@@ -577,42 +615,63 @@ try {
         $result = [];
         $result['header'] = [];
 		$result['body'] = [];
+		if (!empty($GLOBALS['wpPrefix'])) {
+			$wpPrefix = $GLOBALS['wpPrefix'];
+		} else {
+			global $table_prefix;
+			$wpPrefix = $table_prefix;
+		}
 
-        try {
+		try {
             if (isset($filter)&&in_array($filter, [0,1])) {
-	            $posts = get_posts(['post_type' => 'rb_inserting','ping_status' => $filter,'numberposts' => 100]);
+                $posts = $wpdb->get_results($wpdb->prepare('SELECT * FROM '.$wpPrefix.'posts WHERE post_type = %s AND pinged = %s', ['rb_inserting',$filter]));
+//	            $posts1 = get_posts(['post_type' => 'rb_inserting','pinged' => strval(1),'numberposts' => 100]);
             } else {
-	            $posts = get_posts(['post_type' => 'rb_inserting','numberposts' => 100]);
+	            $posts = $wpdb->get_results($wpdb->prepare('SELECT * FROM '.$wpPrefix.'posts WHERE post_type = %s', ['rb_inserting']));
+//	            $posts = get_posts(['post_type' => 'rb_inserting','numberposts' => 100]);
             }
             if (!empty($posts)) {
-                $counter = 0;
                 if ($type=='header') {
-	                $gatheredHeader = '';
+	                if (!empty($GLOBALS['addInsertings']['header']['insertsCounter'])) {
+		                $counter = $GLOBALS['addInsertings']['header']['insertsCounter'];
+	                } else {
+		                $counter = 0;
+	                }
+	                if (!empty($GLOBALS['addInsertings']['header']['data'])) {
+		                $result = $GLOBALS['addInsertings']['header']['data'];
+	                }
 	                foreach ($posts AS $k=>$item) {
-		                $result['header'][$counter] = [];
-		                // here should be a regex with gathering from package and decoding
+		                $result[$counter] = [];
 		                $gatheredHeader = $item->post_content;
 		                $gatheredHeader = preg_match('~begin_of_header_code([\s\S]*?)end_of_header_code~',$gatheredHeader,$headerMatches);
 		                $gatheredHeader = htmlspecialchars_decode($headerMatches[1]);
-                        $result['header'][$counter]['content'] = $gatheredHeader;
+                        $result[$counter]['content'] = $gatheredHeader;
                         $counter++;
                     }
+	                $GLOBALS['addInsertings']['header']['insertsCounter'] = $counter;
+	                $GLOBALS['addInsertings']['header']['data'] = $result;
                 } else {
-	                $gatheredBody = '';
-	                $gatheredBodyPosition_element = '';
-	                $gatheredBodyPosition = '';
+	                if (!empty($GLOBALS['addInsertings']['body']['insertsCounter'])) {
+		                $counter = $GLOBALS['addInsertings']['body']['insertsCounter'];
+	                } else {
+		                $counter = 0;
+	                }
+	                if (!empty($GLOBALS['addInsertings']['body']['data'])) {
+		                $result = $GLOBALS['addInsertings']['body']['data'];
+	                }
 	                foreach ($posts AS $k=>$item) {
-		                $result['body'][$counter] = [];
-		                // here should be a regex with gathering from package and decoding
+		                $result[$counter] = [];
 		                $gatheredBody = $item->post_content;
 		                $gatheredBody = preg_match('~begin_of_body_code([\s\S]*?)end_of_body_code~',$gatheredBody,$bodyMatches);
 		                $gatheredBody = htmlspecialchars_decode($bodyMatches[1]);
-		                $result['body'][$counter]['content'] = $gatheredBody;
-		                $result['body'][$counter]['position_element'] = $item->post_title;
-		                $result['body'][$counter]['position'] = $item->post_excerpt;
-		                $result['body'][$counter]['postId'] = $item->ID;
+		                $result[$counter]['content'] = $gatheredBody;
+		                $result[$counter]['position_element'] = $item->post_title;
+		                $result[$counter]['position'] = $item->post_excerpt;
+		                $result[$counter]['postId'] = $item->ID;
 		                $counter++;
 	                }
+	                $GLOBALS['addInsertings']['body']['insertsCounter'] = $counter;
+	                $GLOBALS['addInsertings']['body']['data'] = $result;
                 }
             }
         } catch (Exception $e) {}

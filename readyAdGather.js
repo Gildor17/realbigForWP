@@ -146,7 +146,6 @@ function gatherReadyBlocks() {
         }
 
         blocks = JSON.stringify(blocks);
-
         sendReadyBlocksNew(blocks);
     }
 }
