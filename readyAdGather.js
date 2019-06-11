@@ -61,7 +61,7 @@ function gatherReadyBlocksOrig() {
     }
 }
 
-function gatherReadyBlocks() {
+function gatherReadyBlocksAfterOrig() {
     // let blocks = '';
     let blocks = {};
     let counter1 = 0;
@@ -85,9 +85,17 @@ function gatherReadyBlocks() {
                     checker = 1;
                     adContent = gatheredBlocks[i]['innerHTML'];
                     // adContent = decodeURIComponent(adContent);
-                    adContent = adContent.replace(/&amp;/g, 'a_m_p');
-                    adContent = adContent.replace(/&quot;/g, '"');
-                    adContent = adContent.replace(/\"/g, "\'");
+                    // adContent = adContent.replace(/&amp;/g, 'a_m_p');
+                    // adContent = adContent.replace(/&quot;/g, '"');
+                    // adContent = adContent.replace(/\"/g, "\'");
+                    adContent = adContent.replace(/\&/g, "rb_amp_rb");
+                    adContent = adContent.replace(/\'/g, "rb_quot_rb");
+                    adContent = adContent.replace(/\"/g, "rb_double_quot_rb");
+                    adContent = adContent.replace(/\?/g, "rb_question_mark_rb");
+                    adContent = adContent.replace(/\</g, "rb_open_angle_rb");
+                    adContent = adContent.replace(/\>/g, "rb_close_angle_rb");
+                    adContent = adContent.replace(/\;/g, "rb_semicolon_rb");
+                    adContent = adContent.replace(/script/g, "scr_ipt");
                 } else if (curState=='no-block') {
                     checker = 1;
                     adContent = '';
@@ -101,6 +109,43 @@ function gatherReadyBlocks() {
 
         blocks = JSON.stringify(blocks);
 
+        sendReadyBlocksNew(blocks);
+    }
+}
+
+function gatherReadyBlocks() {
+    // let blocks = '';
+    let blocks = {};
+    let counter1 = 0;
+    let gatheredBlocks = document.getElementsByClassName('content_rb');
+    let checker = 0;
+    let adContent = '';
+    let curState = '';
+    let thisData = [];
+    let sumData = [];
+    let newBlocks = '';
+    let thisDataString = '';
+
+    if (gatheredBlocks.length > 0) {
+        blocks.data = {};
+
+        for (let i = 0; i < gatheredBlocks.length; i++) {
+            curState = gatheredBlocks[i]['dataset']["state"].toLowerCase();
+            checker = 0;
+            if (curState&&(gatheredBlocks[i]['innerHTML'].length > 0||curState=='no-block')) {
+                if (gatheredBlocks[i]['innerHTML'].length > 0) {
+                    checker = 1;
+                } else if (curState=='no-block') {
+                    checker = 1;
+                }
+                if (checker==1) {
+                    blocks.data[counter1] = {id:gatheredBlocks[i]['dataset']['id'],code:gatheredBlocks[i]['dataset']['aid']};
+                    counter1++;
+                }
+            }
+        }
+
+        blocks = JSON.stringify(blocks);
         sendReadyBlocksNew(blocks);
     }
 }
