@@ -13,7 +13,7 @@ include (dirname(__FILE__)."/textEditing.php");
 /*
 Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.1.26.64
+Version:      0.1.26.65
 Author:       Realbig Team
 Author URI:   https://realbig.media
 License:      GPLv2 or later
@@ -87,7 +87,7 @@ try {
 	/** End of kill rb connection emulation */
 	/** Some manipulations with posts */
 	if (is_admin()&&empty(apply_filters('wp_doing_cron', defined('DOING_CRON')&&DOING_CRON))) {
-//		$oldInserts = get_posts(['post_type' => 'rb_block_desktop','numberposts' => 100]);
+//		$oldInserts = get_posts(['post_type' => 'rb_block_desktop_new','numberposts' => 100]);
 //		$oldInsertsIds = array_column($oldInserts,'id');
 //
 //		$penyok_stoparik = 0;
@@ -113,6 +113,7 @@ try {
 
     if (empty(apply_filters('wp_doing_cron', defined('DOING_CRON') && DOING_CRON))) {
 	    if ((!empty($curUserCan)&&!empty($_POST['statusRefresher']))||empty($tableForToken)||empty($tableForCurrentPluginChecker)) {
+	        $wpdb->query('DELETE FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_mobile,rb_block_desktop") AND post_author = 0');
 		    delete_option('realbig_status_gatherer_version');
 	    }
     }
@@ -121,7 +122,7 @@ try {
 	if (!empty($pluginData['Version'])) {
 		$GLOBALS['realbigForWP_version'] = $pluginData['Version'];
 	} else {
-		$GLOBALS['realbigForWP_version'] = '0.1.26.64';
+		$GLOBALS['realbigForWP_version'] = '0.1.26.65';
 	}
 	$lastSuccessVersionGatherer = get_option('realbig_status_gatherer_version');
 //	require_once( 'synchronising.php' );
@@ -545,14 +546,9 @@ try {
             if (!empty($separatedStatuses)&&!empty($separatedStatuses['liveInternetCode'])&&isset($separatedStatuses['activeLiveInterner'])&&$separatedStatuses['activeLiveInterner']==1) {
 	            add_action('wp_head', 'RFWP_liveInternet_add', 100);
 	            $liveInternetCode = htmlspecialchars_decode($separatedStatuses['liveInternetCode']);
-//	            $GLOBALS['liveInternetCode'] = htmlspecialchars_decode($separatedStatuses['liveInternetCode']);
 	            if (!empty($liveInternetCode)) {
-//		            $GLOBALS['liveInternet']['status'] = 'enabled';
 		            $GLOBALS['liveInternet']['code'] = $liveInternetCode;
-//		            add_action('the_content', 'RFWP_liveInternet_add', 0);
-//		            add_action('the_title', 'RFWP_liveInternet_add', 0);
 	            }
-//	            $GLOBALS['liveInternetCode'] = $separatedStatuses['liveInternetCode'];
             }
 		}
 		add_action('wp_head', 'RFWP_inserts_head_add', 0);
@@ -715,9 +711,9 @@ try {
 //				    ?><!--<script>console.log('using cache')</script>--><?php
                 $mobileCheck = RFWP_wp_is_mobile();
                 if (!empty($mobileCheck)) {
-                    $cachedBlocks = get_posts(['post_type' => 'rb_block_mobile','numberposts' => 100]);
+                    $cachedBlocks = get_posts(['post_type' => 'rb_block_mobile_new','numberposts' => 100]);
                 } else {
-                    $cachedBlocks = get_posts(['post_type' => 'rb_block_desktop','numberposts' => 100]);
+                    $cachedBlocks = get_posts(['post_type' => 'rb_block_desktop_new','numberposts' => 100]);
                 }
 //			    }
 
@@ -774,9 +770,9 @@ try {
 		$blocksCounter = 1;
 		$killRbAvailable = false;
 //		$killRbAvailable = true;
-//		$postsGather = $wpdb->get_results('SELECT post_title FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_desktop","rb_block_mobile")');
-		$postsGatherDesktop = $wpdb->get_results('SELECT post_title FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_desktop")');
-		$postsGatherMobile  = $wpdb->get_results('SELECT post_title FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_mobile" )');
+//		$postsGather = $wpdb->get_results('SELECT post_title FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_desktop_new","rb_block_mobile_new")');
+		$postsGatherDesktop = $wpdb->get_results('SELECT post_title FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_desktop_new")');
+		$postsGatherMobile  = $wpdb->get_results('SELECT post_title FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_mobile_new" )');
 
 		try {
 		    $rbSettings = $wpdb->get_results('SELECT optionName, optionValue, timeUpdate FROM ' . $GLOBALS["wpPrefix"] . 'realbig_settings WHERE optionName IN ("deactError","domain","excludedMainPage","excludedPages","pushStatus","excludedPageTypes","kill_rb")', ARRAY_A);
