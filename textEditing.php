@@ -561,6 +561,10 @@ try {
     }
 
 	function RFWP_insertingsToContent($content, $insertings) {
+	    if (empty($GLOBALS['addInsertings']['body']['data'])) {
+	        return $content;
+        }
+
         $jsScriptString = '';
 		$cssScriptString = '';
         $currentItemContent = '';
