@@ -52,7 +52,6 @@ try {
 				}
 				if (!empty($jsonToken)&&!is_wp_error($jsonToken)) {
 					$decodedToken                  = json_decode( $jsonToken, true );
-//					$sanitisedMessage =
 					$GLOBALS['tokenStatusMessage'] = $decodedToken['message'];
 					if ( $requestType == 'ajax' ) {
 						$ajaxResult = $decodedToken['message'];
@@ -343,16 +342,16 @@ try {
 		                    foreach ($resultData AS $rk => $ritem) {
 	                            switch ($ritem['type']) {
                                     case 'mobile':
-	                                    $postCheckMobile  = $wpdb->get_var($wpdb->prepare('SELECT id FROM '.$wpPrefix.'posts WHERE post_type = %s AND post_title = %s',['rb_block_mobile',$ritem['blockId']]));
+	                                    $postCheckMobile  = $wpdb->get_var($wpdb->prepare('SELECT id FROM '.$wpPrefix.'posts WHERE post_type = %s AND post_title = %s',['rb_block_mobile_new',$ritem['blockId']]));
 	                                    $resultTypes['mobile'] = true;
 	                                    break;
                                     case 'desktop':
-	                                    $postCheckDesktop = $wpdb->get_var($wpdb->prepare('SELECT id FROM '.$wpPrefix.'posts WHERE post_type = %s AND post_title = %s',['rb_block_desktop',$ritem['blockId']]));
+	                                    $postCheckDesktop = $wpdb->get_var($wpdb->prepare('SELECT id FROM '.$wpPrefix.'posts WHERE post_type = %s AND post_title = %s',['rb_block_desktop_new',$ritem['blockId']]));
 	                                    $resultTypes['desktop'] = true;
 	                                    break;
                                     case 'universal':
-	                                    $postCheckMobile  = $wpdb->get_var($wpdb->prepare('SELECT id FROM '.$wpPrefix.'posts WHERE post_type = %s AND post_title = %s',['rb_block_mobile',$ritem['blockId']]));
-	                                    $postCheckDesktop = $wpdb->get_var($wpdb->prepare('SELECT id FROM '.$wpPrefix.'posts WHERE post_type = %s AND post_title = %s',['rb_block_desktop',$ritem['blockId']]));
+	                                    $postCheckMobile  = $wpdb->get_var($wpdb->prepare('SELECT id FROM '.$wpPrefix.'posts WHERE post_type = %s AND post_title = %s',['rb_block_mobile_new',$ritem['blockId']]));
+	                                    $postCheckDesktop = $wpdb->get_var($wpdb->prepare('SELECT id FROM '.$wpPrefix.'posts WHERE post_type = %s AND post_title = %s',['rb_block_desktop_new',$ritem['blockId']]));
 	                                    $resultTypes['universal'] = true;
 	                                    break;
                                 }
@@ -365,7 +364,7 @@ try {
 				                        'post_content' => $ritem['code'],
 				                        'post_title'   => $ritem['blockId'],
 				                        'post_status'  => "publish",
-				                        'post_type'    => 'rb_block_mobile',
+				                        'post_type'    => 'rb_block_mobile_new',
 				                        'post_author'  => 0
 			                        ];
 			                        require_once(dirname(__FILE__ )."/../../../wp-includes/pluggable.php");
@@ -379,7 +378,7 @@ try {
 				                        'post_content' => $ritem['code'],
 				                        'post_title'   => $ritem['blockId'],
 				                        'post_status'  => "publish",
-				                        'post_type'    => 'rb_block_desktop',
+				                        'post_type'    => 'rb_block_desktop_new',
 				                        'post_author'  => 0
 			                        ];
 			                        require_once(dirname(__FILE__ )."/../../../wp-includes/pluggable.php");
