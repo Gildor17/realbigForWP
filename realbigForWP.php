@@ -81,7 +81,7 @@ try {
 	    $kill_rb = $kill_rb_db;
     }
 
-//	$kill_rb = 0;
+	$kill_rb = 0;
 
 	$GLOBALS['kill_rb'] = $kill_rb;
 	/** End of kill rb connection emulation */
