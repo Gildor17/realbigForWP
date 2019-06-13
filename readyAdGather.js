@@ -61,7 +61,7 @@ function gatherReadyBlocksOrig() {
     }
 }
 
-function gatherReadyBlocksAfterOrig() {
+function gatherReadyBlocks() {
     // let blocks = '';
     let blocks = {};
     let counter1 = 0;
@@ -85,17 +85,9 @@ function gatherReadyBlocksAfterOrig() {
                     checker = 1;
                     adContent = gatheredBlocks[i]['innerHTML'];
                     // adContent = decodeURIComponent(adContent);
-                    // adContent = adContent.replace(/&amp;/g, 'a_m_p');
-                    // adContent = adContent.replace(/&quot;/g, '"');
-                    // adContent = adContent.replace(/\"/g, "\'");
-                    adContent = adContent.replace(/\&/g, "rb_amp_rb");
-                    adContent = adContent.replace(/\'/g, "rb_quot_rb");
-                    adContent = adContent.replace(/\"/g, "rb_double_quot_rb");
-                    adContent = adContent.replace(/\?/g, "rb_question_mark_rb");
-                    adContent = adContent.replace(/\</g, "rb_open_angle_rb");
-                    adContent = adContent.replace(/\>/g, "rb_close_angle_rb");
-                    adContent = adContent.replace(/\;/g, "rb_semicolon_rb");
-                    adContent = adContent.replace(/script/g, "scr_ipt");
+                    adContent = adContent.replace(/&amp;/g, 'a_m_p');
+                    adContent = adContent.replace(/&quot;/g, '"');
+                    adContent = adContent.replace(/\"/g, "\'");
                 } else if (curState=='no-block') {
                     checker = 1;
                     adContent = '';
@@ -110,59 +102,6 @@ function gatherReadyBlocksAfterOrig() {
         blocks = JSON.stringify(blocks);
 
         sendReadyBlocksNew(blocks);
-    }
-}
-
-function gatherReadyBlocks() {
-    // let blocks = '';
-    let blocks = {};
-    let counter1 = 0;
-    let gatheredBlocks = document.getElementsByClassName('content_rb');
-    let checker = 0;
-    let adContent = '';
-    let curState = '';
-    let thisData = [];
-    let sumData = [];
-    let newBlocks = '';
-    let thisDataString = '';
-
-    if (gatheredBlocks.length > 0) {
-        blocks.data = {};
-
-        for (let i = 0; i < gatheredBlocks.length; i++) {
-            curState = gatheredBlocks[i]['dataset']["state"].toLowerCase();
-            checker = 0;
-            // if (curState&&(gatheredBlocks[i]['innerHTML'].length > 0||curState=='no-block')) {
-            if (curState&&gatheredBlocks[i]['innerHTML'].length > 0&&gatheredBlocks[i]['dataset']['aid'] > 0&&curState!='no-block') {
-                if (gatheredBlocks[i]['innerHTML'].length > 0) {
-                    checker = 1;
-                }
-                // else if (curState=='no-block') {
-                //     checker = 1;
-                // }
-                if (checker==1) {
-                    blocks.data[counter1] = {id:gatheredBlocks[i]['dataset']['id'],code:gatheredBlocks[i]['dataset']['aid']};
-                    counter1++;
-                }
-            }
-        }
-
-        clearUnsuitableCache();
-        
-        blocks = JSON.stringify(blocks);
-        sendReadyBlocksNew(blocks);
-    }
-}
-
-function clearUnsuitableCache() {
-    let gatheredBlocks = document.querySelectorAll('.percentPointerClass .content_rb');
-
-    if (gatheredBlocks&&gatheredBlocks.length > 0) {
-        for (let i = 0; i < gatheredBlocks; i++) {
-            if ((gatheredBlocks[i]['dataset']["state"]=='no-block')||(['done','fetched'].includes(gatheredBlocks[i]['dataset']["state"])&&gatheredBlocks[i]['dataset']['aid'] < 0)) {
-                gatheredBlocks[i]['innerHTML'] = '';
-            }
-        }
     }
 }
 

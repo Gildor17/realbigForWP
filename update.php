@@ -163,7 +163,7 @@ ENGINE=InnoDB
 		}
 	}
 
-	function RFWP_updateElementEnumValuesFunction($wpPrefix, $statusGatherer) {
+	function RFWP_updateElementEnumValuesFunction( $wpPrefix, $statusGatherer ) {
 		global $wpdb;
 		$requiredElementColumnValues = "enum('p','li','ul','ol','blockquote','img','video','h1','h2','h3','h4','h5','h6')";
 		try {
@@ -188,22 +188,22 @@ ENGINE=InnoDB
 		}
 	}
 
-	function RFWP_wpRealbigSettingsTableUpdateFunction($wpPrefix) {
+	function RFWP_wpRealbigSettingsTableUpdateFunction( $wpPrefix ) {
 		global $wpdb;
 
 		try {
-			$rez = $wpdb->query('SHOW FIELDS FROM ' . $wpPrefix . 'realbig_settings');
+			$rez = $wpdb->query( 'SHOW FIELDS FROM ' . $wpPrefix . 'realbig_settings' );
 
-			if ($rez != 4) {
-				$wpdb->query('ALTER TABLE ' . $wpPrefix . 'realbig_settings ADD `timeUpdate` TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP AFTER optionValue');
+			if ( $rez != 4 ) {
+				$wpdb->query( 'ALTER TABLE ' . $wpPrefix . 'realbig_settings ADD `timeUpdate` TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP AFTER optionValue' );
 			}
 			return true;
-		} catch (Exception $e) {
+		} catch ( Exception $e ) {
 			return false;
 		}
 	}
 
-	function RFWP_wpRealbigPluginSettingsColomnUpdateFunction($wpPrefix, $colCheck, $statusGatherer) {
+	function RFWP_wpRealbigPluginSettingsColomnUpdateFunction( $wpPrefix, $colCheck, $statusGatherer ) {
 		global $wpdb;
 		$atLeastOneMissedColumn                      = false;
 		$requiredColumnsInRealbigPluginSettingsTable = [
@@ -219,37 +219,30 @@ ENGINE=InnoDB
 			'elementStep',
 			'time_update',
 			'minSymbols',
-			'minHeaders',
-            'onCategories',
-            'offCategories',
-            'onTags',
-            'offTags'
+			'minHeaders'
 		];
 
 		try {
-			foreach ($requiredColumnsInRealbigPluginSettingsTable as $item) {
-				if (!in_array($item, $colCheck)) {
+			foreach ( $requiredColumnsInRealbigPluginSettingsTable as $item ) {
+				if ( ! in_array( $item, $colCheck ) ) {
 					$atLeastOneMissedColumn = true;
-					if (in_array($item, ['onCategories', 'offCategories', 'onTags', 'offTags'])) {
-						$wpdb->query('ALTER TABLE ' . $wpPrefix . 'realbig_plugin_settings ADD COLUMN ' . $item . ' TEXT NULL DEFAULT NULL');
-					} else {
-						$wpdb->query('ALTER TABLE ' . $wpPrefix . 'realbig_plugin_settings ADD COLUMN ' . $item . ' INT(11) NULL DEFAULT NULL');
-					}
+					$wpdb->query( 'ALTER TABLE ' . $wpPrefix . 'realbig_plugin_settings ADD COLUMN ' . $item . ' INT(11) NULL DEFAULT NULL' );
 				}
 			}
-			if ($atLeastOneMissedColumn == false) {
+			if ( $atLeastOneMissedColumn == false ) {
 				$statusGatherer['realbig_plugin_settings_columns'] = true;
 			} else {
 				$statusGatherer['realbig_plugin_settings_columns'] = false;
 			}
 
 			return $statusGatherer;
-		} catch (Exception $e) {
+		} catch ( Exception $e ) {
 			$statusGatherer['realbig_plugin_settings_columns'] = false;
 
 			return $statusGatherer;
 		}
 	}
+
 }
 catch (Exception $ex)
 {
