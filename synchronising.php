@@ -340,7 +340,10 @@ try {
 		                    $resultTypes['universal'] = false;
 
 		                    foreach ($resultData AS $rk => $ritem) {
-	                            switch ($ritem['type']) {
+			                    $postCheckMobile = null;
+			                    $postCheckDesktop = null;
+
+			                    switch ($ritem['type']) {
                                     case 'mobile':
 	                                    $postCheckMobile  = $wpdb->get_var($wpdb->prepare('SELECT id FROM '.$wpPrefix.'posts WHERE post_type = %s AND post_title = %s',['rb_block_mobile_new',$ritem['blockId']]));
 	                                    $resultTypes['mobile'] = true;
@@ -356,34 +359,38 @@ try {
 	                                    break;
                                 }
 
-		                        if (!empty($postCheckMobile)) {
-			                        $postarr = ['ID' => $postCheckMobile, 'post_content' => $ritem['code']];
-			                        $updateBlockResultMobile = wp_update_post($postarr, true);
-		                        } else {
-			                        $postarr = [
-				                        'post_content' => $ritem['code'],
-				                        'post_title'   => $ritem['blockId'],
-				                        'post_status'  => "publish",
-				                        'post_type'    => 'rb_block_mobile_new',
-				                        'post_author'  => 0
-			                        ];
-			                        require_once(dirname(__FILE__ )."/../../../wp-includes/pluggable.php");
-			                        $saveBlockResultMobile = wp_insert_post($postarr, true);
-		                        }
-		                        if (!empty($postCheckDesktop)) {
-			                        $postarr = ['ID' => $postCheckDesktop, 'post_content' => $ritem['code']];
-			                        $updateBlockResultDesktop = wp_update_post($postarr, true);
-		                        } else {
-			                        $postarr = [
-				                        'post_content' => $ritem['code'],
-				                        'post_title'   => $ritem['blockId'],
-				                        'post_status'  => "publish",
-				                        'post_type'    => 'rb_block_desktop_new',
-				                        'post_author'  => 0
-			                        ];
-			                        require_once(dirname(__FILE__ )."/../../../wp-includes/pluggable.php");
-			                        $saveBlockResultDesktop = wp_insert_post($postarr, true);
-		                        }
+                                if (in_array($ritem['type'], ['mobile','universal'])) {
+	                                if (!empty($postCheckMobile)) {
+		                                $postarr = ['ID' => $postCheckMobile, 'post_content' => $ritem['code']];
+		                                $updateBlockResultMobile = wp_update_post($postarr, true);
+	                                } else {
+		                                $postarr = [
+			                                'post_content' => $ritem['code'],
+			                                'post_title'   => $ritem['blockId'],
+			                                'post_status'  => "publish",
+			                                'post_type'    => 'rb_block_mobile_new',
+			                                'post_author'  => 0
+		                                ];
+		                                require_once(dirname(__FILE__ )."/../../../wp-includes/pluggable.php");
+		                                $saveBlockResultMobile = wp_insert_post($postarr, true);
+	                                }
+                                }
+                                if (in_array($ritem['type'], ['desktop','universal'])) {
+	                                if (!empty($postCheckDesktop)) {
+		                                $postarr = ['ID' => $postCheckDesktop, 'post_content' => $ritem['code']];
+		                                $updateBlockResultDesktop = wp_update_post($postarr, true);
+	                                } else {
+		                                $postarr = [
+			                                'post_content' => $ritem['code'],
+			                                'post_title'   => $ritem['blockId'],
+			                                'post_status'  => "publish",
+			                                'post_type'    => 'rb_block_desktop_new',
+			                                'post_author'  => 0
+		                                ];
+		                                require_once(dirname(__FILE__ )."/../../../wp-includes/pluggable.php");
+		                                $saveBlockResultDesktop = wp_insert_post($postarr, true);
+	                                }
+                                }
 	                        }
                             unset($rk,$ritem);
 

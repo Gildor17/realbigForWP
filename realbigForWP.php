@@ -13,7 +13,7 @@ include (dirname(__FILE__)."/textEditing.php");
 /*
 Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.1.26.65
+Version:      0.1.26.66
 Author:       Realbig Team
 Author URI:   https://realbig.media
 License:      GPLv2 or later
@@ -111,9 +111,17 @@ try {
 	$tableForCurrentPluginChecker = $wpdb->get_var('SHOW TABLES LIKE "' . $wpPrefix . 'realbig_plugin_settings"');   //settings for block table checking
 	$tableForToken                = $wpdb->get_var('SHOW TABLES LIKE "' . $wpPrefix . 'realbig_settings"');      //settings for token and other
 
+    $clearedOldCachedBlocks = get_option('cleared_old_cached_blocks');
+    if (empty($clearedOldCachedBlocks)) {
+	    $oldCachedBlocksDeleteingResult = $wpdb->query('DELETE FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_mobile","rb_block_desktop","rb_block_mobile_new","rb_block_desktop_new") AND post_author = 0');
+	    if (!empty($oldCachedBlocksDeleteingResult)) {
+	        add_option('cleared_old_cached_blocks','cleared');
+        }
+    }
+
     if (empty(apply_filters('wp_doing_cron', defined('DOING_CRON') && DOING_CRON))) {
 	    if ((!empty($curUserCan)&&!empty($_POST['statusRefresher']))||empty($tableForToken)||empty($tableForCurrentPluginChecker)) {
-	        $wpdb->query('DELETE FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_mobile,rb_block_desktop") AND post_author = 0');
+	        $wpdb->query('DELETE FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_mobile","rb_block_desktop","rb_block_mobile_new","rb_block_desktop_new") AND post_author = 0');
 		    delete_option('realbig_status_gatherer_version');
 	    }
     }
@@ -122,7 +130,7 @@ try {
 	if (!empty($pluginData['Version'])) {
 		$GLOBALS['realbigForWP_version'] = $pluginData['Version'];
 	} else {
-		$GLOBALS['realbigForWP_version'] = '0.1.26.65';
+		$GLOBALS['realbigForWP_version'] = '0.1.26.66';
 	}
 	$lastSuccessVersionGatherer = get_option('realbig_status_gatherer_version');
 //	require_once( 'synchronising.php' );
@@ -409,10 +417,13 @@ try {
 //        $mobileCheck = RFWP_wp_is_mobile();
 	    $cacheTimeoutMobile = get_transient('rb_mobile_cache_timeout');
 	    $cacheTimeoutDesktop = get_transient('rb_desktop_cache_timeout');
+//	    $cacheTimeoutMobile = 0;
+//	    $cacheTimeoutDesktop = 0;
+
 	    if (empty($cacheTimeoutDesktop)||empty($cacheTimeoutMobile)) {
 		    $cacheTimeout = get_transient('rb_cache_timeout');
 
-		    $cacheTimeout = 0;
+//		    $cacheTimeout = 0;
 		    if (empty($cacheTimeout)) {
 			    add_action('wp_enqueue_scripts', 'RFWP_syncFunctionAdd2', 11);
 		    }
@@ -710,11 +721,13 @@ try {
 //			    if (!is_array($rotatorResponce)||(!empty($rotatorResponce['response']['code'])&&$rotatorResponce['response']['code']!=200)) {
 //				    ?><!--<script>console.log('using cache')</script>--><?php
                 $mobileCheck = RFWP_wp_is_mobile();
+                $GLOBALS['rb_mobile_check'] = $mobileCheck;
                 if (!empty($mobileCheck)) {
                     $cachedBlocks = get_posts(['post_type' => 'rb_block_mobile_new','numberposts' => 100]);
                 } else {
                     $cachedBlocks = get_posts(['post_type' => 'rb_block_desktop_new','numberposts' => 100]);
                 }
+//                $cachedBlocks = null;
 //			    }
 
 			    if (!empty($content)) {
