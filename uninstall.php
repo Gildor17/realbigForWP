@@ -9,7 +9,7 @@
 if (!defined("ABSPATH")) { exit;}
 
 try {
-	if(defined('WP_UNINSTALL_PLUGIN') ) {
+	if(defined('WP_UNINSTALL_PLUGIN')) {
 		global $wpdb;
 
 		if (!empty(wp_next_scheduled('bl_cron_hook'))) {
@@ -21,6 +21,8 @@ try {
 			$wpPrefix = $wpdb->base_prefix;
 		}
 		$GLOBALS['wpPrefix'] = $wpPrefix;
+
+		$wpdb->query('DELETE FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_mobile","rb_block_desktop","rb_block_mobile_new","rb_block_desktop_new","rb_inserting") AND post_author = 0');
 
 		delete_option( 'realbig_status_gatherer' );
 		delete_option( 'realbig_status_gatherer_version' );
