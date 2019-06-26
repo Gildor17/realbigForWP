@@ -42,6 +42,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                 posCurrentElement = currentElement.nextSibling;
                 currentElement.style.marginBottom = '0px';
             }
+            currentElement.style.clear = 'both';
 
             return posCurrentElement;
         }
@@ -308,7 +309,9 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
             } catch (e) { }
         }
 
+        // here
         // percentSeparator(lordOfElements);
+        // end of here
 
         if (containerFor6th.length > 0) {
             percentInserter(lordOfElements, containerFor6th);
@@ -437,76 +440,83 @@ function insertingsFunctionLaunch() {
 insertingsFunctionLaunch();
 
 function percentSeparator(lordOfElements) {
-    var separator = lordOfElements.children;
-    var lordOfElementsResult = 0;
-    var lordOfElementsTextResult = "";
-    var textLength;
-    var lengthPercent = 0;
-    var textNeedyLength = 0;
-    var currentChildrenLength = 0;
-    var previousChildrenLength = 0;
-    var separatorResult = [];
-    var separatorResultCounter = 0;
-    var lastICounterValue = 0;
+    var lcSeparator = lordOfElements.children;
+    var lcLordOfElementsResult = 0;
+    var lcLordOfElementsTextResult = "";
+    var lcTextLength;
+    var lcLengthPercent = 0;
+    var lcTextNeedyLength = 0;
+    var lcCurrentChildrenLength = 0;
+    var lcPreviousChildrenLength = 0;
+    var lcSeparatorResult = [];
+    var lcSeparatorResultCounter = 0;
+    var lcLastICounterValue = 0;
+    var lcPossibleTagsArray = ["P", "H1", "H2", "H3", "H4", "H5", "H6", "DIV", "OL", "UL", "LI", "BLOCKQUOTE", "INDEX", "TABLE"];
+    var lcPossibleTagsInCheck = ["DIV", "INDEX"];
+    var lcDeniedClasses = ["percentPointerClass","content_rb"];
+    var lcDeniedId = ["toc_container"];
 
-    if (!document.getElementById("markedSpan")) {
-        // lengthPercent = [10,25,43,60,82,97];
-        textLength = 0;
+    if (!document.getElementById("lcMarkedSpan")) {
+        // lcLengthPercent = [10,25,43,60,82,97];
+        lcTextLength = 0;
         for (let i = 0; i < lordOfElements.children.length; i++) {
             if (lordOfElements.children[i].tagName!="SCRIPT"&&!lordOfElements.children[i].classList.contains("percentPointerClass")) {
-                textLength = textLength + lordOfElements.children[i].innerText.length;
+                lcTextLength = lcTextLength + lordOfElements.children[i].innerText.length;
             }
         }
 
-        let numberToUse = 0;
+        let lcnumberToUse = 0;
         for (let j = 0; j < 101; j++) {
-            // textNeedyLength = Math.round(textLength * (lengthPercent[j]/100));
-            textNeedyLength = Math.round(textLength * (j/100));
+            // lcTextNeedyLength = Math.round(lcTextLength * (lcLengthPercent[j]/100));
+            lcTextNeedyLength = Math.round(lcTextLength * (j/100));
             // for (let i = 0; i < Math.round(lordOfElements.children.length/2); i++) {
 
-            for (let i = lastICounterValue; i < lordOfElements.children.length; i++) {
+            for (let i = lcLastICounterValue; i < lordOfElements.children.length; i++) {
                 if (lordOfElements.children[i].tagName!="SCRIPT"&&!lordOfElements.children[i].classList.contains("percentPointerClass")) {
-                    if (currentChildrenLength >= textNeedyLength) {
+                    if (lcCurrentChildrenLength >= lcTextNeedyLength) {
                         let elementToAdd = document.createElement("div");
                         elementToAdd.classList.add("percentPointerClass");
-                        // elementToAdd.innerHTML = "<div style='border: 1px solid grey; font-size: 20px; height: 25px; width: auto; background-color: #2aabd2'>"+lengthPercent[j]+"</div>";
-                        elementToAdd.innerHTML = "<div style='border: 1px solid grey; font-size: 20px; height: 25px; width: auto; background-color: #2aabd2'>"+j+"</div>";
+                        // elementToAdd.innerHTML = "<div style='border: 1px solid grey; font-size: 20px; height: 25px; width: auto; background-color: #2aabd2'>"+lcLengthPercent[j]+"</div>";
+                        elementToAdd.innerHTML = "<div style='border: 1px solid grey; font-size: 20px; height: 25px; width: auto; background-color: #2aabd2; clear:both;'>"+j+"</div>";
                         if (i > 0) {
-                            numberToUse = i - 1;
+                            lcnumberToUse = i - 1;
                         } else {
-                            numberToUse = i;
+                            lcnumberToUse = i;
                         }
-                        if (previousChildrenLength==0||((currentChildrenLength - Math.round(previousChildrenLength/2)) >= textNeedyLength)) {
-                            lordOfElements.children[numberToUse].parentNode.insertBefore(elementToAdd, lordOfElements.children[i]);
+                        if (lcPreviousChildrenLength==0||((lcCurrentChildrenLength - Math.round(lcPreviousChildrenLength/2)) >= lcTextNeedyLength)) {
+                            lordOfElements.children[lcnumberToUse].parentNode.insertBefore(elementToAdd, lordOfElements.children[i]);
                         } else {
-                            lordOfElements.children[numberToUse].parentNode.insertBefore(elementToAdd, lordOfElements.children[i].nextSibling);
+                            lordOfElements.children[lcnumberToUse].parentNode.insertBefore(elementToAdd, lordOfElements.children[i].nextSibling);
                         }
-                        lastICounterValue = i;
+                        lcLastICounterValue = i;
                         break;
                     }
-                    lordOfElementsTextResult = lordOfElementsTextResult + " " + lordOfElements.children[i].innerText;
-                    lordOfElementsResult = lordOfElementsResult + lordOfElements.children[i].innerText.length;
-                    previousChildrenLength = lordOfElements.children[i].innerText.length;
-                    currentChildrenLength = lordOfElementsResult;
+                    lcLordOfElementsTextResult = lcLordOfElementsTextResult + " " + lordOfElements.children[i].innerText;
+                    lcLordOfElementsResult = lcLordOfElementsResult + lordOfElements.children[i].innerText.length;
+                    lcPreviousChildrenLength = lordOfElements.children[i].innerText.length;
+                    lcCurrentChildrenLength = lcLordOfElementsResult;
                 }
             }
         }
         var spanMarker = document.createElement("span");
-        spanMarker.setAttribute("id", "markedSpan");
+        spanMarker.setAttribute("id", "lcMarkedSpan");
         lordOfElements.prepend(spanMarker);
     }
 
-
-    for (let i = 0; i < separator.length; i++) {
-        if (["P","UL","OL"].includes(separator[i].tagName)) {
-            separatorResult[separatorResultCounter] = separator[i];
-            separatorResultCounter++;
-        } else if (separator[i].tagName=="BLOCKQUOTE"&&separator[i].children.length==1&&separator[i].children[0].tagName=="P") {
-            separatorResult[separatorResultCounter] = separator[i];
-            separatorResultCounter++;
+    for (let i = 0; i < lcSeparator.length; i++) {
+        if (["P","UL","OL"].includes(lcSeparator[i].tagName)) {
+            lcSeparatorResult[lcSeparatorResultCounter] = lcSeparator[i];
+            lcSeparatorResultCounter++;
+        } else if (lcSeparator[i].tagName=="BLOCKQUOTE"&&lcSeparator[i].children.length==1&&lcSeparator[i].children[0].tagName=="P") {
+            lcSeparatorResult[lcSeparatorResultCounter] = lcSeparator[i];
+            lcSeparatorResultCounter++;
         }
     }
 }
+
+// function multifilesTest() {
+//
+// }
 
 function symbolInserter(lordOfElements, containerFor7th) {
     try {
@@ -631,93 +641,139 @@ function percentInserter(lordOfElements, containerFor6th) {
         var separatorResultCounter = 0;
         var lastICounterValue = 0;
         var lastJ1CounterValue = 0;
-        var possibleTagsArray = ["P", "H1", "H2", "H3", "H4", "H5", "H6", "DIV", "OL", "UL", "BLOCKQUOTE", "INDEX"];
-        let possibleTagsInCheck = ["DIV", "INDEX"];
+        var arrCou = [];
+        var arrCouLast = [];
+        var possibleTagsArray = ["P", "H1", "H2", "H3", "H4", "H5", "H6", "DIV", "OL", "UL", "LI", "BLOCKQUOTE", "INDEX", "TABLE"];
+        var possibleTagsInCheck = ["DIV", "INDEX"];
+        var deniedClasses = ["percentPointerClass","content_rb","textLengthMarker"];
+        var deniedId = ["toc_container"];
+        var numberToUse = 0;
+        var previousBreak = 0;
+        var toNextElement = 0;
         let elementToAdd;
+        let wof_wof = 2;
+        let hof_hof = 2;
+        var penyok_stoparik = 0;
+        var gatheredTextLength = 0;
+        var lceCou = 0;
+        var lastLceCou = 0;
+
+        function textLengthMeter(i, usedElement, deepLvl) {
+            let localtextLength = 0;
+            if (deepLvl==1) {
+                penyok_stoparik = 1;
+            }
+            if (usedElement.tagName == 'TABLE') {
+                penyok_stoparik = 1;
+            }
+            let elementDeniedClasses = false;
+            let elementDeniedIds = false;
+            let deeperLocalTextLength = 0;
+            if (possibleTagsArray.includes(usedElement.tagName)) {
+                for (let cou = 0; cou < deniedClasses.length; cou++) {
+                    if (usedElement.classList.contains(deniedClasses[cou])) {
+                        elementDeniedClasses = true;
+                    }
+                }
+                if (!elementDeniedClasses) {
+                    for (let cou = 0; cou < deniedId.length; cou++) {
+                        if (usedElement.id == deniedId[cou]) {
+                            elementDeniedIds = true;
+                        }
+                    }
+                }
+                if (!elementDeniedClasses&&!elementDeniedIds) {
+                    if (possibleTagsInCheck.includes(usedElement.tagName)&&usedElement.children.length > 1) {
+                        for (let j = 0; j < usedElement.children.length; j++) {
+                            deeperLocalTextLength = textLengthMeter(j,usedElement.children[j], deepLvl+1);
+                            // localtextLength = localtextLength + textLengthMeter(j,usedElement.children[j], deepLvl+1);
+                            localtextLength = localtextLength + deeperLocalTextLength;
+                            gatheredTextLength = gatheredTextLength + deeperLocalTextLength;
+                        }
+                    } else {
+                        localtextLength = localtextLength + usedElement.innerText.length;
+                        gatheredTextLength = gatheredTextLength + usedElement.innerText.length;
+                    }
+                    let lcElementToAdd = document.createElement("div");
+                    lcElementToAdd.classList.add("textLengthMarker");
+                    lcElementToAdd.classList.add("hidden");
+                    lcElementToAdd.setAttribute('data-id', gatheredTextLength);
+                    lcElementToAdd.setAttribute('data-number', lceCou);
+                    lcElementToAdd.style.margin = '0';
+                    lcElementToAdd.style.height = '0';
+                    lcElementToAdd.style.width = '0';
+                    lceCou++;
+
+                    usedElement.parentNode.insertBefore(lcElementToAdd, usedElement.nextSibling);
+                    // elementToAdd.style.display = 'block';
+                }
+            }
+            return localtextLength;
+        }
 
         if (!document.getElementById("markedSpan")) {
             textLength = 0;
             for (let i = 0; i < lordOfElements.children.length; i++) {
+                let returnedTextLength = 0;
                 // if (lordOfElements.children[i].tagName!="SCRIPT"&&!lordOfElements.children[i].classList.contains("percentPointerClass")) {
-                if (possibleTagsArray.includes(lordOfElements.children[i].tagName)&&!lordOfElements.children[i].classList.contains("percentPointerClass")&&lordOfElements.children[i].id!="toc_container") {
-                    if (possibleTagsInCheck.includes(lordOfElements.children[i].tagName)) {
-                        if (lordOfElements.children[i].children.length > 1) {
-                            for (let j = 0; j < lordOfElements.children[i].children.length; j++) {
-                                if (possibleTagsArray.includes(lordOfElements.children[i].children[j].tagName)&&!lordOfElements.children[i].children[j].classList.contains("percentPointerClass")&&lordOfElements.children[i].children[j].id!="toc_container") {
-                                    textLength = textLength + lordOfElements.children[i].children[j].innerText.length;
-                                }
-                            }
-                        }
-                    } else {
-                        textLength = textLength + lordOfElements.children[i].innerText.length;
-                    }
-                }
+                // if (wof_wof==1) {
+                    // if (possibleTagsArray.includes(lordOfElements.children[i].tagName)&&!lordOfElements.children[i].classList.contains("percentPointerClass")&&lordOfElements.children[i].id!="toc_container") {
+                    //     if (possibleTagsInCheck.includes(lordOfElements.children[i].tagName)) {
+                    //         if (lordOfElements.children[i].children.length > 1) {
+                    //             for (let j = 0; j < lordOfElements.children[i].children.length; j++) {
+                    //                 if (possibleTagsArray.includes(lordOfElements.children[i].children[j].tagName)&&!lordOfElements.children[i].children[j].classList.contains("percentPointerClass")&&lordOfElements.children[i].children[j].id!="toc_container") {
+                    //                     textLength = textLength + lordOfElements.children[i].children[j].innerText.length;
+                    //                 }
+                    //             }
+                    //         }
+                    //     } else {
+                    //         textLength = textLength + lordOfElements.children[i].innerText.length;
+                    //     }
+                    // }
+                // } else {
+                    returnedTextLength = textLengthMeter(i,lordOfElements.children[i], 1);
+                    textLength = textLength + returnedTextLength;
+                // }
             }
 
-            let numberToUse = 0;
-            let previousBreak = 0;
-            for (let j = 0; j < containerFor6th.length; j++) {
-                previousBreak = 0;
-                textNeedyLength = Math.round(textLength * (containerFor6th[j]["elementPlace"]/100));
-                for (let i = lastICounterValue; i < lordOfElements.children.length; i++) {
-                    if (possibleTagsArray.includes(lordOfElements.children[i].tagName)&&!lordOfElements.children[i].classList.contains("percentPointerClass")&&lordOfElements.children[i].id!="toc_container") {
-                        if (possibleTagsInCheck.includes(lordOfElements.children[i].tagName)) {
-                            if (lordOfElements.children[i].children.length > 0) {
-                                for (let j1 = lastJ1CounterValue; j1 < lordOfElements.children[i].children.length; j1++) {
-                                    if (possibleTagsArray.includes(lordOfElements.children[i].children[j1].tagName)&&!lordOfElements.children[i].children[j1].classList.contains("percentPointerClass")&&lordOfElements.children[i].children[j1].id!="toc_container") {
-                                        if (currentChildrenLength >= textNeedyLength) {
-                                            // elementToAdd = document.createElement("div");
-                                            // elementToAdd.classList.add("percentPointerClass");
-                                            // elementToAdd.innerHTML = containerFor6th[j]["text"];
-                                            // elementToAdd.style.margin = '5px 0px';
-                                            // elementToAdd.style.display = 'block';
-
-                                            elementToAdd = document.querySelector('.percentPointerClass[data-id="'+containerFor6th[j]['id']+'"]');
-
-                                            if (j1 > 0) {
-                                                numberToUse = j1 - 1;
-                                            } else {
-                                                numberToUse = j;
-                                            }
-                                            if (previousChildrenLength==0||((currentChildrenLength - Math.round(previousChildrenLength/2)) >= textNeedyLength)) {
-
-                                                if (lordOfElements.children[i].children[numberToUse].parentElement.tagName.toLowerCase() == "blockquote") {
-                                                    lordOfElements.children[i].children[numberToUse].parentElement.parentNode.insertBefore(elementToAdd, lordOfElements.children[i].children[j1]);
-                                                    elementToAdd.classList.remove('coveredAd');
-                                                } else {
-                                                    lordOfElements.children[i].children[numberToUse].parentNode.insertBefore(elementToAdd, lordOfElements.children[i].children[j1]);
-                                                    elementToAdd.classList.remove('coveredAd');
-                                                }
-                                            } else {
-                                                if (lordOfElements.children[i].children[numberToUse].parentElement.tagName.toLowerCase() == "blockquote") {
-                                                    lordOfElements.children[i].children[numberToUse].parentElement.parentNode.insertBefore(elementToAdd, lordOfElements.children[i].children[j1].nextSibling);
-                                                    elementToAdd.classList.remove('coveredAd');
-                                                } else {
-                                                    lordOfElements.children[i].children[numberToUse].parentNode.insertBefore(elementToAdd, lordOfElements.children[i].children[j1].nextSibling);
-                                                    elementToAdd.classList.remove('coveredAd');
-                                                }
-                                            }
-                                            lastICounterValue = i;
-                                            lastJ1CounterValue = j1;
-                                            previousBreak = 1;
-                                            break;
-                                        }
-                                        lordOfElementsTextResult = lordOfElementsTextResult + " " + lordOfElements.children[i].children[j1].innerText;
-                                        lordOfElementsResult = lordOfElementsResult + lordOfElements.children[i].children[j1].innerText.length;
-                                        previousChildrenLength = lordOfElements.children[i].children[j1].innerText.length;
-                                        currentChildrenLength = lordOfElementsResult;
-                                    }
+            function insertByPercents(i, j, usedElement, insLevel) {
+                let elementDeniedClasses = false;
+                let elementDeniedIds = false;
+                if (usedElement[i].tagName == 'TABLE') {
+                    penyok_stoparik = 1;
+                }
+                if (possibleTagsArray.includes(usedElement[i].tagName)) {
+                    for (let cou = 0; cou < deniedClasses.length; cou++) {
+                        if (usedElement[i].classList.contains(deniedClasses[cou])) {
+                            elementDeniedClasses = true;
+                        }
+                    }
+                    if (!elementDeniedClasses) {
+                        for (let cou = 0; cou < deniedId.length; cou++) {
+                            if (usedElement.id == deniedId[cou]) {
+                                elementDeniedIds = true;
+                            }
+                        }
+                    }
+                    if (!elementDeniedClasses&&!elementDeniedIds) {
+                        if (possibleTagsInCheck.includes(usedElement[i].tagName)) {
+                            if (usedElement[i].children.length > 0) {
+                                if (!arrCouLast[insLevel+1]||arrCouLast[insLevel+1] < 0) {
+                                    arrCouLast[insLevel+1] = 0;
                                 }
-                                if (previousBreak==1) {
-                                    break;
+                                for (let j1 = arrCouLast[insLevel+1]; j1 < usedElement[i].children.length; j1++) {
+                                    insertByPercents(j1, j, usedElement[i].children, insLevel+1);
+                                    if (toNextElement==1) {
+                                        arrCouLast[insLevel] = i;
+                                        return false;
+                                    }
+                                    if (j1 == (usedElement[i].children.length - 1)) {
+                                        arrCouLast[insLevel+1] = -1;
+                                    }
                                 }
                             }
                         } else {
                             if (currentChildrenLength >= textNeedyLength) {
-                                // elementToAdd = document.createElement("div");
-                                // elementToAdd.classList.add("percentPointerClass");
-                                // elementToAdd.innerHTML = containerFor6th[j]["text"];
-
                                 elementToAdd = document.querySelector('.percentPointerClass[data-id="'+containerFor6th[j]['id']+'"]');
 
                                 if (i > 0) {
@@ -726,33 +782,182 @@ function percentInserter(lordOfElements, containerFor6th) {
                                     numberToUse = i;
                                 }
                                 if (previousChildrenLength==0||((currentChildrenLength - Math.round(previousChildrenLength/2)) >= textNeedyLength)) {
-                                    if (lordOfElements.children[numberToUse].parentElement.tagName.toLowerCase() == "blockquote") {
-                                        lordOfElements.children[numberToUse].parentElement.parentNode.insertBefore(elementToAdd, lordOfElements.children[i]);
-                                        elementToAdd.classList.remove('coveredAd');
+                                    if (usedElement[numberToUse].parentElement.tagName.toLowerCase() == "blockquote") {
+                                        usedElement[numberToUse].parentElement.parentNode.insertBefore(elementToAdd, usedElement[i]);
                                     } else {
-                                        lordOfElements.children[numberToUse].parentNode.insertBefore(elementToAdd, lordOfElements.children[i]);
-                                        elementToAdd.classList.remove('coveredAd');
+                                        usedElement[numberToUse].parentNode.insertBefore(elementToAdd, usedElement[i]);
                                     }
                                 } else {
-                                    if (lordOfElements.children[numberToUse].parentElement.tagName.toLowerCase() == "blockquote") {
-                                        lordOfElements.children[numberToUse].parentElement.parentNode.insertBefore(elementToAdd, lordOfElements.children[i].nextSibling);
-                                        elementToAdd.classList.remove('coveredAd');
+                                    if (usedElement[numberToUse].parentElement.tagName.toLowerCase() == "blockquote") {
+                                        usedElement[numberToUse].parentElement.parentNode.insertBefore(elementToAdd, usedElement[i].nextSibling);
                                     } else {
-                                        lordOfElements.children[numberToUse].parentNode.insertBefore(elementToAdd, lordOfElements.children[i].nextSibling);
-                                        elementToAdd.classList.remove('coveredAd');
+                                        usedElement[numberToUse].parentNode.insertBefore(elementToAdd, usedElement[i].nextSibling);
                                     }
                                 }
-                                lastICounterValue = i;
-                                break;
+                                elementToAdd.classList.remove('coveredAd');
+                                arrCouLast[insLevel] = i;
+                                toNextElement = 1;
+                                return false;
                             }
-                            lordOfElementsTextResult = lordOfElementsTextResult + " " + lordOfElements.children[i].innerText;
-                            lordOfElementsResult = lordOfElementsResult + lordOfElements.children[i].innerText.length;
-                            previousChildrenLength = lordOfElements.children[i].innerText.length;
+                            lordOfElementsTextResult = lordOfElementsTextResult + " " + usedElement[i].innerText;
+                            lordOfElementsResult = lordOfElementsResult + usedElement[i].innerText.length;
+                            previousChildrenLength = usedElement[i].innerText.length;
                             currentChildrenLength = lordOfElementsResult;
+                            return false;
                         }
                     }
                 }
             }
+
+            function insertByPercentsNew(j) {
+                let perfectPlace = document.querySelectorAll('.textLengthMarker');
+                let localMiddleValue = 0;
+
+                if (perfectPlace.length > 0) {
+                    for (let i = 0; i < perfectPlace.length; i++) {
+                        if (perfectPlace[i].getAttribute('data-id') > textNeedyLength) {
+                            if (i > 0) {
+                                localMiddleValue = perfectPlace[i].getAttribute('data-id') - perfectPlace[i-1].getAttribute('data-id');
+                                localMiddleValue = perfectPlace[i].getAttribute('data-id') - Math.round(localMiddleValue/2);
+                            } else {
+                                localMiddleValue = Math.round(perfectPlace[i].getAttribute('data-id')/2);
+                            }
+
+                            elementToAdd = document.querySelector('.percentPointerClass[data-id="'+containerFor6th[j]['id']+'"]');
+
+                            if (textNeedyLength < localMiddleValue) {
+                                perfectPlace[i].parentNode.insertBefore(elementToAdd, perfectPlace[i].previousSibling);
+                            } else {
+                                perfectPlace[i].parentNode.insertBefore(elementToAdd, perfectPlace[i]);
+                            }
+                            elementToAdd.classList.remove('coveredAd');
+                            return false;
+                        }
+                        if (i > 1) {
+                            perfectPlace[i-2].remove();
+                        }
+                    }
+                    return false;
+                }
+            }
+
+            function clearTlMarks() {
+                let marksForDeleting = document.querySelectorAll('.textLengthMarker');
+
+                if (marksForDeleting.length > 0) {
+                    for (let i = 0; i < marksForDeleting.length; i++) {
+                        marksForDeleting[i].remove();
+                    }
+                }
+
+            }
+
+            let insLevel = 1;
+            arrCouLast[insLevel] = 0;
+            for (let j = 0; j < containerFor6th.length; j++) {
+                previousBreak = 0;
+                toNextElement = 0;
+                // textNeedyLength = Math.round(textLength * (containerFor6th[j]["elementPlace"]/100));
+                textNeedyLength = Math.round(gatheredTextLength * (containerFor6th[j]["elementPlace"]/100));
+                insertByPercentsNew(j);
+                // for (let i = arrCouLast[insLevel]; i < lordOfElements.children.length; i++) {
+                //     if (hof_hof==1) {
+                //         if (possibleTagsArray.includes(lordOfElements.children[i].tagName)&&!lordOfElements.children[i].classList.contains("percentPointerClass")&&lordOfElements.children[i].id!="toc_container") {
+                //             if (possibleTagsInCheck.includes(lordOfElements.children[i].tagName)) {
+                //                 if (lordOfElements.children[i].children.length > 0) {
+                //                     for (let j1 = lastJ1CounterValue; j1 < lordOfElements.children[i].children.length; j1++) {
+                //                         if (possibleTagsArray.includes(lordOfElements.children[i].children[j1].tagName)&&!lordOfElements.children[i].children[j1].classList.contains("percentPointerClass")&&lordOfElements.children[i].children[j1].id!="toc_container") {
+                //                             if (currentChildrenLength >= textNeedyLength) {
+                //                                 // elementToAdd = document.createElement("div");
+                //                                 // elementToAdd.classList.add("percentPointerClass");
+                //                                 // elementToAdd.innerHTML = containerFor6th[j]["text"];
+                //                                 // elementToAdd.style.margin = '5px 0px';
+                //                                 // elementToAdd.style.display = 'block';
+                //
+                //                                 elementToAdd = document.querySelector('.percentPointerClass[data-id="'+containerFor6th[j]['id']+'"]');
+                //
+                //                                 if (j1 > 0) {
+                //                                     numberToUse = j1 - 1;
+                //                                 } else {
+                //                                     numberToUse = j;
+                //                                 }
+                //                                 if (previousChildrenLength==0||((currentChildrenLength - Math.round(previousChildrenLength/2)) >= textNeedyLength)) {
+                //                                     if (lordOfElements.children[i].children[numberToUse].parentElement.tagName.toLowerCase() == "blockquote") {
+                //                                         lordOfElements.children[i].children[numberToUse].parentElement.parentNode.insertBefore(elementToAdd, lordOfElements.children[i].children[j1]);
+                //                                     } else {
+                //                                         lordOfElements.children[i].children[numberToUse].parentNode.insertBefore(elementToAdd, lordOfElements.children[i].children[j1]);
+                //                                     }
+                //                                 } else {
+                //                                     if (lordOfElements.children[i].children[numberToUse].parentElement.tagName.toLowerCase() == "blockquote") {
+                //                                         lordOfElements.children[i].children[numberToUse].parentElement.parentNode.insertBefore(elementToAdd, lordOfElements.children[i].children[j1].nextSibling);
+                //                                     } else {
+                //                                         lordOfElements.children[i].children[numberToUse].parentNode.insertBefore(elementToAdd, lordOfElements.children[i].children[j1].nextSibling);
+                //                                     }
+                //                                 }
+                //                                 elementToAdd.classList.remove('coveredAd');
+                //                                 lastICounterValue = i;
+                //                                 lastJ1CounterValue = j1;
+                //                                 previousBreak = 1;
+                //                                 break;
+                //                             }
+                //                             lordOfElementsTextResult = lordOfElementsTextResult + " " + lordOfElements.children[i].children[j1].innerText;
+                //                             lordOfElementsResult = lordOfElementsResult + lordOfElements.children[i].children[j1].innerText.length;
+                //                             previousChildrenLength = lordOfElements.children[i].children[j1].innerText.length;
+                //                             currentChildrenLength = lordOfElementsResult;
+                //                         }
+                //                     }
+                //                     if (previousBreak==1) {
+                //                         break;
+                //                     }
+                //                 }
+                //             } else {
+                //                 if (currentChildrenLength >= textNeedyLength) {
+                //                     // elementToAdd = document.createElement("div");
+                //                     // elementToAdd.classList.add("percentPointerClass");
+                //                     // elementToAdd.innerHTML = containerFor6th[j]["text"];
+                //
+                //                     elementToAdd = document.querySelector('.percentPointerClass[data-id="'+containerFor6th[j]['id']+'"]');
+                //
+                //                     if (i > 0) {
+                //                         numberToUse = i - 1;
+                //                     } else {
+                //                         numberToUse = i;
+                //                     }
+                //                     if (previousChildrenLength==0||((currentChildrenLength - Math.round(previousChildrenLength/2)) >= textNeedyLength)) {
+                //                         if (lordOfElements.children[numberToUse].parentElement.tagName.toLowerCase() == "blockquote") {
+                //                             lordOfElements.children[numberToUse].parentElement.parentNode.insertBefore(elementToAdd, lordOfElements.children[i]);
+                //                         } else {
+                //                             lordOfElements.children[numberToUse].parentNode.insertBefore(elementToAdd, lordOfElements.children[i]);
+                //                         }
+                //                     } else {
+                //                         if (lordOfElements.children[numberToUse].parentElement.tagName.toLowerCase() == "blockquote") {
+                //                             lordOfElements.children[numberToUse].parentElement.parentNode.insertBefore(elementToAdd, lordOfElements.children[i].nextSibling);
+                //                         } else {
+                //                             lordOfElements.children[numberToUse].parentNode.insertBefore(elementToAdd, lordOfElements.children[i].nextSibling);
+                //                         }
+                //                     }
+                //                     elementToAdd.classList.remove('coveredAd');
+                //                     lastICounterValue = i;
+                //                     break;
+                //                 }
+                //                 lordOfElementsTextResult = lordOfElementsTextResult + " " + lordOfElements.children[i].innerText;
+                //                 lordOfElementsResult = lordOfElementsResult + lordOfElements.children[i].innerText.length;
+                //                 previousChildrenLength = lordOfElements.children[i].innerText.length;
+                //                 currentChildrenLength = lordOfElementsResult;
+                //             }
+                //         }
+                //     } else {
+                //         // insertByPercents(i, j, lordOfElements.children, insLevel);
+                //         // if (toNextElement==1) {
+                //         //     break;
+                //         // }
+                //         // if (i == (lordOfElements.children.length - 1)) {
+                //         //     arrCouLast[insLevel] = 0;
+                //         // }
+                //     }
+                // }
+            }
+            clearTlMarks();
             var spanMarker = document.createElement("span");
             spanMarker.setAttribute("id", "markedSpan");
             lordOfElements.prepend(spanMarker);
