@@ -13,7 +13,7 @@ include (dirname(__FILE__)."/textEditing.php");
 /*
 Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.1.26.66
+Version:      0.1.26.68
 Author:       Realbig Team
 Author URI:   https://realbig.media
 License:      GPLv2 or later
@@ -122,6 +122,9 @@ try {
     if (empty(apply_filters('wp_doing_cron', defined('DOING_CRON') && DOING_CRON))) {
 	    if ((!empty($curUserCan)&&!empty($_POST['statusRefresher']))||empty($tableForToken)||empty($tableForCurrentPluginChecker)) {
 	        $wpdb->query('DELETE FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_mobile","rb_block_desktop","rb_block_mobile_new","rb_block_desktop_new") AND post_author = 0');
+	        delete_transient('rb_cache_timeout');
+	        delete_transient('rb_mobile_cache_timeout');
+	        delete_transient('rb_desktop_cache_timeout');
 		    delete_option('realbig_status_gatherer_version');
 	    }
     }
@@ -130,7 +133,7 @@ try {
 	if (!empty($pluginData['Version'])) {
 		$GLOBALS['realbigForWP_version'] = $pluginData['Version'];
 	} else {
-		$GLOBALS['realbigForWP_version'] = '0.1.26.66';
+		$GLOBALS['realbigForWP_version'] = '0.1.26.68';
 	}
 	$lastSuccessVersionGatherer = get_option('realbig_status_gatherer_version');
 //	require_once( 'synchronising.php' );
@@ -149,6 +152,13 @@ try {
 			$GLOBALS['manuallyTableCreatingResult'] = RFWP_manuallyTablesCreation($wpPrefix);
 		}
 	}
+
+	if ((!empty($lastSuccessVersionGatherer)&&$lastSuccessVersionGatherer != $GLOBALS['realbigForWP_version'])||empty($lastSuccessVersionGatherer)) {
+		$wpdb->query('DELETE FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_mobile","rb_block_desktop","rb_block_mobile_new","rb_block_desktop_new") AND post_author = 0');
+		delete_transient('rb_cache_timeout');
+		delete_transient('rb_mobile_cache_timeout');
+		delete_transient('rb_desktop_cache_timeout');
+    }
 
 	if ($statusGatherer['realbig_plugin_settings_table'] == false || $statusGatherer['realbig_settings_table'] == false || $lastSuccessVersionGatherer != $GLOBALS['realbigForWP_version']) {
 //		$tableForCurrentPluginChecker = $wpdb->get_var( 'SHOW TABLES LIKE "' . $wpPrefix . 'realbig_plugin_settings"' );   //settings for block table checking
@@ -417,13 +427,18 @@ try {
 //        $mobileCheck = RFWP_wp_is_mobile();
 	    $cacheTimeoutMobile = get_transient('rb_mobile_cache_timeout');
 	    $cacheTimeoutDesktop = get_transient('rb_desktop_cache_timeout');
-//	    $cacheTimeoutMobile = 0;
-//	    $cacheTimeoutDesktop = 0;
+	    if (!empty($GLOBALS['dev_mode'])) {
+		    $cacheTimeoutMobile = 0;
+		    $cacheTimeoutDesktop = 0;
+	    }
 
 	    if (empty($cacheTimeoutDesktop)||empty($cacheTimeoutMobile)) {
 		    $cacheTimeout = get_transient('rb_cache_timeout');
 
-//		    $cacheTimeout = 0;
+		    if (!empty($GLOBALS['dev_mode'])) {
+			    $cacheTimeout = 0;
+		    }
+
 		    if (empty($cacheTimeout)) {
 			    add_action('wp_enqueue_scripts', 'RFWP_syncFunctionAdd2', 11);
 		    }
@@ -738,6 +753,18 @@ try {
 			    require_once (dirname(__FILE__)."/textEditing.php");
 			    $content = RFWP_addIcons($fromDb, $content, 'content', $cachedBlocks);
 
+//			    $curUserCan = current_user_can('activate_plugins');
+//			    if (!empty($curUserCan)) {
+//			        $content = '<script>console.log("accessed")</script>'.$content;
+//
+//				    $testPostGather = $wpdb->get_results('SELECT * FROM '.$GLOBALS['wpPrefix'].'posts WHERE post_type = "rb_block_desktop_new" AND post_title = "39127"');
+//				    if (!empty($testPostGather)&&!empty($testPostGather[0]->post_content)) {
+//					    $testPostGatherContent = $testPostGather[0]->post_content;
+//					    $testPostGatherContent = preg_replace('~((\<|\/)script)~','$2scr+ipt', $testPostGatherContent);
+//					    $content = '<div id="cacheTest_id">'.$testPostGatherContent.'</div>'.$content;
+//				    }
+//			    }
+
 			    $inserts = RFWP_insertsToString('body', 1);
 //			    $content = RFWP_insertingsToContent($content, $inserts);
 
@@ -789,6 +816,7 @@ try {
 
 		try {
 		    $rbSettings = $wpdb->get_results('SELECT optionName, optionValue, timeUpdate FROM ' . $GLOBALS["wpPrefix"] . 'realbig_settings WHERE optionName IN ("deactError","domain","excludedMainPage","excludedPages","pushStatus","excludedPageTypes","kill_rb")', ARRAY_A);
+			$rbTransients = $wpdb->get_results('SELECT optionName, optionValue, timeUpdate FROM ' . $GLOBALS["wpPrefix"] . 'realbig_settings WHERE optionName IN ("deactError","domain","excludedMainPage","excludedPages","pushStatus","excludedPageTypes","kill_rb")', ARRAY_A);
 
 		    $killRbCheck = '';
 //		    if (!empty($_POST['kill_rb'])) {

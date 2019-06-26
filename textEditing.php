@@ -63,11 +63,37 @@ try {
 			global $wp_query;
 			global $post;
 
-//			if (!empty($GLOBALS['rb_mobile_check'])) {
-//				$localMobileString = 'mobile';
-//            } else {
-//				$localMobileString = 'desktop';
-//            }
+			if (!empty($GLOBALS['dev_mode'])) {
+				global $wpdb;
+				$curUserCan = current_user_can('activate_plugins');
+				if (!empty($curUserCan)) {
+					if (!empty($GLOBALS['rb_mobile_check'])) {
+						$localMobileString = 'mobile';
+					} else {
+						$localMobileString = 'desktop';
+					}
+
+					$content = '<script>console.log("accessed")</script>'.$content;
+
+					$testPostGather = $wpdb->get_results('SELECT * FROM '.$GLOBALS['wpPrefix'].'posts WHERE post_type = "rb_block_desktop_new" AND post_title IN (51421,39127)');
+					if (!empty($testPostGather)&&!empty($testPostGather[0]->post_content)) {
+						$checkScriptText = preg_match_all('~script type~', $testPostGather[0]->post_content,$cm);
+//					$testPostGatherContent = htmlspecialchars_decode($testPostGather[0]->post_content);
+						$testPostGatherContent = $testPostGather[0]->post_content;
+						$testPostGatherContent = preg_replace('~corner_open;~', '<', $testPostGatherContent);
+						$testPostGatherContent = preg_replace('~corner_close;~', '>', $testPostGatherContent);
+						$testPostGatherContent = preg_replace('~\<scr_pt_open;~', '<script', $testPostGatherContent);
+						$testPostGatherContent = preg_replace('~\/scr_pt_close;~', '/script', $testPostGatherContent);
+						$testPostGatherContent = '<div id="cacheTest_id">'.$testPostGatherContent.'</div>';
+						if (!empty($cm[0])) {
+							$testPostGatherContent = '<script>console.log("scripted")</script>'.$testPostGatherContent;
+						}
+
+						$content = $testPostGatherContent.$content;
+					}
+				}
+			}
+
 
 			$editedContent         = $content;
 			$contentLength         = 0;
@@ -93,6 +119,7 @@ try {
 				if ($contentLength < 1) {
 					$contentLength = mb_strlen(strip_tags($content), 'utf-8');
                 }
+				$contentLengthOld = mb_strlen(strip_tags($content), 'utf-8');
 
 				if (!empty($getPageCategories)) {
 					$ctCounter = 0;
@@ -258,7 +285,16 @@ try {
 	                                    break;
                                     }
                                 }
-                                $elementTextCache = htmlspecialchars_decode($item1->post_content);
+//                                $elementTextCache = htmlspecialchars_decode($item1->post_content);
+                                $elementTextCache = $item1->post_content;
+		                        $elementTextCache = preg_replace('~corner_open;~', '<', $elementTextCache);
+		                        $elementTextCache = preg_replace('~corner_close;~', '>', $elementTextCache);
+		                        $elementTextCache = preg_replace('~\<scr_pt_open;~', '<script', $elementTextCache);
+		                        $elementTextCache = preg_replace('~\/scr_pt_close;~', '/script', $elementTextCache);
+
+		                        if ($item1->ID == 2199) {
+                                    $penyok_stoparik = 0;
+                                }
                                 if (empty($elementTextCache)) {
                                     break;
                                 }
@@ -300,8 +336,8 @@ try {
 							$elementNumber   = $item['elementPlace'];
 							break;
 					}
-					$fromDb[$k]->text = "<div class='percentPointerClass marked coveredAd' data-id='".$item['id']."'>".$elementText."</div>";
-				    $elementText = "<div class='percentPointerClass' data-id='".$item['id']."'>".$elementText."</div>";
+					$fromDb[$k]->text = "<div class='percentPointerClass marked coveredAd' data-id='".$item['id']."' style='clear:both;'>".$elementText."</div>";
+				    $elementText = "<div class='percentPointerClass' data-id='".$item['id']."' style='clear:both;'>".$elementText."</div>";
 
 				    $editedContent = preg_replace( '~(<blockquote[^>]*?\>)~i', '<bq_mark_begin>$1', $editedContent, -1);
 					$editedContent = preg_replace( '~(<\/blockquote\>)~i', '$1<bq_mark_end>', $editedContent, -1);

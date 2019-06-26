@@ -359,13 +359,20 @@ try {
 	                                    break;
                                 }
 
+                                $postContent = $ritem['code'];
+                                $postContent = htmlspecialchars_decode($postContent);
+                                $postContent = preg_replace('~\<script~', '<scr_pt_open;', $postContent);
+                                $postContent = preg_replace('~\/script~', '/scr_pt_close;', $postContent);
+                                $postContent = preg_replace('~\<~', 'corner_open;', $postContent);
+                                $postContent = preg_replace('~\>~', 'corner_close;', $postContent);
+
                                 if (in_array($ritem['type'], ['mobile','universal'])) {
 	                                if (!empty($postCheckMobile)) {
-		                                $postarr = ['ID' => $postCheckMobile, 'post_content' => $ritem['code']];
+		                                $postarr = ['ID' => $postCheckMobile, 'post_content' => $postContent];
 		                                $updateBlockResultMobile = wp_update_post($postarr, true);
 	                                } else {
 		                                $postarr = [
-			                                'post_content' => $ritem['code'],
+			                                'post_content' => $postContent,
 			                                'post_title'   => $ritem['blockId'],
 			                                'post_status'  => "publish",
 			                                'post_type'    => 'rb_block_mobile_new',
@@ -377,11 +384,11 @@ try {
                                 }
                                 if (in_array($ritem['type'], ['desktop','universal'])) {
 	                                if (!empty($postCheckDesktop)) {
-		                                $postarr = ['ID' => $postCheckDesktop, 'post_content' => $ritem['code']];
+		                                $postarr = ['ID' => $postCheckDesktop, 'post_content' => $postContent];
 		                                $updateBlockResultDesktop = wp_update_post($postarr, true);
 	                                } else {
 		                                $postarr = [
-			                                'post_content' => $ritem['code'],
+			                                'post_content' => $postContent,
 			                                'post_title'   => $ritem['blockId'],
 			                                'post_status'  => "publish",
 			                                'post_type'    => 'rb_block_desktop_new',
