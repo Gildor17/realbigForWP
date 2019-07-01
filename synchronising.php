@@ -241,6 +241,35 @@ try {
 							        }
                                 }
 							    /** End of insertings */
+							    /** Shortcodes */
+							    if (!empty($decodedToken['shortcodes'])) {
+							        $shortcodes = $decodedToken['shortcodes'];
+								    $oldShortcodes = get_posts(['post_type' => 'rb_shortcodes','numberposts' => 100]);
+								    if (!empty($oldShortcodes)) {
+									    foreach ($oldShortcodes AS $k => $item) {
+										    wp_delete_post($item->ID);
+									    }
+									    unset($k, $item);
+								    }
+
+                                    foreach ($shortcodes AS $k=>$item) {
+                                        $content_for_post = 'begin_of_header_code'.$item['headerField'].'end_of_header_code&begin_of_body_code'.$item['bodyField'].'end_of_body_code';
+
+                                        $postarr = [
+                                            'post_content' => $item['code'],
+                                            'post_title'   => $item['id'],
+                                            'post_excerpt' => $item['blockId'],
+                                            'post_name'    => 'shortcode',
+                                            'post_status'  => "publish",
+                                            'post_type'    => 'rb_shortcodes',
+                                            'post_author'  => 0,
+                                        ];
+                                        require_once(dirname(__FILE__ ) . "/../../../wp-includes/pluggable.php");
+                                        $saveInsertResult = wp_insert_post($postarr, true);
+                                    }
+                                    unset($k, $item);
+                                }
+							    /** End of shortcodes */
 
 							    $GLOBALS['token'] = $tokenInput;
 

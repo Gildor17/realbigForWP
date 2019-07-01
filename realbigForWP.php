@@ -13,7 +13,7 @@ include (dirname(__FILE__)."/textEditing.php");
 /*
 Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.1.26.68
+Version:      0.1.26.69
 Author:       Realbig Team
 Author URI:   https://realbig.media
 License:      GPLv2 or later
@@ -43,6 +43,26 @@ try {
 		$GLOBALS['liveInternet'] = [];
 //		$GLOBALS['liveInternet']['status'] = 'disabled';
 	}
+
+//    $Param = array(
+//        'doShortCode'=>admin_url( 'admin-ajax.php?action=handle_ajax_shortcode' ),
+//    );
+//    wp_localize_script('RFWP_rerunShortcodes','Param', $Param);
+//
+////executes for users that are not logged in.
+//    add_action( 'wp_ajax_nopriv_handle_ajax_shortcode', 'RFWP_rerunShortcodes' );
+////executes for users that are logged in.
+//    add_action( 'wp_ajax_handle_ajax_shortcode', 'RFWP_rerunShortcodes' );
+
+//	add_action('wp_ajax_rerunShortcodes', 'rerunShortcodes');
+//	add_action('wp_ajax_nopriv_rerunShortcodes', 'rerunShortcodes');
+//
+//    function rerunShortcodes() {
+//        //put whatever you want to be execute when JavaScript event is triggered
+//        do_shortcode($content, $ignore_html = false);
+//        // Don't forget to stop execution afterward.
+//        wp_die();
+//    }
 
 	/***************** Test zone ******************************************************************************************/
 	/** Kill rb connection emulation */
@@ -133,7 +153,7 @@ try {
 	if (!empty($pluginData['Version'])) {
 		$GLOBALS['realbigForWP_version'] = $pluginData['Version'];
 	} else {
-		$GLOBALS['realbigForWP_version'] = '0.1.26.68';
+		$GLOBALS['realbigForWP_version'] = '0.1.26.69';
 	}
 	$lastSuccessVersionGatherer = get_option('realbig_status_gatherer_version');
 //	require_once( 'synchronising.php' );
@@ -385,7 +405,14 @@ try {
 			plugins_url().'/'.basename(__DIR__).'/asyncBlockInserting.js',
 			array('jquery'),
 			$GLOBALS['realbigForWP_version'],
-			false);
+			false
+        );
+
+//		wp_localize_script(
+//			'asyncBlockInserting',
+//			'adg_object',
+//			array('ajax_url' => admin_url('admin-ajax.php'))
+//		);
 	}
 
 	function RFWP_syncFunctionAdd2() {
@@ -629,21 +656,43 @@ try {
 	if (empty(apply_filters('wp_doing_cron', defined('DOING_CRON')&&DOING_CRON))&&empty($excludedPage)) {
 //		RFWP_js_add();
 		add_filter('the_content', 'RFWP_adBlocksToContentInsertingFunction', 500);
+//		add_filter('the_content', 'RFWP_adBlocksToContentInsertingFunction', 10);
 	}
 
 //	insertings body add
     if (empty(apply_filters('wp_doing_cron', defined('DOING_CRON')&&DOING_CRON))&&!is_admin()) {
 	    RFWP_js_add();
 	    add_filter('the_content', 'RFWP_insertingsToContentAddingFunction', 501);
+//	    add_filter('the_content', 'RFWP_insertingsToContentAddingFunction', 10);
     }
 
+//    if (empty(apply_filters('wp_doing_cron', defined('DOING_CRON')&&DOING_CRON))&&!is_admin()) {
+//	    function testingScQueue($content) {
+//	        $penyok_stoparik = 0;
+//	        return $content;
+//        }
+//
+//	    add_filter('the_content', 'testingScQueue', 10);
+//    }
+
+//    if (empty(apply_filters('wp_doing_cron', defined('DOING_CRON')&&DOING_CRON))&&!is_admin()) {
+//	    $penyok_stoparik = 0;
+//
+//	    function test_sc_oval_exec() {
+//		    return '<div style="width: 100px; height: 20px; border: 1px solid black; background-color: #0033cc; border-radius: 30%;"></div>';
+//	    }
+//	    add_shortcode('test_sc_oval', 'test_sc_oval_exec');
+//
+//	    add_filter('the_content', 'RFWP_activateShortCodes', 502);
+//    }
 	/************* end blocks for text ************************************************************************************/
 	/************* adding insertings in text *****************************************************/
     function RFWP_insertingsToContentAddingFunction($content) {
         $penyok_stoparik = 0;
         $insertings = RFWP_insertsToString('body', 0);
 	    $content = RFWP_insertingsToContent($content, $insertings);
-        return $content;
+//	    $content = do_shortcode($content);
+	    return $content;
     }
 	/************* adding insertings in text *****************************************************/
 	/********** using settings in texts ***********************************************************************************/
@@ -742,6 +791,17 @@ try {
                 } else {
                     $cachedBlocks = get_posts(['post_type' => 'rb_block_desktop_new','numberposts' => 100]);
                 }
+                $shortcodesGathered = get_posts(['post_type' => 'rb_shortcodes','numberposts' => -1]);
+
+                $shortcodes = [];
+                foreach ($shortcodesGathered AS $k=>$item) {
+	                if (empty($shortcodes[$item->post_excerpt])) {
+		                $shortcodes[$item->post_excerpt] = [];
+                    }
+	                $shortcodes[$item->post_excerpt][$item->post_title] = $item;
+                }
+                $shortcodes = null;
+
 //                $cachedBlocks = null;
 //			    }
 
@@ -751,7 +811,7 @@ try {
 				    $fromDb = $wpdb->get_results('SELECT * FROM '.$GLOBALS['wpPrefix'].'realbig_plugin_settings WGPS WHERE setting_type = 3');
 			    }
 			    require_once (dirname(__FILE__)."/textEditing.php");
-			    $content = RFWP_addIcons($fromDb, $content, 'content', $cachedBlocks);
+			    $content = RFWP_addIcons($fromDb, $content, 'content', $cachedBlocks, null, $shortcodes);
 
 //			    $curUserCan = current_user_can('activate_plugins');
 //			    if (!empty($curUserCan)) {
@@ -775,6 +835,12 @@ try {
 	    } else {
 		    return $content;
 	    }
+	}
+
+	function RFWP_activateShortCodes($content) {
+	    $penyok_stoparik = 0;
+		$content = do_shortcode($content);
+		return $content;
 	}
 	/*********** end of using settings in texts ***************************************************************************/
 	/*********** begin of token input area ********************************************************************************/
@@ -808,8 +874,11 @@ try {
 		global $wpPrefix;
 
 		$blocksCounter = 1;
-		$killRbAvailable = false;
-//		$killRbAvailable = true;
+		if (!empty($GLOBALS['dev_mode'])) {
+			$killRbAvailable = true;
+		} else {
+			$killRbAvailable = false;
+		}
 //		$postsGather = $wpdb->get_results('SELECT post_title FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_desktop_new","rb_block_mobile_new")');
 		$postsGatherDesktop = $wpdb->get_results('SELECT post_title FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_desktop_new")');
 		$postsGatherMobile  = $wpdb->get_results('SELECT post_title FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_mobile_new" )');
