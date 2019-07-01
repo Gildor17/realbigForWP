@@ -57,43 +57,42 @@ try {
         }
     }
 
-	function RFWP_addIcons($fromDb, $content, $contentType, $cachedBlocks, $inserts=null) {
+	function RFWP_addIcons($fromDb, $content, $contentType, $cachedBlocks, $inserts=null, $shortcodes) {
 		try {
 
 			global $wp_query;
 			global $post;
 
 			if (!empty($GLOBALS['dev_mode'])) {
-				global $wpdb;
-				$curUserCan = current_user_can('activate_plugins');
-				if (!empty($curUserCan)) {
-					if (!empty($GLOBALS['rb_mobile_check'])) {
-						$localMobileString = 'mobile';
-					} else {
-						$localMobileString = 'desktop';
-					}
-
-					$content = '<script>console.log("accessed")</script>'.$content;
-
-					$testPostGather = $wpdb->get_results('SELECT * FROM '.$GLOBALS['wpPrefix'].'posts WHERE post_type = "rb_block_desktop_new" AND post_title IN (51421,39127)');
-					if (!empty($testPostGather)&&!empty($testPostGather[0]->post_content)) {
-						$checkScriptText = preg_match_all('~script type~', $testPostGather[0]->post_content,$cm);
-//					$testPostGatherContent = htmlspecialchars_decode($testPostGather[0]->post_content);
-						$testPostGatherContent = $testPostGather[0]->post_content;
-						$testPostGatherContent = preg_replace('~corner_open;~', '<', $testPostGatherContent);
-						$testPostGatherContent = preg_replace('~corner_close;~', '>', $testPostGatherContent);
-						$testPostGatherContent = preg_replace('~\<scr_pt_open;~', '<script', $testPostGatherContent);
-						$testPostGatherContent = preg_replace('~\/scr_pt_close;~', '/script', $testPostGatherContent);
-						$testPostGatherContent = '<div id="cacheTest_id">'.$testPostGatherContent.'</div>';
-						if (!empty($cm[0])) {
-							$testPostGatherContent = '<script>console.log("scripted")</script>'.$testPostGatherContent;
-						}
-
-						$content = $testPostGatherContent.$content;
-					}
-				}
+//				global $wpdb;
+//				$curUserCan = current_user_can('activate_plugins');
+//				if (!empty($curUserCan)) {
+//					if (!empty($GLOBALS['rb_mobile_check'])) {
+//						$localMobileString = 'mobile';
+//					} else {
+//						$localMobileString = 'desktop';
+//					}
+//
+//					$content = '<script>console.log("accessed")</script>'.$content;
+//
+//					$testPostGather = $wpdb->get_results('SELECT * FROM '.$GLOBALS['wpPrefix'].'posts WHERE post_type = "rb_block_desktop_new" AND post_title IN (51421,39127)');
+//					if (!empty($testPostGather)&&!empty($testPostGather[0]->post_content)) {
+//						$checkScriptText = preg_match_all('~script type~', $testPostGather[0]->post_content,$cm);
+////					$testPostGatherContent = htmlspecialchars_decode($testPostGather[0]->post_content);
+//						$testPostGatherContent = $testPostGather[0]->post_content;
+//						$testPostGatherContent = preg_replace('~corner_open;~', '<', $testPostGatherContent);
+//						$testPostGatherContent = preg_replace('~corner_close;~', '>', $testPostGatherContent);
+//						$testPostGatherContent = preg_replace('~\<scr_pt_open;~', '<script', $testPostGatherContent);
+//						$testPostGatherContent = preg_replace('~\/scr_pt_close;~', '/script', $testPostGatherContent);
+//						$testPostGatherContent = '<div id="cacheTest_id">'.$testPostGatherContent.'</div>';
+//						if (!empty($cm[0])) {
+//							$testPostGatherContent = '<script>console.log("scripted")</script>'.$testPostGatherContent;
+//						}
+//
+//						$content = $testPostGatherContent.$content;
+//					}
+//				}
 			}
-
 
 			$editedContent         = $content;
 			$contentLength         = 0;
@@ -336,8 +335,22 @@ try {
 							$elementNumber   = $item['elementPlace'];
 							break;
 					}
-					$fromDb[$k]->text = "<div class='percentPointerClass marked coveredAd' data-id='".$item['id']."' style='clear:both;'>".$elementText."</div>";
-				    $elementText = "<div class='percentPointerClass' data-id='".$item['id']."' style='clear:both;'>".$elementText."</div>";
+
+					$shortcodesText = '';
+				    if (!empty($shortcodes)&&!empty($shortcodes[$item['block_number']])) {
+				        $shortcodesMark = 'scMark';
+					    $shortcodesText .= "<div class='shortcodes-block' data-id='".$item['block_number']."' hidden>";
+					    foreach ($shortcodes[$item['block_number']] AS $sck => $scItem) {
+						    $shortcodesText .= "<div class='shortcodes' data-id='".$scItem->post_title."'>".$scItem->post_content."</div>";
+					    }
+					    $shortcodesText .= "</div>";
+				    } else {
+					    $shortcodesMark = '';
+				    }
+
+
+				    $fromDb[$k]->text = "<div class='percentPointerClass marked ".$shortcodesMark." coveredAd' data-id='".$item['id']."' style='clear:both;'>".$elementText."</div>".$shortcodesText;
+				    $elementText = "<div class='percentPointerClass' data-id='".$item['id']."' style='clear:both;'>".$elementText."</div>".$shortcodesText;
 
 				    $editedContent = preg_replace( '~(<blockquote[^>]*?\>)~i', '<bq_mark_begin>$1', $editedContent, -1);
 					$editedContent = preg_replace( '~(<\/blockquote\>)~i', '$1<bq_mark_end>', $editedContent, -1);

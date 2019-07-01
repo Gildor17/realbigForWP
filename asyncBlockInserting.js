@@ -1,4 +1,58 @@
 //var jsInputerLaunch = 0;
+// function rerunShortcodes() {
+//     let xhttp = new XMLHttpRequest();
+//     let sendData = 'action=rerunShortcodes&type=scRerun';
+//     xhttp.onreadystatechange = function(redata) {
+//         if (this.readyState == 4 && this.status == 200) {
+//             if (redata) {
+//                 // decodedData = JSON.parse(redata);
+//             }
+//
+//             console.log('cache succeed');
+//             // document.getElementById("demo").innerHTML = this.responseText;
+//         }
+//     };
+//     // xhttp.open("POST", ajaxurl, true);
+//     xhttp.open("POST", adg_object.ajax_url, true);
+//     xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+//     xhttp.send(sendData);
+// }
+//
+// if (document.readyState === "complete" || (document.readyState !== "loading" && !document.documentElement.doScroll)) {
+//     rerunShortcodes();
+// } else {
+//     document.addEventListener("DOMContentLoaded", rerunShortcodes, false);
+// }
+
+function shortcodesInsert() {
+    let gatheredBlocks = document.querySelectorAll('percentPointerClass');
+    let scBlockId = -1;
+    let scAdId = -1;
+    let blockStatus = '';
+    let gatheredBlockChild;
+    let okStates = ['done','refresh-wait','no-block','fetched'];
+    let scContainer;
+
+    if (gatheredBlocks&&gatheredBlocks.length > 0) {
+        for (let i = 0; i < gatheredBlocks.length; i++) {
+            gatheredBlockChild = gatheredBlocks[i].children[0];
+            scAdId = -1;
+
+            scAdId = gatheredBlockChild.getAttribute('data-aid');
+            blockStatus = gatheredBlockChild.getAttribute('data-state');
+
+            if (blockStatus&&okStates.includes(blockStatus)&&scAdId > 0) {
+                scContainer = document.querySelector('.shortcodes[data-id='+scAdId+']');
+
+                //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+                // scBlockId = gatheredBlockChild.getAttribute('data-id');
+            }
+        }
+    }
+}
 
 function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
     try {
@@ -107,9 +161,23 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                     continue;
                 }
                 if (blockSettingArray[i]["setting_type"] == 1) {
-                    currentElement = parent_with_content.querySelector(blockSettingArray[i]["element"]);
-                    if (currentElement.length < 1) {
-                        currentElement = parent_with_content.parentElement.querySelector(blockSettingArray[i]["element"]);
+
+                    function placingToH1(usedElement, elementTagToFind) {
+                        currentElement = usedElement.querySelectorAll(elementTagToFind);
+                        if (currentElement.length < 1) {
+                            if (usedElement.parentElement) {
+                                placingToH1(usedElement.parentElement, elementTagToFind);
+                            }
+                        }
+                    }
+
+                    if (blockSettingArray[i]["element"].toLowerCase()=='h1') {
+                        placingToH1(parent_with_content, blockSettingArray[i]["element"]);
+                    } else {
+                        currentElement = parent_with_content.querySelectorAll(blockSettingArray[i]["element"]);
+                        if (currentElement.length < 1) {
+                            currentElement = parent_with_content.parentElement.querySelectorAll(blockSettingArray[i]["element"]);
+                        }
                     }
                     if (blockSettingArray[i]["elementPlace"] < 0) {
                         sumResult = currentElement.length + blockSettingArray[i]["elementPlace"];
