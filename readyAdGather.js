@@ -55,22 +55,10 @@ function gatherReadyBlocks() {
             }
         }
 
-        clearUnsuitableCache();
+        // clearUnsuitableCache();
         
         blocks = JSON.stringify(blocks);
         sendReadyBlocksNew(blocks);
-    }
-}
-
-function clearUnsuitableCache() {
-    let gatheredBlocks = document.querySelectorAll('.percentPointerClass .content_rb');
-
-    if (gatheredBlocks&&gatheredBlocks.length > 0) {
-        for (let i = 0; i < gatheredBlocks; i++) {
-            if ((gatheredBlocks[i]['dataset']["state"]=='no-block')||(['done','fetched'].includes(gatheredBlocks[i]['dataset']["state"])&&gatheredBlocks[i]['dataset']['aid'] < 0)) {
-                gatheredBlocks[i]['innerHTML'] = '';
-            }
-        }
     }
 }
 

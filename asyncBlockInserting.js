@@ -24,33 +24,98 @@
 //     document.addEventListener("DOMContentLoaded", rerunShortcodes, false);
 // }
 
+if (typeof endedSc === 'undefined') {
+    var endedSc = false;
+}
+if (typeof endedCc === 'undefined') {
+    var endedCc = false;
+}
+
+// "sc" in variables - mark for shortcode variable
 function shortcodesInsert() {
-    let gatheredBlocks = document.querySelectorAll('percentPointerClass');
+    let gatheredBlocks = document.querySelectorAll('.percentPointerClass.scMark');
     let scBlockId = -1;
     let scAdId = -1;
     let blockStatus = '';
     let gatheredBlockChild;
     let okStates = ['done','refresh-wait','no-block','fetched'];
     let scContainer;
+    let scRepeatFuncLaunch = false;
 
     if (gatheredBlocks&&gatheredBlocks.length > 0) {
         for (let i = 0; i < gatheredBlocks.length; i++) {
             gatheredBlockChild = gatheredBlocks[i].children[0];
-            scAdId = -1;
+            if (!gatheredBlockChild) {
+                continue;
+            }
+            scAdId = -3;
+            blockStatus = null;
+            scContainer = null;
 
             scAdId = gatheredBlockChild.getAttribute('data-aid');
             blockStatus = gatheredBlockChild.getAttribute('data-state');
 
-            if (blockStatus&&okStates.includes(blockStatus)&&scAdId > 0) {
-                scContainer = document.querySelector('.shortcodes[data-id='+scAdId+']');
-
-                //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-                // scBlockId = gatheredBlockChild.getAttribute('data-id');
+            if (scAdId > 0) {
+                if (blockStatus&&okStates.includes(blockStatus)) {
+                    scContainer = gatheredBlocks[i].parentElement.querySelector('.shortcodes[data-id="'+scAdId+'"]');
+                    if (scContainer) {
+                        if (blockStatus=='no-block') {
+                            gatheredBlockChild.innerHTML = '';
+                        } else {
+                            gatheredBlockChild.innerHTML = scContainer.innerHTML;
+                        }
+                        scContainer.remove();
+                    }
+                    gatheredBlocks[i].classList.remove('scMark');
+                } else {
+                    scRepeatFuncLaunch = true;
+                }
+            } else if (scAdId == -3||scAdId === null) {
+                scRepeatFuncLaunch = true;
             }
         }
+
+        if (scRepeatFuncLaunch) {
+            // console.log('shortcodes-alert');
+            setTimeout(function () {
+                shortcodesInsert();
+            }, 100);
+        }
+    } else {
+        endedSc = true;
+    }
+}
+
+function clearUnsuitableCache(cuc_cou) {
+    let scAdId = -1;
+    let ccRepeat = false;
+
+    let gatheredBlocks = document.querySelectorAll('.percentPointerClass .content_rb');
+
+    if (gatheredBlocks&&gatheredBlocks.length > 0) {
+        for (let i = 0; i < gatheredBlocks.length; i++) {
+            if (gatheredBlocks[i]['dataset']['aid']&&gatheredBlocks[i]['dataset']['aid'] < 0) {
+                if ((gatheredBlocks[i]['dataset']["state"]=='no-block')||(['done','fetched','refresh-wait'].includes(gatheredBlocks[i]['dataset']["state"]))) {
+                    gatheredBlocks[i]['innerHTML'] = '';
+                } else {
+                    ccRepeat = true;
+                }
+            } else if (!gatheredBlocks[i]['dataset']['aid']) {
+                ccRepeat = true;
+            }
+        }
+        if (cuc_cou < 50) {
+            if (ccRepeat) {
+                // console.log('cache-alert:'+cuc_cou);
+                setTimeout(function () {
+                    clearUnsuitableCache(cuc_cou+1);
+                }, 100);
+            }
+        } else {
+            endedCc = true;
+        }
+    } else {
+        endedCc = true;
     }
 }
 
@@ -391,6 +456,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
 
         window.addEventListener('load', function () {
             if (repeat = true) {
+                // console.log('async-blocks-alert');
                 setTimeout(function () {
                     asyncBlocksInsertingFunction(blockSettingArray, contentLength)
                 }, 100);
@@ -403,13 +469,18 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
 
 function asyncFunctionLauncher() {
     if (window.jsInputerLaunch !== undefined&&jsInputerLaunch == 15) {
-        // if () {
         asyncBlocksInsertingFunction(blockSettingArray, contentLength);
-        // }
+        if (!endedSc) {
+            shortcodesInsert();
+        }
+        if (!endedCc) {
+            // clearUnsuitableCache(0);
+        }
     } else {
+        // console.log('wait-async-blocks-launch-alert');
         setTimeout(function () {
             asyncFunctionLauncher();
-        }, 50)
+        }, 50);
     }
 }
 asyncFunctionLauncher();
@@ -490,9 +561,10 @@ function asyncInsertingsInsertingFunction(insertingsArray) {
         }
     }
     if (repeatSearch == 1) {
+        // console.log('insertings-alert');
         setTimeout(function () {
             asyncInsertingsInsertingFunction(insertingsArray);
-        }, 50)
+        }, 100)
     }
 }
 
@@ -500,9 +572,10 @@ function insertingsFunctionLaunch() {
     if (window.jsInsertingsLaunch !== undefined&&jsInsertingsLaunch == 25) {
         asyncInsertingsInsertingFunction(insertingsArray);
     } else {
+        // console.log('insertings-launch-alert');
         setTimeout(function () {
             insertingsFunctionLaunch();
-        }, 50)
+        }, 100)
     }
 }
 insertingsFunctionLaunch();
