@@ -350,7 +350,7 @@ try {
 
 
 				    $fromDb[$k]->text = "<div class='percentPointerClass marked ".$shortcodesMark." coveredAd' data-id='".$item['id']."' style='clear:both;'>".$elementText."</div>".$shortcodesText;
-				    $elementText = "<div class='percentPointerClass' data-id='".$item['id']."' style='clear:both;'>".$elementText."</div>".$shortcodesText;
+				    $elementText = "<div class='percentPointerClass ".$shortcodesMark."' data-id='".$item['id']."' style='clear:both;'>".$elementText."</div>".$shortcodesText;
 
 				    $editedContent = preg_replace( '~(<blockquote[^>]*?\>)~i', '<bq_mark_begin>$1', $editedContent, -1);
 					$editedContent = preg_replace( '~(<\/blockquote\>)~i', '$1<bq_mark_end>', $editedContent, -1);
@@ -532,6 +532,10 @@ try {
 			return $content;
 		}
 	}
+
+	function RFWP_wp_cache_gathering($cachedBlocks) {
+        $scriptString = '';
+    }
 
 	function RFWP_wp_is_mobile_old() {
 		if (empty($_SERVER['HTTP_USER_AGENT'])) {

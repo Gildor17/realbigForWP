@@ -13,7 +13,7 @@ include (dirname(__FILE__)."/textEditing.php");
 /*
 Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.1.26.69
+Version:      0.1.26.70
 Author:       Realbig Team
 Author URI:   https://realbig.media
 License:      GPLv2 or later
@@ -153,7 +153,7 @@ try {
 	if (!empty($pluginData['Version'])) {
 		$GLOBALS['realbigForWP_version'] = $pluginData['Version'];
 	} else {
-		$GLOBALS['realbigForWP_version'] = '0.1.26.69';
+		$GLOBALS['realbigForWP_version'] = '0.1.26.70';
 	}
 	$lastSuccessVersionGatherer = get_option('realbig_status_gatherer_version');
 //	require_once( 'synchronising.php' );
@@ -524,7 +524,7 @@ try {
 //		}
 //		$rotatorUrl = $prefix."://".$getDomain."/".$getRotator.".min.js";
 
-		if (!empty($GLOBALS['kill_rb'])&&$GLOBALS['kill_rb']==2) {
+		if (!empty($GLOBALS['dev_mode'])&&!empty($GLOBALS['kill_rb'])&&$GLOBALS['kill_rb']==2) {
             $rotatorUrl = "HTTPS://ex.ua";
 		} else {
 			$rotatorUrl = "https://".$getDomain."/".$getRotator.".min.js";
@@ -675,16 +675,16 @@ try {
 //	    add_filter('the_content', 'testingScQueue', 10);
 //    }
 
-//    if (empty(apply_filters('wp_doing_cron', defined('DOING_CRON')&&DOING_CRON))&&!is_admin()) {
+    if (empty(apply_filters('wp_doing_cron', defined('DOING_CRON')&&DOING_CRON))&&!is_admin()) {
 //	    $penyok_stoparik = 0;
-//
+
 //	    function test_sc_oval_exec() {
 //		    return '<div style="width: 100px; height: 20px; border: 1px solid black; background-color: #0033cc; border-radius: 30%;"></div>';
 //	    }
 //	    add_shortcode('test_sc_oval', 'test_sc_oval_exec');
-//
-//	    add_filter('the_content', 'RFWP_activateShortCodes', 502);
-//    }
+
+	    add_filter('the_content', 'RFWP_activateShortCodes', 502);
+    }
 	/************* end blocks for text ************************************************************************************/
 	/************* adding insertings in text *****************************************************/
     function RFWP_insertingsToContentAddingFunction($content) {
@@ -781,29 +781,29 @@ try {
 			    $rotatorUrl = $GLOBALS['rotatorUrl'];
 			    $rotatorResponce = wp_safe_remote_head($rotatorUrl, ['timeout' => 1]);
 
-			    $cachedBlocks = '';
-//			    if (!is_array($rotatorResponce)||(!empty($rotatorResponce['response']['code'])&&$rotatorResponce['response']['code']!=200)) {
-//				    ?><!--<script>console.log('using cache')</script>--><?php
-                $mobileCheck = RFWP_wp_is_mobile();
-                $GLOBALS['rb_mobile_check'] = $mobileCheck;
-                if (!empty($mobileCheck)) {
-                    $cachedBlocks = get_posts(['post_type' => 'rb_block_mobile_new','numberposts' => 100]);
-                } else {
-                    $cachedBlocks = get_posts(['post_type' => 'rb_block_desktop_new','numberposts' => 100]);
-                }
-                $shortcodesGathered = get_posts(['post_type' => 'rb_shortcodes','numberposts' => -1]);
-
-                $shortcodes = [];
-                foreach ($shortcodesGathered AS $k=>$item) {
-	                if (empty($shortcodes[$item->post_excerpt])) {
-		                $shortcodes[$item->post_excerpt] = [];
+                $cachedBlocks = '';
+                if (!is_array($rotatorResponce)||(!empty($rotatorResponce['response']['code'])&&$rotatorResponce['response']['code']!=200)) {
+    //				    ?><!--<script>console.log('using cache')</script>--><?php
+                    $mobileCheck = RFWP_wp_is_mobile();
+                    $GLOBALS['rb_mobile_check'] = $mobileCheck;
+                    if (!empty($mobileCheck)) {
+                        $cachedBlocks = get_posts(['post_type' => 'rb_block_mobile_new','numberposts' => 100]);
+                    } else {
+                        $cachedBlocks = get_posts(['post_type' => 'rb_block_desktop_new','numberposts' => 100]);
                     }
-	                $shortcodes[$item->post_excerpt][$item->post_title] = $item;
-                }
-                $shortcodes = null;
 
 //                $cachedBlocks = null;
-//			    }
+			    }
+
+                $shortcodesGathered = get_posts(['post_type' => 'rb_shortcodes','numberposts' => -1]);
+                $shortcodes = [];
+                foreach ($shortcodesGathered AS $k=>$item) {
+                    if (empty($shortcodes[$item->post_excerpt])) {
+                        $shortcodes[$item->post_excerpt] = [];
+                    }
+                    $shortcodes[$item->post_excerpt][$item->post_title] = $item;
+                }
+//                $shortcodes = null;
 
 			    if (!empty($content)) {
 				    $fromDb = $wpdb->get_results('SELECT * FROM '.$GLOBALS['wpPrefix'].'realbig_plugin_settings WGPS');
@@ -811,6 +811,7 @@ try {
 				    $fromDb = $wpdb->get_results('SELECT * FROM '.$GLOBALS['wpPrefix'].'realbig_plugin_settings WGPS WHERE setting_type = 3');
 			    }
 			    require_once (dirname(__FILE__)."/textEditing.php");
+//			    $content = RFWP_addIcons($fromDb, $content, 'content', null, null, $shortcodes);
 			    $content = RFWP_addIcons($fromDb, $content, 'content', $cachedBlocks, null, $shortcodes);
 
 //			    $curUserCan = current_user_can('activate_plugins');
@@ -838,7 +839,7 @@ try {
 	}
 
 	function RFWP_activateShortCodes($content) {
-	    $penyok_stoparik = 0;
+//	    $penyok_stoparik = 0;
 		$content = do_shortcode($content);
 		return $content;
 	}
