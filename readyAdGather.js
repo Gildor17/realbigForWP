@@ -2,20 +2,13 @@ var nReadyBlock = false;
 var fetchedCounter = 0;
 
 function sendReadyBlocksNew(blocks) {
-    let decodedData;
     let xhttp = new XMLHttpRequest();
     let sendData = 'action=saveAdBlocks&type=blocksGethering&data='+blocks;
     xhttp.onreadystatechange = function(redata) {
         if (this.readyState == 4 && this.status == 200) {
-            if (redata) {
-                // decodedData = JSON.parse(redata);
-            }
-
             console.log('cache succeed');
-            // document.getElementById("demo").innerHTML = this.responseText;
         }
     };
-    // xhttp.open("POST", ajaxurl, true);
     xhttp.open("POST", adg_object.ajax_url, true);
     xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
     xhttp.send(sendData);

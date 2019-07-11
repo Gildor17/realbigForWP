@@ -183,30 +183,6 @@ try {
 								    }
 							    }
 							    /** End of excluded page types */
-							    /** Live internet code */
-//							    if (isset($decodedToken['liveInternetCode'])) {
-//							        $liveInternetCode = sanitize_text_field($decodedToken['liveInternetCode']);
-//								    $getLiveInternetCode = $wpdb->get_var('SELECT id FROM '.$wpPrefix.'realbig_settings WHERE optionName = "liveInternetCode"');
-//								    if (!empty($getLiveInternetCode)) {
-//									    $updateResult = $wpdb->update($wpPrefix.'realbig_settings', ['optionName'=>'liveInternetCode', 'optionValue'=>$liveInternetCode],
-//										    ['optionName' => 'liveInternetCode']);
-//                                    } else {
-//									    $wpdb->insert($wpPrefix.'realbig_settings', ['optionName'=>'liveInternetCode', 'optionValue'=>$liveInternetCode]);
-//								    }
-//							    }
-							    /** End of live internet code */
-							    /** Live internet active check */
-//							    if (isset($decodedToken['activeLiveInterner'])) {
-//							        $activeLiveInternet = sanitize_text_field($decodedToken['activeLiveInterner']);
-//								    $getActiveLiveInternet = $wpdb->get_var('SELECT id FROM '.$wpPrefix.'realbig_settings WHERE optionName = "activeLiveInterner"');
-//								    if (!empty($getLiveInternetCode)) {
-//									    $updateResult = $wpdb->update($wpPrefix.'realbig_settings', ['optionName'=>'activeLiveInterner', 'optionValue'=>$activeLiveInternet],
-//										    ['optionName' => 'activeLiveInterner']);
-//                                    } else {
-//									    $wpdb->insert($wpPrefix.'realbig_settings', ['optionName'=>'activeLiveInterner', 'optionValue'=>$activeLiveInternet]);
-//								    }
-//							    }
-							    /** End of live internet active check */
 							    /** Insertings */
 							    if (!empty($decodedToken['insertings'])) {
 								    $insertings = $decodedToken['insertings'];
