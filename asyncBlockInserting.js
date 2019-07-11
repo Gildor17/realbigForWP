@@ -119,6 +119,62 @@ function clearUnsuitableCache(cuc_cou) {
     }
 }
 
+function blocksRepositionUse(containerString, blType) {
+    let blocksInContainer;
+    let currentBlock;
+    let currentBlockId;
+    let currentBlockPosition;
+    let currentContainer;
+    let i = 0;
+    let j = 0;
+
+    blocksInContainer = document.querySelectorAll(blType+containerString+' .percentPointerClass:not(.marked)');
+
+    if (blocksInContainer&&blocksInContainer.length > 0&&usedBlockSettingArray&&usedBlockSettingArray.length > 0) {
+        for (i = 0; i < blocksInContainer.length; i++) {
+            currentBlock = blocksInContainer[i];
+            currentBlockId = currentBlock.querySelector('.content_rb').getAttribute('data-id');
+            currentContainer = null;
+            for (j = 0; j < usedBlockSettingArray.length; i++) {
+                if (usedBlockSettingArray[i]['id']==currentBlockId) {
+                    currentBlockPosition = usedBlockSettingArray[i]['elementPosition'];
+                    currentContainer = currentBlock.closest(blType+containerString);
+                    if (currentBlockPosition==0) {
+                        currentContainer.parentNode.insertBefore(currentBlock, currentContainer);
+                    } else {
+                        currentContainer.parentNode.insertBefore(currentBlock, currentContainer.nextSibling);
+                    }
+                    break;
+                }
+            }
+        }
+    }
+}
+
+function blocksReposition() {
+    let containersArray = [];
+    containersArray[0] = [];
+    containersArray[0]['type'] = [''];
+    containersArray[0]['list'] = ['table', 'blockquote'];
+    containersArray[1] = [];
+    containersArray[1]['type'] = ['#'];
+    containersArray[1]['list'] = ['toc_container'];
+    containersArray[2] = [];
+    containersArray[2]['type'] = ['.'];
+    containersArray[2]['list'] = ['percentPointerClass','content_rb'];
+
+    let penyok_stoparik = 0;
+    let i = 0;
+    let j = 0;
+
+    for (i = 0; i < containersArray.length; i++) {
+        penyok_stoparik = 1;
+        for (j = 0; j < containersArray[i]['list'].length; j++) {
+            blocksRepositionUse(containersArray[i]['list'][j], containersArray[i]['type']);
+        }
+    }
+}
+
 function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
     try {
         var content_pointer = document.querySelector("#content_pointer_id");
@@ -145,13 +201,13 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                 currentElement = currentElement.parentElement;
             } else if (["tr","td","th","thead","tbody","table"].includes(currentElement.parentElement.tagName.toLowerCase())) {
                 currentElement = currentElement.parentElement;
-                while (["tr", "td", "th", "thead", "tbody", "table"].includes(currentElement.parentElement.tagName.toLowerCase())) {
+                while (["tr","td","th","thead","tbody","table"].includes(currentElement.parentElement.tagName.toLowerCase())) {
                     currentElement = currentElement.parentElement;
                 }
             }
             return currentElement;
         }
-        
+
         function initTargetToInsert(blockSettingArray) {
             let posCurrentElement;
             if (blockSettingArray[i]["elementPosition"] == 0) {
@@ -203,13 +259,10 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
             currentElement = null;
             currentElementChecker = false;
             try {
-                // elementToAdd = document.createElement("div");
-                // elementToAdd.classList.add("percentPointerClass");
-                // elementToAdd.style.margin = '5px 0px';
-                // elementToAdd.innerHTML = blockSettingArray[i]["text"];
-                // elementToAdd.style.display = 'block';
-
-                elementToAdd = document.querySelector('.percentPointerClass[data-id="'+blockSettingArray[i]['id']+'"]');
+                elementToAdd = document.querySelector('.percentPointerClass.coveredAd[data-id="'+blockSettingArray[i]['id']+'"]');
+                if (!elementToAdd) {
+                    continue;
+                }
 
                 if (blockSettingArray[i]["minHeaders"] > 0) {
                     var termorarity_parent_with_content = parent_with_content;
@@ -226,7 +279,6 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                     continue;
                 }
                 if (blockSettingArray[i]["setting_type"] == 1) {
-
                     function placingToH1(usedElement, elementTagToFind) {
                         currentElement = usedElement.querySelectorAll(elementTagToFind);
                         if (currentElement.length < 1) {
@@ -476,6 +528,8 @@ function asyncFunctionLauncher() {
         if (!endedCc) {
             // clearUnsuitableCache(0);
         }
+        blocksReposition();
+        // cachePlacing();
     } else {
         // console.log('wait-async-blocks-launch-alert');
         setTimeout(function () {
@@ -483,7 +537,7 @@ function asyncFunctionLauncher() {
         }, 50);
     }
 }
-asyncFunctionLauncher();
+// asyncFunctionLauncher();
 
 function old_asyncInsertingsInsertingFunction(insertingsArray) {
     let currentElementForInserting = 0;
@@ -568,6 +622,18 @@ function asyncInsertingsInsertingFunction(insertingsArray) {
     }
 }
 
+// function launchInsertingsFunctionLaunch() {
+//     if (typeof insertingsFunctionLaunch !== 'undefined' && typeof insertingsFunctionLaunch === 'function') {
+//         console.log("Insertings function found;");
+//         insertingsFunctionLaunch();
+//     } else {
+//         console.log("Insertings function not found;");
+//         setTimeout(function () {
+//             launchInsertingsFunctionLaunch();
+//         }, 100)
+//     }
+// }
+
 function insertingsFunctionLaunch() {
     if (window.jsInsertingsLaunch !== undefined&&jsInsertingsLaunch == 25) {
         asyncInsertingsInsertingFunction(insertingsArray);
@@ -578,7 +644,48 @@ function insertingsFunctionLaunch() {
         }, 100)
     }
 }
-insertingsFunctionLaunch();
+// insertingsFunctionLaunch();
+
+function setLongCache() {
+    let xhttp = new XMLHttpRequest();
+    let sendData = 'action=setLongCache&type=longCatching';
+    xhttp.onreadystatechange = function(redata) {
+        if (this.readyState == 4 && this.status == 200) {
+            console.log('long cache deployed');
+        }
+    };
+    xhttp.open("POST", adg_object_ad.ajax_url, true);
+    xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    xhttp.send(sendData);
+}
+
+function cachePlacing(alert_type) {
+    let adBlocks = document.querySelectorAll('.percentPointerClass .content_rb');
+    let curAdBlock;
+    let okStates = ['done','refresh-wait','no-block','fetched'];
+    // let adId = -1;
+    let blockStatus = null;
+    let blockId;
+
+    if (adBlocks&&adBlocks.length > 0) {
+        for (let i = 0; i < adBlocks.length; i++) {
+            blockStatus = null;
+            blockStatus = adBlocks[i]['dataset']['state'];
+
+            if (!blockStatus) {
+                blockId = adBlocks[i]['dataset']['id'];
+                if (cachedBlocksArray&&cachedBlocksArray[blockId]) {
+                    // adBlocks[i].innerHTML = cachedBlocksArray[blockId];
+                    jQuery(adBlocks[i]).html(cachedBlocksArray[blockId]);
+                }
+            }
+        }
+    }
+
+    if (alert_type&&alert_type=='high') {
+        setLongCache();
+    }
+}
 
 function percentSeparator(lordOfElements) {
     var lcSeparator = lordOfElements.children;

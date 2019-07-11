@@ -368,21 +368,21 @@ try {
 							/**********************************************************/
 							if ($elementName == 'img') {     //element is image
 								if ($elementPosition == 0) {    //if position before
-									$editedContent = preg_replace( '~<' . $elementName . '( |>|\/>){1}?~i', '<placeholderForAd><' . $elementName . '$1', $editedContent, - 1, $replaces );
-								} elseif ( $elementPosition == 1 ) {    //if position after
-									$editedContent = preg_replace( '~<' . $elementName . '([^>]*?)(\/>|>){1}~i',
+									$editedContent = preg_replace('~<' . $elementName . '( |>|\/>){1}?~i', '<placeholderForAd><' . $elementName . '$1', $editedContent, - 1, $replaces );
+								} elseif ($elementPosition == 1) {    //if position after
+									$editedContent = preg_replace('~<' . $elementName . '([^>]*?)(\/>|>){1}~i',
 										'<' . $elementName . ' $1 $2<placeholderForAd>', $editedContent, - 1, $replaces );
 								}
 							} else {    // non-image element
-								if ( $elementPosition == 0 ) {    //if position before
-									$editedContent = preg_replace( '~<' . $elementName . '( |>){1}?~i', '<placeholderForAd><' . $elementName . '$1', $editedContent, - 1, $replaces );
-								} elseif ( $elementPosition == 1 ) {    //if position after
-									$editedContent = preg_replace( '~<( )*\/( )*' . $elementName . '( )*>~i', '</' . $elementName . '><placeholderForAd>', $editedContent, - 1, $replaces );
+								if ($elementPosition == 0) {    //if position before
+									$editedContent = preg_replace('~<' . $elementName . '( |>){1}?~i', '<placeholderForAd><' . $elementName . '$1', $editedContent, - 1, $replaces );
+								} elseif ($elementPosition == 1) {    //if position after
+									$editedContent = preg_replace('~<( )*\/( )*' . $elementName . '( )*>~i', '</' . $elementName . '><placeholderForAd>', $editedContent, - 1, $replaces );
 								}
 							}
-							$editedContent = preg_replace( '~<placeholderForAd>~', '', $editedContent, $replaces + $elementNumber );
-							$quotesCheck = preg_match("~(<bq_mark_begin>)(((?<!<bq_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<bq_mark_end>)~i", $editedContent, $qm);
-							$tablesCheck = preg_match("~(<tab_mark_begin>)(((?<!<tab_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<tab_mark_end>)~i", $editedContent, $qm);
+							$editedContent = preg_replace('~<placeholderForAd>~', '', $editedContent, $replaces + $elementNumber );
+//							$quotesCheck = preg_match("~(<bq_mark_begin>)(((?<!<bq_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<bq_mark_end>)~i", $editedContent, $qm);
+//							$tablesCheck = preg_match("~(<tab_mark_begin>)(((?<!<tab_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<tab_mark_end>)~i", $editedContent, $qm);
 							if (!empty($quotesCheck)) {
 								if ($elementPosition == 0) {
 									$editedContent = preg_replace('~(<bq_mark_begin>)(((?<!<bq_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<bq_mark_end>)~i', '<placeholderForAdDop>$0', $editedContent,1, $countReplaces);
@@ -417,8 +417,8 @@ try {
 								}
 							}
 							$editedContent = preg_replace( '~<placeholderForAd>~', '', $editedContent, $elementNumber - 1 );
-							$quotesCheck = preg_match("~(<bq_mark_begin>)(((?<!<bq_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<bq_mark_end>)~i", $editedContent, $qm);
-							$tablesCheck = preg_match("~(<tab_mark_begin>)(((?<!<tab_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<tab_mark_end>)~i", $editedContent, $qm);
+//							$quotesCheck = preg_match("~(<bq_mark_begin>)(((?<!<bq_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<bq_mark_end>)~i", $editedContent, $qm);
+//							$tablesCheck = preg_match("~(<tab_mark_begin>)(((?<!<tab_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<tab_mark_end>)~i", $editedContent, $qm);
 							if (!empty($quotesCheck)) {
 								if ($elementPosition == 0) {
 									$editedContent = preg_replace('~(<bq_mark_begin>)(((?<!<bq_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<bq_mark_end>)~i', '<placeholderForAdDop>$0', $editedContent, 1, $countReplaces);
@@ -436,62 +436,6 @@ try {
 							}
 							$editedContent = preg_replace( '~<placeholderForAd>~', '', $editedContent);
 						}
-					} elseif ( $item['setting_type'] == 2 ) {       //for repeatable block
-						if ( $elementPosition == 0 ) {    //if position before
-							$editedContent = preg_replace( '~<' . $elementName . '( |>){1}?~', '<placeholderForAd><' . $elementName . '$1', $editedContent );
-						} elseif ( $elementPosition == 1 ) {    //if position after
-							$editedContent = preg_replace( '~<( )*\/( )*' . $elementName . '( )*>~', '</' . $elementName . '><placeholderForAd>', $editedContent );
-						}
-						$editedContent = preg_replace( '~<placeholderForAd>~', '', $editedContent, $elementNumber - 1 );        //first iteration
-						$editedContent = preg_replace( '~<placeholderForAd>~', '<placeholderForAdDop>', $editedContent, 1, $countReplaces );
-
-						for ( $i = 0; $i < $elementRepeats; $i ++ ) {     //repeats begin
-							$editedContent = preg_replace( '~<placeholderForAd>~', '', $editedContent, $elementStep - 1 );
-							$editedContent = preg_replace( '~<placeholderForAd>~', '<placeholderForAdDop>', $editedContent, 1, $countReplaces );
-						}
-					} elseif ( $item['setting_type'] == 33 ) {       //for direct element (temporary unused)
-						if ( empty( $elementName ) || empty( $elementText ) ) {
-							$usedBlocks[$usedBlocksCounter] = $item['id'];
-							$usedBlocksCounter ++;
-							continue;
-						}
-
-						$directElementTag = null;
-						$thisElementTag   = preg_match( '~[\.\#]{1}~', $elementName, $m );
-						$thisElementName  = preg_replace( '~([\.\#]{1})~', '', $elementName, 1 );
-						if ( $m[0] == '.' ) {
-							$thisElementType  = 'class';
-							$directElementTag = $elementTag;
-						} elseif ( $m[0] == '#' ) {
-							$thisElementType = 'id';
-						}
-
-						if ( $elementPosition == 0 ) {   //if position before
-							if ( $directElementTag == null ) {
-								$usedTag = preg_match( '~<([0-9a-z]+?) ([^>]*?)(( |\'|\"){1})' . $thisElementName . '(( |\'|\"){1})([^>]*?)>~', $editedContent, $m1 );
-								if ( ! empty( $m1[1] ) ) {
-									$directElementTag = $m1[1];
-								}
-							}
-							if ( $directElementTag ) {
-								$editedContent = preg_replace(
-									'~<' . $directElementTag . ' ([^>]*?)(( |\'|\"){1})' . $thisElementName . '(( |\'|\"){1})([^>]*?)>~',
-									'<placeholderForAd><' . $directElementTag . ' $1 $2' . $thisElementName . '$4 $6>', $editedContent, 1 );
-							}
-						} elseif ( $elementPosition == 1 ) {       //if position after
-							if ( $directElementTag == null ) {
-								$usedTag = preg_match( '~<([0-9a-z]+?) ([^>]*?)(( |\'|\"){1})' . $thisElementName . '(( |\'|\"){1})([^>]*?)>((\s|\S)*?)<\/([0-9a-z]+?)>~', $editedContent, $m1 );
-								if (!empty($m1[1])) {
-									$directElementTag = $m1[1];
-								}
-							}
-							if ( $directElementTag ) {
-								$editedContent = preg_replace(
-									'~<(' . $directElementTag . ') ([^>]*?)(( |\'|\"){1})' . $thisElementName . '(( |\'|\"){1})([^>]*?)>((\s|\S)*?)<\/' . $directElementTag . '>~',
-									'<$1 $2 $3' . $thisElementName . '$5 $7>$8</$1><placeholderForAd>', $editedContent, 1 );
-							}
-						}
-						$editedContent = preg_replace( '~<placeholderForAd>~', '<placeholderForAdDop>', $editedContent, - 1, $countReplaces );
 					} elseif ( $item['setting_type'] == 4 ) {       //for end of content
 						if (empty($elementText)) {
 							$usedBlocks[$usedBlocksCounter] = $item['id'];
@@ -520,9 +464,10 @@ try {
 					}
 				}
 				$editedContent = '<span id="content_pointer_id"></span>'.$editedContent;
+//				$editedContent = RFWP_rb_cache_gathering($editedContent, $cachedBlocks);
 //			    $usedBlocks = [];
 				$creatingJavascriptParserForContent = RFWP_creatingJavascriptParserForContentFunction($fromDb, $usedBlocks, $contentLength);
-				$editedContent                      = $editedContent.$creatingJavascriptParserForContent;
+				$editedContent                      = $creatingJavascriptParserForContent['before'].$editedContent.$creatingJavascriptParserForContent['after'];
 
                 return $editedContent;
 			} else {
@@ -533,8 +478,45 @@ try {
 		}
 	}
 
-	function RFWP_wp_cache_gathering($cachedBlocks) {
+	function RFWP_rb_cache_gathering($content, $cachedBlocks, $longCache) {
+        $usedBlockIds = [];
         $scriptString = '';
+        $scriptString .= '<script>'.PHP_EOL;
+        $scriptString .= 'var cachedBlocksArray = [];'.PHP_EOL;
+
+        foreach ($cachedBlocks AS $k => $item) {
+            if (in_array($item->post_title, $usedBlockIds)) {
+                continue;
+            }
+            array_push($usedBlockIds, $item->post_title);
+
+            $elementTextCache = $item->post_content;
+            $elementTextCache = do_shortcode($elementTextCache);
+	        $elementTextCache = preg_replace('~\"~', '\'', $elementTextCache);
+	        $elementTextCache = preg_replace('~corner_open;~', '<', $elementTextCache);
+            $elementTextCache = preg_replace('~corner_close;~', '>', $elementTextCache);
+            $elementTextCache = preg_replace('~\<scr_pt_open;~', '<scr"+"ipt', $elementTextCache);
+            $elementTextCache = preg_replace('~\/scr_pt_close;~', '/scr"+"ipt', $elementTextCache);
+
+	        $scriptString .= 'cachedBlocksArray['.$item->post_title.'] = "'.$elementTextCache.'";'.PHP_EOL;
+        }
+        if (!empty($longCache)) {
+	        $scriptString .=
+'function onErrorPlacing() {
+    if (typeof cachePlacing !== \'undefined\' && typeof cachePlacing === \'function\') {
+        cachePlacing("low");
+    } else {
+        setTimeout(function () {
+            onErrorPlacing();
+        }, 100)
+    }
+}
+onErrorPlacing();';
+        }
+
+		$scriptString .= '</script>';
+        $content = $content.$scriptString;
+		return $content;
     }
 
 	function RFWP_wp_is_mobile_old() {
@@ -698,6 +680,18 @@ try {
 		        }
 	        }
 	        $jsScriptString .= 'var jsInsertingsLaunch = 25;'.PHP_EOL;
+	        $jsScriptString .=
+'function launchInsertingsFunctionLaunch() {
+    if (typeof insertingsFunctionLaunch !== \'undefined\' && typeof insertingsFunctionLaunch === \'function\') {
+        insertingsFunctionLaunch();
+    } else {
+        setTimeout(function () {
+            launchInsertingsFunctionLaunch();
+        }, 100)
+    }
+}
+launchInsertingsFunctionLaunch();'.PHP_EOL;
+
 	        $jsScriptString .= '</script>';
 
 	        $content .= $cssScriptString.$jsScriptString;
@@ -779,6 +773,7 @@ try {
 		try {
 //		    $needleUrl = plugins_url().'/'.basename(__DIR__).'/connectTestFile';
 //		    $needleUrl = basename(__DIR__).'/connectTestFile';
+            $scriptingCodeResult = [];
             $contentBeforeScript = ''.PHP_EOL;
             $cssCode = ''.PHP_EOL;
             $cssCode .='<style>
@@ -791,63 +786,80 @@ try {
 			$scriptingCode = '
             <script>
             var blockSettingArray = [];
+            var usedBlockSettingArray = [];
             var contentLength = ' . $contentLength . ';
             ';
-			foreach ($fromDb AS $k => $item ) {
-				if (is_object( $item ) ) {
-					$item = get_object_vars( $item );
+			$k1 = 0;
+			foreach ($fromDb AS $k => $item) {
+				if (is_object($item)) {
+					$item = get_object_vars($item);
 				}
-				$resultHere = in_array( $item['id'], $usedBlocks );
-				if ( $resultHere == false ) {
+				$resultHere = in_array($item['id'], $usedBlocks);
+				if ($resultHere == false) {
 				    $contentBeforeScript .= $item['text'].PHP_EOL;
-					$scriptingCode .= 'blockSettingArray[' . $k . '] = [];' . PHP_EOL;
+					$scriptingCode .= 'blockSettingArray['.$k.'] = [];'.PHP_EOL;
 
-					if ( ! empty( $item['minSymbols'] ) && $item['minSymbols'] > 1 ) {
-						$scriptingCode .= 'blockSettingArray[' . $k . ']["minSymbols"] = ' . $item['minSymbols'] . '; ' . PHP_EOL;
+					if (!empty($item['minSymbols'])&&$item['minSymbols'] > 1) {
+						$scriptingCode .= 'blockSettingArray['.$k.']["minSymbols"] = '.$item['minSymbols'] . '; ' . PHP_EOL;
 					} else {
-						$scriptingCode .= 'blockSettingArray[' . $k . ']["minSymbols"] = 0;' . PHP_EOL;
+						$scriptingCode .= 'blockSettingArray['.$k.']["minSymbols"] = 0;' . PHP_EOL;
 					}
-					if ( ! empty( $item['minHeaders'] ) && $item['minHeaders'] > 1 ) {
-						$scriptingCode .= 'blockSettingArray[' . $k . ']["minHeaders"] = ' . $item['minHeaders'] . '; ' . PHP_EOL;
+					if (!empty($item['minHeaders'])&&$item['minHeaders'] > 1) {
+						$scriptingCode .= 'blockSettingArray['.$k.']["minHeaders"] = ' . $item['minHeaders'] . '; ' . PHP_EOL;
 					} else {
-						$scriptingCode .= 'blockSettingArray[' . $k . ']["minHeaders"] = 0;' . PHP_EOL;
+						$scriptingCode .= 'blockSettingArray['.$k.']["minHeaders"] = 0;' . PHP_EOL;
 					}
-					$scriptingCode     .= 'blockSettingArray[' . $k . ']["id"] = \'' . $item['id'] . '\'; ' . PHP_EOL;
-//					$scriptingCode     .= 'blockSettingArray[' . $k . ']["text"] = \'' . $item['text'] . '\'; ' . PHP_EOL;
-					$scriptingCode     .= 'blockSettingArray[' . $k . ']["setting_type"] = '.$item['setting_type'].'; ' . PHP_EOL;
+					$scriptingCode     .= 'blockSettingArray['.$k.']["id"] = \'' . $item['id'] . '\'; ' . PHP_EOL;
+//					$scriptingCode     .= 'blockSettingArray['.$k.']["text"] = \'' . $item['text'] . '\'; ' . PHP_EOL;
+					$scriptingCode     .= 'blockSettingArray['.$k.']["setting_type"] = '.$item['setting_type'].'; ' . PHP_EOL;
 					if       ($item['setting_type'] == 1) {       //for ordinary block
-//						$scriptingCode .= 'blockSettingArray[' . $k . ']["setting_type"] = 1; ' . PHP_EOL;
-						$scriptingCode .= 'blockSettingArray[' . $k . ']["element"] = "' . $item['element'] . '"; ' . PHP_EOL;
-						$scriptingCode .= 'blockSettingArray[' . $k . ']["elementPosition"] = ' . $item['elementPosition'] . '; ' . PHP_EOL;
-						$scriptingCode .= 'blockSettingArray[' . $k . ']["elementPlace"] = ' . $item['elementPlace'] . '; ' . PHP_EOL;
+//						$scriptingCode .= 'blockSettingArray['.$k.']["setting_type"] = 1; ' . PHP_EOL;
+						$scriptingCode .= 'blockSettingArray['.$k.']["element"] = "' . $item['element'] . '"; ' . PHP_EOL;
+						$scriptingCode .= 'blockSettingArray['.$k.']["elementPosition"] = ' . $item['elementPosition'] . '; ' . PHP_EOL;
+						$scriptingCode .= 'blockSettingArray['.$k.']["elementPlace"] = ' . $item['elementPlace'] . '; ' . PHP_EOL;
 					} elseif ($item['setting_type'] == 3) {       //for direct block
-						$scriptingCode .= 'blockSettingArray[' . $k . ']["element"] = "' . $item['element'] . '"; ' . PHP_EOL;
-						$scriptingCode .= 'blockSettingArray[' . $k . ']["directElement"] = "' . $item['directElement'] . '"; ' . PHP_EOL;
-						$scriptingCode .= 'blockSettingArray[' . $k . ']["elementPosition"] = ' . $item['elementPosition'] . '; ' . PHP_EOL;
-						$scriptingCode .= 'blockSettingArray[' . $k . ']["elementPlace"] = ' . $item['elementPlace'] . '; ' . PHP_EOL;
+						$scriptingCode .= 'blockSettingArray['.$k.']["element"] = "' . $item['element'] . '"; ' . PHP_EOL;
+						$scriptingCode .= 'blockSettingArray['.$k.']["directElement"] = "' . $item['directElement'] . '"; ' . PHP_EOL;
+						$scriptingCode .= 'blockSettingArray['.$k.']["elementPosition"] = ' . $item['elementPosition'] . '; ' . PHP_EOL;
+						$scriptingCode .= 'blockSettingArray['.$k.']["elementPlace"] = ' . $item['elementPlace'] . '; ' . PHP_EOL;
 					} elseif (in_array($item['setting_type'],[6,7])) {       //for percentage
-						$scriptingCode .= 'blockSettingArray[' . $k . ']["elementPlace"] = ' . $item['elementPlace'] . '; ' . PHP_EOL;
+						$scriptingCode .= 'blockSettingArray['.$k.']["elementPlace"] = ' . $item['elementPlace'] . '; ' . PHP_EOL;
 					}
+				} else {
+					$scriptingCode .= 'usedBlockSettingArray['.$k1.'] = [];'.PHP_EOL;
+					$scriptingCode .= 'usedBlockSettingArray['.$k1.']["id"] = \''.$item['block_number'].'\'; '.PHP_EOL;
+					$scriptingCode .= 'usedBlockSettingArray['.$k1.']["elementPosition"] = '.$item['elementPosition'].'; '.PHP_EOL;
+					$k1++;
 				}
 			}
 			$scriptingCode .= PHP_EOL;
-			$scriptingCode .= 'var jsInputerLaunch = 15;';
-			$scriptingCode .= PHP_EOL;
-//			$scriptingCode .= 'var needleUrl = "'.plugins_url().'/'.basename(__DIR__).'/realbigForWP/";';
-//			$scriptingCode .= 'var needleUrl = "'.$needleUrl.'";';
-//			$scriptingCode .= PHP_EOL;
-//			if (!empty(RFWP_wp_is_mobile())) {
-//				$scriptingCode .= 'var isMobile = 1;';
-//				?><!--<script>console.log('mob')</script>--><?php
-//			} else {
-//				$scriptingCode .= 'var isMobile = 0;';
-//				?><!--<script>console.log('NE_mob')</script>--><?php
-//			}
-//			$scriptingCode .= PHP_EOL;
+			$scriptingCode .= 'var jsInputerLaunch = 15;'.PHP_EOL;
+//            $scriptingCode .= 'if (typeof asyncFunctionLauncher !== \'undefined\' && typeof asyncFunctionLauncher === \'function\') {'.PHP_EOL;
+//            $scriptingCode .= 'console.log("ads function found;");'.PHP_EOL;
+//            $scriptingCode .= 'asyncFunctionLauncher();'.PHP_EOL;
+//            $scriptingCode .= '} else {'.PHP_EOL;
+//            $scriptingCode .= 'console.log("ads function not found;");'.PHP_EOL;
+//            $scriptingCode .= '}'.PHP_EOL;
+            $scriptingCode .=
+'function launchAsyncFunctionLauncher() {
+    if (typeof asyncFunctionLauncher !== \'undefined\' && typeof asyncFunctionLauncher === \'function\') {
+        asyncFunctionLauncher();
+    } else {
+        setTimeout(function () {
+            launchAsyncFunctionLauncher();
+        }, 100)
+    }
+}
+launchAsyncFunctionLauncher();'.PHP_EOL;
+
+            $scriptingCode .= PHP_EOL;
 			$scriptingCode .= '</script>';
 
+			$scriptingCodeResult['before'] = $contentBeforeScript.$cssCode;
+            $scriptingCodeResult['after'] = $scriptingCode;
 			$scriptingCode = $contentBeforeScript.$cssCode.$scriptingCode;
-			return $scriptingCode;
+//			return $scriptingCode;
+			return $scriptingCodeResult;
 		} catch ( Exception $e ) {
 			return '';
 		}
