@@ -10,7 +10,7 @@ include (dirname(__FILE__)."/textEditing.php");
 /*
 Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.1.26.71
+Version:      0.1.26.72
 Author:       Realbig Team
 Author URI:   https://realbig.media
 License:      GPLv2 or later
@@ -116,6 +116,7 @@ try {
 	    if ((!empty($curUserCan)&&!empty($_POST['statusRefresher']))||empty($tableForToken)||empty($tableForCurrentPluginChecker)) {
 	        $wpdb->query('DELETE FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_mobile","rb_block_desktop","rb_block_mobile_new","rb_block_desktop_new") AND post_author = 0');
 	        delete_transient('rb_cache_timeout');
+	        delete_transient('rb_longCacheDeploy');
 	        delete_transient('rb_mobile_cache_timeout');
 	        delete_transient('rb_desktop_cache_timeout');
 		    delete_option('realbig_status_gatherer_version');
@@ -149,6 +150,7 @@ try {
 	if ((!empty($lastSuccessVersionGatherer)&&$lastSuccessVersionGatherer != $GLOBALS['realbigForWP_version'])||empty($lastSuccessVersionGatherer)) {
 		$wpdb->query('DELETE FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_mobile","rb_block_desktop","rb_block_mobile_new","rb_block_desktop_new") AND post_author = 0');
 		delete_transient('rb_cache_timeout');
+		delete_transient('rb_longCacheDeploy');
 		delete_transient('rb_mobile_cache_timeout');
 		delete_transient('rb_desktop_cache_timeout');
     }
@@ -486,7 +488,8 @@ try {
 		require_once (dirname(__FILE__)."/textEditing.php");
 		$headerParsingResult = RFWP_headerADInsertor();
 
-		$longCache = get_transient('rb_longCacheDeploy');
+//		$longCache = get_transient('rb_longCacheDeploy');
+		$longCache = false;
 		$GLOBALS['rb_longCache'] = $longCache;
 
 		if ($headerParsingResult == true&&empty($longCache)) {
@@ -494,7 +497,7 @@ try {
             <script type="text/javascript">
                 function onErrorPlacing() {
                     if (typeof cachePlacing !== 'undefined' && typeof cachePlacing === 'function') {
-                        cachePlacing('high');
+                        cachePlacing('low');
                     } else {
                         setTimeout(function () {
                             onErrorPlacing();
