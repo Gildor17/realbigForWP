@@ -10,7 +10,7 @@ include (dirname(__FILE__)."/textEditing.php");
 /*
 Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.1.26.71
+Version:      0.1.26.72
 Author:       Realbig Team
 Author URI:   https://realbig.media
 License:      GPLv2 or later
