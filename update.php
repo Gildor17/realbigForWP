@@ -22,7 +22,7 @@ CREATE TABLE `" . $wpPrefix . "realbig_plugin_settings`
 	`block_number` INT(11) NOT NULL,
 	`text` TEXT NOT NULL,
 	`setting_type` INT(11) NOT NULL,
-	`element` ENUM('p','li','ul','ol','blockquote','img','video','h1','h2','h3','h4','h5','h6') NOT NULL,
+	`element` ENUM('p','li','ul','ol','blockquote','img','video','h1','h2','h3','h4','h5','h6','article') NOT NULL,
 	`directElement` TEXT NOT NULL,
 	`elementPosition` INT(11) NOT NULL,
 	`elementPlace` INT(11) NOT NULL,
@@ -30,7 +30,9 @@ CREATE TABLE `" . $wpPrefix . "realbig_plugin_settings`
 	`elementCount` INT(11) NOT NULL,
 	`elementStep` INT(11) NOT NULL,
 	`minSymbols` INT(11) NULL DEFAULT NULL,
+	`maxSymbols` INT(11) NULL DEFAULT NULL,
 	`minHeaders` INT(11) NULL DEFAULT NULL,
+	`maxHeaders` INT(11) NULL DEFAULT NULL,
 	`time_update` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	PRIMARY KEY (`id`)
 )
@@ -109,7 +111,7 @@ CREATE TABLE `" . $wpPrefix . "realbig_plugin_settings`
 	`block_number` INT(11) NOT NULL,
 	`text` TEXT NOT NULL,
 	`setting_type` INT(11) NOT NULL,
-	`element` ENUM('p','li','ul','ol','blockquote','img','video','h1','h2','h3','h4','h5','h6') NOT NULL,
+	`element` ENUM('p','li','ul','ol','blockquote','img','video','h1','h2','h3','h4','h5','h6','article') NOT NULL,
 	`directElement` TEXT NOT NULL,
 	`elementPosition` INT(11) NOT NULL,
 	`elementPlace` INT(11) NOT NULL,
@@ -117,7 +119,9 @@ CREATE TABLE `" . $wpPrefix . "realbig_plugin_settings`
 	`elementCount` INT(11) NOT NULL,
 	`elementStep` INT(11) NOT NULL,
 	`minSymbols` INT(11) NULL DEFAULT NULL,
+	`maxSymbols` INT(11) NULL DEFAULT NULL,
 	`minHeaders` INT(11) NULL DEFAULT NULL,
+	`maxHeaders` INT(11) NULL DEFAULT NULL,
 	`time_update` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	PRIMARY KEY (`id`)
 )
@@ -165,13 +169,13 @@ ENGINE=InnoDB
 
 	function RFWP_updateElementEnumValuesFunction($wpPrefix, $statusGatherer) {
 		global $wpdb;
-		$requiredElementColumnValues = "enum('p','li','ul','ol','blockquote','img','video','h1','h2','h3','h4','h5','h6')";
+		$requiredElementColumnValues = "enum('p','li','ul','ol','blockquote','img','video','h1','h2','h3','h4','h5','h6','article')";
 		try {
 			$enumTypeQuery = $wpdb->get_results( 'SHOW FIELDS FROM ' . $wpPrefix . 'realbig_plugin_settings WHERE Field = "element"' );
 			if ( ! empty( $enumTypeQuery ) ) {
 				$enumTypeQuery = get_object_vars( $enumTypeQuery[0] );
 				if ( $enumTypeQuery['Type'] != $requiredElementColumnValues ) {
-					$wpdb->query( "ALTER TABLE " . $wpPrefix . "realbig_plugin_settings MODIFY `element` ENUM('p','li','ul','ol','blockquote','img','video','h1','h2','h3','h4','h5','h6') NULL DEFAULT NULL" );
+					$wpdb->query( "ALTER TABLE " . $wpPrefix . "realbig_plugin_settings MODIFY `element` ENUM('p','li','ul','ol','blockquote','img','video','h1','h2','h3','h4','h5','h6','article') NULL DEFAULT NULL" );
 					$statusGatherer['element_column_values'] = false;
 					return $statusGatherer;
 				} else {
@@ -182,7 +186,7 @@ ENGINE=InnoDB
 				$statusGatherer['element_column_values'] = false;
 				return $statusGatherer;
 			}
-		} catch ( Exception $e ) {
+		} catch (Exception $e) {
 			$statusGatherer['element_column_values'] = false;
 			return $statusGatherer;
 		}
@@ -219,7 +223,9 @@ ENGINE=InnoDB
 			'elementStep',
 			'time_update',
 			'minSymbols',
+			'maxSymbols',
 			'minHeaders',
+			'maxHeaders',
             'onCategories',
             'offCategories',
             'onTags',

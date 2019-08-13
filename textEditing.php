@@ -17,7 +17,7 @@ try {
 	        $cuttedContent = $content;
 	        $listOfTags = [];
 	        $listOfTags['unavailable'] = ['ins','script','style'];
-	        $listOfTags['available'] = ['p','div','span','blockquote','table','ul','ol','h1','h2','h3','h4','h5','h6','strong',];
+	        $listOfTags['available'] = ['p','div','span','blockquote','table','ul','ol','h1','h2','h3','h4','h5','h6','strong','article'];
 	        $listOfSymbolsForEcranising = '(\/|\$|\^|\.|\,|\&|\||\(|\)|\+|\-|\*|\?|\!|\[|\]|\{|\}|\<|\>|\\\|\~){1}';
 	        if (empty($isRepeated)) {
 		        foreach ($listOfTags AS $affiliation => $listItems) {
@@ -57,7 +57,7 @@ try {
         }
     }
 
-	function RFWP_addIcons($fromDb, $content, $contentType, $cachedBlocks, $inserts=null, $shortcodes) {
+	function RFWP_addIcons($fromDb, $content, $contentType, $cachedBlocks, $inserts=null, $shortcodes, $excIdClass) {
 		try {
 
 			global $wp_query;
@@ -104,12 +104,12 @@ try {
 			$usedBlocksCounter     = 0;
 			$usedBlocks            = [];
 			$objArray              = [];
-			$onCategoriesArray = [];
-			$offCategoriesArray = [];
-			$onTagsArray = [];
-			$offTagsArray = [];
-			$pageCategories = [];
-			$pageTags = [];
+			$onCategoriesArray     = [];
+			$offCategoriesArray    = [];
+			$onTagsArray           = [];
+			$offTagsArray          = [];
+			$pageCategories        = [];
+			$pageTags              = [];
 
 			if (!empty($fromDb)) {
 			    /** New system for content length checking **/
@@ -119,6 +119,10 @@ try {
 					$contentLength = mb_strlen(strip_tags($content), 'utf-8');
                 }
 				$contentLengthOld = mb_strlen(strip_tags($content), 'utf-8');
+
+				$headersMatchesResult = preg_match_all('~<(h1|h2|h3|h4|h5|h6)~', $content, $headM);
+				$headersMatchesResult = count($headM[0]);
+				$headersMatchesResult += 1;
 
 				if (!empty($getPageCategories)) {
 					$ctCounter = 0;
@@ -143,6 +147,14 @@ try {
 					unset($k1,$item1);
 				}
 
+				if (!empty($excIdClass)) {
+					$excIdClass = explode(';', $excIdClass);
+					foreach ($excIdClass AS $k1 => $item1) {
+						$excIdClass[$k1] = trim($excIdClass[$k1]);
+                    }
+					$excIdClass = implode('","', $excIdClass);
+                }
+
 //				$contentLengthOld = mb_strlen(strip_tags($content), 'utf-8');
 /*              ?><script>console.log('new content:'+<?php echo $contentLength ?>);console.log('old content:'+<?php echo $contentLengthOld ?>);</script><?php  */
  				foreach ($fromDb AS $k => $item) {
@@ -156,16 +168,24 @@ try {
 						$usedBlocksCounter ++;
 						continue;
 					}
-					if (!empty($item['minHeaders']) && $item['minHeaders'] > 0) {
-						$headersMatchesResult = preg_match_all('~<(h1|h2|h3|h4|h5|h6)~', $content, $headM);
-						$headersMatchesResult = count($headM[0]);
-						$headersMatchesResult += 1;
+					if (!empty($headersMatchesResult)) {
+						if (!empty($item['minHeaders']) && $item['minHeaders'] > 0 && $item['minHeaders'] > $headersMatchesResult) {
+							$usedBlocks[$usedBlocksCounter] = $item['id'];
+							$usedBlocksCounter ++;
+							continue;
+						}
+						if (!empty($item['maxHeaders']) && $item['maxHeaders'] > 0 && $item['maxHeaders'] < $headersMatchesResult) {
+							$usedBlocks[$usedBlocksCounter] = $item['id'];
+							$usedBlocksCounter ++;
+							continue;
+						}
 					}
-					if (!empty($item['minHeaders']) && ! empty($headersMatchesResult) && $item['minHeaders'] > 0 && $item['minHeaders'] > $headersMatchesResult) {
+					if (!empty($item['minSymbols']) && $item['minSymbols'] > 0 && $item['minSymbols'] > $contentLength) {
 						$usedBlocks[$usedBlocksCounter] = $item['id'];
 						$usedBlocksCounter ++;
 						continue;
-					} elseif (!empty($item['minSymbols']) && $item['minSymbols'] > 0 && $item['minSymbols'] > $contentLength) {
+					}
+					if (!empty($item['maxSymbols']) && $item['maxSymbols'] > 0 && $item['maxSymbols'] < $contentLength) {
 						$usedBlocks[$usedBlocksCounter] = $item['id'];
 						$usedBlocksCounter ++;
 						continue;
@@ -466,7 +486,7 @@ try {
 				$editedContent = '<span id="content_pointer_id"></span>'.$editedContent;
 //				$editedContent = RFWP_rb_cache_gathering($editedContent, $cachedBlocks);
 //			    $usedBlocks = [];
-				$creatingJavascriptParserForContent = RFWP_creatingJavascriptParserForContentFunction($fromDb, $usedBlocks, $contentLength);
+				$creatingJavascriptParserForContent = RFWP_creatingJavascriptParserForContentFunction($fromDb, $usedBlocks, $contentLength, $excIdClass);
 				$editedContent                      = $creatingJavascriptParserForContent['before'].$editedContent.$creatingJavascriptParserForContent['after'];
 
                 return $editedContent;
@@ -635,7 +655,7 @@ onErrorPlacing();';
 		return $content;
     }
 
-	function RFWP_insertingsToContent($content, $insertings) {
+	function RFWP_insertingsToContent($content) {
 	    if (empty($GLOBALS['addInsertings']['body']['data'])) {
 	        return $content;
         }
@@ -769,7 +789,7 @@ launchInsertingsFunctionLaunch();'.PHP_EOL;
         return $result;
     }
 
-	function RFWP_creatingJavascriptParserForContentFunction($fromDb, $usedBlocks, $contentLength) {
+	function RFWP_creatingJavascriptParserForContentFunction($fromDb, $usedBlocks, $contentLength, $excIdClass) {
 		try {
 //		    $needleUrl = plugins_url().'/'.basename(__DIR__).'/connectTestFile';
 //		    $needleUrl = basename(__DIR__).'/connectTestFile';
@@ -778,16 +798,18 @@ launchInsertingsFunctionLaunch();'.PHP_EOL;
             $cssCode = ''.PHP_EOL;
             $cssCode .='<style>
     .coveredAd {
+        position: relative;
+        left: -5000px;
         max-height: 1px;
-        max-width:  1px;
         overflow: hidden;
     } 
 </style>';
 			$scriptingCode = '
             <script>
             var blockSettingArray = [];
+            var excIdClass = ["'.$excIdClass.'"];
             var usedBlockSettingArray = [];
-            var contentLength = ' . $contentLength . ';
+            var contentLength = '.$contentLength.';
             ';
 			$k1 = 0;
 			foreach ($fromDb AS $k => $item) {
@@ -804,10 +826,20 @@ launchInsertingsFunctionLaunch();'.PHP_EOL;
 					} else {
 						$scriptingCode .= 'blockSettingArray['.$k.']["minSymbols"] = 0;' . PHP_EOL;
 					}
+					if (!empty($item['maxSymbols'])&&$item['maxSymbols'] > 1) {
+						$scriptingCode .= 'blockSettingArray['.$k.']["maxSymbols"] = '.$item['maxSymbols'] . '; ' . PHP_EOL;
+					} else {
+						$scriptingCode .= 'blockSettingArray['.$k.']["maxSymbols"] = 0;' . PHP_EOL;
+					}
 					if (!empty($item['minHeaders'])&&$item['minHeaders'] > 1) {
 						$scriptingCode .= 'blockSettingArray['.$k.']["minHeaders"] = ' . $item['minHeaders'] . '; ' . PHP_EOL;
 					} else {
 						$scriptingCode .= 'blockSettingArray['.$k.']["minHeaders"] = 0;' . PHP_EOL;
+					}
+					if (!empty($item['maxHeaders'])&&$item['maxHeaders'] > 1) {
+						$scriptingCode .= 'blockSettingArray['.$k.']["maxHeaders"] = ' . $item['maxHeaders'] . '; ' . PHP_EOL;
+					} else {
+						$scriptingCode .= 'blockSettingArray['.$k.']["maxHeaders"] = 0;' . PHP_EOL;
 					}
 					$scriptingCode     .= 'blockSettingArray['.$k.']["id"] = \'' . $item['id'] . '\'; ' . PHP_EOL;
 //					$scriptingCode     .= 'blockSettingArray['.$k.']["text"] = \'' . $item['text'] . '\'; ' . PHP_EOL;

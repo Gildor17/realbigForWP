@@ -102,7 +102,7 @@ try {
 
 								    $counter = 0;
 								    $wpdb->query( 'DELETE FROM ' . $wpPrefix . 'realbig_plugin_settings');
-								    $sqlTokenSave = "INSERT INTO " . $wpPrefix . "realbig_plugin_settings (text, block_number, setting_type, element, directElement, elementPosition, elementPlace, firstPlace, elementCount, elementStep, minSymbols, minHeaders, onCategories, offCategories, onTags, offTags) VALUES ";
+								    $sqlTokenSave = "INSERT INTO " . $wpPrefix . "realbig_plugin_settings (text, block_number, setting_type, element, directElement, elementPosition, elementPlace, firstPlace, elementCount, elementStep, minSymbols, maxSymbols, minHeaders, maxHeaders, onCategories, offCategories, onTags, offTags) VALUES ";
 								    foreach ( $decodedToken['data'] AS $k => $item ) {
 //								        foreach ($item AS $k1 => $item1) {
 //								            if (in_array($k1, ['onCategories', 'offCategories', 'onTags', 'offTags'])) {
@@ -116,10 +116,10 @@ try {
 									    $penyok_stoparik = 0;
 
 									    $counter ++;
-									    $sqlTokenSave .= ($counter != 1 ? ", " : "") . "('" . $item['text'] . "', " . (int) sanitize_text_field($item['block_number']) . ", " . (int) sanitize_text_field($item['setting_type']) . ", '" . sanitize_text_field($item['element']) . "', '" . sanitize_text_field( $item['directElement'] ) . "', " . (int) sanitize_text_field($item['elementPosition']) . ", " . (int) sanitize_text_field($item['elementPlace']) . ", " . (int) sanitize_text_field($item['firstPlace']) . ", " . (int) sanitize_text_field($item['elementCount']) . ", " . (int) sanitize_text_field($item['elementStep']) . ", " . (int) sanitize_text_field($item['minSymbols']) . ", " . (int) sanitize_text_field($item['minHeaders']).", '".sanitize_text_field($item['onCategories'])."', '".sanitize_text_field($item['offCategories'])."', '".sanitize_text_field($item['onTags'])."', '".sanitize_text_field($item['offTags'])."')";
+									    $sqlTokenSave .= ($counter != 1 ?", ":"")."('".$item['text']."',".(int) sanitize_text_field($item['block_number']).", ".(int) sanitize_text_field($item['setting_type']) . ", '" . sanitize_text_field($item['element']) . "', '" . sanitize_text_field( $item['directElement'] ) . "', " . (int) sanitize_text_field($item['elementPosition']) . ", " . (int) sanitize_text_field($item['elementPlace']) . ", " . (int) sanitize_text_field($item['firstPlace']) . ", " . (int) sanitize_text_field($item['elementCount']) . ", " . (int) sanitize_text_field($item['elementStep']) . ", " . (int) sanitize_text_field($item['minSymbols']) . ", " . (int) sanitize_text_field($item['maxSymbols']) . ", " . (int) sanitize_text_field($item['minHeaders']).", " . (int) sanitize_text_field($item['maxHeaders']).", '".sanitize_text_field($item['onCategories'])."', '".sanitize_text_field($item['offCategories'])."', '".sanitize_text_field($item['onTags'])."', '".sanitize_text_field($item['offTags'])."')";
 								    }
 								    unset($k, $item);
-								    $sqlTokenSave .= " ON DUPLICATE KEY UPDATE text = values(text), setting_type = values(setting_type), element = values(element), directElement = values(directElement), elementPosition = values(elementPosition), elementPlace = values(elementPlace), firstPlace = values(firstPlace), elementCount = values(elementCount), elementStep = values(elementStep), minSymbols = values(minSymbols), minHeaders = values(minHeaders), minHeaders = values(onCategories), minHeaders = values(offCategories), minHeaders = values(onTags), minHeaders = values(offTags) ";
+								    $sqlTokenSave .= " ON DUPLICATE KEY UPDATE text = values(text), setting_type = values(setting_type), element = values(element), directElement = values(directElement), elementPosition = values(elementPosition), elementPlace = values(elementPlace), firstPlace = values(firstPlace), elementCount = values(elementCount), elementStep = values(elementStep), minSymbols = values(minSymbols), maxSymbols = values(maxSymbols), minHeaders = values(minHeaders), maxHeaders = values(maxHeaders), onCategories = values(onCategories), offCategories = values(offCategories), onTags = values(onTags), offTags = values(offTags) ";
 								    $wpdb->query($sqlTokenSave);
 							    } elseif (empty($decodedToken['data'])&&sanitize_text_field($decodedToken['status']) == "empty_success") {
 								    $wpdb->query('DELETE FROM '.$wpPrefix.'realbig_plugin_settings');
@@ -183,6 +183,18 @@ try {
 								    }
 							    }
 							    /** End of excluded page types */
+							    /** Excluded id and classes */
+							    if (isset($decodedToken['excludedIdAndClasses'])) {
+							        $excludedIdAndClasses = sanitize_text_field($decodedToken['excludedIdAndClasses']);
+								    $getExcludedIdAndClasses = $wpdb->get_var('SELECT id FROM '.$wpPrefix.'realbig_settings WHERE optionName = "excludedIdAndClasses"');
+								    if (!empty($getExcludedIdAndClasses)) {
+									    $updateResult = $wpdb->update($wpPrefix.'realbig_settings', ['optionName'=>'excludedIdAndClasses', 'optionValue'=>$excludedIdAndClasses],
+										    ['optionName' => 'excludedIdAndClasses']);
+                                    } else {
+									    $wpdb->insert($wpPrefix.'realbig_settings', ['optionName'=>'excludedIdAndClasses', 'optionValue'=>$excludedIdAndClasses]);
+								    }
+							    }
+							    /** End of excluded id and classes */
 							    /** Insertings */
 							    if (!empty($decodedToken['insertings'])) {
 								    $insertings = $decodedToken['insertings'];
@@ -276,7 +288,7 @@ try {
 				}
 
 				try {
-					set_transient('realbigPluginSyncAttempt', $decodedToken['status'], 300);
+					set_transient('realbigPluginSyncAttempt', time()+300, 300);
 					if ($decodedToken['status'] == 'success') {
 						if (empty($wpOptionsCheckerSyncTime)) {
 							$wpdb->insert( $wpPrefix . 'realbig_settings', ['optionName'  => 'token_sync_time', 'optionValue' => time()]);
@@ -406,14 +418,14 @@ try {
 	                        }
                             unset($rk,$ritem);
 
-		                    set_transient('rb_cache_timeout', '60', 60);
+		                    set_transient('rb_cache_timeout', time()+60, 60);
 		                    if (!empty($resultTypes['mobile'])&&empty($resultTypes['desktop'])) {
-			                    set_transient('rb_mobile_cache_timeout', '60', 60*60);
+			                    set_transient('rb_mobile_cache_timeout', time()+(60*60), 60*60);
                             } elseif (empty($resultTypes['mobile'])&&!empty($resultTypes['desktop'])) {
-			                    set_transient('rb_desktop_cache_timeout', '60', 60*60);
+			                    set_transient('rb_desktop_cache_timeout', time()+(60*60), 60*60);
                             } elseif (empty($resultTypes['mobile'])&&empty($resultTypes['desktop'])&&!empty($resultTypes['universal'])) {
-			                    set_transient('rb_mobile_cache_timeout', '60', 60*60);
-			                    set_transient('rb_desktop_cache_timeout', '60', 60*60);
+			                    set_transient('rb_mobile_cache_timeout', time()+(60*60), 60*60);
+			                    set_transient('rb_desktop_cache_timeout', time()+(60*60), 60*60);
                             }
 		                    delete_transient('rb_active_cache');
 	                    }
@@ -571,7 +583,7 @@ try {
     /** Auto Sync */
 	if (!function_exists('RFWP_autoSync')) {
 		function RFWP_autoSync() {
-			set_transient('realbigPluginSyncProcess', 'true', 30);
+			set_transient('realbigPluginSyncProcess', time()+30, 30);
 			global $wpdb;
 			$wpOptionsCheckerSyncTime = $wpdb->get_row($wpdb->prepare('SELECT optionValue FROM '.$GLOBALS['table_prefix'].'realbig_settings WHERE optionName = %s',[ "token_sync_time" ]));
 			if (!empty($wpOptionsCheckerSyncTime)) {
