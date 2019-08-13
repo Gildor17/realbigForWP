@@ -499,8 +499,7 @@ try {
 		require_once (dirname(__FILE__)."/textEditing.php");
 		$headerParsingResult = RFWP_headerADInsertor();
 
-//		$longCache = get_transient('rb_longCacheDeploy');
-		$longCache = false;
+		$longCache = get_transient('rb_longCacheDeploy');
 //		$longCache = false;
 		$GLOBALS['rb_longCache'] = $longCache;
 
