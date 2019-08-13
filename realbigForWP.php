@@ -10,7 +10,7 @@ include (dirname(__FILE__)."/textEditing.php");
 /*
 Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.1.26.72
+Version:      0.1.26.74
 Author:       Realbig Team
 Author URI:   https://realbig.media
 License:      GPLv2 or later
@@ -29,6 +29,13 @@ try {
 		require_once (dirname(__FILE__)."/../../../wp-includes/pluggable.php");
 		$curUserCan = current_user_can('activate_plugins');
 	}
+
+	if (!empty($GLOBALS['dev_mode'])) {
+		if (empty($GLOBALS['rb_admin_menu_loaded'])) {
+			require_once (dirname(__FILE__)."/adminMenuAdd.php");
+			$GLOBALS['rb_admin_menu_loaded'] = true;
+		}
+    }
 
 	$wpPrefix = $table_prefix;
 	if (empty($wpPrefix)) {
@@ -92,12 +99,16 @@ try {
 	/***************** End of test zone ***********************************************************************************/
 	/***************** Cached AD blocks saving ***************************************************************************************/
     function saveAdBlocks($tunnelData) {
-	    include_once (dirname(__FILE__).'/connectTestFile.php');
+	    if (!empty($_POST['type'])&&$_POST['type']=='blocksGethering') {
+		    include_once (dirname(__FILE__).'/connectTestFile.php');
+	    }
 	    return $tunnelData;
     }
 
     function setLongCache($tunnelData) {
-        set_transient('rb_longCacheDeploy', 'true', 300);
+        if (!empty($_POST['type'])&&$_POST['type']=='longCatching') {
+	        set_transient('rb_longCacheDeploy', time()+300, 300);
+        }
 	    return $tunnelData;
     }
 	/***************** End of cached AD blocks saving *********************************************************************************/
@@ -127,7 +138,7 @@ try {
 	if (!empty($pluginData['Version'])) {
 		$GLOBALS['realbigForWP_version'] = $pluginData['Version'];
 	} else {
-		$GLOBALS['realbigForWP_version'] = '0.1.26.71';
+		$GLOBALS['realbigForWP_version'] = '0.1.26.74';
 	}
 	$lastSuccessVersionGatherer = get_option('realbig_status_gatherer_version');
 //	require_once( 'synchronising.php' );
@@ -488,8 +499,8 @@ try {
 		require_once (dirname(__FILE__)."/textEditing.php");
 		$headerParsingResult = RFWP_headerADInsertor();
 
-//		$longCache = get_transient('rb_longCacheDeploy');
-		$longCache = false;
+		$longCache = get_transient('rb_longCacheDeploy');
+//		$longCache = false;
 		$GLOBALS['rb_longCache'] = $longCache;
 
 		if ($headerParsingResult == true&&empty($longCache)) {
@@ -497,16 +508,32 @@ try {
             <script type="text/javascript">
                 function onErrorPlacing() {
                     if (typeof cachePlacing !== 'undefined' && typeof cachePlacing === 'function') {
-                        cachePlacing('low');
+                        let errorInfo = [];
+                        // errorInfo['msg'] = msg;
+                        // errorInfo['url'] = url;
+                        // errorInfo['lineNo'] = lineNo;
+                        // errorInfo['columnNo'] = columnNo;
+                        // errorInfo['error'] = error;
+
+                        cachePlacing('low',errorInfo);
                     } else {
                         setTimeout(function () {
                             onErrorPlacing();
                         }, 100)
                     }
                 }
+                let rotatorScript = document.createElement('script');
+                rotatorScript.src = "//<?php echo $getDomain ?>/<?php echo $getRotator ?>.min.js";
+                rotatorScript.type = "text/javascript";
+                rotatorScript.async = true;
+                document.head.append(rotatorScript);
+
+                rotatorScript.onerror = function(message, url, line, col, errorObj) {
+                    // alert('error is here');
+                };
             </script>
-            <script async="async" onerror="onErrorPlacing()" type="text/javascript" src="//<?php echo $getDomain ?>/<?php echo $getRotator ?>.min.js"></script><?php
-        }
+<?php	/*<script async="async" onerror="onErrorPlacing()" type="text/javascript" src="//<?php echo $getDomain ?>/<?php echo $getRotator ?>.min.js"></script><?php*/
+		}
 	}
 
 	function RFWP_push_head_add() {
@@ -609,15 +636,17 @@ try {
 //	if ($mainPageStatus == 2||empty($excludedPage)) {
 	if (empty(apply_filters('wp_doing_cron', defined('DOING_CRON')&&DOING_CRON))&&empty($excludedPage)) {
 //		RFWP_js_add();
-		add_filter('the_content', 'RFWP_adBlocksToContentInsertingFunction', 5000);
-//		add_filter('the_content', 'RFWP_adBlocksToContentInsertingFunction', 10);
+//        if (empty($GLOBALS['used_ad_func'])) {
+	        add_filter('the_content', 'RFWP_adBlocksToContentInsertingFunction', 5000);
+//        }
 	}
 
 //	insertings body add
     if (empty(apply_filters('wp_doing_cron', defined('DOING_CRON')&&DOING_CRON))&&!is_admin()) {
 	    RFWP_js_add();
-	    add_filter('the_content', 'RFWP_insertingsToContentAddingFunction', 5001);
-//	    add_filter('the_content', 'RFWP_insertingsToContentAddingFunction', 10);
+//	    if (empty($GLOBALS['used_insertings_func'])) {
+		    add_filter('the_content', 'RFWP_insertingsToContentAddingFunction', 5001);
+//	    }
     }
 
 //    if (empty(apply_filters('wp_doing_cron', defined('DOING_CRON')&&DOING_CRON))&&!is_admin()) {
@@ -639,20 +668,69 @@ try {
 
 	    add_filter('the_content', 'RFWP_activateShortCodes', 5002);
     }
+
+//    function RFWP_checkForTitle($content) {
+//	    if (current_user_can('activate_plugins')) {
+//    <script>console.log('the_title passed');</script>
+//	    }
+//	    return $content;
+//    }
+//	add_filter('the_title', 'RFWP_checkForTitle', 5000);
+//
+//    function RFWP_checkForExcerpts($content) {
+//	    if (current_user_can('activate_plugins')) {
+//	    }
+//	    return $content;
+//    }
+//	add_filter('the_excerpt', 'RFWP_checkForExcerpts', 5000);
+//
+//    function RFWP_checkForWidgetText($content) {
+//	    if (current_user_can('activate_plugins')) {
+//	    }
+//	    return $content;
+//    }
+//	add_filter('widget_text', 'RFWP_checkForWidgetText', 5000);
+//
+//    function RFWP_checkForWidgetTextContent($content) {
+//	    if (current_user_can('activate_plugins')) {
+//	    }
+//	    return $content;
+//    }
+//	add_filter('widget_text_content', 'RFWP_checkForWidgetTextContent', 5000);
+//
+//    function RFWP_checkForWpHead($content) {
+//	    if (current_user_can('activate_plugins')) {
+//	    }
+//	    return $content;
+//    }
+//	add_filter('wp_head', 'RFWP_checkForWpHead', 5000);
+
 	/************* end blocks for text ************************************************************************************/
 	/************* adding insertings in text *****************************************************/
     function RFWP_insertingsToContentAddingFunction($content) {
-        $penyok_stoparik = 0;
-        $insertings = RFWP_insertsToString('body', 0);
-	    $content = RFWP_insertingsToContent($content, $insertings);
+	    if (empty($GLOBALS['used_ins'])||(!empty($GLOBALS['used_ins'])&&empty($GLOBALS['used_ins']['body_0']))) {
+//		    require_once (dirname(__FILE__)."/../../../wp-includes/pluggable.php");
+//		    if (current_user_can('activate_plugins')) {
+			   /* ?><script>console.log('unf inserting to content passed');</script><?php */
+//		    }
+
+		    $GLOBALS['used_ins']['body_0'] = true;
+		    $insertings = RFWP_insertsToString('body', 0);
+        }
+	    $content = RFWP_insertingsToContent($content);
 //	    $content = do_shortcode($content);
 	    return $content;
     }
-	/************* adding insertings in text *****************************************************/
+	/************* end adding insertings in text *****************************************************/
 	/********** using settings in texts ***********************************************************************************/
 	function RFWP_adBlocksToContentInsertingFunction($content) {
 		global $wp_query;
 		global $post;
+
+//		require_once (dirname(__FILE__)."/../../../wp-includes/pluggable.php");
+//		if (current_user_can('activate_plugins')) {
+		    /* ?><script>console.log('ad to content passed');</script><?php */
+//        }
 
 		$pasingAllowed = true;
 		$arrayOfCheckedTypes = [
@@ -685,13 +763,14 @@ try {
 //		    if (is_page()||is_single()||is_singular()||is_archive()||is_home()||is_front_page()) {
 			    global $wpdb;
 
+                $excIdClass = $wpdb->get_var('SELECT optionValue FROM '.$GLOBALS['wpPrefix'].'realbig_settings WGPS WHERE optionName = "excludedIdAndClasses"');
 //			    $rotatorUrl = $GLOBALS['rotatorUrl'];
 //			    $rotatorResponce = wp_safe_remote_head($rotatorUrl, ['timeout' => 1]);
 
                 $cachedBlocks = '';
 //                if (!is_array($rotatorResponce)||(!empty($rotatorResponce['response']['code'])&&$rotatorResponce['response']['code']!=200)) {
-                    $mobileCheck = RFWP_wp_is_mobile();
-                    $GLOBALS['rb_mobile_check'] = $mobileCheck;
+                $mobileCheck = RFWP_wp_is_mobile();
+                $GLOBALS['rb_mobile_check'] = $mobileCheck;
 //                $cachedBlocks = null;
 //			    }
 
@@ -711,15 +790,23 @@ try {
 				    $fromDb = $wpdb->get_results('SELECT * FROM '.$GLOBALS['wpPrefix'].'realbig_plugin_settings WGPS WHERE setting_type = 3');
 			    }
 			    require_once (dirname(__FILE__)."/textEditing.php");
-			    $content = RFWP_addIcons($fromDb, $content, 'content', null, null, $shortcodes);
+			    $content = RFWP_addIcons($fromDb, $content, 'content', null, null, $shortcodes, $excIdClass);
 //			    $content = RFWP_addIcons($fromDb, $content, 'content', $cachedBlocks, null, $shortcodes);
 
 //                $content = RFWP_rb_cache_gathering($content, $cachedBlocks);
 
-			    $inserts = RFWP_insertsToString('body', 1);
+			    if (empty($GLOBALS['used_ins'])||(!empty($GLOBALS['used_ins'])&&empty($GLOBALS['used_ins']['body_1']))) {
+//				    require_once (dirname(__FILE__)."/../../../wp-includes/pluggable.php");
+//				    if (current_user_can('activate_plugins')) {
+					    /* ?><script>console.log('f inserting to content passed');</script><?php */
+//				    }
+
+				    $GLOBALS['used_ins']['body_1'] = true;
+				    $inserts = RFWP_insertsToString('body', 1);
+			    }
 
                 add_filter('the_content', 'RFWP_rbCacheGatheringLaunch', 5003);
-//			    $content = RFWP_insertingsToContent($content, $inserts);
+//			    $content = RFWP_insertingsToContent($content);
 
 			    return $content;
 		    } else {

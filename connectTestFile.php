@@ -29,7 +29,7 @@ try {
 	    if (!empty($checkActiveCaching)) {
 		    sleep(6);
 	    } else {
-		    set_transient('rb_active_cache', '5', 5);
+		    set_transient('rb_active_cache', time()+5, 5);
 	        $stopIt = true;
         }
     }
