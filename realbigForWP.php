@@ -516,7 +516,7 @@ try {
                         // errorInfo['columnNo'] = columnNo;
                         // errorInfo['error'] = error;
 
-                        cachePlacing('high',errorInfo);
+                        cachePlacing('low',errorInfo);
                     } else {
                         setTimeout(function () {
                             onErrorPlacing();
