@@ -30,6 +30,12 @@ if (typeof endedSc === 'undefined') {
 if (typeof endedCc === 'undefined') {
     var endedCc = false;
 }
+if (typeof usedAdBlocksArray==='undefined') {
+    var usedAdBlocksArray = [];
+}
+if (typeof usedBlockSettingArrayIds==='undefined') {
+    var usedBlockSettingArrayIds = [];
+}
 
 // "sc" in variables - mark for shortcode variable
 function shortcodesInsert() {
@@ -212,15 +218,18 @@ function blocksReposition() {
 
     if (excIdClass&&excIdClass.length > 0) {
         for (i = 0; i < excIdClass.length; i++) {
-            blocksRepositionUse(excIdClass[i], '', markingString);
+            if (excIdClass[i].length > 0) {
+                blocksRepositionUse(excIdClass[i], '', markingString);
+            }
         }
     }
-
 }
 
 function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
     try {
-        var content_pointer = document.querySelector("#content_pointer_id");
+        var content_pointer = document.querySelector("#content_pointer_id"); //orig
+        // var content_pointer = document.querySelectorAll("#content_pointer_id");
+        // content_pointer = content_pointer[content_pointer.length - 1];
         var parent_with_content = content_pointer.parentElement;
         var lordOfElements = parent_with_content;
         parent_with_content = parent_with_content.parentElement;
@@ -238,6 +247,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
         let containerFor6th = [];
         let containerFor7th = [];
         let posCurrentElement;
+        // var checkIfBlockUsed = 0;
 
         function getFromConstructions(currentElement) {
             if (currentElement.parentElement.tagName.toLowerCase() == "blockquote") {
@@ -305,6 +315,17 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
             termorarity_parent_with_content_length += termorarity_parent_with_content.getElementsByTagName(headersList[hc1]).length;
         }
 
+        // if (usedBlockSettingArray&&usedBlockSettingArray.length > 0) {
+        //     for (let j = 0; j < usedBlockSettingArray.length; j++) {
+        //         if (usedBlockSettingArrayIds.length > 0) {
+        //             if (usedBlockSettingArrayIds.includes(usedBlockSettingArray[j]['id'])) {
+        //                 continue;
+        //             }
+        //         }
+        //         usedBlockSettingArrayIds.push(usedBlockSettingArray[j]['id']);
+        //     }
+        // }
+
         for (var i = 0; i < blockSettingArray.length; i++) {
             currentElement = null;
             currentElementChecker = false;
@@ -313,6 +334,20 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                 if (!elementToAdd) {
                     continue;
                 }
+                // checkIfBlockUsed = elementToAdd.querySelector('.content_rb');
+                // checkIfBlockUsed = checkIfBlockUsed.getAttribute('data-id');
+                // if (usedAdBlocksArray&&usedAdBlocksArray.length > 0) {
+                //     if (checkIfBlockUsed&&checkIfBlockUsed > 0&&usedAdBlocksArray.includes(checkIfBlockUsed)) {
+                //         blockSettingArray.splice(i, 1);
+                //         continue;
+                //     }
+                // }
+                // if (usedBlockSettingArrayIds&&usedBlockSettingArrayIds.length > 0) {
+                //     if (checkIfBlockUsed&&checkIfBlockUsed > 0&&usedBlockSettingArrayIds.includes(checkIfBlockUsed)) {
+                //         blockSettingArray.splice(i, 1);
+                //         continue;
+                //     }
+                // }
 
                 if (blockSettingArray[i]["minHeaders"] > 0) {
                     if (blockSettingArray[i]["minHeaders"] > termorarity_parent_with_content_length) {
@@ -358,7 +393,9 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                             currentElement = getFromConstructions(currentElement);
                             if (excIdClass&&excIdClass.length > 0) {
                                 for (let i2 = 0; i2 < excIdClass.length; i2++) {
-                                    currentElement = blocksRepositionUse(excIdClass[i2], currentElement, 'marked');
+                                    if (excIdClass[i2].length > 0) {
+                                        currentElement = blocksRepositionUse(excIdClass[i2], currentElement, 'marked');
+                                    } 
                                 }
                             }
                             if (currentElement) {
@@ -372,7 +409,9 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                             currentElement = getFromConstructions(currentElement);
                             if (excIdClass&&excIdClass.length > 0) {
                                 for (let i2 = 0; i2 < excIdClass.length; i2++) {
-                                    currentElement = blocksRepositionUse(excIdClass[i2], currentElement, 'marked');
+                                    if (excIdClass[i2].length > 0) {
+                                        currentElement = blocksRepositionUse(excIdClass[i2], currentElement, 'marked');
+                                    }
                                 }
                             }
                             if (currentElement) {
@@ -384,6 +423,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                         posCurrentElement = initTargetToInsert(blockSettingArray);
                         currentElement.parentNode.insertBefore(elementToAdd, posCurrentElement);
                         elementToAdd.classList.remove('coveredAd');
+                        // usedAdBlocksArray.push(checkIfBlockUsed);
                         blockSettingArray.splice(i, 1);
                         poolbackI = 1;
                         i--;
@@ -456,7 +496,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                         posCurrentElement = initTargetToInsert(blockSettingArray);
                         currentElement.parentNode.insertBefore(elementToAdd, posCurrentElement);
                         elementToAdd.classList.remove('coveredAd');
-
+                        // usedAdBlocksArray.push(checkIfBlockUsed);
                         blockSettingArray.splice(i, 1);
                         poolbackI = 1;
                         i--;
@@ -465,11 +505,15 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                     }
                 } else if (blockSettingArray[i]["setting_type"] == 4) {
                     parent_with_content.append(elementToAdd);
+                    // usedAdBlocksArray.push(checkIfBlockUsed);
                     blockSettingArray.splice(i, 1);
                     poolbackI = 1;
                     i--;
                 } else if (blockSettingArray[i]["setting_type"] == 5) {
                     let currentElement = document.getElementById("content_pointer_id").parentElement;
+                    // let currentElement = document.querySelectorAll("content_pointer_id");
+                    // currentElement = currentElement[currentElement.length - 1];
+                    // currentElement = currentElement.parentElement;
                     if (currentElement.getElementsByTagName("p").length > 0) {
                         let pCount = currentElement.getElementsByTagName("p").length;
                         let elementNumber = Math.round(pCount/2);
@@ -479,7 +523,9 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                         currentElement = getFromConstructions(currentElement);
                         if (excIdClass&&excIdClass.length > 0) {
                             for (let i2 = 0; i2 < excIdClass.length; i2++) {
-                                currentElement = blocksRepositionUse(excIdClass[i2], currentElement, 'marked');
+                                if (excIdClass[i2].length > 0) {
+                                    currentElement = blocksRepositionUse(excIdClass[i2], currentElement, 'marked');
+                                }
                             }
                         }
                         if (currentElement != undefined && currentElement != null) {
@@ -490,6 +536,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                                 currentElement.parentNode.insertBefore(elementToAdd, currentElement.nextSibling);
                                 elementToAdd.classList.remove('coveredAd');
                             }
+                            // usedAdBlocksArray.push(checkIfBlockUsed);
                             blockSettingArray.splice(i, 1);
                             poolbackI = 1;
                             i--;
@@ -506,6 +553,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                                 // continue;
                                 if (j == containerFor6th.length-1) {
                                     containerFor6th.push(blockSettingArray[i]);
+                                    // usedAdBlocksArray.push(checkIfBlockUsed);
                                     blockSettingArray.splice(i, 1);
                                     poolbackI = 1;
                                     i--;
@@ -516,6 +564,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                                     containerFor6th[k + 1] = containerFor6th[k];
                                 }
                                 containerFor6th[j] = blockSettingArray[i];
+                                // usedAdBlocksArray.push(checkIfBlockUsed);
                                 blockSettingArray.splice(i, 1);
                                 poolbackI = 1;
                                 i--;
@@ -524,6 +573,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                         }
                     } else {
                         containerFor6th.push(blockSettingArray[i]);
+                        // usedAdBlocksArray.push(checkIfBlockUsed);
                         blockSettingArray.splice(i, 1);
                         poolbackI = 1;
                         i--;
@@ -536,6 +586,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                                 // continue;
                                 if (j == containerFor7th.length-1) {
                                     containerFor7th.push(blockSettingArray[i]);
+                                    // usedAdBlocksArray.push(checkIfBlockUsed);
                                     blockSettingArray.splice(i, 1);
                                     poolbackI = 1;
                                     i--;
@@ -546,6 +597,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                                     containerFor7th[k + 1] = containerFor7th[k];
                                 }
                                 containerFor7th[j] = blockSettingArray[i];
+                                // usedAdBlocksArray.push(checkIfBlockUsed);
                                 blockSettingArray.splice(i, 1);
                                 poolbackI = 1;
                                 i--;
@@ -554,12 +606,14 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                         }
                     } else {
                         containerFor7th.push(blockSettingArray[i]);
+                        // usedAdBlocksArray.push(checkIfBlockUsed);
                         blockSettingArray.splice(i, 1);
                         poolbackI = 1;
                         i--;
                     }
                 //    vidpravutu v vidstiinuk dlya 7ho tipa
                 }
+                // checkIfBlockUsed = 0;
             } catch (e) { }
         }
 
@@ -908,7 +962,9 @@ function symbolInserter(lordOfElements, containerFor7th) {
                             elementToBind = tlArray[j]['element'];
                             if (excIdClass&&excIdClass.length > 0) {
                                 for (let i2 = 0; i2 < excIdClass.length; i2++) {
-                                    elementToBind = blocksRepositionUse(excIdClass[i2], elementToBind, 'marked');
+                                    if (excIdClass[i2].length > 0) {
+                                        elementToBind = blocksRepositionUse(excIdClass[i2], elementToBind, 'marked');
+                                    }
                                 }
                             }
                             elementToBind.parentNode.insertBefore(elementToAdd, elementToBind);
@@ -926,7 +982,9 @@ function symbolInserter(lordOfElements, containerFor7th) {
                     elementToBind = tlArray[0]['element'];
                     if (excIdClass&&excIdClass.length > 0) {
                         for (let i2 = 0; i2 < excIdClass.length; i2++) {
-                            elementToBind = blocksRepositionUse(excIdClass[i2], elementToBind, 'marked');
+                            if (excIdClass[i2].length > 0) {
+                                elementToBind = blocksRepositionUse(excIdClass[i2], elementToBind, 'marked');
+                            }
                         }
                     }
                     elementToBind.parentNode.insertBefore(elementToAdd, elementToBind);
@@ -938,7 +996,9 @@ function symbolInserter(lordOfElements, containerFor7th) {
                             elementToBind = tlArray[j]['element'];
                             if (excIdClass&&excIdClass.length > 0) {
                                 for (let i2 = 0; i2 < excIdClass.length; i2++) {
-                                    elementToBind = blocksRepositionUse(excIdClass[i2], elementToBind, 'marked');
+                                    if (excIdClass[i2].length > 0) {
+                                        elementToBind = blocksRepositionUse(excIdClass[i2], elementToBind, 'marked');
+                                    }
                                 }
                             }
                             elementToBind.parentNode.insertBefore(elementToAdd, tlArray[j]['element'].nextSibling);
@@ -949,7 +1009,9 @@ function symbolInserter(lordOfElements, containerFor7th) {
                                 elementToBind = tlArray[j]['element'];
                                 if (excIdClass&&excIdClass.length > 0) {
                                     for (let i2 = 0; i2 < excIdClass.length; i2++) {
-                                        elementToBind = blocksRepositionUse(excIdClass[i2], elementToBind, 'marked');
+                                        if (excIdClass[i2].length > 0) {
+                                            elementToBind = blocksRepositionUse(excIdClass[i2], elementToBind, 'marked');
+                                        }
                                     }
                                 }
                                 elementToBind.parentNode.insertBefore(elementToAdd, elementToBind.nextSibling);
@@ -1003,6 +1065,7 @@ function percentInserter(lordOfElements, containerFor6th) {
         var lceCou = 0;
         var lastLceCou = 0;
         var elementToBind;
+        // var checkIfBlockUsed = 0;
 
         function textLengthMeter(i, usedElement, deepLvl) {
             let localtextLength = 0;
@@ -1162,6 +1225,11 @@ function percentInserter(lordOfElements, containerFor6th) {
                 if (perfectPlace.length > 0) {
                     for (let i = 0; i < perfectPlace.length; i++) {
                         if (perfectPlace[i].getAttribute('data-id') > textNeedyLength) {
+                            elementToAdd = document.querySelector('.percentPointerClass[data-id="'+containerFor6th[j]['id']+'"]');
+                            if (!elementToAdd) {
+                                return false;
+                            }
+
                             if (i > 0) {
                                 localMiddleValue = perfectPlace[i].getAttribute('data-id') - perfectPlace[i-1].getAttribute('data-id');
                                 localMiddleValue = perfectPlace[i].getAttribute('data-id') - Math.round(localMiddleValue/2);
@@ -1169,11 +1237,12 @@ function percentInserter(lordOfElements, containerFor6th) {
                                 localMiddleValue = Math.round(perfectPlace[i].getAttribute('data-id')/2);
                             }
 
-                            elementToAdd = document.querySelector('.percentPointerClass[data-id="'+containerFor6th[j]['id']+'"]');
                             elementToBind = perfectPlace[i];
                             if (excIdClass&&excIdClass.length > 0) {
                                 for (let i2 = 0; i2 < excIdClass.length; i2++) {
-                                    elementToBind = blocksRepositionUse(excIdClass[i2], elementToBind, 'marked');
+                                    if (excIdClass[i2].length > 0) {
+                                        elementToBind = blocksRepositionUse(excIdClass[i2], elementToBind, 'marked');
+                                    }
                                 }
                             }
 
@@ -1182,6 +1251,7 @@ function percentInserter(lordOfElements, containerFor6th) {
                             } else {
                                 elementToBind.parentNode.insertBefore(elementToAdd, elementToBind);
                             }
+                            // usedAdBlocksArray.push(checkIfBlockUsed);
                             elementToAdd.classList.remove('coveredAd');
                             return false;
                         }
