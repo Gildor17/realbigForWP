@@ -10,7 +10,7 @@ include (dirname(__FILE__)."/textEditing.php");
 /*
 Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.1.26.74
+Version:      0.1.26.75
 Author:       Realbig Team
 Author URI:   https://realbig.media
 License:      GPLv2 or later
@@ -80,7 +80,6 @@ try {
 			    $kill_rb_db = 1;
 		    }
 	    }
-
 	    $kill_rb = $kill_rb_db;
     }
 
@@ -138,7 +137,7 @@ try {
 	if (!empty($pluginData['Version'])) {
 		$GLOBALS['realbigForWP_version'] = $pluginData['Version'];
 	} else {
-		$GLOBALS['realbigForWP_version'] = '0.1.26.74';
+		$GLOBALS['realbigForWP_version'] = '0.1.26.75';
 	}
 	$lastSuccessVersionGatherer = get_option('realbig_status_gatherer_version');
 //	require_once( 'synchronising.php' );
