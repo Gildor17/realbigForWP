@@ -15,7 +15,6 @@ function sendReadyBlocksNew(blocks) {
 }
 
 function gatherReadyBlocks() {
-    // let blocks = '';
     let blocks = {};
     let counter1 = 0;
     let gatheredBlocks = document.getElementsByClassName('content_rb');
@@ -33,14 +32,10 @@ function gatherReadyBlocks() {
         for (let i = 0; i < gatheredBlocks.length; i++) {
             curState = gatheredBlocks[i]['dataset']["state"].toLowerCase();
             checker = 0;
-            // if (curState&&(gatheredBlocks[i]['innerHTML'].length > 0||curState=='no-block')) {
             if (curState&&gatheredBlocks[i]['innerHTML'].length > 0&&gatheredBlocks[i]['dataset']['aid'] > 0&&curState!='no-block') {
                 if (gatheredBlocks[i]['innerHTML'].length > 0) {
                     checker = 1;
                 }
-                // else if (curState=='no-block') {
-                //     checker = 1;
-                // }
                 if (checker==1) {
                     blocks.data[counter1] = {id:gatheredBlocks[i]['dataset']['id'],code:gatheredBlocks[i]['dataset']['aid']};
                     counter1++;
@@ -48,8 +43,6 @@ function gatherReadyBlocks() {
             }
         }
 
-        // clearUnsuitableCache();
-        
         blocks = JSON.stringify(blocks);
         sendReadyBlocksNew(blocks);
     }
