@@ -54,8 +54,7 @@ try {
 				'optionValue' => 'textEdit: '.$ex->getMessage()
 			], ['optionName'  => 'deactError']);
 		}
-	} catch (Exception $exIex) {
-	} catch (Error $erIex) { }
+	} catch (Exception $exIex) { } catch (Error $erIex) { }
 
 	deactivate_plugins(plugin_basename( __FILE__ ));
 	?><div style="margin-left: 200px; border: 3px solid red"><?php echo $ex; ?></div><?php
@@ -81,8 +80,7 @@ try {
 				'optionValue' => 'textEdit: '.$er->getMessage()
 			], ['optionName'  => 'deactError']);
 		}
-	} catch (Exception $exIex) {
-	} catch (Error $erIex) { }
+	} catch (Exception $exIex) { } catch (Error $erIex) { }
 
 	deactivate_plugins(plugin_basename( __FILE__ ));
 	?><div style="margin-left: 200px; border: 3px solid red"><?php echo $er; ?></div><?php
