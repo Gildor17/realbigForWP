@@ -134,19 +134,27 @@ try {
 							    if (!empty($decodedToken['dataPush'])) {
 							        $sanitisedPushStatus = sanitize_text_field($decodedToken['dataPush']['pushStatus']);
 							        $sanitisedPushData = sanitize_text_field($decodedToken['dataPush']['pushCode']);
-								    $wpOptionsCheckerPushStatus = $wpdb->query( $wpdb->prepare( "SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", [ 'pushStatus' ] ) );
+							        $sanitisedPushDomain = sanitize_text_field($decodedToken['dataPush']['pushDomain']);
+								    $wpOptionsCheckerPushStatus = $wpdb->query($wpdb->prepare("SELECT id FROM ".$wpPrefix."realbig_settings WHERE optionName = %s",['pushStatus']));
 								    if (empty($wpOptionsCheckerPushStatus)) {
-									    $wpdb->insert( $wpPrefix . 'realbig_settings', ['optionName'  => 'pushStatus', 'optionValue' => $sanitisedPushStatus]);
+									    $wpdb->insert($wpPrefix.'realbig_settings', ['optionName' => 'pushStatus', 'optionValue' => $sanitisedPushStatus]);
 								    } else {
-									    $wpdb->update( $wpPrefix . 'realbig_settings', ['optionName'  => 'pushStatus', 'optionValue' => $sanitisedPushStatus],
+									    $wpdb->update($wpPrefix.'realbig_settings', ['optionName' => 'pushStatus', 'optionValue' => $sanitisedPushStatus],
 										    ['optionName' => 'pushStatus']);
 								    }
-								    $wpOptionsCheckerPushCode = $wpdb->query( $wpdb->prepare( "SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", [ 'pushCode' ] ) );
+								    $wpOptionsCheckerPushCode = $wpdb->query( $wpdb->prepare( "SELECT id FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s",['pushCode']));
 								    if (empty($wpOptionsCheckerPushCode)) {
-									    $wpdb->insert( $wpPrefix . 'realbig_settings', ['optionName'  => 'pushCode', 'optionValue' => $sanitisedPushData]);
+									    $wpdb->insert($wpPrefix.'realbig_settings', ['optionName'  => 'pushCode', 'optionValue' => $sanitisedPushData]);
 								    } else {
-									    $wpdb->update( $wpPrefix . 'realbig_settings', ['optionName'  => 'pushCode', 'optionValue' => $sanitisedPushData],
+									    $wpdb->update($wpPrefix.'realbig_settings', ['optionName'  => 'pushCode', 'optionValue' => $sanitisedPushData],
 										    ['optionName' => 'pushCode']);
+								    }
+								    $wpOptionsCheckerPushDomain = $wpdb->query($wpdb->prepare("SELECT id FROM ".$wpPrefix."realbig_settings WHERE optionName = %s",['pushDomain']));
+								    if (empty($wpOptionsCheckerPushDomain)) {
+									    $wpdb->insert($wpPrefix.'realbig_settings', ['optionName' => 'pushDomain', 'optionValue' => $sanitisedPushDomain]);
+								    } else {
+									    $wpdb->update($wpPrefix.'realbig_settings', ['optionName' => 'pushDomain', 'optionValue' => $sanitisedPushDomain],
+										    ['optionName' => 'pushDomain']);
 								    }
 							    }
 							    if (!empty($decodedToken['domain'])) {

@@ -10,7 +10,7 @@ include_once (dirname(__FILE__)."/textEditing.php");
 /*
 Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.1.26.77
+Version:      0.1.26.78
 Author:       Realbig Team
 Author URI:   https://realbig.media
 License:      GPLv2 or later
@@ -127,7 +127,7 @@ try {
 	    if (!empty($pluginData['Version'])) {
 		    $GLOBALS['realbigForWP_version'] = $pluginData['Version'];
 	    } else {
-		    $GLOBALS['realbigForWP_version'] = '0.1.26.77';
+		    $GLOBALS['realbigForWP_version'] = '0.1.26.78';
 	    }
     }
 
@@ -508,15 +508,17 @@ try {
 		require_once (dirname(__FILE__)."/textEditing.php");
 		$headerParsingResult = RFWP_headerPushInsertor();
 		if ($headerParsingResult == true) {
+		    global $wpdb;
+
+			$pushDomain = $wpdb->get_var('SELECT optionValue FROM '.$GLOBALS['wpPrefix'].'realbig_settings WHERE optionName = "pushDomain"');
+		    if (empty($pushDomain)) {
+			    $pushDomain = 'bigreal.org';
+            }
+
 			?><script charset="utf-8" async
-                src="https://bigreal.org/pushJs/<?php echo $GLOBALS['pushCode'] ?>.js"></script><?php
+                src="https://<?php echo $pushDomain ?>/pushJs/<?php echo $GLOBALS['pushCode'] ?>.js"></script><?php
 		}
 	}
-
-	function RFWP_liveInternet_add($content) {
-	    $penyok_stoparik = 0;
-	    ?><?php //echo $GLOBALS['liveInternetCode'] ?><?php
-    }
 
     function RFWP_inserts_head_add() {
 	    $contentToAdd = RFWP_insertsToString('header');
@@ -531,11 +533,9 @@ try {
 	if (!is_admin()&&empty(apply_filters('wp_doing_cron', defined('DOING_CRON')&&DOING_CRON))) {
 		add_action('wp_head', 'RFWP_AD_header_add', 0);
 		$separatedStatuses = [];
-		$statuses = $wpdb->get_results($wpdb->prepare('SELECT optionName, optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName IN (%s, %s, %s, %s)', [
+		$statuses = $wpdb->get_results($wpdb->prepare('SELECT optionName, optionValue FROM '.$wpPrefix.'realbig_settings WHERE optionName IN (%s, %s)', [
 			"pushCode",
-			"pushStatus",
-			"liveInternetCode",
-			"activeLiveInterner"
+			"pushStatus"
 		]), ARRAY_A);
 		if (!empty($statuses)) {
 		    foreach ($statuses AS $k => $item) {
@@ -544,13 +544,6 @@ try {
 			if (!empty($separatedStatuses)&&!empty($separatedStatuses['pushCode'])&&isset($separatedStatuses['pushStatus'])&&$separatedStatuses['pushStatus']==1) {
 				add_action('wp_head', 'RFWP_push_head_add', 0);
 				$GLOBALS['pushCode'] = $separatedStatuses['pushCode'];
-            }
-            if (!empty($separatedStatuses)&&!empty($separatedStatuses['liveInternetCode'])&&isset($separatedStatuses['activeLiveInterner'])&&$separatedStatuses['activeLiveInterner']==1) {
-	            add_action('wp_head', 'RFWP_liveInternet_add', 100);
-	            $liveInternetCode = htmlspecialchars_decode($separatedStatuses['liveInternetCode']);
-//	            if (!empty($liveInternetCode)) {
-//		            $GLOBALS['liveInternet']['code'] = $liveInternetCode;
-//	            }
             }
 		}
 		add_action('wp_head', 'RFWP_inserts_head_add', 0);
@@ -618,7 +611,6 @@ try {
 		}
 		add_shortcode('test_sc_oval', 'test_sc_oval_exec');
 		add_filter('the_content', 'RFWP_shortCodesAdd', 4999);
-
 	}
 
 //    if (empty(apply_filters('wp_doing_cron', defined('DOING_CRON')&&DOING_CRON))&&!is_admin()) {

@@ -335,6 +335,11 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                 if (blockSettingArray[i]["setting_type"] == 1) {
                     if (blockSettingArray[i]["element"].toLowerCase()=='h1') {
                         placingToH1(parent_with_content, blockSettingArray[i]["element"]);
+                    } else if (blockSettingArray[i]["element"].toLowerCase()=='h2-4') {
+                        currentElement = parent_with_content.querySelectorAll('h2,h3,h4');
+                        if (currentElement.length < 1) {
+                            currentElement = parent_with_content.parentElement.querySelectorAll('h2,h3,h4');
+                        }
                     } else {
                         currentElement = parent_with_content.querySelectorAll(blockSettingArray[i]["element"]);
                         if (currentElement.length < 1) {
@@ -416,11 +421,15 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                             elementTypeSymbol = directElement.indexOf('.');
                             elementType = 'class';
                             elementName = directElement.replace(/\s/, '.');
-                            if (elementTypeSymbol < 1) {
+                            if (elementTypeSymbol < 0) {
                                 elementName = '.' + elementName;
                             } else {
                                 if (blockSettingArray[i]['element']) {
-                                    elementName = blockSettingArray[i]['element']+elementName;
+                                    if (blockSettingArray[i]['element']=='h2-4') {
+                                        elementName = 'h2'+elementName+',h3'+elementName+',h4'+elementName;
+                                    } else {
+                                        elementName = blockSettingArray[i]['element']+elementName;
+                                    }
                                 }
                             }
 
@@ -755,7 +764,7 @@ function symbolInserter(lordOfElements, containerFor7th) {
         let tlArray = [];
         let tlArrayCou = 0;
         var currentChildrenLength = 0;
-        var possibleTagsArray = ["P", "H1", "H2", "H3", "H4", "H5", "H6", "DIV", "OL", "UL", "BLOCKQUOTE", "INDEX", "ARTICLE"];
+        var possibleTagsArray = ["P", "H1", "H2", "H3", "H4", "H5", "H6", "DIV", "OL", "UL", "LI", "BLOCKQUOTE", "INDEX", "TABLE", "ARTICLE"];
         let possibleTagsInCheck = ["DIV", "INDEX"];
         let numberToUse = 0;
         let previousBreak = 0;

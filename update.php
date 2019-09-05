@@ -23,7 +23,7 @@ CREATE TABLE `" . $wpPrefix . "realbig_plugin_settings`
 	`block_number` INT(11) NOT NULL,
 	`text` TEXT NOT NULL,
 	`setting_type` INT(11) NOT NULL,
-	`element` ENUM('p','li','ul','ol','blockquote','img','video','h1','h2','h3','h4','h5','h6','article') NOT NULL,
+	`element` ENUM('p','li','ul','ol','blockquote','img','video','h1','h2','h3','h4','h5','h6','h2-4','article') NOT NULL,
 	`directElement` TEXT NOT NULL,
 	`elementPosition` INT(11) NOT NULL,
 	`elementPlace` INT(11) NOT NULL,
@@ -80,7 +80,7 @@ ENGINE=InnoDB
 	}
 	if (!function_exists('RFWP_updateElementEnumValuesFunction')) {
 		function RFWP_updateElementEnumValuesFunction($wpPrefix, $statusGatherer) {
-			$requiredElementColumnValues = "enum('p','li','ul','ol','blockquote','img','video','h1','h2','h3','h4','h5','h6','article')";
+			$requiredElementColumnValues = "enum('p','li','ul','ol','blockquote','img','video','h1','h2','h3','h4','h5','h6','h2-4','article')";
 			try {
 				function RFWP_checkElementColumnValues($wpPrefix, $requiredElementColumnValues) {
 					global $wpdb;
@@ -90,7 +90,7 @@ ENGINE=InnoDB
 					if (!empty($enumTypeQuery)) {
 						$enumTypeQuery = get_object_vars($enumTypeQuery[0]);
 						if ($enumTypeQuery['Type'] != $requiredElementColumnValues) {
-							$alterResult = $wpdb->query("ALTER TABLE ".$wpPrefix."realbig_plugin_settings MODIFY `element` ENUM('p','li','ul','ol','blockquote','img','video','h1','h2','h3','h4','h5','h6','article') NULL DEFAULT NULL");
+							$alterResult = $wpdb->query("ALTER TABLE ".$wpPrefix."realbig_plugin_settings MODIFY `element` ENUM('p','li','ul','ol','blockquote','img','video','h1','h2','h3','h4','h5','h6','h2-4','article') NULL DEFAULT NULL");
 							if (!empty($alterResult)&&is_int($alterResult)&&$alterResult == 1) {
 								$localReturnValue = RFWP_checkElementColumnValues($wpPrefix, $requiredElementColumnValues);
 							}
