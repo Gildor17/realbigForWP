@@ -357,6 +357,9 @@ try {
 								$usedBlocksCounter ++;
 								continue;
 							}
+							if ($elementName=='h2-4') {
+								continue;
+							}
 							if ($elementNumber < 0) {
 								$replaces = 0;
 								/**********************************************************/
@@ -369,7 +372,7 @@ try {
 									}
 								} else {    // non-image element
 									if ($elementPosition == 0) {    //if position before
-										$editedContent = preg_replace('~<' . $elementName . '( |>){1}?~i', '<placeholderForAd><' . $elementName . '$1', $editedContent, - 1, $replaces );
+										$editedContent = preg_replace('~<'.$elementName.'( |>){1}?~i', '<placeholderForAd><' . $elementName . '$1', $editedContent, - 1, $replaces );
 									} elseif ($elementPosition == 1) {    //if position after
 										$editedContent = preg_replace('~<( )*\/( )*' . $elementName . '( )*>~i', '</' . $elementName . '><placeholderForAd>', $editedContent, - 1, $replaces );
 									}
@@ -617,7 +620,7 @@ onErrorPlacing();';
 				$themeHeaderFileOpen = file_get_contents('wp-content/themes/'.$wp_cur_theme_name.'/header.php');
 
 				$checkedHeader = preg_match('~realpush\.media\/pushJs|bigreal\.org\/pushJs~', $themeHeaderFileOpen, $m);
-				if ( count($m) == 0) {
+				if (count($m) == 0) {
 					$result = true;
 				} else {
 					$result = false;
