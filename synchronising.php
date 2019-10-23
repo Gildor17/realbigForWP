@@ -17,7 +17,7 @@ try {
 			$unsuccessfullAjaxSyncAttempt = 0;
 
 			try {
-//    			$url = 'https://realbigweb/api/wp-get-settings';     // orig web post
+//    			$url = 'https://realbig.web/api/wp-get-settings';     // orig web post
 //    			$url = 'https://beta.realbig.media/api/wp-get-settings';     // beta post
                 $url = 'https://realbig.media/api/wp-get-settings';     // orig post
 
@@ -201,6 +201,22 @@ try {
 								    }
 							    }
 							    /** End of excluded id and classes */
+							    /** Blocks duplicate denying option */
+							    if (isset($decodedToken['blockDuplicate'])) {
+								    $blockDuplicate = sanitize_text_field($decodedToken['blockDuplicate']);
+								    $getblockDuplicate = $wpdb->get_var( 'SELECT id FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = "blockDuplicate"' );
+								    if (!empty($getblockDuplicate)) {
+									    $wpdb->update( $wpPrefix . 'realbig_settings', ['optionValue' => $blockDuplicate], ['optionName' => 'blockDuplicate']);
+								    } else {
+									    $wpdb->insert( $wpPrefix . 'realbig_settings', ['optionName'  => 'blockDuplicate', 'optionValue' => $blockDuplicate]);
+								    }
+							    }
+							    /** End of blocks duplicate denying option */
+							    /** Create it for compatibility with some plugins */
+							    if (empty($GLOBALS['wp_rewrite'])) {
+								    $GLOBALS['wp_rewrite'] = new WP_Rewrite();
+							    }
+							    /** End of creating of that for compatibility with some plugins */
 							    /** Insertings */
 							    if (!empty($decodedToken['insertings'])) {
 								    $insertings = $decodedToken['insertings'];
@@ -228,7 +244,10 @@ try {
 //									            'ping_status'  => $item['limitationUse'],
 //									            'post_content_filtered' => 12,
 								            ];
-								            require_once(dirname(__FILE__ ) . "/../../../wp-includes/pluggable.php");
+								            require_once(ABSPATH."/wp-includes/pluggable.php");
+								            if (empty($GLOBALS['wp_rewrite'])) {
+									            $GLOBALS['wp_rewrite'] = new WP_Rewrite();
+                                            }
 								            $saveInsertResult = wp_insert_post($postarr, true);
                                         }
 								        unset($k, $item);
@@ -247,29 +266,29 @@ try {
 								    }
 
                                     foreach ($shortcodes AS $k=>$item) {
-                                        $content_for_post = 'begin_of_header_code'.$item['headerField'].'end_of_header_code&begin_of_body_code'.$item['bodyField'].'end_of_body_code';
+								        if (!empty($item)) {
+//									        $content_for_post = 'begin_of_header_code'.$item['headerField'].'end_of_header_code&begin_of_body_code'.$item['bodyField'].'end_of_body_code';
 
-                                        $postarr = [
-                                            'post_content' => $item['code'],
-                                            'post_title'   => $item['id'],
-                                            'post_excerpt' => $item['blockId'],
-                                            'post_name'    => 'shortcode',
-                                            'post_status'  => "publish",
-                                            'post_type'    => 'rb_shortcodes',
-                                            'post_author'  => 0,
-                                        ];
-                                        require_once(dirname(__FILE__ ) . "/../../../wp-includes/pluggable.php");
-                                        $saveInsertResult = wp_insert_post($postarr, true);
+									        $postarr = [
+										        'post_content' => $item['code'],
+										        'post_title'   => $item['id'],
+										        'post_excerpt' => $item['blockId'],
+										        'post_name'    => 'shortcode',
+										        'post_status'  => "publish",
+										        'post_type'    => 'rb_shortcodes',
+										        'post_author'  => 0,
+									        ];
+									        require_once(ABSPATH."/wp-includes/pluggable.php");
+									        $saveInsertResult = wp_insert_post($postarr, true);
+                                        }
                                     }
                                     unset($k, $item);
                                 }
 							    /** End of shortcodes */
-
 							    $GLOBALS['token'] = $tokenInput;
 
 							    delete_transient('rb_mobile_cache_timeout' );
 							    delete_transient('rb_desktop_cache_timeout');
-
 						    } catch ( Exception $e ) {
 							    $GLOBALS['tokenStatusMessage'] = $e;
 							    $unsuccessfullAjaxSyncAttempt  = 1;
@@ -335,7 +354,7 @@ try {
             $resultTypes = [];
 
             try {
-//    			$url = 'https://realbigweb/api/wp-get-ads';     // orig web post
+//    			$url = 'https://realbig.web/api/wp-get-ads';     // orig web post
 //                $url = 'https://beta.realbig.media/api/wp-get-ads';     // beta post
     			$url = 'https://realbig.media/api/wp-get-ads';     // orig post
 
@@ -361,7 +380,7 @@ try {
 		                    $resultTypes['desktop'] = false;
 		                    $resultTypes['universal'] = false;
 
-		                    require_once(dirname(__FILE__ )."/../../../wp-includes/pluggable.php");
+		                    require_once(ABSPATH."/wp-includes/pluggable.php");
 		                    foreach ($resultData AS $rk => $ritem) {
 			                    $postCheckMobile = null;
 			                    $postCheckDesktop = null;

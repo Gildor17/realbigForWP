@@ -43,7 +43,7 @@ try {
 			$cachesArray[$k]['time'] = get_transient('rb_desktop_cache_timeout');
 			unset($k);
 
-			$admin_bar->add_menu( array(
+			$admin_bar->add_menu(array(
 				'id'    => 'rb_item_1',
 				'title' => '<span class="ab-icon dashicons dashicons-admin-site"></span> Realbig',
 //			'href'  => '#',
@@ -51,7 +51,7 @@ try {
 					'title' => __('My item'),
 				),
 			));
-			$admin_bar->add_menu( array(
+			$admin_bar->add_menu(array(
 				'id'     => 'rb_sub_item_1',
 				'parent' => 'rb_item_1',
 				'title'  => 'Cache w expTime:',
@@ -64,10 +64,10 @@ try {
 			foreach ($cachesArray AS $k => $item) {
 				if (!empty($item['time'])) {
 					$lctExpTime = $item['time'] - time();
-					$admin_bar->add_menu( array(
+					$admin_bar->add_menu(array(
 						'id'     => 'rb_sub_item_1_'.($k+1),
 						'parent' => 'rb_sub_item_1',
-						'title'  => $item['name'].': ' . '<span style="color: #92ffaf">' . $lctExpTime . '</span>',
+						'title'  => $item['name'].': '.'<span style="color: #92ffaf">'.$lctExpTime.'</span>',
 					));
 				}
 			}

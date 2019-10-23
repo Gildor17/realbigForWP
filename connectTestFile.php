@@ -11,7 +11,6 @@ try {
     $returnData['errors'] = [];
     $errorsGather = '';
 
-    $penyok_stoparik = 0;
     $checkCacheTimeoutMobile = get_transient('rb_mobile_cache_timeout');
     $checkCacheTimeoutDesktop = get_transient('rb_desktop_cache_timeout');
 

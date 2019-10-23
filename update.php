@@ -40,7 +40,7 @@ CREATE TABLE `" . $wpPrefix . "realbig_plugin_settings`
 COLLATE='utf8_general_ci'
 ENGINE=InnoDB   
 ";
-					require_once (dirname(__FILE__)."/../../../wp-admin/includes/upgrade.php");
+					require_once (ABSPATH."/wp-admin/includes/upgrade.php");
 					dbDelta($sql, true);
 					add_option( 'realbigForWP_version', $GLOBALS['realbigForWP_version'] );
 //				if (!empty($wpdb->get_var( 'SHOW TABLES LIKE "' . $wpPrefix . 'realbig_plugin_settings"' ))) {

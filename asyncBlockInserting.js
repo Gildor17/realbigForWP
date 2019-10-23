@@ -46,10 +46,14 @@ function shortcodesInsert() {
     let gatheredBlockChild;
     let okStates = ['done','refresh-wait','no-block','fetched'];
     let scContainer;
+    let oneSuccess;
+    let oneFail;
+    let sci;
     let scRepeatFuncLaunch = false;
+    let i1 = 0;
 
     if (typeof scArray !== 'undefined') {
-        if (scArray&&gatheredBlocks&&gatheredBlocks.length > 0) {
+        if (scArray&&scArray.length > 0&&gatheredBlocks&&gatheredBlocks.length > 0) {
             for (let i = 0; i < gatheredBlocks.length; i++) {
                 gatheredBlockChild = gatheredBlocks[i].children[0];
                 if (!gatheredBlockChild) {
@@ -63,25 +67,47 @@ function shortcodesInsert() {
                 scBlockId = gatheredBlockChild.getAttribute('data-id');
                 blockStatus = gatheredBlockChild.getAttribute('data-state');
 
-                if (scBlockId&&scArray[scBlockId]) {
-                    if (scAdId > 0) {
+                // if (scBlockId&&scArray[scBlockId]) {
+                if (scBlockId&&scAdId > 0) {
+                    sci = -1;
+                    for (i1 = 0; i1 < scArray.length; i1++) {
+                        if (scBlockId == scArray[i1]['blockId']&&scAdId == scArray[i1]['adId']) {
+                            sci = i1;
+                        }
+                    }
+
+                    if (sci > -1) {
                         if (blockStatus&&okStates.includes(blockStatus)) {
-                            if (scArray[scBlockId][scAdId]) {
+                            // if (scArray[scBlockId][scAdId]) {
                                 if (blockStatus=='no-block') {
                                     gatheredBlockChild.innerHTML = '';
                                 } else {
-                                    jQuery(gatheredBlockChild).html(scArray[scBlockId][scAdId]);
+                                    jQuery(gatheredBlockChild).html(scArray[sci]['text']);
+                                }
+                                for (i1 = 0; i1 < scArray.length; i1++) {
+                                    if (scBlockId == scArray[i1]['blockId']) {
+                                        scArray.splice(i1, 1);
+                                    }
                                 }
                                 gatheredBlocks[i].classList.remove('scMark');
-                            }
+                            // }
                         }
                     }
                 }
             }
+        } else if (!scArray||(scArray&&scArray.length < 1)) {
+            endedSc = true;
         }
     } else {
         endedSc = true;
     }
+
+    if (!endedSc) {
+        setTimeout(function () {
+            shortcodesInsert();
+        }, 200);
+    }
+
 }
 
 function clearUnsuitableCache(cuc_cou) {
@@ -216,6 +242,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
         let containerFor6th = [];
         let containerFor7th = [];
         let posCurrentElement;
+        var block_number;
 
         function getFromConstructions(currentElement) {
             if (currentElement.parentElement.tagName.toLowerCase() == "blockquote") {
@@ -303,6 +330,8 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
 
                 // elementToAdd = document.querySelector('.percentPointerClass.coveredAd[data-id="'+blockSettingArray[i]['id']+'"]');
 
+                block_number = 0;
+
                 elementToAdd = document.createElement("div");
                 elementToAdd.classList.add("percentPointerClass");
                 elementToAdd.classList.add("marked");
@@ -310,6 +339,18 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                     elementToAdd.classList.add("scMark");
                 }
                 elementToAdd.innerHTML = blockSettingArray[i]["text"];
+                block_number = elementToAdd.children[0].attributes['data-id'].value;
+
+                if (blockDuplicate == 'no') {
+                    if (usedBlockSettingArrayIds.length > 0) {
+                        for (let i1 = 0; i1 < usedBlockSettingArrayIds.length; i1++) {
+                            if (block_number==usedBlockSettingArrayIds[i1]) {
+                                blockSettingArray.splice(i, 1);
+                                continue;
+                            }
+                        }
+                    }
+                }
 
                 if (blockSettingArray[i]["minHeaders"] > 0) {
                     if (blockSettingArray[i]["minHeaders"] > termorarity_parent_with_content_length) {
@@ -386,6 +427,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                         currentElement.parentNode.insertBefore(elementToAdd, posCurrentElement);
                         elementToAdd.classList.remove('coveredAd');
                         // usedAdBlocksArray.push(checkIfBlockUsed);
+                        usedBlockSettingArrayIds.push(block_number);
                         blockSettingArray.splice(i, 1);
                         poolbackI = 1;
                         i--;
@@ -463,6 +505,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                         currentElement.parentNode.insertBefore(elementToAdd, posCurrentElement);
                         elementToAdd.classList.remove('coveredAd');
                         // usedAdBlocksArray.push(checkIfBlockUsed);
+                        usedBlockSettingArrayIds.push(block_number);
                         blockSettingArray.splice(i, 1);
                         poolbackI = 1;
                         i--;
@@ -472,6 +515,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                 } else if (blockSettingArray[i]["setting_type"] == 4) {
                     parent_with_content.append(elementToAdd);
                     // usedAdBlocksArray.push(checkIfBlockUsed);
+                    usedBlockSettingArrayIds.push(block_number);
                     blockSettingArray.splice(i, 1);
                     poolbackI = 1;
                     i--;
@@ -494,12 +538,12 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                         if (currentElement != undefined && currentElement != null) {
                             if (pCount > 1) {
                                 currentElement.parentNode.insertBefore(elementToAdd, currentElement);
-                                elementToAdd.classList.remove('coveredAd');
                             } else {
                                 currentElement.parentNode.insertBefore(elementToAdd, currentElement.nextSibling);
-                                elementToAdd.classList.remove('coveredAd');
                             }
+                            elementToAdd.classList.remove('coveredAd');
                             // usedAdBlocksArray.push(checkIfBlockUsed);
+                            usedBlockSettingArrayIds.push(block_number);
                             blockSettingArray.splice(i, 1);
                             poolbackI = 1;
                             i--;
@@ -517,6 +561,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                                 if (j == containerFor6th.length-1) {
                                     containerFor6th.push(blockSettingArray[i]);
                                     // usedAdBlocksArray.push(checkIfBlockUsed);
+                                    usedBlockSettingArrayIds.push(block_number);
                                     blockSettingArray.splice(i, 1);
                                     poolbackI = 1;
                                     i--;
@@ -528,6 +573,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                                 }
                                 containerFor6th[j] = blockSettingArray[i];
                                 // usedAdBlocksArray.push(checkIfBlockUsed);
+                                usedBlockSettingArrayIds.push(block_number);
                                 blockSettingArray.splice(i, 1);
                                 poolbackI = 1;
                                 i--;
@@ -537,6 +583,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                     } else {
                         containerFor6th.push(blockSettingArray[i]);
                         // usedAdBlocksArray.push(checkIfBlockUsed);
+                        usedBlockSettingArrayIds.push(block_number);
                         blockSettingArray.splice(i, 1);
                         poolbackI = 1;
                         i--;
@@ -550,6 +597,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                                 if (j == containerFor7th.length-1) {
                                     containerFor7th.push(blockSettingArray[i]);
                                     // usedAdBlocksArray.push(checkIfBlockUsed);
+                                    usedBlockSettingArrayIds.push(block_number);
                                     blockSettingArray.splice(i, 1);
                                     poolbackI = 1;
                                     i--;
@@ -561,6 +609,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                                 }
                                 containerFor7th[j] = blockSettingArray[i];
                                 // usedAdBlocksArray.push(checkIfBlockUsed);
+                                usedBlockSettingArrayIds.push(block_number);
                                 blockSettingArray.splice(i, 1);
                                 poolbackI = 1;
                                 i--;
@@ -570,6 +619,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                     } else {
                         containerFor7th.push(blockSettingArray[i]);
                         // usedAdBlocksArray.push(checkIfBlockUsed);
+                        usedBlockSettingArrayIds.push(block_number);
                         blockSettingArray.splice(i, 1);
                         poolbackI = 1;
                         i--;

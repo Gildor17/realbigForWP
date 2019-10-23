@@ -59,7 +59,7 @@ try {
 		}
 	}
 	if (!function_exists('RFWP_addIcons')) {
-		function RFWP_addIcons($fromDb, $content, $contentType, $cachedBlocks, $inserts=null, $shortcodes, $excIdClass) {
+		function RFWP_addIcons($fromDb, $content, $contentType, $cachedBlocks, $inserts=null, $shortcodes, $excIdClass, $blockDuplicate) {
 			try {
 				global $wp_query;
 				global $post;
@@ -75,6 +75,8 @@ try {
 				$previousEditedContent = $editedContent;
 				$usedBlocksCounter     = 0;
 				$usedBlocks            = [];
+				$rejectedBlocksCounter = 0;
+				$rejectedBlocks        = [];
 				$objArray              = [];
 				$onCategoriesArray     = [];
 				$offCategoriesArray    = [];
@@ -119,6 +121,7 @@ try {
 						unset($k1,$item1);
 					}
 
+					$excIdClass .= ".percentPointerClass;.content_rb;#toc_container;table;blockquote";
 					if (!empty($excIdClass)) {
 						$excIdClass = explode(';', $excIdClass);
 						foreach ($excIdClass AS $k1 => $item1) {
@@ -132,34 +135,44 @@ try {
 					foreach ($fromDb AS $k => $item) {
 						$countReplaces = 0;
 
-						if ( is_object( $item ) ) {
-							$item = get_object_vars( $item );
+						if (is_object($item)) {
+							$item = get_object_vars($item);
 						}
 						if (empty($item['setting_type'])) {
-							$usedBlocks[$usedBlocksCounter] = $item['id'];
-							$usedBlocksCounter ++;
+//							$usedBlocks[$usedBlocksCounter] = $item['id'];
+//							$usedBlocksCounter ++;
+							$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
+							$rejectedBlocksCounter ++;
 							continue;
 						}
 						if (!empty($headersMatchesResult)) {
 							if (!empty($item['minHeaders']) && $item['minHeaders'] > 0 && $item['minHeaders'] > $headersMatchesResult) {
-								$usedBlocks[$usedBlocksCounter] = $item['id'];
-								$usedBlocksCounter ++;
+//								$usedBlocks[$usedBlocksCounter] = $item['id'];
+//								$usedBlocksCounter ++;
+								$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
+								$rejectedBlocksCounter ++;
 								continue;
 							}
 							if (!empty($item['maxHeaders']) && $item['maxHeaders'] > 0 && $item['maxHeaders'] < $headersMatchesResult) {
-								$usedBlocks[$usedBlocksCounter] = $item['id'];
-								$usedBlocksCounter ++;
+//								$usedBlocks[$usedBlocksCounter] = $item['id'];
+//								$usedBlocksCounter ++;
+								$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
+								$rejectedBlocksCounter ++;
 								continue;
 							}
 						}
 						if (!empty($item['minSymbols']) && $item['minSymbols'] > 0 && $item['minSymbols'] > $contentLength) {
-							$usedBlocks[$usedBlocksCounter] = $item['id'];
-							$usedBlocksCounter ++;
+//							$usedBlocks[$usedBlocksCounter] = $item['id'];
+//							$usedBlocksCounter ++;
+							$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
+							$rejectedBlocksCounter ++;
 							continue;
 						}
 						if (!empty($item['maxSymbols']) && $item['maxSymbols'] > 0 && $item['maxSymbols'] < $contentLength) {
-							$usedBlocks[$usedBlocksCounter] = $item['id'];
-							$usedBlocksCounter ++;
+//							$usedBlocks[$usedBlocksCounter] = $item['id'];
+//							$usedBlocksCounter ++;
+							$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
+							$rejectedBlocksCounter ++;
 							continue;
 						}
 
@@ -169,8 +182,10 @@ try {
 
 						if (!empty($item['onCategories'])) {
 							if (empty($pageCategories)) {
-								$usedBlocks[$usedBlocksCounter] = $item['id'];
-								$usedBlocksCounter ++;
+//								$usedBlocks[$usedBlocksCounter] = $item['id'];
+//								$usedBlocksCounter ++;
+								$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
+								$rejectedBlocksCounter ++;
 								continue;
 							}
 							$onCategoriesArray = explode(':',trim($item['onCategories']));
@@ -186,8 +201,10 @@ try {
 								}
 								unset($k1,$item1);
 								if (empty($passAllowed)) {
-									$usedBlocks[$usedBlocksCounter] = $item['id'];
-									$usedBlocksCounter ++;
+//									$usedBlocks[$usedBlocksCounter] = $item['id'];
+//									$usedBlocksCounter ++;
+									$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
+									$rejectedBlocksCounter ++;
 									continue;
 								}
 							}
@@ -205,8 +222,10 @@ try {
 								}
 								unset($k1,$item1);
 								if (!empty($passRejected)) {
-									$usedBlocks[$usedBlocksCounter] = $item['id'];
-									$usedBlocksCounter ++;
+//									$usedBlocks[$usedBlocksCounter] = $item['id'];
+//									$usedBlocksCounter ++;
+									$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
+									$rejectedBlocksCounter ++;
 									continue;
 								}
 							}
@@ -218,8 +237,10 @@ try {
 
 						if (!empty($item['onTags'])) {
 							if (empty($pageTags)) {
-								$usedBlocks[$usedBlocksCounter] = $item['id'];
-								$usedBlocksCounter ++;
+//								$usedBlocks[$usedBlocksCounter] = $item['id'];
+//								$usedBlocksCounter ++;
+								$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
+								$rejectedBlocksCounter ++;
 								continue;
 							}
 							$onTagsArray = explode(':',trim($item['onTags']));
@@ -235,8 +256,10 @@ try {
 								}
 								unset($k1,$item1);
 								if (empty($passAllowed)) {
-									$usedBlocks[$usedBlocksCounter] = $item['id'];
-									$usedBlocksCounter ++;
+//									$usedBlocks[$usedBlocksCounter] = $item['id'];
+//									$usedBlocksCounter ++;
+									$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
+									$rejectedBlocksCounter ++;
 									continue;
 								}
 							}
@@ -254,8 +277,10 @@ try {
 								}
 								unset($k1,$item1);
 								if (!empty($passRejected)) {
-									$usedBlocks[$usedBlocksCounter] = $item['id'];
-									$usedBlocksCounter ++;
+//									$usedBlocks[$usedBlocksCounter] = $item['id'];
+//									$usedBlocksCounter ++;
+									$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
+									$rejectedBlocksCounter ++;
 									continue;
 								}
 							}
@@ -301,36 +326,36 @@ try {
 								}
 							}
 						}
-						switch ($item['setting_type']) {
-							case 1:
-								$elementName     = $item['element'];
-								$elementPosition = $item['elementPosition'];
-								$elementNumber   = $item['elementPlace'];
-								break;
-							case 2:
-								$elementName     = $item['element'];
-								$elementPosition = $item['elementPosition'];
-								$elementNumber   = $item['firstPlace'];
-								$elementRepeats  = $item['elementCount'] - 1;
-								$elementStep     = $item['elementStep'];
-								break;
-							case 3:
-								$elementTag      = $item['element'];
-								$elementName     = $item['directElement'];
-								$elementPosition = $item['elementPosition'];
-								$elementNumber   = $item['elementPlace'];
-								break;
-							case 6:
-								$elementNumber   = $item['elementPlace'];
-								break;
-							case 7:
-								$elementNumber   = $item['elementPlace'];
-								break;
-						}
+//						switch ($item['setting_type']) {
+//							case 1:
+//								$elementName     = $item['element'];
+//								$elementPosition = $item['elementPosition'];
+//								$elementNumber   = $item['elementPlace'];
+//								break;
+//							case 2:
+//								$elementName     = $item['element'];
+//								$elementPosition = $item['elementPosition'];
+//								$elementNumber   = $item['firstPlace'];
+//								$elementRepeats  = $item['elementCount'] - 1;
+//								$elementStep     = $item['elementStep'];
+//								break;
+//							case 3:
+//								$elementTag      = $item['element'];
+//								$elementName     = $item['directElement'];
+//								$elementPosition = $item['elementPosition'];
+//								$elementNumber   = $item['elementPlace'];
+//								break;
+//							case 6:
+//								$elementNumber   = $item['elementPlace'];
+//								break;
+//							case 7:
+//								$elementNumber   = $item['elementPlace'];
+//								break;
+//						}
 
 //						$shortcodesText = '';
 						if (!empty($shortcodes)&&!empty($shortcodes[$item['block_number']])) {
-							$shortcodesMark = 'scMark';
+							$shortcodesMark = ' scMark';
 //							$shortcodesText .= "<div class='shortcodes-block' data-id='".$item['block_number']."' hidden>";
 //							foreach ($shortcodes[$item['block_number']] AS $sck => $scItem) {
 //								$shortcodesText .= "<div class='shortcodes' data-id='".$scItem->post_title."'>".$scItem->post_content."</div>";
@@ -344,118 +369,118 @@ try {
     //				    $elementText = "<div class='percentPointerClass ".$shortcodesMark."' data-id='".$item['id']."' style='clear:both;'>".$elementText."</div>".$shortcodesText;
 
     //				    $fromDb[$k]->text = "<div class='percentPointerClass marked ".$shortcodesMark." coveredAd' data-id='".$item['id']."' style='clear:both;'>".$elementText."</div>".$shortcodesText;
-                        $elementText = "<div class='percentPointerClass ".$shortcodesMark."' data-id='".$item['id']."' style='clear:both;'>".$elementText."</div>";
+                        $elementText = "<div class='percentPointerClass".$shortcodesMark."' data-id='".$item['id']."' style='clear:both;'>".$elementText."</div>";
 
-						$editedContent = preg_replace( '~(<blockquote[^>]*?\>)~i', '<bq_mark_begin>$1', $editedContent, -1);
-						$editedContent = preg_replace( '~(<\/blockquote\>)~i', '$1<bq_mark_end>', $editedContent, -1);
-						$editedContent = preg_replace( '~(<table[^>]*?\>)~i', '<tab_mark_begin>$1', $editedContent, -1);
-						$editedContent = preg_replace( '~(<\/table\>)~i', '$1<tab_mark_end>', $editedContent, -1);
-
-						if ($item['setting_type'] == 1) {       //for lonely block
-							if (empty($elementName)||empty($elementNumber)||empty($elementText)) {
-								$usedBlocks[$usedBlocksCounter] = $item['id'];
-								$usedBlocksCounter ++;
-								continue;
-							}
-							if ($elementName=='h2-4') {
-								continue;
-							}
-							if ($elementNumber < 0) {
-								$replaces = 0;
-								/**********************************************************/
-								if ($elementName == 'img') {     //element is image
-									if ($elementPosition == 0) {    //if position before
-										$editedContent = preg_replace('~<' . $elementName . '( |>|\/>){1}?~i', '<placeholderForAd><' . $elementName . '$1', $editedContent, - 1, $replaces );
-									} elseif ($elementPosition == 1) {    //if position after
-										$editedContent = preg_replace('~<' . $elementName . '([^>]*?)(\/>|>){1}~i',
-											'<' . $elementName . ' $1 $2<placeholderForAd>', $editedContent, - 1, $replaces );
-									}
-								} else {    // non-image element
-									if ($elementPosition == 0) {    //if position before
-										$editedContent = preg_replace('~<'.$elementName.'( |>){1}?~i', '<placeholderForAd><' . $elementName . '$1', $editedContent, - 1, $replaces );
-									} elseif ($elementPosition == 1) {    //if position after
-										$editedContent = preg_replace('~<( )*\/( )*' . $elementName . '( )*>~i', '</' . $elementName . '><placeholderForAd>', $editedContent, - 1, $replaces );
-									}
-								}
-								$editedContent = preg_replace('~<placeholderForAd>~', '', $editedContent, $replaces + $elementNumber );
-//							$quotesCheck = preg_match("~(<bq_mark_begin>)(((?<!<bq_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<bq_mark_end>)~i", $editedContent, $qm);
-//							$tablesCheck = preg_match("~(<tab_mark_begin>)(((?<!<tab_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<tab_mark_end>)~i", $editedContent, $qm);
-								if (!empty($quotesCheck)) {
-									if ($elementPosition == 0) {
-										$editedContent = preg_replace('~(<bq_mark_begin>)(((?<!<bq_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<bq_mark_end>)~i', '<placeholderForAdDop>$0', $editedContent,1, $countReplaces);
-									} elseif ($elementPosition == 1) {
-										$editedContent = preg_replace("~(<bq_mark_begin>)(((?<!<bq_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<bq_mark_end>)~i", "$0<placeholderForAdDop>", $editedContent,1, $countReplaces);
-									}
-								} elseif (!empty($tablesCheck)) {
-									if ($elementPosition == 0) {
-										$editedContent = preg_replace('~(<tab_mark_begin>)(((?<!<tab_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<tab_mark_end>)~i', '<placeholderForAdDop>$0', $editedContent,1, $countReplaces);
-									} elseif ($elementPosition == 1) {
-										$editedContent = preg_replace("~(<tab_mark_begin>)(((?<!<tab_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<tab_mark_end>)~i", "$0<placeholderForAdDop>", $editedContent,1, $countReplaces);
-									}
-								} else {
-									$editedContent = preg_replace('~<placeholderForAd>~', '<placeholderForAdDop>', $editedContent, 1, $countReplaces);
-								}
-
-								$editedContent = preg_replace( '~<placeholderForAd>~', '', $editedContent );
-								/**********************************************************/
-							} else {
-								if ( $elementName == 'img' ) {     //element is image
-									if ( $elementPosition == 0 ) {   //if position before
-										$editedContent = preg_replace( '~<' . $elementName . '( |>|\/>){1}?~', '<placeholderForAd><' . $elementName . '$1', $editedContent, $elementNumber );
-									} elseif ( $elementPosition == 1 ) {   //if position after
-										$editedContent = preg_replace( '~<' . $elementName . '([^>]*?)(\/>|>){1}~',
-											'<' . $elementName . ' $1 $2<placeholderForAd>', $editedContent, $elementNumber );
-									}
-								} else {    // non-image element
-									if ( $elementPosition == 0 ) {   //if position before
-										$editedContent = preg_replace( '~<' . $elementName . '( |>){1}?~', '<placeholderForAd><' . $elementName . '$1', $editedContent, $elementNumber );
-									} elseif ( $elementPosition == 1 ) {   //if position after
-										$editedContent = preg_replace( '~<( )*\/( )*' . $elementName . '( )*>~', '</' . $elementName . '><placeholderForAd>', $editedContent, $elementNumber );
-									}
-								}
-								$editedContent = preg_replace( '~<placeholderForAd>~', '', $editedContent, $elementNumber - 1 );
-//							$quotesCheck = preg_match("~(<bq_mark_begin>)(((?<!<bq_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<bq_mark_end>)~i", $editedContent, $qm);
-//							$tablesCheck = preg_match("~(<tab_mark_begin>)(((?<!<tab_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<tab_mark_end>)~i", $editedContent, $qm);
-								if (!empty($quotesCheck)) {
-									if ($elementPosition == 0) {
-										$editedContent = preg_replace('~(<bq_mark_begin>)(((?<!<bq_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<bq_mark_end>)~i', '<placeholderForAdDop>$0', $editedContent, 1, $countReplaces);
-									} elseif ($elementPosition == 1) {
-										$editedContent = preg_replace("~(<bq_mark_begin>)(((?<!<bq_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<bq_mark_end>)~i", "$0<placeholderForAdDop>", $editedContent,1, $countReplaces);
-									}
-								} elseif (!empty($tablesCheck)) {
-									if ($elementPosition == 0) {
-										$editedContent = preg_replace('~(<tab_mark_begin>)(((?<!<tab_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<tab_mark_end>)~i', '<placeholderForAdDop>$0', $editedContent,1, $countReplaces);
-									} elseif ($elementPosition == 1) {
-										$editedContent = preg_replace("~(<tab_mark_begin>)(((?<!<tab_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<tab_mark_end>)~i", "$0<placeholderForAdDop>", $editedContent,1, $countReplaces);
-									}
-								} else {
-									$editedContent = preg_replace( '~<placeholderForAd>~', '<placeholderForAdDop>', $editedContent, 1, $countReplaces);
-								}
-								$editedContent = preg_replace( '~<placeholderForAd>~', '', $editedContent);
-							}
-						} elseif ( $item['setting_type'] == 4 ) {       //for end of content
-							if (empty($elementText)) {
-								$usedBlocks[$usedBlocksCounter] = $item['id'];
-								$usedBlocksCounter ++;
-								continue;
-							}
-							$editedContent = $editedContent . '<placeholderForAd>';
-							$editedContent = preg_replace( '~<placeholderForAd>~', '<placeholderForAdDop>', $editedContent, - 1, $countReplaces );
-						}
-						$editedContent = preg_replace( '~<bq_mark_begin>~i', '', $editedContent, -1);
-						$editedContent = preg_replace( '~<bq_mark_end>~i', '', $editedContent, -1);
-						$editedContent = preg_replace( '~<tab_mark_begin>~i', '', $editedContent, -1);
-						$editedContent = preg_replace( '~<tab_mark_end>~i', '', $editedContent, -1);
-
-						$editedContent = preg_replace( '~<placeholderForAdDop>~', $elementText, $editedContent );   //replacing right placeholders
-						$editedContent = preg_replace( '~<placeholderForAd>~', '', $editedContent );    //replacing all useless placeholders
+//						$editedContent = preg_replace( '~(<blockquote[^>]*?\>)~i', '<bq_mark_begin>$1', $editedContent, -1);
+//						$editedContent = preg_replace( '~(<\/blockquote\>)~i', '$1<bq_mark_end>', $editedContent, -1);
+//						$editedContent = preg_replace( '~(<table[^>]*?\>)~i', '<tab_mark_begin>$1', $editedContent, -1);
+//						$editedContent = preg_replace( '~(<\/table\>)~i', '$1<tab_mark_end>', $editedContent, -1);
+//
+//						if ($item['setting_type'] == 1) {       //for lonely block
+//							if (empty($elementName)||empty($elementNumber)||empty($elementText)) {
+//								$usedBlocks[$usedBlocksCounter] = $item['id'];
+//								$usedBlocksCounter ++;
+//								continue;
+//							}
+//							if ($elementName=='h2-4') {
+//								continue;
+//							}
+//							if ($elementNumber < 0) {
+//								$replaces = 0;
+//								/**********************************************************/
+//								if ($elementName == 'img') {     //element is image
+//									if ($elementPosition == 0) {    //if position before
+//										$editedContent = preg_replace('~<' . $elementName . '( |>|\/>){1}?~i', '<placeholderForAd><' . $elementName . '$1', $editedContent, - 1, $replaces );
+//									} elseif ($elementPosition == 1) {    //if position after
+//										$editedContent = preg_replace('~<' . $elementName . '([^>]*?)(\/>|>){1}~i',
+//											'<' . $elementName . ' $1 $2<placeholderForAd>', $editedContent, - 1, $replaces );
+//									}
+//								} else {    // non-image element
+//									if ($elementPosition == 0) {    //if position before
+//										$editedContent = preg_replace('~<'.$elementName.'( |>){1}?~i', '<placeholderForAd><' . $elementName . '$1', $editedContent, - 1, $replaces );
+//									} elseif ($elementPosition == 1) {    //if position after
+//										$editedContent = preg_replace('~<( )*\/( )*' . $elementName . '( )*>~i', '</' . $elementName . '><placeholderForAd>', $editedContent, - 1, $replaces );
+//									}
+//								}
+//								$editedContent = preg_replace('~<placeholderForAd>~', '', $editedContent, $replaces + $elementNumber );
+////							$quotesCheck = preg_match("~(<bq_mark_begin>)(((?<!<bq_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<bq_mark_end>)~i", $editedContent, $qm);
+////							$tablesCheck = preg_match("~(<tab_mark_begin>)(((?<!<tab_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<tab_mark_end>)~i", $editedContent, $qm);
+//								if (!empty($quotesCheck)) {
+//									if ($elementPosition == 0) {
+//										$editedContent = preg_replace('~(<bq_mark_begin>)(((?<!<bq_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<bq_mark_end>)~i', '<placeholderForAdDop>$0', $editedContent,1, $countReplaces);
+//									} elseif ($elementPosition == 1) {
+//										$editedContent = preg_replace("~(<bq_mark_begin>)(((?<!<bq_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<bq_mark_end>)~i", "$0<placeholderForAdDop>", $editedContent,1, $countReplaces);
+//									}
+//								} elseif (!empty($tablesCheck)) {
+//									if ($elementPosition == 0) {
+//										$editedContent = preg_replace('~(<tab_mark_begin>)(((?<!<tab_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<tab_mark_end>)~i', '<placeholderForAdDop>$0', $editedContent,1, $countReplaces);
+//									} elseif ($elementPosition == 1) {
+//										$editedContent = preg_replace("~(<tab_mark_begin>)(((?<!<tab_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<tab_mark_end>)~i", "$0<placeholderForAdDop>", $editedContent,1, $countReplaces);
+//									}
+//								} else {
+//									$editedContent = preg_replace('~<placeholderForAd>~', '<placeholderForAdDop>', $editedContent, 1, $countReplaces);
+//								}
+//
+//								$editedContent = preg_replace( '~<placeholderForAd>~', '', $editedContent );
+//								/**********************************************************/
+//							} else {
+//								if ( $elementName == 'img' ) {     //element is image
+//									if ( $elementPosition == 0 ) {   //if position before
+//										$editedContent = preg_replace( '~<' . $elementName . '( |>|\/>){1}?~', '<placeholderForAd><' . $elementName . '$1', $editedContent, $elementNumber );
+//									} elseif ( $elementPosition == 1 ) {   //if position after
+//										$editedContent = preg_replace( '~<' . $elementName . '([^>]*?)(\/>|>){1}~',
+//											'<' . $elementName . ' $1 $2<placeholderForAd>', $editedContent, $elementNumber );
+//									}
+//								} else {    // non-image element
+//									if ( $elementPosition == 0 ) {   //if position before
+//										$editedContent = preg_replace( '~<' . $elementName . '( |>){1}?~', '<placeholderForAd><' . $elementName . '$1', $editedContent, $elementNumber );
+//									} elseif ( $elementPosition == 1 ) {   //if position after
+//										$editedContent = preg_replace( '~<( )*\/( )*' . $elementName . '( )*>~', '</' . $elementName . '><placeholderForAd>', $editedContent, $elementNumber );
+//									}
+//								}
+//								$editedContent = preg_replace( '~<placeholderForAd>~', '', $editedContent, $elementNumber - 1 );
+////							$quotesCheck = preg_match("~(<bq_mark_begin>)(((?<!<bq_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<bq_mark_end>)~i", $editedContent, $qm);
+////							$tablesCheck = preg_match("~(<tab_mark_begin>)(((?<!<tab_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<tab_mark_end>)~i", $editedContent, $qm);
+//								if (!empty($quotesCheck)) {
+//									if ($elementPosition == 0) {
+//										$editedContent = preg_replace('~(<bq_mark_begin>)(((?<!<bq_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<bq_mark_end>)~i', '<placeholderForAdDop>$0', $editedContent, 1, $countReplaces);
+//									} elseif ($elementPosition == 1) {
+//										$editedContent = preg_replace("~(<bq_mark_begin>)(((?<!<bq_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<bq_mark_end>)~i", "$0<placeholderForAdDop>", $editedContent,1, $countReplaces);
+//									}
+//								} elseif (!empty($tablesCheck)) {
+//									if ($elementPosition == 0) {
+//										$editedContent = preg_replace('~(<tab_mark_begin>)(((?<!<tab_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<tab_mark_end>)~i', '<placeholderForAdDop>$0', $editedContent,1, $countReplaces);
+//									} elseif ($elementPosition == 1) {
+//										$editedContent = preg_replace("~(<tab_mark_begin>)(((?<!<tab_mark_end>)[\s\S])*?)(<placeholderForAd>)([\s\S]*?)(<tab_mark_end>)~i", "$0<placeholderForAdDop>", $editedContent,1, $countReplaces);
+//									}
+//								} else {
+//									$editedContent = preg_replace( '~<placeholderForAd>~', '<placeholderForAdDop>', $editedContent, 1, $countReplaces);
+//								}
+//								$editedContent = preg_replace( '~<placeholderForAd>~', '', $editedContent);
+//							}
+//						} elseif ( $item['setting_type'] == 4 ) {       //for end of content
+//							if (empty($elementText)) {
+//								$usedBlocks[$usedBlocksCounter] = $item['id'];
+//								$usedBlocksCounter ++;
+//								continue;
+//							}
+//							$editedContent = $editedContent . '<placeholderForAd>';
+//							$editedContent = preg_replace( '~<placeholderForAd>~', '<placeholderForAdDop>', $editedContent, - 1, $countReplaces );
+//						}
+//						$editedContent = preg_replace( '~<bq_mark_begin>~i', '', $editedContent, -1);
+//						$editedContent = preg_replace( '~<bq_mark_end>~i', '', $editedContent, -1);
+//						$editedContent = preg_replace( '~<tab_mark_begin>~i', '', $editedContent, -1);
+//						$editedContent = preg_replace( '~<tab_mark_end>~i', '', $editedContent, -1);
+//
+//						$editedContent = preg_replace( '~<placeholderForAdDop>~', $elementText, $editedContent );   //replacing right placeholders
+//						$editedContent = preg_replace( '~<placeholderForAd>~', '', $editedContent );    //replacing all useless placeholders
 
 						if (!empty($editedContent)) {
 							$previousEditedContent = $editedContent;
-							if (!empty($countReplaces)&&$countReplaces > 0) {
-								$usedBlocks[$usedBlocksCounter] = $item['id'];
-								$usedBlocksCounter ++;
-							}
+//							if (!empty($countReplaces)&&$countReplaces > 0) {
+//								$usedBlocks[$usedBlocksCounter] = $item['id'];
+//								$usedBlocksCounter ++;
+//							}
 						} else {
 							$editedContent = $previousEditedContent;
 						}
@@ -463,7 +488,7 @@ try {
 					$editedContent = '<span id="content_pointer_id"></span>'.$editedContent;
 //				$editedContent = RFWP_rb_cache_gathering($editedContent, $cachedBlocks);
 //			    $usedBlocks = [];
-					$creatingJavascriptParserForContent = RFWP_creatingJavascriptParserForContentFunction($fromDb, $usedBlocks, $contentLength, $excIdClass, $shortcodes);
+					$creatingJavascriptParserForContent = RFWP_creatingJavascriptParserForContentFunction($fromDb, $usedBlocks, $contentLength, $excIdClass, $shortcodes, $rejectedBlocks, $blockDuplicate);
 					$editedContent                      = $creatingJavascriptParserForContent['before'].$editedContent.$creatingJavascriptParserForContent['after'];
 
 					return $editedContent;
@@ -500,19 +525,19 @@ try {
 		    $scContent .= 'var scArray = [];'.PHP_EOL;
 		    $cou = 0;
 	        foreach ($shortcodes AS $k1 => $item1) {
-		        $scContent .= 'scArray['.$k1.'] = [];'.PHP_EOL;
-//		        $scContent .= 'scArray['.$cou.'] = [];'.PHP_EOL;
-
+//		        $scContent .= 'scArray['.$k1.'] = [];'.PHP_EOL;
 		        foreach ($item1 AS $k2 => $item2) {
-//			        $scContent .= 'scArray['.$cou.']["blockId"] = '.$k1.';'.PHP_EOL;
-//			        $scContent .= 'scArray['.$cou.']["adId"] = '.$k2.';'.PHP_EOL;
+			        $scContent .= 'scArray['.$cou.'] = [];'.PHP_EOL;
+			        $scContent .= 'scArray['.$cou.']["blockId"] = '.$k1.';'.PHP_EOL;
+			        $scContent .= 'scArray['.$cou.']["adId"] = '.$k2.';'.PHP_EOL;
 			        $scText = $item2;
 			        $scText = preg_replace('~(\'|\")~','\\\$1',$scText);
 			        $scText = preg_replace('~(\r\n)~',' ',$scText);
 			        $scText = preg_replace('~\<script~', '<scr"+"ipt', $scText);
 			        $scText = preg_replace('~\/script~', '/scr"+"ipt', $scText);
-//			        $scContent .= 'scArray['.$cou.']["text"] = "'.$scText.'";'.PHP_EOL;
-			        $scContent .= 'scArray['.$k1.']['.$k2.'] = "'.$scText.'";'.PHP_EOL;
+			        $scContent .= 'scArray['.$cou.']["text"] = "'.$scText.'";'.PHP_EOL;
+//			        $scContent .= 'scArray['.$k1.']['.$k2.'] = "'.$scText.'";'.PHP_EOL;
+			        $cou++;
 		        }
 		        unset($k2,$item2);
 	        }
@@ -770,7 +795,7 @@ launchInsertingsFunctionLaunch();'.PHP_EOL;
 		}
 	}
 	if (!function_exists('RFWP_creatingJavascriptParserForContentFunction')) {
-		function RFWP_creatingJavascriptParserForContentFunction($fromDb, $usedBlocks, $contentLength, $excIdClass, $shortcodes) {
+		function RFWP_creatingJavascriptParserForContentFunction($fromDb, $usedBlocks, $contentLength, $excIdClass, $shortcodes, $rejectedBlocks, $blockDuplicate) {
 			try {
 //		    $needleUrl = plugins_url().'/'.basename(__DIR__).'/connectTestFile';
 //		    $needleUrl = basename(__DIR__).'/connectTestFile';
@@ -789,72 +814,111 @@ launchInsertingsFunctionLaunch();'.PHP_EOL;
 </style>';
 				$scriptingCode = '
             <script>
-            var blockSettingArray = [];
-            var excIdClass = ["'.$excIdClass.'"];
-            var usedBlockSettingArray = [];
-            var contentLength = '.$contentLength.';
+            var cou1 = 0;
+            if (typeof blockSettingArray==="undefined") {
+                var blockSettingArray = [];
+            } else {
+                if (Array.isArray(blockSettingArray)) {
+                    cou1 = blockSettingArray.length;
+                } else {
+                    var blockSettingArray = [];
+                }
+            }
+            var cou2 = 0;
+            if (typeof usedBlockSettingArray==="undefined") {
+                var usedBlockSettingArray = [];
+            } else {
+                if (Array.isArray(usedBlockSettingArray)) {
+                    cou2 = usedBlockSettingArray.length;
+                } else {
+                    var usedBlockSettingArray = [];
+                }
+            }
+            if (typeof excIdClass==="undefined") {
+                var excIdClass = ["'.$excIdClass.'"];
+            }
+            if (typeof contentLength==="undefined") {
+                var contentLength = '.$contentLength.';
+            } else {
+                contentLength = '.$contentLength.';
+            }
+            if (typeof blockDuplicate==="undefined") {
+                var blockDuplicate = "'.$blockDuplicate.'";
+            }                        
             ';
+
 				$k1 = 0;
 				foreach ($fromDb AS $k => $item) {
+					$resultHere = 'normal';
 					if (is_object($item)) {
 						$item = get_object_vars($item);
 					}
-					$resultHere = in_array($item['id'], $usedBlocks);
-					if ($resultHere == false) {
+					if (in_array($item['id'], $usedBlocks)) {
+						$resultHere = 'used';
+                    }
+					elseif (in_array($item['id'], $rejectedBlocks)) {
+						$resultHere = 'rejected';
+					}
+//					$resultHere = in_array($item['id'], $usedBlocks);
+//					if ($resultHere == false) {
+					if ($resultHere == 'normal') {
 //				    $contentBeforeScript .= $item['text'].PHP_EOL;
-						$scriptingCode .= 'blockSettingArray['.$cou1.'] = [];'.PHP_EOL;
+						$scriptingCode .= 'blockSettingArray[cou1] = [];'.PHP_EOL;
 
 						if (!empty($item['minSymbols'])&&$item['minSymbols'] > 1) {
-							$scriptingCode .= 'blockSettingArray['.$cou1.']["minSymbols"] = '.$item['minSymbols'].'; '.PHP_EOL;
+							$scriptingCode .= 'blockSettingArray[cou1]["minSymbols"] = '.$item['minSymbols'].'; '.PHP_EOL;
 						} else {
-							$scriptingCode .= 'blockSettingArray['.$cou1.']["minSymbols"] = 0;'.PHP_EOL;
+							$scriptingCode .= 'blockSettingArray[cou1]["minSymbols"] = 0;'.PHP_EOL;
 						}
 						if (!empty($item['maxSymbols'])&&$item['maxSymbols'] > 1) {
-							$scriptingCode .= 'blockSettingArray['.$cou1.']["maxSymbols"] = '.$item['maxSymbols'].'; '.PHP_EOL;
+							$scriptingCode .= 'blockSettingArray[cou1]["maxSymbols"] = '.$item['maxSymbols'].'; '.PHP_EOL;
 						} else {
-							$scriptingCode .= 'blockSettingArray['.$cou1.']["maxSymbols"] = 0;'.PHP_EOL;
+							$scriptingCode .= 'blockSettingArray[cou1]["maxSymbols"] = 0;'.PHP_EOL;
 						}
 						if (!empty($item['minHeaders'])&&$item['minHeaders'] > 1) {
-							$scriptingCode .= 'blockSettingArray['.$cou1.']["minHeaders"] = '.$item['minHeaders'].'; '.PHP_EOL;
+							$scriptingCode .= 'blockSettingArray[cou1]["minHeaders"] = '.$item['minHeaders'].'; '.PHP_EOL;
 						} else {
-							$scriptingCode .= 'blockSettingArray['.$cou1.']["minHeaders"] = 0;'.PHP_EOL;
+							$scriptingCode .= 'blockSettingArray[cou1]["minHeaders"] = 0;'.PHP_EOL;
 						}
 						if (!empty($item['maxHeaders'])&&$item['maxHeaders'] > 1) {
-							$scriptingCode .= 'blockSettingArray['.$cou1.']["maxHeaders"] = '.$item['maxHeaders'].'; '.PHP_EOL;
+							$scriptingCode .= 'blockSettingArray[cou1]["maxHeaders"] = '.$item['maxHeaders'].'; '.PHP_EOL;
 						} else {
-							$scriptingCode .= 'blockSettingArray['.$cou1.']["maxHeaders"] = 0;'.PHP_EOL;
+							$scriptingCode .= 'blockSettingArray[cou1]["maxHeaders"] = 0;'.PHP_EOL;
 						}
-						$scriptingCode     .= 'blockSettingArray['.$cou1.']["id"] = \''.$item['id'].'\'; '.PHP_EOL;
+						$scriptingCode     .= 'blockSettingArray[cou1]["id"] = \''.$item['id'].'\'; '.PHP_EOL;
 						if (!empty($shortcodes[$item['block_number']])) {
-							$scriptingCode .= 'blockSettingArray['.$cou1.']["sc"] = \'1\'; '.PHP_EOL;
+							$scriptingCode .= 'blockSettingArray[cou1]["sc"] = \'1\'; '.PHP_EOL;
 						} else {
-							$scriptingCode .= 'blockSettingArray['.$cou1.']["sc"] = \'0\'; '.PHP_EOL;
+							$scriptingCode .= 'blockSettingArray[cou1]["sc"] = \'0\'; '.PHP_EOL;
 						}
 						$currentItemContent = $item['text'];
 						$currentItemContent = preg_replace('~(\'|\")~','\\\$1',$currentItemContent);
 						$currentItemContent = preg_replace('~(\r\n)~','',$currentItemContent);
 //					$currentItemContent = preg_replace('~(\<\/script\>)~','</scr"+"ipt>',$currentItemContent);
-//					$scriptingCode     .= 'blockSettingArray['.$cou1.']["text"] = \'' . $item['text'] . '\'; ' . PHP_EOL;
-						$scriptingCode     .= 'blockSettingArray['.$cou1.']["text"] = \'' . $currentItemContent . '\'; ' . PHP_EOL;
-						$scriptingCode     .= 'blockSettingArray['.$cou1.']["setting_type"] = '.$item['setting_type'].'; ' . PHP_EOL;
+//					$scriptingCode     .= 'blockSettingArray[cou1]["text"] = \'' . $item['text'] . '\'; ' . PHP_EOL;
+						$scriptingCode     .= 'blockSettingArray[cou1]["text"] = \'' . $currentItemContent . '\'; ' . PHP_EOL;
+						$scriptingCode     .= 'blockSettingArray[cou1]["setting_type"] = '.$item['setting_type'].'; ' . PHP_EOL;
 						if       ($item['setting_type'] == 1) {       //for ordinary block
-//						$scriptingCode .= 'blockSettingArray['.$cou1.']["setting_type"] = 1; ' . PHP_EOL;
-							$scriptingCode .= 'blockSettingArray['.$cou1.']["element"] = "' . $item['element'] . '"; ' . PHP_EOL;
-							$scriptingCode .= 'blockSettingArray['.$cou1.']["elementPosition"] = ' . $item['elementPosition'] . '; ' . PHP_EOL;
-							$scriptingCode .= 'blockSettingArray['.$cou1.']["elementPlace"] = ' . $item['elementPlace'] . '; ' . PHP_EOL;
+//						$scriptingCode .= 'blockSettingArray[cou1]["setting_type"] = 1; ' . PHP_EOL;
+							$scriptingCode .= 'blockSettingArray[cou1]["element"] = "' . $item['element'] . '"; ' . PHP_EOL;
+							$scriptingCode .= 'blockSettingArray[cou1]["elementPosition"] = ' . $item['elementPosition'] . '; ' . PHP_EOL;
+							$scriptingCode .= 'blockSettingArray[cou1]["elementPlace"] = ' . $item['elementPlace'] . '; ' . PHP_EOL;
 						} elseif ($item['setting_type'] == 3) {       //for direct block
-							$scriptingCode .= 'blockSettingArray['.$cou1.']["element"] = "' . $item['element'] . '"; ' . PHP_EOL;
-							$scriptingCode .= 'blockSettingArray['.$cou1.']["directElement"] = "' . $item['directElement'] . '"; ' . PHP_EOL;
-							$scriptingCode .= 'blockSettingArray['.$cou1.']["elementPosition"] = ' . $item['elementPosition'] . '; ' . PHP_EOL;
-							$scriptingCode .= 'blockSettingArray['.$cou1.']["elementPlace"] = ' . $item['elementPlace'] . '; ' . PHP_EOL;
+							$scriptingCode .= 'blockSettingArray[cou1]["element"] = "' . $item['element'] . '"; ' . PHP_EOL;
+							$scriptingCode .= 'blockSettingArray[cou1]["directElement"] = "' . $item['directElement'] . '"; ' . PHP_EOL;
+							$scriptingCode .= 'blockSettingArray[cou1]["elementPosition"] = ' . $item['elementPosition'] . '; ' . PHP_EOL;
+							$scriptingCode .= 'blockSettingArray[cou1]["elementPlace"] = ' . $item['elementPlace'] . '; ' . PHP_EOL;
 						} elseif (in_array($item['setting_type'],[6,7])) {       //for percentage
-							$scriptingCode .= 'blockSettingArray['.$cou1.']["elementPlace"] = ' . $item['elementPlace'] . '; ' . PHP_EOL;
+							$scriptingCode .= 'blockSettingArray[cou1]["elementPlace"] = ' . $item['elementPlace'] . '; ' . PHP_EOL;
 						}
-						$cou1++;
-					} else {
-						$scriptingCode .= 'usedBlockSettingArray['.$k1.'] = [];'.PHP_EOL;
-						$scriptingCode .= 'usedBlockSettingArray['.$k1.']["id"] = \''.$item['block_number'].'\'; '.PHP_EOL;
-						$scriptingCode .= 'usedBlockSettingArray['.$k1.']["elementPosition"] = '.$item['elementPosition'].'; '.PHP_EOL;
+						$scriptingCode .= 'cou1++;'.PHP_EOL;
+//						$cou1++;
+					}
+					elseif ($resultHere == 'used') {
+						$scriptingCode .= 'usedBlockSettingArray[cou2] = [];'.PHP_EOL;
+						$scriptingCode .= 'usedBlockSettingArray[cou2]["id"] = \''.$item['block_number'].'\'; '.PHP_EOL;
+						$scriptingCode .= 'usedBlockSettingArray[cou2]["elementPosition"] = '.$item['elementPosition'].'; '.PHP_EOL;
+						$scriptingCode .= 'cou2++;'.PHP_EOL;
 						$k1++;
 					}
 				}

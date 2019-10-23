@@ -2,7 +2,8 @@
 
 if (!defined("ABSPATH")) { exit;}
 
-require_once (dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
+//require_once (dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
+require_once (ABSPATH."/wp-admin/includes/plugin.php");
 include_once (dirname(__FILE__)."/update.php");
 include_once (dirname(__FILE__)."/synchronising.php");
 include_once (dirname(__FILE__)."/textEditing.php");
@@ -28,7 +29,7 @@ try {
     }
 
 	if (empty(apply_filters('wp_doing_cron', defined('DOING_CRON')&&DOING_CRON))) {
-		require_once (dirname(__FILE__)."/../../../wp-includes/pluggable.php");
+		require_once (ABSPATH."/wp-includes/pluggable.php");
 		$curUserCan = current_user_can('activate_plugins');
 	}
 
@@ -716,7 +717,25 @@ try {
 //		    if (is_page()||is_single()||is_singular()||is_archive()||is_home()||is_front_page()) {
 			    global $wpdb;
 
-                $excIdClass = $wpdb->get_var('SELECT optionValue FROM '.$GLOBALS['wpPrefix'].'realbig_settings WGPS WHERE optionName = "excludedIdAndClasses"');
+//			    $excIdClass = $wpdb->get_var('SELECT optionValue FROM '.$GLOBALS['wpPrefix'].'realbig_settings WGPS WHERE optionName = "excludedIdAndClasses"');
+			    $excIdClass = null;
+			    $blockDuplicate = 'yes';
+			    $realbig_settings_info = $wpdb->get_results('SELECT optionName, optionValue FROM '.$GLOBALS['wpPrefix'].'realbig_settings WGPS WHERE optionName IN ("excludedIdAndClasses","blockDuplicate")');
+			    if (!empty($realbig_settings_info)) {
+				    foreach ($realbig_settings_info AS $k => $item) {
+					    if (isset($item->optionValue)) {
+						    if ($item->optionName == 'excludedIdAndClasses') {
+							    $excIdClass = $item->optionValue;
+						    } elseif ($item->optionName == 'blockDuplicate') {
+						        if ($item->optionValue==0) {
+							        $blockDuplicate = 'no';
+						        }
+						    }
+					    }
+				    }
+				    unset($k,$item);
+                }
+
 //			    $rotatorUrl = $GLOBALS['rotatorUrl'];
 //			    $rotatorResponce = wp_safe_remote_head($rotatorUrl, ['timeout' => 1]);
 
@@ -727,7 +746,7 @@ try {
 //                $cachedBlocks = null;
 //			    }
 
-                $shortcodesGathered = get_posts(['post_type' => 'rb_shortcodes','numberposts' => -1]);
+                $shortcodesGathered = get_posts(['post_type'=>'rb_shortcodes','numberposts'=>-1]);
                 $shortcodes = [];
                 foreach ($shortcodesGathered AS $k=>$item) {
                     if (empty($shortcodes[$item->post_excerpt])) {
@@ -743,8 +762,8 @@ try {
 				    $fromDb = $wpdb->get_results('SELECT * FROM '.$GLOBALS['wpPrefix'].'realbig_plugin_settings WGPS WHERE setting_type = 3');
 			    }
 			    require_once (dirname(__FILE__)."/textEditing.php");
-			    $content = RFWP_addIcons($fromDb, $content, 'content', null, null, $shortcodes, $excIdClass);
-//			    $content = RFWP_addIcons($fromDb, $content, 'content', $cachedBlocks, null, $shortcodes);
+			    $content = RFWP_addIcons($fromDb, $content, 'content', null, null, $shortcodes, $excIdClass, $blockDuplicate);
+//			    $content = RFWP_addIcons($fromDb, $content, 'content', $cachedBlocks, null, $shortcodes, $blockDuplicate);
 
 //                $content = RFWP_rb_cache_gathering($content, $cachedBlocks);
 
@@ -844,7 +863,7 @@ try {
 
 		try {
 		    $rbSettings = $wpdb->get_results('SELECT optionName, optionValue, timeUpdate FROM ' . $GLOBALS["wpPrefix"] . 'realbig_settings WHERE optionName IN ("deactError","domain","excludedMainPage","excludedPages","pushStatus","excludedPageTypes","kill_rb")', ARRAY_A);
-			$rbTransients = $wpdb->get_results('SELECT optionName, optionValue, timeUpdate FROM ' . $GLOBALS["wpPrefix"] . 'realbig_settings WHERE optionName IN ("deactError","domain","excludedMainPage","excludedPages","pushStatus","excludedPageTypes","kill_rb")', ARRAY_A);
+//			$rbTransients = $wpdb->get_results('SELECT optionName, optionValue, timeUpdate FROM ' . $GLOBALS["wpPrefix"] . 'realbig_settings WHERE optionName IN ("deactError","domain","excludedMainPage","excludedPages","pushStatus","excludedPageTypes","kill_rb")', ARRAY_A);
 
 		    $killRbCheck = '';
 //		    if (!empty($_POST['kill_rb'])) {
