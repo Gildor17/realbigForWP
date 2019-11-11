@@ -35,6 +35,11 @@ try {
 } catch (Exception $ex) {
 	try {
 		global $wpdb;
+		global $rb_logFile;
+
+		$messageFLog = 'Deactivation error: '.$ex->getMessage().';';
+		error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+
 		if (!empty($GLOBALS['wpPrefix'])) {
 			$wpPrefix = $GLOBALS['wpPrefix'];
 		} else {
@@ -61,6 +66,11 @@ try {
 } catch (Error $er) {
 	try {
 		global $wpdb;
+		global $rb_logFile;
+
+		$messageFLog = 'Deactivation error: '.$er->getMessage().';';
+		error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+
 		if (!empty($GLOBALS['wpPrefix'])) {
 			$wpPrefix = $GLOBALS['wpPrefix'];
 		} else {

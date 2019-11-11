@@ -13,11 +13,12 @@ try {
 	if (!function_exists('RFWP_dbTablesCreateFunction')) {
 		function RFWP_dbTablesCreateFunction($tableForCurrentPluginChecker, $tableForToken, $wpPrefix, $statusGatherer) {
 			global $wpdb;
+			global $rb_logFile;
 			try {
 				if (empty($tableForCurrentPluginChecker)) {
 
 					$sql = "
-CREATE TABLE `" . $wpPrefix . "realbig_plugin_settings` 
+CREATE TABLE `".$wpPrefix."realbig_plugin_settings` 
 (
 	`id` INT(11) NOT NULL AUTO_INCREMENT,
 	`block_number` INT(11) NOT NULL,
@@ -34,6 +35,7 @@ CREATE TABLE `" . $wpPrefix . "realbig_plugin_settings`
 	`maxSymbols` INT(11) NULL DEFAULT NULL,
 	`minHeaders` INT(11) NULL DEFAULT NULL,
 	`maxHeaders` INT(11) NULL DEFAULT NULL,
+	`elementCss` ENUM('default','center','left','right') NOT NULL DEFAULT 'default',
 	`time_update` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	PRIMARY KEY (`id`)
 )
@@ -41,19 +43,23 @@ COLLATE='utf8_general_ci'
 ENGINE=InnoDB   
 ";
 					require_once (ABSPATH."/wp-admin/includes/upgrade.php");
-					dbDelta($sql, true);
-					add_option( 'realbigForWP_version', $GLOBALS['realbigForWP_version'] );
+					$tableCreateResult = dbDelta($sql, true);
+					add_option('realbigForWP_version', $GLOBALS['realbigForWP_version']);
 //				if (!empty($wpdb->get_var( 'SHOW TABLES LIKE "' . $wpPrefix . 'realbig_plugin_settings"' ))) {
 //					$statusGatherer['realbig_plugin_settings_table'] = true;
-//                }
+//              }
 				} else {
 					$statusGatherer['realbig_plugin_settings_table'] = true;
+					$messageFLog = 'realbig_plugin_settings exists;';
+					if (!empty($messageFLog)) {
+						error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL,3,$rb_logFile);
+					}
 				}
 
 				if (empty($tableForToken)) {
 
 					$sql = "
-CREATE TABLE `" . $wpPrefix . "realbig_settings` (
+CREATE TABLE `".$wpPrefix."realbig_settings` (
 `id` INT(11) NOT NULL AUTO_INCREMENT,
 `optionName` VARCHAR(50) NOT NULL,
 `optionValue` TEXT NOT NULL,
@@ -67,11 +73,16 @@ ENGINE=InnoDB
 					dbDelta($sql, true);
 				} else {
 					$statusGatherer['realbig_settings_table'] = true;
+					$messageFLog = 'realbig_settings exists;';
+                    error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL,3,$rb_logFile);
 				}
 
 				return $statusGatherer;
 			} catch (Exception $e) {
-				echo $e;
+//				echo $e;
+				$messageFLog = 'some error in table create: '.$e->getMessage().';';
+				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL,3,$rb_logFile);
+
 				$statusGatherer['realbig_plugin_settings_table'] = false;
 				$statusGatherer['realbig_settings_table']        = false;
 				return $statusGatherer;
@@ -80,6 +91,7 @@ ENGINE=InnoDB
 	}
 	if (!function_exists('RFWP_updateElementEnumValuesFunction')) {
 		function RFWP_updateElementEnumValuesFunction($wpPrefix, $statusGatherer) {
+			global $rb_logFile;
 			$requiredElementColumnValues = "enum('p','li','ul','ol','blockquote','img','video','h1','h2','h3','h4','h5','h6','h2-4','article')";
 			try {
 				function RFWP_checkElementColumnValues($wpPrefix, $requiredElementColumnValues) {
@@ -102,7 +114,16 @@ ENGINE=InnoDB
 				}
 				$statusGatherer['element_column_values'] = RFWP_checkElementColumnValues($wpPrefix, $requiredElementColumnValues);
 				return $statusGatherer;
-			} catch (Exception $e) {
+			} catch (Exception $ex) {
+				$messageFLog = 'some error in update Element Enum Values: '.$ex->getMessage().';';
+				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL,3,$rb_logFile);
+
+				$statusGatherer['element_column_values'] = false;
+				return $statusGatherer;
+			} catch (Error $er) {
+				$messageFLog = 'some error in update Element Enum Values: '.$er->getMessage().';';
+				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL,3,$rb_logFile);
+
 				$statusGatherer['element_column_values'] = false;
 				return $statusGatherer;
 			}
@@ -111,7 +132,7 @@ ENGINE=InnoDB
 	if (!function_exists('RFWP_wpRealbigSettingsTableUpdateFunction')) {
 		function RFWP_wpRealbigSettingsTableUpdateFunction($wpPrefix) {
 			global $wpdb;
-
+			global $rb_logFile;
 			try {
 				$rez = $wpdb->query('SHOW FIELDS FROM ' . $wpPrefix . 'realbig_settings');
 
@@ -119,7 +140,15 @@ ENGINE=InnoDB
 					$wpdb->query('ALTER TABLE ' . $wpPrefix . 'realbig_settings ADD `timeUpdate` TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP AFTER optionValue');
 				}
 				return true;
-			} catch (Exception $e) {
+			} catch (Exception $ex) {
+				$messageFLog = 'some error in wpRealbigSettingsTableUpdate: '.$ex->getMessage().';';
+				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL,3,$rb_logFile);
+
+				return false;
+			} catch (Error $er) {
+				$messageFLog = 'some error in wpRealbigSettingsTableUpdate: '.$er->getMessage().';';
+				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL,3,$rb_logFile);
+
 				return false;
 			}
 		}
@@ -147,16 +176,17 @@ ENGINE=InnoDB
 				'onCategories',
 				'offCategories',
 				'onTags',
-				'offTags'
+				'offTags',
+                'elementCss',
 			];
-
+			global $rb_logFile;
 			try {
 			    // !!! not ready yet!!!
 
 				foreach ($requiredColumnsInRealbigPluginSettingsTable as $item) {
 					if (!in_array($item, $colCheck)) {
 						$atLeastOneMissedColumn = true;
-						if (in_array($item, ['text','directElement','onCategories','offCategories','onTags','offTags'])) {
+						if (in_array($item, ['text','directElement','onCategories','offCategories','onTags','offTags','elementCss'])) {
 							$wpdb->query('ALTER TABLE '.$wpPrefix.'realbig_plugin_settings ADD COLUMN '.$item.' TEXT NULL DEFAULT NULL');
 						} else {
 							$wpdb->query('ALTER TABLE '.$wpPrefix.'realbig_plugin_settings ADD COLUMN '.$item.' INT(11) NULL DEFAULT NULL');
@@ -170,7 +200,17 @@ ENGINE=InnoDB
 				}
 
 				return $statusGatherer;
-			} catch (Exception $e) {
+			} catch (Exception $ex) {
+				$messageFLog = 'some error in wpRealbigSettingsTableUpdate: '.$ex->getMessage().';';
+				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL,3,$rb_logFile);
+
+				$statusGatherer['realbig_plugin_settings_columns'] = false;
+
+				return $statusGatherer;
+			} catch (Error $er) {
+				$messageFLog = 'some error in wpRealbigSettingsTableUpdate: '.$er->getMessage().';';
+				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL,3,$rb_logFile);
+
 				$statusGatherer['realbig_plugin_settings_columns'] = false;
 
 				return $statusGatherer;
@@ -182,6 +222,11 @@ catch (Exception $ex)
 {
 	try {
 		global $wpdb;
+		global $rb_logFile;
+
+		$messageFLog = 'Deactivation error: '.$ex->getMessage().';';
+		error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+
 		if (!empty($GLOBALS['wpPrefix'])) {
 			$wpPrefix = $GLOBALS['wpPrefix'];
 		} else {
@@ -211,6 +256,11 @@ catch (Error $er)
 {
 	try {
 		global $wpdb;
+		global $rb_logFile;
+
+		$messageFLog = 'Deactivation error: '.$er->getMessage().';';
+		error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+
 		if (!empty($GLOBALS['wpPrefix'])) {
 			$wpPrefix = $GLOBALS['wpPrefix'];
 		} else {
