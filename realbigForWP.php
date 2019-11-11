@@ -2,7 +2,6 @@
 
 if (!defined("ABSPATH")) { exit;}
 
-
 //require_once (dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
 require_once (ABSPATH."/wp-admin/includes/plugin.php");
 include_once (dirname(__FILE__)."/update.php");
@@ -12,7 +11,7 @@ include_once (dirname(__FILE__)."/textEditing.php");
 /*
 Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.2.0.0
+Version:      0.2.1
 Author:       Realbig Team
 Author URI:   https://realbig.media
 License:      GPLv2 or later
@@ -91,7 +90,7 @@ try {
 	    $kill_rb = $kill_rb_db;
     }
 
-//	$kill_rb = 0;
+	$kill_rb = 0;
 
 	$GLOBALS['kill_rb'] = $kill_rb;
 	/** End of kill rb connection emulation */
