@@ -12,46 +12,63 @@ try {
 	if (!function_exists('RFWP_add_toolbar_items')) {
 		function RFWP_add_toolbar_items($admin_bar) {
 //		$ppCurrentStatus = ['text' => 'idle', 'color' => 'green'];
+            $arrayForArray = [
+                'longCacheUse'=>get_transient('rb_longCacheDeploy'),
+                'activeCache' =>get_transient('rb_active_cache'),
+                'syncAttempt' =>get_transient('realbigPluginSyncAttempt'),
+                'syncProcess' =>get_transient('realbigPluginSyncProcess'),
+                'cache'       =>get_transient('rb_cache_timeout'),
+                'mobileCache' =>get_transient('rb_mobile_cache_timeout'),
+                'desktopCache'=>get_transient('rb_desktop_cache_timeout'),
+            ];
 			$cachesArray = [];
-			$k=0;
-			$cachesArray[$k] = [];
-			$cachesArray[$k]['name'] = 'longCacheUse';
-			$cachesArray[$k]['time'] = get_transient('rb_longCacheDeploy');
-			$k++;
-			$cachesArray[$k] = [];
-			$cachesArray[$k]['name'] = 'activeCache';
-			$cachesArray[$k]['time'] = get_transient('rb_active_cache');
-			$k++;
-			$cachesArray[$k] = [];
-			$cachesArray[$k]['name'] = 'syncAttempt';
-			$cachesArray[$k]['time'] = get_transient('realbigPluginSyncAttempt');
-			$k++;
-			$cachesArray[$k] = [];
-			$cachesArray[$k]['name'] = 'syncProcess';
-			$cachesArray[$k]['time'] = get_transient('realbigPluginSyncProcess');
-			$k++;
-			$cachesArray[$k] = [];
-			$cachesArray[$k]['name'] = 'cache';
-			$cachesArray[$k]['time'] = get_transient('rb_cache_timeout');
-			$k++;
-			$cachesArray[$k] = [];
-			$cachesArray[$k]['name'] = 'mobileCache';
-			$cachesArray[$k]['time'] = get_transient('rb_mobile_cache_timeout');
-			$k++;
-			$cachesArray[$k] = [];
-			$cachesArray[$k]['name'] = 'desktopCache';
-			$cachesArray[$k]['time'] = get_transient('rb_desktop_cache_timeout');
-			unset($k);
+			$cou = 0;
+			foreach ($arrayForArray AS $k => $item) {
+				$cachesArray[$cou] = [];
+				$cachesArray[$cou]['name'] = $k;
+				$cachesArray[$cou]['time'] = $item;
+				$cou++;
+            }
+			unset($k,$item,$cou);
 
-			$admin_bar->add_menu( array(
+//			$k=0;
+//			$cachesArray[$k] = [];
+//			$cachesArray[$k]['name'] = 'longCacheUse';
+//			$cachesArray[$k]['time'] = get_transient('rb_longCacheDeploy');
+//			$k++;
+//			$cachesArray[$k] = [];
+//			$cachesArray[$k]['name'] = 'activeCache';
+//			$cachesArray[$k]['time'] = get_transient('rb_active_cache');
+//			$k++;
+//			$cachesArray[$k] = [];
+//			$cachesArray[$k]['name'] = 'syncAttempt';
+//			$cachesArray[$k]['time'] = get_transient('realbigPluginSyncAttempt');
+//			$k++;
+//			$cachesArray[$k] = [];
+//			$cachesArray[$k]['name'] = 'syncProcess';
+//			$cachesArray[$k]['time'] = get_transient('realbigPluginSyncProcess');
+//			$k++;
+//			$cachesArray[$k] = [];
+//			$cachesArray[$k]['name'] = 'cache';
+//			$cachesArray[$k]['time'] = get_transient('rb_cache_timeout');
+//			$k++;
+//			$cachesArray[$k] = [];
+//			$cachesArray[$k]['name'] = 'mobileCache';
+//			$cachesArray[$k]['time'] = get_transient('rb_mobile_cache_timeout');
+//			$k++;
+//			$cachesArray[$k] = [];
+//			$cachesArray[$k]['name'] = 'desktopCache';
+//			$cachesArray[$k]['time'] = get_transient('rb_desktop_cache_timeout');
+//			unset($k);
+
+			$admin_bar->add_menu(array(
 				'id'    => 'rb_item_1',
 				'title' => '<span class="ab-icon dashicons dashicons-admin-site"></span> Realbig',
-//			'href'  => '#',
 				'meta'  => array(
 					'title' => __('My item'),
 				),
 			));
-			$admin_bar->add_menu( array(
+			$admin_bar->add_menu(array(
 				'id'     => 'rb_sub_item_1',
 				'parent' => 'rb_item_1',
 				'title'  => 'Cache w expTime:',
@@ -64,10 +81,10 @@ try {
 			foreach ($cachesArray AS $k => $item) {
 				if (!empty($item['time'])) {
 					$lctExpTime = $item['time'] - time();
-					$admin_bar->add_menu( array(
+					$admin_bar->add_menu(array(
 						'id'     => 'rb_sub_item_1_'.($k+1),
 						'parent' => 'rb_sub_item_1',
-						'title'  => $item['name'].': ' . '<span style="color: #92ffaf">' . $lctExpTime . '</span>',
+						'title'  => $item['name'].': '.'<span style="color: #92ffaf">'.$lctExpTime.'</span>',
 					));
 				}
 			}
@@ -77,6 +94,11 @@ try {
 } catch (Exception $ex) {
 	try {
 		global $wpdb;
+		global $rb_logFile;
+
+		$messageFLog = 'Deactivation error: '.$ex->getMessage().';';
+		error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+
 		if (!empty($GLOBALS['wpPrefix'])) {
 			$wpPrefix = $GLOBALS['wpPrefix'];
 		} else {
@@ -104,6 +126,11 @@ try {
 } catch (Error $er) {
 	try {
 		global $wpdb;
+		global $rb_logFile;
+
+		$messageFLog = 'Deactivation error: '.$er->getMessage().';';
+		error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+
 		if (!empty($GLOBALS['wpPrefix'])) {
 			$wpPrefix = $GLOBALS['wpPrefix'];
 		} else {

@@ -46,10 +46,14 @@ function shortcodesInsert() {
     let gatheredBlockChild;
     let okStates = ['done','refresh-wait','no-block','fetched'];
     let scContainer;
+    let oneSuccess;
+    let oneFail;
+    let sci;
     let scRepeatFuncLaunch = false;
+    let i1 = 0;
 
     if (typeof scArray !== 'undefined') {
-        if (scArray&&gatheredBlocks&&gatheredBlocks.length > 0) {
+        if (scArray&&scArray.length > 0&&gatheredBlocks&&gatheredBlocks.length > 0) {
             for (let i = 0; i < gatheredBlocks.length; i++) {
                 gatheredBlockChild = gatheredBlocks[i].children[0];
                 if (!gatheredBlockChild) {
@@ -63,25 +67,47 @@ function shortcodesInsert() {
                 scBlockId = gatheredBlockChild.getAttribute('data-id');
                 blockStatus = gatheredBlockChild.getAttribute('data-state');
 
-                if (scBlockId&&scArray[scBlockId]) {
-                    if (scAdId > 0) {
+                // if (scBlockId&&scArray[scBlockId]) {
+                if (scBlockId&&scAdId > 0) {
+                    sci = -1;
+                    for (i1 = 0; i1 < scArray.length; i1++) {
+                        if (scBlockId == scArray[i1]['blockId']&&scAdId == scArray[i1]['adId']) {
+                            sci = i1;
+                        }
+                    }
+
+                    if (sci > -1) {
                         if (blockStatus&&okStates.includes(blockStatus)) {
-                            if (scArray[scBlockId][scAdId]) {
+                            // if (scArray[scBlockId][scAdId]) {
                                 if (blockStatus=='no-block') {
                                     gatheredBlockChild.innerHTML = '';
                                 } else {
-                                    jQuery(gatheredBlockChild).html(scArray[scBlockId][scAdId]);
+                                    jQuery(gatheredBlockChild).html(scArray[sci]['text']);
+                                }
+                                for (i1 = 0; i1 < scArray.length; i1++) {
+                                    if (scBlockId == scArray[i1]['blockId']) {
+                                        scArray.splice(i1, 1);
+                                    }
                                 }
                                 gatheredBlocks[i].classList.remove('scMark');
-                            }
+                            // }
                         }
                     }
                 }
             }
+        } else if (!scArray||(scArray&&scArray.length < 1)) {
+            endedSc = true;
         }
     } else {
         endedSc = true;
     }
+
+    if (!endedSc) {
+        setTimeout(function () {
+            shortcodesInsert();
+        }, 200);
+    }
+
 }
 
 function clearUnsuitableCache(cuc_cou) {
@@ -196,6 +222,63 @@ function blocksReposition() {
     }
 }
 
+function createStyleElement(blockNumber, localElementCss) {
+    let htmlToAdd = '';
+    let marginString;
+    let textAlignString;
+    let contPoi;
+    let emptyValues = false;
+    let elementToAddStyleLocal = document.querySelector('#blocksAlignStyle');
+    if (!elementToAddStyleLocal) {
+        contPoi = document.querySelector('#content_pointer_id');
+        if (!contPoi) {
+            return false;
+        }
+
+        elementToAddStyleLocal = document.createElement('style');
+        elementToAddStyleLocal.setAttribute('id', 'blocksAlignStyle');
+        contPoi.parentNode.insertBefore(elementToAddStyleLocal, contPoi);
+    }
+
+    switch (localElementCss) {
+        case 'left':
+            emptyValues = false;
+            marginString = '0 auto 0 0';
+            textAlignString = 'left';
+            break;
+        case 'right':
+            emptyValues = false;
+            marginString = '0 0 0 auto';
+            textAlignString = 'right';
+            break;
+        case 'center':
+            emptyValues = false;
+            marginString = '0 auto';
+            textAlignString = 'center';
+            break;
+        case 'default':
+            emptyValues = true;
+            marginString = 'default';
+            textAlignString = 'default';
+            /** here will be css */
+            break;
+    }
+    if (!emptyValues) {
+        // htmlToAdd = '#content_rb_'+blockNumber+' > * {\n' +
+        //     '    margin: '+marginString+';\n' +
+        //     '    text-align: '+textAlignString+';\n' +
+        //     '}\n';
+        htmlToAdd = '#content_rb_'+blockNumber+' > * {\n' +
+            '    margin: '+marginString+';\n' +
+            '}\n';
+    }
+
+    elementToAddStyleLocal.innerHTML += htmlToAdd;
+
+    // return true;
+    return textAlignString;
+}
+
 function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
     try {
         var content_pointer = document.querySelector("#content_pointer_id"); //orig
@@ -205,10 +288,17 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
 
         var newElement = document.createElement("div");
         var elementToAdd;
+        var elementToAddStyle;
         var poolbackI = 0;
 
         var counter = 0;
         var currentElement;
+        var repeatableCurrentElement;
+        var repeatableSuccess;
+        var reCou;
+        var curFirstPlace;
+        var curElementCount;
+        var curElementStep;
         var backElement = 0;
         var sumResult = 0;
         var repeat = false;
@@ -216,6 +306,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
         let containerFor6th = [];
         let containerFor7th = [];
         let posCurrentElement;
+        var block_number;
 
         function getFromConstructions(currentElement) {
             if (currentElement.parentElement.tagName.toLowerCase() == "blockquote") {
@@ -298,10 +389,14 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
             try {
                 if (!blockSettingArray[i]["text"]||(blockSettingArray[i]["text"]&&blockSettingArray[i]["text"].length < 1)) {
                     blockSettingArray.splice(i, 1);
+                    poolbackI = 1;
+                    i--;
                     continue;
                 }
 
                 // elementToAdd = document.querySelector('.percentPointerClass.coveredAd[data-id="'+blockSettingArray[i]['id']+'"]');
+
+                block_number = 0;
 
                 elementToAdd = document.createElement("div");
                 elementToAdd.classList.add("percentPointerClass");
@@ -310,6 +405,26 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                     elementToAdd.classList.add("scMark");
                 }
                 elementToAdd.innerHTML = blockSettingArray[i]["text"];
+                block_number = elementToAdd.children[0].attributes['data-id'].value;
+
+                elementToAddStyle = createStyleElement(block_number, blockSettingArray[i]["elementCss"]);
+
+                if (elementToAddStyle&&elementToAddStyle!='default') {
+                    elementToAdd.style.textAlign = elementToAddStyle;
+                }
+
+                if (blockDuplicate == 'no') {
+                    if (usedBlockSettingArrayIds.length > 0) {
+                        for (let i1 = 0; i1 < usedBlockSettingArrayIds.length; i1++) {
+                            if (block_number==usedBlockSettingArrayIds[i1]) {
+                                blockSettingArray.splice(i, 1);
+                                poolbackI = 1;
+                                i--;
+                                continue;
+                            }
+                        }
+                    }
+                }
 
                 if (blockSettingArray[i]["minHeaders"] > 0) {
                     if (blockSettingArray[i]["minHeaders"] > termorarity_parent_with_content_length) {
@@ -319,6 +434,8 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                 if (blockSettingArray[i]["maxHeaders"] > 0) {
                     if (blockSettingArray[i]["maxHeaders"] < termorarity_parent_with_content_length) {
                         blockSettingArray.splice(i, 1);
+                        poolbackI = 1;
+                        i--;
                         continue;
                     }
                 }
@@ -328,6 +445,8 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                 if (blockSettingArray[i]["maxSymbols"] > 0) {
                     if (blockSettingArray[i]["maxSymbols"] < contentLength) {
                         blockSettingArray.splice(i, 1);
+                        poolbackI = 1;
+                        i--;
                         continue;
                     }
                 }
@@ -386,11 +505,105 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                         currentElement.parentNode.insertBefore(elementToAdd, posCurrentElement);
                         elementToAdd.classList.remove('coveredAd');
                         // usedAdBlocksArray.push(checkIfBlockUsed);
+                        usedBlockSettingArrayIds.push(block_number);
                         blockSettingArray.splice(i, 1);
                         poolbackI = 1;
                         i--;
                     } else {
                         repeat = true;
+                    }
+                } else if (blockSettingArray[i]["setting_type"] == 2) {
+                    if (blockDuplicate == 'no') {
+                        blockSettingArray[i]["elementCount"] = 1;
+                    }
+                    repeatableCurrentElement = [];
+                    reCou = 0;
+                    curFirstPlace = blockSettingArray[i]["firstPlace"];
+                    curElementCount = blockSettingArray[i]["elementCount"];
+                    curElementStep = blockSettingArray[i]["elementStep"];
+                    repeatableSuccess = false;
+
+                    elementToAddStyle = createStyleElement(block_number, blockSettingArray[i]["elementCss"]);
+
+                    if (blockSettingArray[i]["element"].toLowerCase()=='h1') {
+                        placingToH1(parent_with_content, blockSettingArray[i]["element"]);
+                    } else if (blockSettingArray[i]["element"].toLowerCase()=='h2-4') {
+                        repeatableCurrentElement = parent_with_content.querySelectorAll('h2,h3,h4');
+                        if (repeatableCurrentElement.length < 1) {
+                            repeatableCurrentElement = parent_with_content.parentElement.querySelectorAll('h2,h3,h4');
+                        }
+                    } else {
+                        repeatableCurrentElement = parent_with_content.querySelectorAll(blockSettingArray[i]["element"]);
+                        if (repeatableCurrentElement.length < 1) {
+                            repeatableCurrentElement = parent_with_content.parentElement.querySelectorAll(blockSettingArray[i]["element"]);
+                        }
+                    }
+
+                    for (let i1 = 0; i1 < blockSettingArray[i]["elementCount"]; i1++) {
+                        currentElementChecker = false;
+                        let repElementToAdd = document.createElement("div");
+                        repElementToAdd.classList.add("percentPointerClass");
+                        repElementToAdd.classList.add("marked");
+                        if (blockSettingArray[i]["sc"]==1) {
+                            repElementToAdd.classList.add("scMark");
+                        }
+                        repElementToAdd.innerHTML = blockSettingArray[i]["text"];
+
+                        if (elementToAddStyle&&elementToAddStyle!='default') {
+                            repElementToAdd.style.textAlign = elementToAddStyle;
+                        }
+
+                        sumResult = Math.round(parseInt(blockSettingArray[i]["firstPlace"]) + (i1*parseInt(blockSettingArray[i]["elementStep"])) - 1);
+                        if (sumResult < repeatableCurrentElement.length) {
+                            currentElement = repeatableCurrentElement[sumResult];
+                            currentElement = getFromConstructions(currentElement);
+                            if (excIdClass&&excIdClass.length > 0) {
+                                for (let i2 = 0; i2 < excIdClass.length; i2++) {
+                                    if (excIdClass[i2].length > 0) {
+                                        currentElement = blocksRepositionUse(excIdClass[i2], currentElement, 'marked');
+                                    }
+                                }
+                            }
+                            if (currentElement) {
+                                currentElementChecker = true;
+                            }
+                        }
+
+                        if (currentElement != undefined && currentElement != null && currentElementChecker) {
+                            posCurrentElement = initTargetToInsert(blockSettingArray);
+                            currentElement.parentNode.insertBefore(repElementToAdd, posCurrentElement);
+                            repElementToAdd.classList.remove('coveredAd');
+                            // usedAdBlocksArray.push(checkIfBlockUsed);
+                            curFirstPlace = sumResult + parseInt(blockSettingArray[i]["elementStep"]) + 1;
+                            curElementCount--;
+                            repeatableSuccess = true;
+                        } else {
+                            repeatableSuccess = false;
+                            break;
+                        }
+                    }
+                    if (repeatableSuccess==true) {
+                        usedBlockSettingArrayIds.push(block_number);
+                        blockSettingArray.splice(i, 1);
+                        poolbackI = 1;
+                        i--;
+                    } else {
+                        if (!blockSettingArray[i]["unsuccess"]) {
+                            blockSettingArray[i]["unsuccess"] = 1;
+                        } else {
+                            blockSettingArray[i]["unsuccess"] = Math.round(blockSettingArray[i]["unsuccess"] + 1);
+                        }
+                        if (blockSettingArray[i]["unsuccess"] > 10) {
+                            usedBlockSettingArrayIds.push(block_number);
+                            blockSettingArray.splice(i, 1);
+                            poolbackI = 1;
+                            i--;
+                        } else {
+                            blockSettingArray[i]["firstPlace"] = curFirstPlace;
+                            blockSettingArray[i]["elementCount"] = curElementCount;
+                            blockSettingArray[i]["elementStep"] = curElementStep;
+                            repeat = true;
+                        }
                     }
                 } else if (blockSettingArray[i]["setting_type"] == 3) {
                     let elementTypeSymbol = '';
@@ -463,6 +676,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                         currentElement.parentNode.insertBefore(elementToAdd, posCurrentElement);
                         elementToAdd.classList.remove('coveredAd');
                         // usedAdBlocksArray.push(checkIfBlockUsed);
+                        usedBlockSettingArrayIds.push(block_number);
                         blockSettingArray.splice(i, 1);
                         poolbackI = 1;
                         i--;
@@ -472,6 +686,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                 } else if (blockSettingArray[i]["setting_type"] == 4) {
                     parent_with_content.append(elementToAdd);
                     // usedAdBlocksArray.push(checkIfBlockUsed);
+                    usedBlockSettingArrayIds.push(block_number);
                     blockSettingArray.splice(i, 1);
                     poolbackI = 1;
                     i--;
@@ -494,12 +709,12 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                         if (currentElement != undefined && currentElement != null) {
                             if (pCount > 1) {
                                 currentElement.parentNode.insertBefore(elementToAdd, currentElement);
-                                elementToAdd.classList.remove('coveredAd');
                             } else {
                                 currentElement.parentNode.insertBefore(elementToAdd, currentElement.nextSibling);
-                                elementToAdd.classList.remove('coveredAd');
                             }
+                            elementToAdd.classList.remove('coveredAd');
                             // usedAdBlocksArray.push(checkIfBlockUsed);
+                            usedBlockSettingArrayIds.push(block_number);
                             blockSettingArray.splice(i, 1);
                             poolbackI = 1;
                             i--;
@@ -517,6 +732,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                                 if (j == containerFor6th.length-1) {
                                     containerFor6th.push(blockSettingArray[i]);
                                     // usedAdBlocksArray.push(checkIfBlockUsed);
+                                    usedBlockSettingArrayIds.push(block_number);
                                     blockSettingArray.splice(i, 1);
                                     poolbackI = 1;
                                     i--;
@@ -528,6 +744,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                                 }
                                 containerFor6th[j] = blockSettingArray[i];
                                 // usedAdBlocksArray.push(checkIfBlockUsed);
+                                usedBlockSettingArrayIds.push(block_number);
                                 blockSettingArray.splice(i, 1);
                                 poolbackI = 1;
                                 i--;
@@ -537,6 +754,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                     } else {
                         containerFor6th.push(blockSettingArray[i]);
                         // usedAdBlocksArray.push(checkIfBlockUsed);
+                        usedBlockSettingArrayIds.push(block_number);
                         blockSettingArray.splice(i, 1);
                         poolbackI = 1;
                         i--;
@@ -550,6 +768,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                                 if (j == containerFor7th.length-1) {
                                     containerFor7th.push(blockSettingArray[i]);
                                     // usedAdBlocksArray.push(checkIfBlockUsed);
+                                    usedBlockSettingArrayIds.push(block_number);
                                     blockSettingArray.splice(i, 1);
                                     poolbackI = 1;
                                     i--;
@@ -561,6 +780,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                                 }
                                 containerFor7th[j] = blockSettingArray[i];
                                 // usedAdBlocksArray.push(checkIfBlockUsed);
+                                usedBlockSettingArrayIds.push(block_number);
                                 blockSettingArray.splice(i, 1);
                                 poolbackI = 1;
                                 i--;
@@ -570,6 +790,7 @@ function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
                     } else {
                         containerFor7th.push(blockSettingArray[i]);
                         // usedAdBlocksArray.push(checkIfBlockUsed);
+                        usedBlockSettingArrayIds.push(block_number);
                         blockSettingArray.splice(i, 1);
                         poolbackI = 1;
                         i--;
@@ -774,6 +995,8 @@ function symbolInserter(lordOfElements, containerFor7th) {
         let currentSumLength;
         let elementToAdd;
         let elementToBind;
+        let elementToAddStyle;
+        let block_number;
 
         if (!document.getElementById("markedSpan1")) {
             textLength = 0;
@@ -817,9 +1040,17 @@ function symbolInserter(lordOfElements, containerFor7th) {
                     elementToAdd.classList.add("scMark");
                 }
                 elementToAdd.innerHTML = containerFor7th[i]["text"];
+                block_number = elementToAdd.children[0].attributes['data-id'].value;
                 if (!elementToAdd) {
                     continue;
                 }
+
+                elementToAddStyle = createStyleElement(block_number, containerFor7th[i]["elementCss"]);
+
+                if (elementToAddStyle&&elementToAddStyle!='default') {
+                    elementToAdd.style.textAlign = elementToAddStyle;
+                }
+
 
                 if (containerFor7th[i]['elementPlace'] < 0) {
                     for (let j = tlArray.length-1; j > -1; j--) {
@@ -932,6 +1163,8 @@ function percentInserter(lordOfElements, containerFor6th) {
         var lceCou = 0;
         var lastLceCou = 0;
         var elementToBind;
+        let elementToAddStyle;
+        let block_number;
         // var checkIfBlockUsed = 0;
 
         function textLengthMeter(i, usedElement, deepLvl) {
@@ -1010,6 +1243,12 @@ function percentInserter(lordOfElements, containerFor6th) {
                                 elementToAdd.classList.add("scMark");
                             }
                             elementToAdd.innerHTML = containerFor6th[j]["text"];
+                            block_number = elementToAdd.children[0].attributes['data-id'].value;
+
+                            elementToAddStyle = createStyleElement(block_number, containerFor6th[j]["elementCss"]);
+                            if (elementToAddStyle&&elementToAddStyle!='default') {
+                                elementToAdd.style.textAlign = elementToAddStyle;
+                            }
 
                             if (!elementToAdd) {
                                 return false;

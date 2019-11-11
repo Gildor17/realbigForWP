@@ -11,7 +11,6 @@ try {
     $returnData['errors'] = [];
     $errorsGather = '';
 
-    $penyok_stoparik = 0;
     $checkCacheTimeoutMobile = get_transient('rb_mobile_cache_timeout');
     $checkCacheTimeoutDesktop = get_transient('rb_desktop_cache_timeout');
 
@@ -46,6 +45,11 @@ try {
 } catch (Exception $ex) {
 	try {
 		global $wpdb;
+		global $rb_logFile;
+
+		$messageFLog = 'Deactivation error: '.$ex->getMessage().';';
+		error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+
 		if (!empty($GLOBALS['wpPrefix'])) {
 			$wpPrefix = $GLOBALS['wpPrefix'];
 		} else {
@@ -74,6 +78,11 @@ try {
 } catch (Error $er) {
 	try {
 		global $wpdb;
+		global $rb_logFile;
+
+		$messageFLog = 'Deactivation error: '.$er->getMessage().';';
+		error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+
 		if (!empty($GLOBALS['wpPrefix'])) {
 			$wpPrefix = $GLOBALS['wpPrefix'];
 		} else {

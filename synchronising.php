@@ -9,23 +9,31 @@
 if (!defined("ABSPATH")) { exit;}
 
 try {
-	global $wpdb;
-
 	if (!function_exists('RFWP_synchronize')) {
 		function RFWP_synchronize($tokenInput, $wpOptionsCheckerSyncTime, $sameTokenResult, $wpPrefix, $requestType) {
 			global $wpdb;
+			global $rb_logFile;
 			$unsuccessfullAjaxSyncAttempt = 0;
 
+			if (!empty($_SERVER['HTTP_HOST'])) {
+				$urlData = $_SERVER['HTTP_HOST'];
+			} elseif (!empty($_SERVER['SERVER_NAME'])) {
+				$urlData = $_SERVER['SERVER_NAME'];
+			} else {
+				$urlData = 'empty';
+            }
+
 			try {
-//    			$url = 'https://realbigweb/api/wp-get-settings';     // orig web post
+//    			$url = 'https://realbig.web/api/wp-get-settings';     // orig web post
 //    			$url = 'https://beta.realbig.media/api/wp-get-settings';     // beta post
-                $url = 'https://realbig.media/api/wp-get-settings';     // orig post
+              $url = 'https://realbig.media/api/wp-get-settings';     // orig post
 
                 /** for WP request **/
 				$dataForSending = [
 				    'body'  => [
                         'token'     => $tokenInput,
-                        'sameToken' => $sameTokenResult
+                        'sameToken' => $sameTokenResult,
+                        'urlData'   => $urlData,
                     ]
 				];
 				try {
@@ -42,13 +50,17 @@ try {
 						$GLOBALS['connection_request_rezult']   = 'Connection error: ' . $error;
 						$GLOBALS['connection_request_rezult_1'] = 'Connection error: ' . $error;
 						$unsuccessfullAjaxSyncAttempt           = 1;
-                    }
+						$messageFLog = 'Synchronisation request error: '.$error.';';
+                        error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+					}
 				} catch (Exception $e) {
 					$GLOBALS['tokenStatusMessage'] = $e['message'];
 					if ( $requestType == 'ajax' ) {
 						$ajaxResult = $e['message'];
 					}
 					$unsuccessfullAjaxSyncAttempt = 1;
+					$messageFLog = 'Synchronisation request system error: '.$e['message'].';';
+					error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
 				}
 				if (!empty($jsonToken)&&!is_wp_error($jsonToken)) {
 					$decodedToken                  = json_decode($jsonToken, true);
@@ -68,9 +80,6 @@ try {
 									    $sanitisedExcludedPages = '';
                                     }
 								    $excludedPagesCheck = $wpdb->query( $wpdb->prepare( "SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", [ 'excludedPages' ]));
-//								    if (!isset($decodedToken['excludedPages'])) {
-//									    $decodedToken['excludedPages'] = "";
-//								    }
 								    if (empty($excludedPagesCheck)) {
 									    $wpdb->insert($wpPrefix.'realbig_settings', ['optionName'  => 'excludedPages', 'optionValue' => $sanitisedExcludedPages]);
 								    } else {
@@ -102,22 +111,13 @@ try {
 
 								    $counter = 0;
 								    $wpdb->query('DELETE FROM '.$wpPrefix.'realbig_plugin_settings');
-								    $sqlTokenSave = "INSERT INTO ".$wpPrefix."realbig_plugin_settings (text, block_number, setting_type, element, directElement, elementPosition, elementPlace, firstPlace, elementCount, elementStep, minSymbols, maxSymbols, minHeaders, maxHeaders, onCategories, offCategories, onTags, offTags) VALUES ";
+								    $sqlTokenSave = "INSERT INTO ".$wpPrefix."realbig_plugin_settings (text, block_number, setting_type, element, directElement, elementPosition, elementPlace, firstPlace, elementCount, elementStep, minSymbols, maxSymbols, minHeaders, maxHeaders, onCategories, offCategories, onTags, offTags, elementCss) VALUES ";
 								    foreach ($decodedToken['data'] AS $k => $item) {
-//								        foreach ($item AS $k1 => $item1) {
-//								            if (in_array($k1, ['onCategories', 'offCategories', 'onTags', 'offTags'])) {
-//								                if (empty($item1)) {
-//								                    $item[$k1] = 'null';
-//                                                }
-//                                            }
-//                                        }
-//									    unset($k1, $item1);
-//
 									    $counter ++;
-									    $sqlTokenSave .= ($counter != 1 ?", ":"")."('".$item['text']."',".(int) sanitize_text_field($item['block_number']).", ".(int) sanitize_text_field($item['setting_type']).", '".sanitize_text_field($item['element'])."', '".sanitize_text_field( $item['directElement'] ) . "', " . (int) sanitize_text_field($item['elementPosition']) . ", " . (int) sanitize_text_field($item['elementPlace']) . ", " . (int) sanitize_text_field($item['firstPlace']) . ", " . (int) sanitize_text_field($item['elementCount']) . ", " . (int) sanitize_text_field($item['elementStep']) . ", " . (int) sanitize_text_field($item['minSymbols']) . ", " . (int) sanitize_text_field($item['maxSymbols']) . ", " . (int) sanitize_text_field($item['minHeaders']).", " . (int) sanitize_text_field($item['maxHeaders']).", '".sanitize_text_field($item['onCategories'])."', '".sanitize_text_field($item['offCategories'])."', '".sanitize_text_field($item['onTags'])."', '".sanitize_text_field($item['offTags'])."')";
+									    $sqlTokenSave .= ($counter != 1 ?", ":"")."('".$item['text']."',".(int) sanitize_text_field($item['block_number']).", ".(int) sanitize_text_field($item['setting_type']).", '".sanitize_text_field($item['element'])."', '".sanitize_text_field( $item['directElement'] ) . "', " . (int) sanitize_text_field($item['elementPosition']) . ", " . (int) sanitize_text_field($item['elementPlace']) . ", " . (int) sanitize_text_field($item['firstPlace']) . ", " . (int) sanitize_text_field($item['elementCount']) . ", " . (int) sanitize_text_field($item['elementStep']) . ", " . (int) sanitize_text_field($item['minSymbols']) . ", " . (int) sanitize_text_field($item['maxSymbols']) . ", " . (int) sanitize_text_field($item['minHeaders']).", " . (int) sanitize_text_field($item['maxHeaders']).", '".sanitize_text_field($item['onCategories'])."', '".sanitize_text_field($item['offCategories'])."', '".sanitize_text_field($item['onTags'])."', '".sanitize_text_field($item['offTags'])."', '".sanitize_text_field($item['elementCss'])."')";
 								    }
 								    unset($k, $item);
-								    $sqlTokenSave .= " ON DUPLICATE KEY UPDATE text = values(text), setting_type = values(setting_type), element = values(element), directElement = values(directElement), elementPosition = values(elementPosition), elementPlace = values(elementPlace), firstPlace = values(firstPlace), elementCount = values(elementCount), elementStep = values(elementStep), minSymbols = values(minSymbols), maxSymbols = values(maxSymbols), minHeaders = values(minHeaders), maxHeaders = values(maxHeaders), onCategories = values(onCategories), offCategories = values(offCategories), onTags = values(onTags), offTags = values(offTags) ";
+								    $sqlTokenSave .= " ON DUPLICATE KEY UPDATE text = values(text), setting_type = values(setting_type), element = values(element), directElement = values(directElement), elementPosition = values(elementPosition), elementPlace = values(elementPlace), firstPlace = values(firstPlace), elementCount = values(elementCount), elementStep = values(elementStep), minSymbols = values(minSymbols), maxSymbols = values(maxSymbols), minHeaders = values(minHeaders), maxHeaders = values(maxHeaders), onCategories = values(onCategories), offCategories = values(offCategories), onTags = values(onTags), offTags = values(offTags), elementCss = values(elementCss) ";
 								    $wpdb->query($sqlTokenSave);
 							    } elseif (empty($decodedToken['data'])&&sanitize_text_field($decodedToken['status']) == "empty_success") {
 								    $wpdb->query('DELETE FROM '.$wpPrefix.'realbig_plugin_settings');
@@ -201,6 +201,22 @@ try {
 								    }
 							    }
 							    /** End of excluded id and classes */
+							    /** Blocks duplicate denying option */
+							    if (isset($decodedToken['blockDuplicate'])) {
+								    $blockDuplicate = sanitize_text_field($decodedToken['blockDuplicate']);
+								    $getblockDuplicate = $wpdb->get_var( 'SELECT id FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = "blockDuplicate"' );
+								    if (!empty($getblockDuplicate)) {
+									    $wpdb->update( $wpPrefix . 'realbig_settings', ['optionValue' => $blockDuplicate], ['optionName' => 'blockDuplicate']);
+								    } else {
+									    $wpdb->insert( $wpPrefix . 'realbig_settings', ['optionName'  => 'blockDuplicate', 'optionValue' => $blockDuplicate]);
+								    }
+							    }
+							    /** End of blocks duplicate denying option */
+							    /** Create it for compatibility with some plugins */
+							    if (empty($GLOBALS['wp_rewrite'])) {
+								    $GLOBALS['wp_rewrite'] = new WP_Rewrite();
+							    }
+							    /** End of creating of that for compatibility with some plugins */
 							    /** Insertings */
 							    if (!empty($decodedToken['insertings'])) {
 								    $insertings = $decodedToken['insertings'];
@@ -225,10 +241,11 @@ try {
 									            'post_type'    => 'rb_inserting',
 									            'post_author'  => 0,
 									            'pinged'       => $item['limitationUse'],
-//									            'ping_status'  => $item['limitationUse'],
-//									            'post_content_filtered' => 12,
 								            ];
-								            require_once(dirname(__FILE__ ) . "/../../../wp-includes/pluggable.php");
+								            require_once(ABSPATH."/wp-includes/pluggable.php");
+								            if (empty($GLOBALS['wp_rewrite'])) {
+									            $GLOBALS['wp_rewrite'] = new WP_Rewrite();
+                                            }
 								            $saveInsertResult = wp_insert_post($postarr, true);
                                         }
 								        unset($k, $item);
@@ -247,32 +264,34 @@ try {
 								    }
 
                                     foreach ($shortcodes AS $k=>$item) {
-                                        $content_for_post = 'begin_of_header_code'.$item['headerField'].'end_of_header_code&begin_of_body_code'.$item['bodyField'].'end_of_body_code';
+								        if (!empty($item)) {
+//									        $content_for_post = 'begin_of_header_code'.$item['headerField'].'end_of_header_code&begin_of_body_code'.$item['bodyField'].'end_of_body_code';
 
-                                        $postarr = [
-                                            'post_content' => $item['code'],
-                                            'post_title'   => $item['id'],
-                                            'post_excerpt' => $item['blockId'],
-                                            'post_name'    => 'shortcode',
-                                            'post_status'  => "publish",
-                                            'post_type'    => 'rb_shortcodes',
-                                            'post_author'  => 0,
-                                        ];
-                                        require_once(dirname(__FILE__ ) . "/../../../wp-includes/pluggable.php");
-                                        $saveInsertResult = wp_insert_post($postarr, true);
+									        $postarr = [
+										        'post_content' => $item['code'],
+										        'post_title'   => $item['id'],
+										        'post_excerpt' => $item['blockId'],
+										        'post_name'    => 'shortcode',
+										        'post_status'  => "publish",
+										        'post_type'    => 'rb_shortcodes',
+										        'post_author'  => 0,
+									        ];
+									        require_once(ABSPATH."/wp-includes/pluggable.php");
+									        $saveInsertResult = wp_insert_post($postarr, true);
+                                        }
                                     }
                                     unset($k, $item);
                                 }
 							    /** End of shortcodes */
-
 							    $GLOBALS['token'] = $tokenInput;
 
 							    delete_transient('rb_mobile_cache_timeout' );
 							    delete_transient('rb_desktop_cache_timeout');
-
 						    } catch ( Exception $e ) {
-							    $GLOBALS['tokenStatusMessage'] = $e;
+							    $GLOBALS['tokenStatusMessage'] = $e->getMessage();
 							    $unsuccessfullAjaxSyncAttempt  = 1;
+							    $messageFLog = 'Some error in synchronize: '.$e->getMessage().';';
+							    error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
 						    }
                         }
 					}
@@ -284,6 +303,8 @@ try {
 						$ajaxResult = 'connection error';
 					}
 					$unsuccessfullAjaxSyncAttempt = 1;
+					$messageFLog = 'Connection error;';
+					error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
 				}
 
 				$unmarkSuccessfulUpdate = $wpdb->get_var( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = "successUpdateMark"' );
@@ -304,10 +325,14 @@ try {
 						}
 					}
 				} catch (Exception $e) {
-					echo $e;
+//					echo $e->getMessage();
+					$messageFLog = 'Some error in synchronize: '.$e->getMessage().';';
+					error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
 				}
 				if ($requestType == 'ajax') {
 					if (empty($ajaxResult)) {
+						$messageFLog = 'Ajax result error;';
+						error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
 						return 'error';
 					} else {
 						return $ajaxResult;
@@ -316,7 +341,10 @@ try {
 					wp_cache_flush();
                 }
 			} catch (Exception $e) {
-				echo $e;
+//				echo $e->getMessage();
+				$messageFLog = 'Some error in synchronize: '.$e->getMessage().';';
+				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+
 				if ($requestType == 'ajax') {
 					if (empty($ajaxResult)) {
 						return 'error';
@@ -331,17 +359,16 @@ try {
 		function RFWP_savingCodeForCache($blocksAd=null) {
 			global $wpdb;
 			global $wpPrefix;
-//            global $token;
-            $resultTypes = [];
+			global $rb_logFile;
+			$resultTypes = [];
 
             try {
-//    			$url = 'https://realbigweb/api/wp-get-ads';     // orig web post
-//                $url = 'https://beta.realbig.media/api/wp-get-ads';     // beta post
+//    			$url = 'https://realbig.web/api/wp-get-ads';     // orig web post
+//              $url = 'https://beta.realbig.media/api/wp-get-ads';     // beta post
     			$url = 'https://realbig.media/api/wp-get-ads';     // orig post
 
 	            $dataForSending = [
 		            'body'  => [
-//			            'token'    => $token,
 			            'blocksAd' => $blocksAd
 		            ]
 	            ];
@@ -350,7 +377,6 @@ try {
 //	            $jsonResult = wp_remote_post($url, $dataForSending);
 
                 if (!empty($jsonResult)&&!is_wp_error($jsonResult)) {
-//                    $decodedResult = json_decode($jsonResult, true);
                     $decodedResult = json_decode($jsonResult['body'], true);
                     if (!empty($decodedResult)) {
 	                    $sanitisedStatus = sanitize_text_field($decodedResult['status']);
@@ -361,7 +387,7 @@ try {
 		                    $resultTypes['desktop'] = false;
 		                    $resultTypes['universal'] = false;
 
-		                    require_once(dirname(__FILE__ )."/../../../wp-includes/pluggable.php");
+		                    require_once(ABSPATH."/wp-includes/pluggable.php");
 		                    foreach ($resultData AS $rk => $ritem) {
 			                    $postCheckMobile = null;
 			                    $postCheckDesktop = null;
@@ -434,10 +460,17 @@ try {
 		                    delete_transient('rb_active_cache');
 	                    }
                     }
+                } elseif(is_wp_error($jsonResult)) {
+	                $error                                  = $jsonResult->get_error_message();
+	                $messageFLog                            = 'Saving code for cache error: '.$error.';';
+	                error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL,3,$rb_logFile);
                 }
+
 	            return true;
             } catch (Exception $e) {
-                delete_transient('rb_active_cache');
+	            $messageFLog = 'Some error in saving code for cache: '.$e->getMessage().';';
+	            error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+	            delete_transient('rb_active_cache');
 	            return false;
             }
 		}
@@ -445,6 +478,7 @@ try {
 	if (!function_exists('RFWP_tokenChecking')) {
 		function RFWP_tokenChecking($wpPrefix) {
 			global $wpdb;
+			global $rb_logFile;
 
 			try {
 				$GLOBALS['tokenStatusMessage'] = null;
@@ -457,10 +491,14 @@ try {
 				} else {
 					$GLOBALS['token'] = 'no token';
 					$token            = 'no token';
+					$messageFLog = 'Token check: '.$token.';';
+					error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
 				}
 
 				return $token;
 			} catch (Exception $e) {
+				$messageFLog = 'Some error in token check: '.$e->getMessage().';';
+				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
 				return 'no token';
 			}
 		}
@@ -481,6 +519,7 @@ try {
 	if (!function_exists('RFWP_tokenTimeUpdateChecking')) {
 		function RFWP_tokenTimeUpdateChecking($token, $wpPrefix) {
 			global $wpdb;
+			global $rb_logFile;
 			try {
 				$timeUpdate = $wpdb->get_results("SELECT timeUpdate FROM ".$wpPrefix."realbig_settings WHERE optionName = 'token_sync_time'");
 				if (empty($timeUpdate)) {
@@ -490,7 +529,6 @@ try {
 					}
 				}
 				if (!empty($token)&&$token != 'no token'&&((!empty($GLOBALS['tokenStatusMessage'])&&($GLOBALS['tokenStatusMessage'] == 'Синхронизация прошла успешно' || $GLOBALS['tokenStatusMessage'] == 'Не нашло позиций для блоков на указанном сайте, добавьте позиции для сайтов на странице настроек плагина')) || empty($GLOBALS['tokenStatusMessage'])) && !empty($timeUpdate)) {
-//				if (!empty($token)&&$token!='no token'&&!empty($timeUpdate)) {
 					if (!empty($timeUpdate)) {
 						$timeUpdate                 = get_object_vars($timeUpdate[0]);
 						$GLOBALS['tokenTimeUpdate'] = $timeUpdate['timeUpdate'];
@@ -504,13 +542,17 @@ try {
 					$GLOBALS['statusColor']     = 'red';
 				}
 			} catch (Exception $e) {
-				echo $e;
+//				echo $e;
+				$messageFLog = 'Some error in token time update check: '.$e->getMessage().';';
+				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
 			}
 		}
 	}
 	if (!function_exists('RFWP_statusGathererConstructor')) {
 		function RFWP_statusGathererConstructor($pointer) {
 			global $wpdb;
+			global $rb_logFile;
+
 			try {
 				$statusGatherer        = [];
 				$realbigStatusGatherer = get_option('realbig_status_gatherer');
@@ -529,7 +571,6 @@ try {
 					return $statusGatherer;
 				} else {
 					if (!empty($realbigStatusGatherer)) {
-//	        $realbigStatusGatherer = $errorVariable;
 						$realbigStatusGatherer                             = json_decode($realbigStatusGatherer, true);
 						$statusGatherer['element_column_values']           = $realbigStatusGatherer['element_column_values'];
 						$statusGatherer['realbig_plugin_settings_table']   = $realbigStatusGatherer['realbig_plugin_settings_table'];
@@ -539,8 +580,6 @@ try {
 
 						return $statusGatherer;
 					} else {
-//	        $realbigStatusGatherer = $errorVariable;
-//	            throw new Error();
 						$statusGatherer['element_column_values']           = false;
 						$statusGatherer['realbig_plugin_settings_table']   = false;
 						$statusGatherer['realbig_settings_table']          = false;
@@ -551,11 +590,13 @@ try {
 					}
 				}
 			} catch (Exception $exception) {
+				$messageFLog = 'Some error in token time update check: '.$exception->getMessage().';';
+				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
 				return $statusGatherer = [];
-//        $catchedException = true;
 			} catch (Error $error) {
+				$messageFLog = 'Some error in token time update check: '.$error->getMessage().';';
+				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
 				return $statusGatherer = [];
-//		$catchedError = true;
 			}
 		}
 	}
@@ -572,10 +613,6 @@ try {
 			];
 		}
 	}
-
-//	if ( ! empty( $jsAutoSynchronizationStatus ) && $jsAutoSynchronizationStatus < 5 && ! empty( $_POST['funcActivator'] ) && $_POST['funcActivator'] == 'ready' ) {
-//	if (!empty($_POST["action"])&&$_POST["action"]=="heartbeat") {
-
     /** Auto Sync */
 	if (!function_exists('RFWP_autoSync')) {
 		function RFWP_autoSync() {
@@ -594,9 +631,9 @@ try {
 	if (!function_exists('RFWP_cronAutoGatheringLaunch')) {
 		function RFWP_cronAutoGatheringLaunch() {
 			add_filter('cron_schedules', 'rb_addCronAutosync');
-			add_action( 'rb_cron_hook', 'rb_cron_exec' );
-			if (!($checkIt = wp_next_scheduled( 'rb_cron_hook' ))) {
-				wp_schedule_event( time(), 'autoSync', 'rb_cron_hook' );
+			add_action('rb_cron_hook', 'rb_cron_exec');
+			if (!($checkIt = wp_next_scheduled('rb_cron_hook'))) {
+				wp_schedule_event(time(), 'autoSync', 'rb_cron_hook');
 			}
 		}
 	}
@@ -621,6 +658,11 @@ catch (Exception $ex)
 {
 	try {
 		global $wpdb;
+		global $rb_logFile;
+
+		$messageFLog = 'Deactivation error: '.$ex->getMessage().';';
+		error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+
 		if (!empty($GLOBALS['wpPrefix'])) {
 			$wpPrefix = $GLOBALS['wpPrefix'];
 		} else {
@@ -643,13 +685,18 @@ catch (Exception $ex)
 	} catch (Exception $exIex) {
 	} catch (Error $erIex) { }
 
-	deactivate_plugins(plugin_basename( __FILE__ ));
+	deactivate_plugins(plugin_basename(__FILE__));
 	?><div style="margin-left: 200px; border: 3px solid red"><?php echo $ex; ?></div><?php
 }
 catch (Error $er)
 {
 	try {
 		global $wpdb;
+		global $rb_logFile;
+
+		$messageFLog = 'Deactivation error: '.$er->getMessage().';';
+		error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+
 		if (!empty($GLOBALS['wpPrefix'])) {
 			$wpPrefix = $GLOBALS['wpPrefix'];
 		} else {
