@@ -11,7 +11,7 @@ include_once (dirname(__FILE__)."/textEditing.php");
 /*
 Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.2.1
+Version:      0.2.2
 Author:       Realbig Team
 Author URI:   https://realbig.media
 License:      GPLv2 or later
