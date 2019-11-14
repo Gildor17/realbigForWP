@@ -834,6 +834,7 @@ function asyncFunctionLauncher() {
         }
         blocksReposition();
         // cachePlacing();
+        // symbolMarkersPlaced();
     } else {
         // console.log('wait-async-blocks-launch-alert');
         setTimeout(function () {
@@ -985,8 +986,8 @@ function symbolInserter(lordOfElements, containerFor7th) {
         let tlArray = [];
         let tlArrayCou = 0;
         var currentChildrenLength = 0;
-        var possibleTagsArray = ["P", "H1", "H2", "H3", "H4", "H5", "H6", "DIV", "OL", "UL", "LI", "BLOCKQUOTE", "INDEX", "TABLE", "ARTICLE"];
-        // var possibleTagsArray = ["P", "H1", "H2", "H3", "H4", "H5", "H6", "DIV", "BLOCKQUOTE", "INDEX", "ARTICLE"];
+        // var possibleTagsArray = ["P", "H1", "H2", "H3", "H4", "H5", "H6", "DIV", "OL", "UL", "LI", "BLOCKQUOTE", "INDEX", "TABLE", "ARTICLE"];
+        var possibleTagsArray = ["P", "H1", "H2", "H3", "H4", "H5", "H6", "DIV", "BLOCKQUOTE", "INDEX", "ARTICLE"];
         let possibleTagsInCheck = ["DIV", "INDEX"];
         let numberToUse = 0;
         let previousBreak = 0;
@@ -1068,11 +1069,11 @@ function symbolInserter(lordOfElements, containerFor7th) {
                             elementToAdd.classList.remove('coveredAd');
                             break;
                         } else {
-                            if (j == 0) {
-                                tlArray[j]['element'].parentNode.insertBefore(elementToAdd, tlArray[tlArray.length-1]['element'].nextSibling);
-                                elementToAdd.classList.remove('coveredAd');
-                                break;
-                            }
+                            // if (j == 0) {
+                            //     tlArray[j]['element'].parentNode.insertBefore(elementToAdd, tlArray[tlArray.length-1]['element'].nextSibling);
+                            //     elementToAdd.classList.remove('coveredAd');
+                            //     break;
+                            // }
                         }
                     }
                 } else if (containerFor7th[i]['elementPlace'] == 0) {
@@ -1103,19 +1104,19 @@ function symbolInserter(lordOfElements, containerFor7th) {
                             elementToAdd.classList.remove('coveredAd');
                             break;
                         } else {
-                            if (j == tlArray.length-1) {
-                                elementToBind = tlArray[j]['element'];
-                                if (excIdClass&&excIdClass.length > 0) {
-                                    for (let i2 = 0; i2 < excIdClass.length; i2++) {
-                                        if (excIdClass[i2].length > 0) {
-                                            elementToBind = blocksRepositionUse(excIdClass[i2], elementToBind, 'marked');
-                                        }
-                                    }
-                                }
-                                elementToBind.parentNode.insertBefore(elementToAdd, elementToBind.nextSibling);
-                                elementToAdd.classList.remove('coveredAd');
-                                break;
-                            }
+                            // if (j == tlArray.length-1) {
+                            //     elementToBind = tlArray[j]['element'];
+                            //     if (excIdClass&&excIdClass.length > 0) {
+                            //         for (let i2 = 0; i2 < excIdClass.length; i2++) {
+                            //             if (excIdClass[i2].length > 0) {
+                            //                 elementToBind = blocksRepositionUse(excIdClass[i2], elementToBind, 'marked');
+                            //             }
+                            //         }
+                            //     }
+                            //     elementToBind.parentNode.insertBefore(elementToAdd, elementToBind.nextSibling);
+                            //     elementToAdd.classList.remove('coveredAd');
+                            //     break;
+                            // }
                         }
                     }
                 }
