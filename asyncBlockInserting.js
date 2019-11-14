@@ -985,7 +985,8 @@ function symbolInserter(lordOfElements, containerFor7th) {
         let tlArray = [];
         let tlArrayCou = 0;
         var currentChildrenLength = 0;
-        var possibleTagsArray = ["P", "H1", "H2", "H3", "H4", "H5", "H6", "DIV", "OL", "UL", "LI", "BLOCKQUOTE", "INDEX", "TABLE", "ARTICLE"];
+        // var possibleTagsArray = ["P", "H1", "H2", "H3", "H4", "H5", "H6", "DIV", "OL", "UL", "LI", "BLOCKQUOTE", "INDEX", "TABLE", "ARTICLE"];
+        var possibleTagsArray = ["P", "H1", "H2", "H3", "H4", "H5", "H6", "DIV", "BLOCKQUOTE", "INDEX", "ARTICLE"];
         let possibleTagsInCheck = ["DIV", "INDEX"];
         let numberToUse = 0;
         let previousBreak = 0;

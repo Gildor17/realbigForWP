@@ -11,7 +11,7 @@ include_once (dirname(__FILE__)."/textEditing.php");
 /*
 Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.2.1
+Version:      0.2.2
 Author:       Realbig Team
 Author URI:   https://realbig.media
 License:      GPLv2 or later
@@ -90,7 +90,9 @@ try {
 	    $kill_rb = $kill_rb_db;
     }
 
-	$kill_rb = 0;
+    if (!isset($kill_rb)) {
+	    $kill_rb = 0;
+    }
 
 	$GLOBALS['kill_rb'] = $kill_rb;
 	/** End of kill rb connection emulation */
@@ -424,11 +426,26 @@ try {
 		$headerParsingResult = RFWP_headerInsertor('ad');
 
 		$longCache = get_transient('rb_longCacheDeploy');
-//		$longCache = false;
+		if (!empty($GLOBALS['dev_mode'])) {
+            $longCache = false;
+		}
 		$GLOBALS['rb_longCache'] = $longCache;
 
 		if ($headerParsingResult == true&&empty($longCache)) {
             ?><script type="text/javascript"> rbConfig = {start: performance.now(),rotator:'<?php echo $getRotator ?>'}; </script>
+            <?php /* <script>
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET',"//<?php echo $getDomain ?>/<?php echo $getRotator ?>.min.js",true);
+                xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                xhr.onreadystatechange = function() {
+                    if (xhr.status != 200) {
+                        if (xhr.statusText != 'abort') {
+                            onErrorPlacing();
+                        }
+                    }
+                };
+                xhr.send();
+            </script> */ ?>
             <script type="text/javascript">
                 function onErrorPlacing() {
                     if (typeof cachePlacing !== 'undefined' && typeof cachePlacing === 'function') {
@@ -444,6 +461,7 @@ try {
                 rotatorScript.src = "//<?php echo $getDomain ?>/<?php echo $getRotator ?>.min.js";
                 rotatorScript.type = "text/javascript";
                 rotatorScript.async = true;
+
                 document.head.append(rotatorScript);
             </script>
 <?php
