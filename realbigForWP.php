@@ -4,6 +4,30 @@ if (!defined("ABSPATH")) { exit;}
 
 //require_once (dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
 require_once (ABSPATH."/wp-admin/includes/plugin.php");
+
+/** Rename plugin folder */
+if (empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))&&!empty($_POST['folderRename'])) {
+	$checkDirName = basename(dirname(__FILE__));
+	$pluginDirname = dirname(__DIR__);
+	$curFileName = basename(plugin_basename( __FILE__ ));
+	$plBaseName = plugin_basename(__FILE__);
+	$renameResult = false;
+
+	if (!empty($pluginDirname)&&!empty($curFileName)&&!empty($checkDirName)&&strpos($checkDirName,'realbigForWP')!==false) {
+		require_once (ABSPATH."/wp-includes/pluggable.php");
+		$rndIntval = rand(1000,9999);
+		$newDirName = 'rb-'.$rndIntval.'-git';
+		deactivate_plugins($plBaseName);
+		$renameResult = rename(dirname(__FILE__),$pluginDirname.'/'.$newDirName);
+		if (!empty($renameResult)) {
+			activate_plugin($newDirName.'/'.$curFileName, admin_url('plugins.php'));
+		} else {
+			activate_plugin($plBaseName, admin_url('plugins.php'));
+		}
+	}
+}
+/** End of rename plugin folder */
+
 include_once (dirname(__FILE__)."/update.php");
 include_once (dirname(__FILE__)."/synchronising.php");
 include_once (dirname(__FILE__)."/textEditing.php");
@@ -11,7 +35,7 @@ include_once (dirname(__FILE__)."/textEditing.php");
 /*
 Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.2.4
+Version:      0.2.5
 Author:       Realbig Team
 Author URI:   https://realbig.media
 License:      GPLv2 or later
@@ -134,7 +158,7 @@ try {
 	    if (!empty($pluginData['Version'])) {
 		    $GLOBALS['realbigForWP_version'] = $pluginData['Version'];
 	    } else {
-		    $GLOBALS['realbigForWP_version'] = '0.2.3';
+		    $GLOBALS['realbigForWP_version'] = '0.2.5';
 	    }
     }
 
@@ -706,6 +730,7 @@ try {
 		global $wpPrefix;
 
 		$blocksCounter = 1;
+		$checkDirName = basename(dirname(__FILE__));
 		if (!empty($GLOBALS['dev_mode'])) {
 			$killRbAvailable = true;
 		} else {
@@ -809,6 +834,9 @@ try {
 		            <?php if (!empty($GLOBALS['tokenStatusMessage'])): ?>
                         <div name="rezultDiv" style="font-size: 16px"><?php echo $GLOBALS['tokenStatusMessage'] ?></div>
 		            <?php endif; ?>
+	                <?php if ($checkDirName=='realbigForWP'): ?>
+		                <?php submit_button('Rename', 'folderRename', 'folderRename') ?>
+	                <?php endif; ?>
                 </form>
             </div>
             <div class="separated-blocks">
