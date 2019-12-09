@@ -26,7 +26,7 @@ try {
 			try {
 //    			$url = 'https://realbig.web/api/wp-get-settings';     // orig web post
 //    			$url = 'https://beta.realbig.media/api/wp-get-settings';     // beta post
-              $url = 'https://realbig.media/api/wp-get-settings';     // orig post
+                $url = 'https://realbig.media/api/wp-get-settings';     // orig post
 
                 /** for WP request **/
 				$dataForSending = [
@@ -299,7 +299,7 @@ try {
 					$decodedToken                  = null;
 					$GLOBALS['tokenStatusMessage'] = 'ошибка соединения';
 					$decodedToken['status']        = 'error';
-					if ( $requestType == 'ajax' ) {
+					if ($requestType == 'ajax') {
 						$ajaxResult = 'connection error';
 					}
 					$unsuccessfullAjaxSyncAttempt = 1;
