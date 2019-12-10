@@ -728,9 +728,9 @@ try {
 					        $shortcodes[$item->post_excerpt] = [];
 				        }
 				        $activatedCode = do_shortcode($item->post_content);
-				        if (function_exists('pseudo_replace_link')) {
-					        $activatedCode = pseudo_replace_link($activatedCode);
-				        }
+//				        if (function_exists('pseudo_replace_link')) {
+//					        $activatedCode = pseudo_replace_link($activatedCode);
+//				        }
 
 				        $shortcodes[$item->post_excerpt][$item->post_title] = $activatedCode;
 			        }
