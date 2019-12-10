@@ -444,38 +444,28 @@ try {
 							$item = get_object_vars($item);
 						}
 						if (empty($item['setting_type'])) {
-//							$usedBlocks[$usedBlocksCounter] = $item['id'];
-//							$usedBlocksCounter ++;
 							$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
 							$rejectedBlocksCounter ++;
 							continue;
 						}
 						if (!empty($headersMatchesResult)) {
 							if (!empty($item['minHeaders']) && $item['minHeaders'] > 0 && $item['minHeaders'] > $headersMatchesResult) {
-//								$usedBlocks[$usedBlocksCounter] = $item['id'];
-//								$usedBlocksCounter ++;
 								$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
 								$rejectedBlocksCounter ++;
 								continue;
 							}
 							if (!empty($item['maxHeaders']) && $item['maxHeaders'] > 0 && $item['maxHeaders'] < $headersMatchesResult) {
-//								$usedBlocks[$usedBlocksCounter] = $item['id'];
-//								$usedBlocksCounter ++;
 								$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
 								$rejectedBlocksCounter ++;
 								continue;
 							}
 						}
 						if (!empty($item['minSymbols']) && $item['minSymbols'] > 0 && $item['minSymbols'] > $contentLength) {
-//							$usedBlocks[$usedBlocksCounter] = $item['id'];
-//							$usedBlocksCounter ++;
 							$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
 							$rejectedBlocksCounter ++;
 							continue;
 						}
 						if (!empty($item['maxSymbols']) && $item['maxSymbols'] > 0 && $item['maxSymbols'] < $contentLength) {
-//							$usedBlocks[$usedBlocksCounter] = $item['id'];
-//							$usedBlocksCounter ++;
 							$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
 							$rejectedBlocksCounter ++;
 							continue;
@@ -487,8 +477,6 @@ try {
 
 						if (!empty($item['onCategories'])) {
 							if (empty($pageCategories)) {
-//								$usedBlocks[$usedBlocksCounter] = $item['id'];
-//								$usedBlocksCounter ++;
 								$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
 								$rejectedBlocksCounter ++;
 								continue;
@@ -506,8 +494,6 @@ try {
 								}
 								unset($k1,$item1);
 								if (empty($passAllowed)) {
-//									$usedBlocks[$usedBlocksCounter] = $item['id'];
-//									$usedBlocksCounter ++;
 									$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
 									$rejectedBlocksCounter ++;
 									continue;
@@ -527,8 +513,6 @@ try {
 								}
 								unset($k1,$item1);
 								if (!empty($passRejected)) {
-//									$usedBlocks[$usedBlocksCounter] = $item['id'];
-//									$usedBlocksCounter ++;
 									$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
 									$rejectedBlocksCounter ++;
 									continue;
@@ -542,8 +526,6 @@ try {
 
 						if (!empty($item['onTags'])) {
 							if (empty($pageTags)) {
-//								$usedBlocks[$usedBlocksCounter] = $item['id'];
-//								$usedBlocksCounter ++;
 								$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
 								$rejectedBlocksCounter ++;
 								continue;
@@ -561,8 +543,6 @@ try {
 								}
 								unset($k1,$item1);
 								if (empty($passAllowed)) {
-//									$usedBlocks[$usedBlocksCounter] = $item['id'];
-//									$usedBlocksCounter ++;
 									$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
 									$rejectedBlocksCounter ++;
 									continue;
@@ -582,8 +562,6 @@ try {
 								}
 								unset($k1,$item1);
 								if (!empty($passRejected)) {
-//									$usedBlocks[$usedBlocksCounter] = $item['id'];
-//									$usedBlocksCounter ++;
 									$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
 									$rejectedBlocksCounter ++;
 									continue;
@@ -592,43 +570,6 @@ try {
 						}
 
 						/************************************* */
-
-//						$elementText     = $item['text'];
-//						if (!empty($cachedBlocks)&&!empty($elementText)) {
-//							foreach ($cachedBlocks AS $k1 => $item1) {
-//								if ($item1->post_title==$item['block_number']) {
-//									if (empty($item1->post_content)) {
-//										break;
-//									} elseif (!empty($item1->post_content)) {
-//										$loweredText = strtolower($item1->post_content);
-//										if ($loweredText=='undefined') {
-//											break;
-//										}
-//									}
-//									$elementTextCache = $item1->post_content;
-//									$elementTextCache = preg_replace('~corner_open;~', '<', $elementTextCache);
-//									$elementTextCache = preg_replace('~corner_close;~', '>', $elementTextCache);
-//									$elementTextCache = preg_replace('~\<scr_pt_open;~', '<script', $elementTextCache);
-//									$elementTextCache = preg_replace('~\/scr_pt_close;~', '/script', $elementTextCache);
-//
-//									if (empty($elementTextCache)) {
-//										break;
-//									}
-//									$elementText = preg_replace('~\<\/div\>~', $elementTextCache.'</div>', $elementText);
-//									$fromDb[$k]->text = $elementText;
-//									break;
-//								}
-//							}
-//						}
-//
-//						if (!empty($shortcodes)&&!empty($shortcodes[$item['block_number']])) {
-//							$shortcodesMark = ' scMark';
-//						} else {
-//							$shortcodesMark = '';
-//						}
-//
-//                        $elementText = "<div class='percentPointerClass".$shortcodesMark."' data-id='".$item['id']."' style='clear:both;'>".$elementText."</div>";
-
 						if (!empty($editedContent)) {
 							$previousEditedContent = $editedContent;
 						} else {
@@ -652,8 +593,6 @@ try {
 
 					$editedContent = '<span id="content_pointer_id" data-content-length="'.$contentLength.'"'.$finalRejectedBlocks.$finalAcceptedBlocks.'></span>'.$editedContent;
 
-//				$editedContent = RFWP_rb_cache_gathering($editedContent, $cachedBlocks);
-//			    $usedBlocks = [];
 					$creatingJavascriptParserForContent = RFWP_creatingJavascriptParserForContentFunction_content();
 					$editedContent                      = $editedContent.$creatingJavascriptParserForContent;
 
@@ -728,10 +667,6 @@ try {
 					        $shortcodes[$item->post_excerpt] = [];
 				        }
 				        $activatedCode = do_shortcode($item->post_content);
-//				        if (function_exists('pseudo_replace_link')) {
-//					        $activatedCode = pseudo_replace_link($activatedCode);
-//				        }
-
 				        $shortcodes[$item->post_excerpt][$item->post_title] = $activatedCode;
 			        }
 			        $GLOBALS['shortcodes'] = $shortcodes;
@@ -761,7 +696,7 @@ try {
 			    }
 			    $scContent = '';
 		        global $shortcodes;
-		        if (!empty($shortcodes)&&count($shortcodes) > 0) {
+		        if (!empty($shortcodes)&&$shortcodes!='nun'&&count($shortcodes) > 0) {
 			        $scContent .= '<script>'.PHP_EOL;
 			        $scContent .= 'var scArray = [];'.PHP_EOL;
 			        $cou = 0;
