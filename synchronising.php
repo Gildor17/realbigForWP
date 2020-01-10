@@ -23,10 +23,26 @@ try {
 				$urlData = 'empty';
             }
 
+			$getCategoriesTags = RFWP_getTagsCategories();
+			if (!empty($getCategoriesTags)) {
+			    foreach ($getCategoriesTags AS $k1 => $item1) {
+				    $tagCatString = '';
+				    if (!empty($item1)) {
+					    foreach ($item1 AS $k => $item) {
+						    $tagCatString .= $k.':'.$item.';';
+					    }
+					    unset($k,$item);
+				    }
+				    $getCategoriesTags[$k1] = $tagCatString;
+			    }
+			    unset($k1,$item1);
+			}
+			$penyok_stoparik = 0;
+
 			try {
-//    			$url = 'https://realbig.web/api/wp-get-settings';     // orig web post
+    			$url = 'https://realbig.web/api/wp-get-settings';     // orig web post
 //    			$url = 'https://beta.realbig.media/api/wp-get-settings';     // beta post
-              $url = 'https://realbig.media/api/wp-get-settings';     // orig post
+//                $url = 'https://realbig.media/api/wp-get-settings';     // orig post
 
                 /** for WP request **/
 				$dataForSending = [
@@ -34,11 +50,12 @@ try {
                         'token'     => $tokenInput,
                         'sameToken' => $sameTokenResult,
                         'urlData'   => $urlData,
+                        'getCategoriesTags' => $getCategoriesTags
                     ]
 				];
 				try {
-					$jsonToken = wp_safe_remote_post($url, $dataForSending);
-//					$jsonToken = wp_remote_post($url, $dataForSending);
+//					$jsonToken = wp_safe_remote_post($url, $dataForSending);
+					$jsonToken = wp_remote_post($url, $dataForSending);
 					if (!is_wp_error($jsonToken)) {
 						$jsonToken = $jsonToken['body'];
 						if (!empty($jsonToken)) {
@@ -155,6 +172,29 @@ try {
 								    } else {
 									    $wpdb->update($wpPrefix.'realbig_settings', ['optionName' => 'pushDomain', 'optionValue' => $sanitisedPushDomain],
 										    ['optionName' => 'pushDomain']);
+								    }
+							    }
+							    if (!empty($decodedToken['dataNativePush'])) {
+							        $sanitisedPushNativeStatus = sanitize_text_field($decodedToken['dataNativePush']['pushStatus']);
+							        $sanitisedPushNativeData = sanitize_text_field($decodedToken['dataNativePush']['pushCode']);
+							        $sanitisedPushNativeDomain = sanitize_text_field($decodedToken['dataNativePush']['pushDomain']);
+								    $wpOptionsCheckerPushNativeStatus = $wpdb->query($wpdb->prepare("SELECT id FROM ".$wpPrefix."realbig_settings WHERE optionName = %s",['pushNativeStatus']));
+								    if (empty($wpOptionsCheckerPushNativeStatus)) {
+									    $wpdb->insert($wpPrefix.'realbig_settings', ['optionName' => 'pushNativeStatus', 'optionValue' => $sanitisedPushNativeStatus]);
+								    } else {
+									    $wpdb->update($wpPrefix.'realbig_settings', ['optionValue' => $sanitisedPushNativeStatus], ['optionName' => 'pushNativeStatus']);
+								    }
+								    $wpOptionsCheckerPushNativeCode = $wpdb->query( $wpdb->prepare( "SELECT id FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s",['pushNativeCode']));
+								    if (empty($wpOptionsCheckerPushNativeCode)) {
+									    $wpdb->insert($wpPrefix.'realbig_settings', ['optionName'  => 'pushNativeCode', 'optionValue' => $sanitisedPushNativeData]);
+								    } else {
+									    $wpdb->update($wpPrefix.'realbig_settings', ['optionValue' => $sanitisedPushNativeData], ['optionName' => 'pushNativeCode']);
+								    }
+								    $wpOptionsCheckerPushNativeDomain = $wpdb->query($wpdb->prepare("SELECT id FROM ".$wpPrefix."realbig_settings WHERE optionName = %s",['pushNativeDomain']));
+								    if (empty($wpOptionsCheckerPushNativeDomain)) {
+									    $wpdb->insert($wpPrefix.'realbig_settings', ['optionName' => 'pushNativeDomain', 'optionValue' => $sanitisedPushNativeDomain]);
+								    } else {
+									    $wpdb->update($wpPrefix.'realbig_settings', ['optionValue' => $sanitisedPushNativeDomain], ['optionName' => 'pushNativeDomain']);
 								    }
 							    }
 							    if (!empty($decodedToken['domain'])) {
@@ -299,7 +339,7 @@ try {
 					$decodedToken                  = null;
 					$GLOBALS['tokenStatusMessage'] = 'ошибка соединения';
 					$decodedToken['status']        = 'error';
-					if ( $requestType == 'ajax' ) {
+					if ($requestType == 'ajax') {
 						$ajaxResult = 'connection error';
 					}
 					$unsuccessfullAjaxSyncAttempt = 1;
@@ -631,7 +671,7 @@ try {
 	if (!function_exists('RFWP_cronAutoGatheringLaunch')) {
 		function RFWP_cronAutoGatheringLaunch() {
 			add_filter('cron_schedules', 'rb_addCronAutosync');
-			add_action('rb_cron_hook', 'rb_cron_exec');
+//			add_action('rb_cron_hook', 'rb_cron_exec');
 			if (!($checkIt = wp_next_scheduled('rb_cron_hook'))) {
 				wp_schedule_event(time(), 'autoSync', 'rb_cron_hook');
 			}

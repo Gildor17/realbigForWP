@@ -91,7 +91,8 @@ try {
 		}
 	}
 	add_action('admin_bar_menu', 'RFWP_add_toolbar_items', 20000);
-} catch (Exception $ex) {
+}
+catch (Exception $ex) {
 	try {
 		global $wpdb;
 		global $rb_logFile;
@@ -123,7 +124,8 @@ try {
 
 	deactivate_plugins(plugin_basename( __FILE__ ));
 	?><div style="margin-left: 200px; border: 3px solid red"><?php echo $ex; ?></div><?php
-} catch (Error $er) {
+}
+catch (Error $er) {
 	try {
 		global $wpdb;
 		global $rb_logFile;

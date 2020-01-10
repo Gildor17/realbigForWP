@@ -16,7 +16,6 @@ try {
 			global $rb_logFile;
 			try {
 				if (empty($tableForCurrentPluginChecker)) {
-
 					$sql = "
 CREATE TABLE `".$wpPrefix."realbig_plugin_settings` 
 (
@@ -44,6 +43,9 @@ ENGINE=InnoDB
 ";
 					require_once (ABSPATH."/wp-admin/includes/upgrade.php");
 					$tableCreateResult = dbDelta($sql, true);
+					if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
+						RFWP_WorkProgressLog(false,'create realbig_plugin_settings tables');
+					}
 					add_option('realbigForWP_version', $GLOBALS['realbigForWP_version']);
 //				if (!empty($wpdb->get_var( 'SHOW TABLES LIKE "' . $wpPrefix . 'realbig_plugin_settings"' ))) {
 //					$statusGatherer['realbig_plugin_settings_table'] = true;
@@ -57,7 +59,6 @@ ENGINE=InnoDB
 				}
 
 				if (empty($tableForToken)) {
-
 					$sql = "
 CREATE TABLE `".$wpPrefix."realbig_settings` (
 `id` INT(11) NOT NULL AUTO_INCREMENT,
@@ -71,6 +72,9 @@ COLLATE='utf8_general_ci'
 ENGINE=InnoDB
 ";
 					dbDelta($sql, true);
+					if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
+						RFWP_WorkProgressLog(false,'create realbig_plugin_settings tables');
+					}
 				} else {
 					$statusGatherer['realbig_settings_table'] = true;
 					$messageFLog = 'realbig_settings exists;';
