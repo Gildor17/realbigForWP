@@ -25,17 +25,19 @@ try {
 
 			$getCategoriesTags = RFWP_getTagsCategories();
 			if (!empty($getCategoriesTags)) {
-			    foreach ($getCategoriesTags AS $k1 => $item1) {
-				    $tagCatString = '';
-				    if (!empty($item1)) {
-					    foreach ($item1 AS $k => $item) {
-						    $tagCatString .= $k.':'.$item.';';
-					    }
-					    unset($k,$item);
-				    }
-				    $getCategoriesTags[$k1] = $tagCatString;
-			    }
-			    unset($k1,$item1);
+				$getCategoriesTags = json_encode($getCategoriesTags);
+
+//			    foreach ($getCategoriesTags AS $k1 => $item1) {
+//				    $tagCatString = '';
+//				    if (!empty($item1)) {
+//					    foreach ($item1 AS $k => $item) {
+//						    $tagCatString .= $k.':'.$item.';';
+//					    }
+//					    unset($k,$item);
+//				    }
+//				    $getCategoriesTags[$k1] = $tagCatString;
+//			    }
+//			    unset($k1,$item1);
 			}
 			$penyok_stoparik = 0;
 

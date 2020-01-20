@@ -598,18 +598,22 @@ try {
 		}
 	}
 	if (!function_exists('RFWP_getPageCategories')) {
-	    function RFWP_getPageCategories($pageCategories) {
+	    function RFWP_getPageCategories() {
+		    $pageCategories = [];
 	        if (!empty($GLOBALS['pageCategories'])) {
 		        $pageCategories = $GLOBALS['pageCategories'];
             } else {
 		        $getPageCategories = get_the_category(get_the_ID());
 		        if (!empty($getPageCategories)) {
 			        $ctCounter = 0;
+			        $pageCategories['names'] = [];
+			        $pageCategories['terms'] = [];
 
 			        foreach ($getPageCategories AS $k1 => $item1) {
-				        $pageCategories[$ctCounter] = $item1->name;
-				        $pageCategories[$ctCounter] = trim($pageCategories[$ctCounter]);
-				        $pageCategories[$ctCounter] = strtolower($pageCategories[$ctCounter]);
+				        $item1->name = trim($item1->name);
+				        $item1->name = strtolower($item1->name);
+				        $pageCategories['names'][$ctCounter] = $item1->name;
+				        $pageCategories['terms'][$ctCounter] = $item1->term_id;
 				        $ctCounter++;
 			        }
 			        unset($k1,$item1);
@@ -621,18 +625,22 @@ try {
         }
     }
 	if (!function_exists('RFWP_getPageTags')) {
-	    function RFWP_getPageTags($pageTags) {
+	    function RFWP_getPageTags() {
+		    $pageTags = [];
 		    if (!empty($GLOBALS['pageTags'])) {
 			    $pageTags = $GLOBALS['pageTags'];
 		    } else {
 			    $getPageTags = get_the_tags(get_the_ID());
 			    if (!empty($getPageTags)) {
 				    $ctCounter = 0;
+				    $pageTags['names'] = [];
+				    $pageTags['terms'] = [];
 
 				    foreach ($getPageTags AS $k1 => $item1) {
-					    $pageTags[$ctCounter] = $item1->name;
-					    $pageTags[$ctCounter] = trim($pageTags[$ctCounter]);
-					    $pageTags[$ctCounter] = strtolower($pageTags[$ctCounter]);
+					    $item1->name = trim($item1->name);
+					    $item1->name = strtolower($item1->name);
+					    $pageTags['names'][$ctCounter] = $item1->name;
+					    $pageTags['terms'][$ctCounter] = $item1->term_id;
 					    $ctCounter++;
 				    }
 				    unset($k1,$item1);
@@ -645,11 +653,12 @@ try {
     }
 	if (!function_exists('RFWP_onOffCategoryTag')) {
 	    function RFWP_onOffCategoryTag($item) {
+	        /** true = block rejected */
 		    $passAllowed = false;
 		    $passRejected = false;
 
-		    $pageCategories = RFWP_getPageCategories([]);
-		    $pageTags = RFWP_getPageTags([]);
+		    $pageCategories = RFWP_getPageCategories();
+		    $pageTags = RFWP_getPageTags();
 
 		    if (!empty($item['onCategories'])) {
 			    if (empty($pageCategories)) {
@@ -661,7 +670,7 @@ try {
 					    $currentCategory = trim($item1);
 					    $currentCategory = strtolower($currentCategory);
 
-					    if (in_array($currentCategory, $pageCategories)) {
+					    if (in_array($currentCategory, $pageCategories['names'])||in_array($currentCategory, $pageCategories['terms'])) {
 						    $passAllowed = true;
 						    break;
 					    }
@@ -678,7 +687,7 @@ try {
 					    $currentCategory = trim($item1);
 					    $currentCategory = strtolower($currentCategory);
 
-					    if (in_array($currentCategory, $pageCategories)) {
+					    if (in_array($currentCategory, $pageCategories['names'])||in_array($currentCategory, $pageCategories['terms'])) {
 						    $passRejected = true;
 						    break;
 					    }
@@ -703,7 +712,7 @@ try {
 					    $currentTag = trim($item1);
 					    $currentTag = strtolower($currentTag);
 
-					    if (in_array($currentTag, $pageTags)) {
+					    if (in_array($currentTag, $pageTags['names'])||in_array($currentTag, $pageTags['terms'])) {
 						    $passAllowed = true;
 						    break;
 					    }
@@ -720,7 +729,7 @@ try {
 					    $currentTag = trim($item1);
 					    $currentTag = strtolower($currentTag);
 
-					    if (in_array($currentTag, $pageTags)) {
+					    if (in_array($currentTag, $pageTags['names'])||in_array($currentTag, $pageTags['terms'])) {
 						    $passRejected = true;
 						    break;
 					    }
@@ -1779,9 +1788,12 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 		        $rb_tagsCategoriesFinal['categories'] = [];
 		        if (!empty($rb_tagsCategories['categories'])) {
 		            foreach ($rb_tagsCategories['categories'] AS $item) {
-			            $rb_tagsCategoriesFinal['categories'][$item->slug] = $item->name;
+//			            $rb_tagsCategoriesFinal['categories'][$item->slug] = $item->name;
+			            $rb_tagsCategoriesFinal['categories'][$item->term_id] = $item->name;
                     }
 		            unset($item);
+                } else {
+			        $rb_tagsCategoriesFinal['categories'] = '_nun_';
                 }
             }
 
@@ -1790,7 +1802,8 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 		        $rb_tagsCategoriesFinal['tags'] = [];
 		        if (!empty($rb_tagsCategories['tags'])) {
 			        foreach ($rb_tagsCategories['tags'] AS $item) {
-				        $rb_tagsCategoriesFinal['tags'][$item->slug] = $item->name;
+//				        $rb_tagsCategoriesFinal['tags'][$item->slug] = $item->name;
+				        $rb_tagsCategoriesFinal['tags'][$item->term_id] = $item->name;
 			        }
 			        unset($item);
 		        }
