@@ -379,9 +379,6 @@ try {
 				$editedContent         = $content;
 				$contentLength         = 0;
 
-				$getPageTags = get_the_tags(get_the_ID());
-				$getPageCategories = get_the_category(get_the_ID());
-
 				$previousEditedContent = $editedContent;
 				$usedBlocksCounter     = 0;
 				$usedBlocks            = [];
@@ -415,28 +412,8 @@ try {
 					$headersMatchesResult = count($headM[0]);
 					$headersMatchesResult += 1;
 
-					if (!empty($getPageCategories)) {
-						$ctCounter = 0;
-
-						foreach ($getPageCategories AS $k1 => $item1) {
-							$pageCategories[$ctCounter] = $item1->name;
-							$pageCategories[$ctCounter] = trim($pageCategories[$ctCounter]);
-							$pageCategories[$ctCounter] = strtolower($pageCategories[$ctCounter]);
-							$ctCounter++;
-						}
-						unset($k1,$item1);
-					}
-					if (!empty($getPageTags)) {
-						$ctCounter = 0;
-
-						foreach ($getPageTags AS $k1 => $item1) {
-							$pageTags[$ctCounter] = $item1->name;
-							$pageTags[$ctCounter] = trim($pageTags[$ctCounter]);
-							$pageTags[$ctCounter] = strtolower($pageTags[$ctCounter]);
-							$ctCounter++;
-						}
-						unset($k1,$item1);
-					}
+//					$pageCategories = RFWP_getPageCategories($pageCategories);
+//					$pageTags = RFWP_getPageTags($pageTags);
 
 					foreach ($fromDb AS $k => $item) {
 						$countReplaces = 0;
@@ -472,102 +449,109 @@ try {
 						}
 
 						/************************************* */
-						$passAllowed = false;
-						$passRejected = false;
+//						$passAllowed = false;
+//						$passRejected = false;
+//
+//						if (!empty($item['onCategories'])) {
+//							if (empty($pageCategories)) {
+//								$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
+//								$rejectedBlocksCounter ++;
+//								continue;
+//							}
+//							$onCategoriesArray = explode(':',trim($item['onCategories']));
+//							if (!empty($onCategoriesArray)&&count($onCategoriesArray) > 0) {
+//								foreach ($onCategoriesArray AS $k1 => $item1) {
+//									$currentCategory = trim($item1);
+//									$currentCategory = strtolower($currentCategory);
+//
+//									if (in_array($currentCategory, $pageCategories)) {
+//										$passAllowed = true;
+//										break;
+//									}
+//								}
+//								unset($k1,$item1);
+//								if (empty($passAllowed)) {
+//									$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
+//									$rejectedBlocksCounter ++;
+//									continue;
+//								}
+//							}
+//						} elseif (!empty($item['offCategories'])&&!empty($pageCategories)) {
+//							$offCategoriesArray = explode(':',trim($item['offCategories']));
+//							if (!empty($offCategoriesArray)&&count($offCategoriesArray) > 0) {
+//								foreach ($offCategoriesArray AS $k1 => $item1) {
+//									$currentCategory = trim($item1);
+//									$currentCategory = strtolower($currentCategory);
+//
+//									if (in_array($currentCategory, $pageCategories)) {
+//										$passRejected = true;
+//										break;
+//									}
+//								}
+//								unset($k1,$item1);
+//								if (!empty($passRejected)) {
+//									$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
+//									$rejectedBlocksCounter ++;
+//									continue;
+//								}
+//							}
+//						}
+//
+//						/************************************* */
+//						$passAllowed = false;
+//						$passRejected = false;
+//
+//						if (!empty($item['onTags'])) {
+//							if (empty($pageTags)) {
+//								$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
+//								$rejectedBlocksCounter ++;
+//								continue;
+//							}
+//							$onTagsArray = explode(':',trim($item['onTags']));
+//							if (!empty($onTagsArray)&&count($onTagsArray) > 0) {
+//								foreach ($onTagsArray AS $k1 => $item1) {
+//									$currentTag = trim($item1);
+//									$currentTag = strtolower($currentTag);
+//
+//									if (in_array($currentTag, $pageTags)) {
+//										$passAllowed = true;
+//										break;
+//									}
+//								}
+//								unset($k1,$item1);
+//								if (empty($passAllowed)) {
+//									$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
+//									$rejectedBlocksCounter ++;
+//									continue;
+//								}
+//							}
+//						} elseif (!empty($item['offTags'])&&!empty($pageTags)) {
+//							$offTagsArray = explode(':',trim($item['offTags']));
+//							if (!empty($offTagsArray)&&count($offTagsArray) > 0) {
+//								foreach ($offTagsArray AS $k1 => $item1) {
+//									$currentTag = trim($item1);
+//									$currentTag = strtolower($currentTag);
+//
+//									if (in_array($currentTag, $pageTags)) {
+//										$passRejected = true;
+//										break;
+//									}
+//								}
+//								unset($k1,$item1);
+//								if (!empty($passRejected)) {
+//									$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
+//									$rejectedBlocksCounter ++;
+//									continue;
+//								}
+//							}
+//						}
 
-						if (!empty($item['onCategories'])) {
-							if (empty($pageCategories)) {
-								$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
-								$rejectedBlocksCounter ++;
-								continue;
-							}
-							$onCategoriesArray = explode(':',trim($item['onCategories']));
-							if (!empty($onCategoriesArray)&&count($onCategoriesArray) > 0) {
-								foreach ($onCategoriesArray AS $k1 => $item1) {
-									$currentCategory = trim($item1);
-									$currentCategory = strtolower($currentCategory);
-
-									if (in_array($currentCategory, $pageCategories)) {
-										$passAllowed = true;
-										break;
-									}
-								}
-								unset($k1,$item1);
-								if (empty($passAllowed)) {
-									$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
-									$rejectedBlocksCounter ++;
-									continue;
-								}
-							}
-						} elseif (!empty($item['offCategories'])&&!empty($pageCategories)) {
-							$offCategoriesArray = explode(':',trim($item['offCategories']));
-							if (!empty($offCategoriesArray)&&count($offCategoriesArray) > 0) {
-								foreach ($offCategoriesArray AS $k1 => $item1) {
-									$currentCategory = trim($item1);
-									$currentCategory = strtolower($currentCategory);
-
-									if (in_array($currentCategory, $pageCategories)) {
-										$passRejected = true;
-										break;
-									}
-								}
-								unset($k1,$item1);
-								if (!empty($passRejected)) {
-									$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
-									$rejectedBlocksCounter ++;
-									continue;
-								}
-							}
-						}
-
-						/************************************* */
-						$passAllowed = false;
-						$passRejected = false;
-
-						if (!empty($item['onTags'])) {
-							if (empty($pageTags)) {
-								$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
-								$rejectedBlocksCounter ++;
-								continue;
-							}
-							$onTagsArray = explode(':',trim($item['onTags']));
-							if (!empty($onTagsArray)&&count($onTagsArray) > 0) {
-								foreach ($onTagsArray AS $k1 => $item1) {
-									$currentTag = trim($item1);
-									$currentTag = strtolower($currentTag);
-
-									if (in_array($currentTag, $pageTags)) {
-										$passAllowed = true;
-										break;
-									}
-								}
-								unset($k1,$item1);
-								if (empty($passAllowed)) {
-									$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
-									$rejectedBlocksCounter ++;
-									continue;
-								}
-							}
-						} elseif (!empty($item['offTags'])&&!empty($pageTags)) {
-							$offTagsArray = explode(':',trim($item['offTags']));
-							if (!empty($offTagsArray)&&count($offTagsArray) > 0) {
-								foreach ($offTagsArray AS $k1 => $item1) {
-									$currentTag = trim($item1);
-									$currentTag = strtolower($currentTag);
-
-									if (in_array($currentTag, $pageTags)) {
-										$passRejected = true;
-										break;
-									}
-								}
-								unset($k1,$item1);
-								if (!empty($passRejected)) {
-									$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
-									$rejectedBlocksCounter ++;
-									continue;
-								}
-							}
-						}
+						$rejectedBlockRes = RFWP_onOffCategoryTag($item);
+						if (!empty($rejectedBlockRes)) {
+							$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
+							$rejectedBlocksCounter ++;
+							continue;
+                        }
 
 						/************************************* */
 						if (!empty($editedContent)) {
@@ -613,6 +597,152 @@ try {
 			}
 		}
 	}
+	if (!function_exists('RFWP_getPageCategories')) {
+	    function RFWP_getPageCategories() {
+		    $pageCategories = [];
+	        if (!empty($GLOBALS['pageCategories'])) {
+		        $pageCategories = $GLOBALS['pageCategories'];
+            } else {
+		        $getPageCategories = get_the_category(get_the_ID());
+		        if (!empty($getPageCategories)) {
+			        $ctCounter = 0;
+			        $pageCategories['names'] = [];
+			        $pageCategories['terms'] = [];
+
+			        foreach ($getPageCategories AS $k1 => $item1) {
+				        $item1->name = trim($item1->name);
+				        $item1->name = strtolower($item1->name);
+				        $pageCategories['names'][$ctCounter] = $item1->name;
+				        $pageCategories['terms'][$ctCounter] = $item1->term_id;
+				        $ctCounter++;
+			        }
+			        unset($k1,$item1);
+			        $GLOBALS['pageCategories'] = $pageCategories;
+		        }
+            }
+
+		    return $pageCategories;
+        }
+    }
+	if (!function_exists('RFWP_getPageTags')) {
+	    function RFWP_getPageTags() {
+		    $pageTags = [];
+		    if (!empty($GLOBALS['pageTags'])) {
+			    $pageTags = $GLOBALS['pageTags'];
+		    } else {
+			    $getPageTags = get_the_tags(get_the_ID());
+			    if (!empty($getPageTags)) {
+				    $ctCounter = 0;
+				    $pageTags['names'] = [];
+				    $pageTags['terms'] = [];
+
+				    foreach ($getPageTags AS $k1 => $item1) {
+					    $item1->name = trim($item1->name);
+					    $item1->name = strtolower($item1->name);
+					    $pageTags['names'][$ctCounter] = $item1->name;
+					    $pageTags['terms'][$ctCounter] = $item1->term_id;
+					    $ctCounter++;
+				    }
+				    unset($k1,$item1);
+				    $GLOBALS['pageTags'] = $pageTags;
+			    }
+            }
+
+		    return $pageTags;
+        }
+    }
+	if (!function_exists('RFWP_onOffCategoryTag')) {
+	    function RFWP_onOffCategoryTag($item) {
+	        /** true = block rejected */
+		    $passAllowed = false;
+		    $passRejected = false;
+
+		    $pageCategories = RFWP_getPageCategories();
+		    $pageTags = RFWP_getPageTags();
+
+		    if (!empty($item['onCategories'])) {
+			    if (empty($pageCategories)) {
+				    return true;
+			    }
+			    $onCategoriesArray = explode(':',trim($item['onCategories']));
+			    if (!empty($onCategoriesArray)&&count($onCategoriesArray) > 0) {
+				    foreach ($onCategoriesArray AS $k1 => $item1) {
+					    $currentCategory = trim($item1);
+					    $currentCategory = strtolower($currentCategory);
+
+					    if (in_array($currentCategory, $pageCategories['names'])||in_array($currentCategory, $pageCategories['terms'])) {
+						    $passAllowed = true;
+						    break;
+					    }
+				    }
+				    unset($k1,$item1);
+				    if (empty($passAllowed)) {
+					    return true;
+				    }
+			    }
+		    } elseif (!empty($item['offCategories'])&&!empty($pageCategories)) {
+			    $offCategoriesArray = explode(':',trim($item['offCategories']));
+			    if (!empty($offCategoriesArray)&&count($offCategoriesArray) > 0) {
+				    foreach ($offCategoriesArray AS $k1 => $item1) {
+					    $currentCategory = trim($item1);
+					    $currentCategory = strtolower($currentCategory);
+
+					    if (in_array($currentCategory, $pageCategories['names'])||in_array($currentCategory, $pageCategories['terms'])) {
+						    $passRejected = true;
+						    break;
+					    }
+				    }
+				    unset($k1,$item1);
+				    if (!empty($passRejected)) {
+					    return true;
+				    }
+			    }
+		    }
+		    /************************************* */
+		    $passAllowed = false;
+		    $passRejected = false;
+
+		    if (!empty($item['onTags'])) {
+			    if (empty($pageTags)) {
+				    return true;
+			    }
+			    $onTagsArray = explode(':',trim($item['onTags']));
+			    if (!empty($onTagsArray)&&count($onTagsArray) > 0) {
+				    foreach ($onTagsArray AS $k1 => $item1) {
+					    $currentTag = trim($item1);
+					    $currentTag = strtolower($currentTag);
+
+					    if (in_array($currentTag, $pageTags['names'])||in_array($currentTag, $pageTags['terms'])) {
+						    $passAllowed = true;
+						    break;
+					    }
+				    }
+				    unset($k1,$item1);
+				    if (empty($passAllowed)) {
+					    return true;
+				    }
+			    }
+		    } elseif (!empty($item['offTags'])&&!empty($pageTags)) {
+			    $offTagsArray = explode(':',trim($item['offTags']));
+			    if (!empty($offTagsArray)&&count($offTagsArray) > 0) {
+				    foreach ($offTagsArray AS $k1 => $item1) {
+					    $currentTag = trim($item1);
+					    $currentTag = strtolower($currentTag);
+
+					    if (in_array($currentTag, $pageTags['names'])||in_array($currentTag, $pageTags['terms'])) {
+						    $passRejected = true;
+						    break;
+					    }
+				    }
+				    unset($k1,$item1);
+				    if (!empty($passRejected)) {
+					    return true;
+				    }
+			    }
+		    }
+		    return false;
+        }
+    }
 	if (!function_exists('RFWP_excludedPagesAndDuplicates')) {
 	    function RFWP_excludedPagesAndDuplicates() {
 		    global $wpdb;
@@ -709,7 +839,7 @@ try {
 					        $scContent .= 'scArray['.$cou.']["fetched"] = 0;'.PHP_EOL;
 					        $scText = $item2;
 					        $scText = preg_replace('~(\'|\")~','\\\$1',$scText);
-					        $scText = preg_replace('~(\r\n|\r|\n)~',' ',$scText);
+					        $scText = preg_replace('~(\r\n|\n|\r)~',' ',$scText);
 					        $scText = preg_replace('~\<script~', '<scr"+"ipt', $scText);
 					        $scText = preg_replace('~\/script~', '/scr"+"ipt', $scText);
 					        $scContent .= 'scArray['.$cou.']["text"] = "'.$scText.'";'.PHP_EOL;
@@ -758,7 +888,7 @@ try {
 			        $elementTextCache = preg_replace('~\/scr_pt_close;~', '/scr"+"ipt',$elementTextCache);
 			        $elementTextCache = preg_replace('~\<script~', '<scr"+"ipt',$elementTextCache);
 			        $elementTextCache = preg_replace('~\/script~', '/scr"+"ipt',$elementTextCache);
-			        $elementTextCache = preg_replace('~(\r\n|\r|\n)~',' ',$elementTextCache);
+			        $elementTextCache = preg_replace('~(\r\n|\n|\r)~',' ',$elementTextCache);
 
 			        $scriptString .= 'cachedBlocksArray['.$item->post_title.'] = "'.$elementTextCache.'";'.PHP_EOL;
 		        }
@@ -834,9 +964,9 @@ try {
 			try {
 				$wp_cur_theme      = wp_get_theme();
 				$wp_cur_theme_name = $wp_cur_theme->get_template();
-				$themeHeaderFileOpen = file_get_contents(ABSPATH.'wp-content/themes/' . $wp_cur_theme_name . '/header.php');
+				$themeHeaderFileOpen = file_get_contents(ABSPATH.'wp-content/themes/'.$wp_cur_theme_name.'/header.php');
 
-				$checkedHeader = preg_match( '~rbConfig=\{start\:performance\.now\(\)\}~iu', $themeHeaderFileOpen, $m );
+				$checkedHeader = preg_match('~rbConfig=(\s|\r\n|\n|\r)*\{start\:performance\.now\(\)~iu', $themeHeaderFileOpen, $m);
 				if (count($m) == 0) {
 					$result = true;
 				} else {
@@ -886,6 +1016,17 @@ try {
 		function RFWP_headerInsertor($patternType) {
 			global $rb_logFile;
 			try {
+			    $detectedHeader = false;
+				if ($patternType=='ad') {
+					$checkedHeaderPattern = '~rbConfig=(\s|\r\n|\n|\r)*?\{start\:performance\.now\(\)~iu';
+				} elseif ($patternType=='push') {
+					$checkedHeaderPattern = '~\<script\s+?.*?src\s*?=\s*?["\']{1}[^"\']+?\/pushJs\/[^"\']+?["\']{1}[^>]*?\>\<\/script\>~iu';
+				} elseif ($patternType=='pushNative') {
+					$checkedHeaderPattern = '~\<script\s+?.*?src\s*?=\s*?["\']{1}[^"\']+?\/nat\/[^"\']+?["\']{1}[^>]*?\>\<\/script\>~iu';
+				} else {
+					return false;
+				}
+
 				$wp_cur_theme      = wp_get_theme();
 				$themeHeaderFileOpen = false;
 				$wp_cur_theme_root = $wp_cur_theme->get_theme_root();
@@ -900,24 +1041,45 @@ try {
 					$themeHeaderFileOpen = file_get_contents(ABSPATH.'wp-content/themes/'.$wp_cur_theme_name.'/header.php');
 				}
 
-				if (!empty($themeHeaderFileOpen)) {
-				    if ($patternType=='ad') {
-					    $checkedHeader = preg_match('~rbConfig=\{start\:performance\.now\(\)~iu', $themeHeaderFileOpen, $m);
-				    } elseif ($patternType=='push') {
-//					    $checkedHeader = preg_match('~realpush\.media\/pushJs|bigreal\.org\/pushJs~iu', $themeHeaderFileOpen, $m);
-					    $checkedHeader = preg_match('~\<script\s+?.*?src\s*?=\s*?["\']{1}[^"\']+?\/pushJs\/[^"\']+?["\']{1}[^>]*?\>\<\/script\>~iu', $themeHeaderFileOpen, $m);
-				    } else {
-					    return false;
-				    }
-
-					if (count($m) == 0) {
-						$result = true;
+				$checkRebootInName = preg_match('~reboot~', $wp_cur_theme_name, $rm);
+				if (count($rm) > 0) {
+					$rebootHeaderGet = get_option('reboot_options');
+					if (!empty($rebootHeaderGet)&&!empty($rebootHeaderGet['code_head'])) {
+						$checkedHeader = preg_match($checkedHeaderPattern, $rebootHeaderGet['code_head'], $rm1);
+						if (count($rm1) == 0) {
+							?><script>console.log('reboot <?php echo $patternType ?>: nun')</script><?php
+							$result = true;
+						} else {
+							?><script>console.log('reboot <?php echo $patternType ?>: presents')</script><?php
+							$result = false;
+							$detectedHeader = true;
+						}
 					} else {
-						$result = false;
+						?><script>console.log('reboot <?php echo $patternType ?>: options error')</script><?php
 					}
-                } else {
-					$result = true;
 				}
+
+				if (empty($detectedHeader)) {
+					if (!empty($themeHeaderFileOpen)) {
+//				    if ($patternType=='ad') {
+//					    $checkedHeader = preg_match('~rbConfig=(\s|\n|\r\n)*?\{start\:performance\.now\(\)~iu', $themeHeaderFileOpen, $m);
+//				    } elseif ($patternType=='push') {
+////					    $checkedHeader = preg_match('~realpush\.media\/pushJs|bigreal\.org\/pushJs~iu', $themeHeaderFileOpen, $m);
+//					    $checkedHeader = preg_match('~\<script\s+?.*?src\s*?=\s*?["\']{1}[^"\']+?\/pushJs\/[^"\']+?["\']{1}[^>]*?\>\<\/script\>~iu', $themeHeaderFileOpen, $m);
+//				    }
+						$checkedHeader = preg_match($checkedHeaderPattern, $themeHeaderFileOpen, $m);
+						if (count($m) == 0) {
+							?><script>console.log('<?php echo $patternType ?>: nun')</script><?php
+							$result = true;
+						} else {
+							?><script>console.log('<?php echo $patternType ?>: presents')</script><?php
+							$result = false;
+						}
+					} else {
+						?><script>console.log('<?php echo $patternType ?>: header error')</script><?php
+						$result = true;
+					}
+                }
 
 				return $result;
 			} catch (Exception $ex) {
@@ -1521,9 +1683,140 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
     }
 	if (!function_exists('test_sc_oval_exec')) {
 		function test_sc_oval_exec() {
-			return '<div style="width: 100px; height: 20px; border: 1px solid black; background-color: #0033cc; border-radius: 30%;"></div><script>console.log(\'oval narisoval\');</script>';
+//			return '<div style="width: 100px; height: 20px; border: 1px solid black; background-color: #0033cc; border-radius: 30%;"></div><script>console.log(\'oval narisoval\');</script>';
+			return '<div style="width: 400px; height: 80px; border: 1px solid black; background-color: #0033cc; border-radius: 30%;"></div><script>console.log(\'oval narisoval\');</script>';
 		}
 	}
+	if (!function_exists('RFWP_launch_without_content_function')) {
+		function RFWP_launch_without_content_function($content) {
+			global $rb_logFile;
+			global $fromDb;
+			try {
+				$adBlocksIdsString = '0';
+				$rejectedIdsString = '0';
+				$adBlocksIds = [];
+				$rejectedIds = [];
+				$newContent = '';
+				$itemArray = [];
+			    if (!empty($fromDb)&&!empty($fromDb['adBlocks'])&&count($fromDb['adBlocks']) > 0) {
+			        foreach ($fromDb['adBlocks'] AS $k => $item) {
+			            foreach ($item AS $k1 => $item1) {
+				            $itemArray[$k1] = $item1;
+                        }
+				        unset($k1,$item1);
+				        $rejectedBlockRes = RFWP_onOffCategoryTag($itemArray);
+				        if (!empty($rejectedBlockRes)) {
+					        array_push($rejectedIds, $item->id);
+				        } else {
+					        array_push($adBlocksIds, $item->id);
+				        }
+                    }
+			        unset($k,$item);
+			        if (count($adBlocksIds) > 0) {
+				        $adBlocksIdsString = implode(',', $adBlocksIds);
+                    }
+			        if (count($rejectedIds) > 0) {
+				        $rejectedIdsString = implode(',', $rejectedIds);
+                    }
+
+				    $newContent =
+					    '<script>
+    if (typeof jsInputerLaunch === \'undefined\') {
+        var jsInputerLaunch = -1;
+    }
+    function contentMonitoring() {
+        if (typeof jsInputerLaunch===\'undefined\'||(typeof jsInputerLaunch!==\'undefined\'&&jsInputerLaunch==-1)) {
+            let contentCheck = document.querySelector(\'.post-wrap\');
+//            let contentCheck1 = document.querySelector(\'.post-wrap\');
+//            let contentCheck2 = document.querySelector(\'.taxonomy-description\');
+            let contentPointerCheck = document.querySelector(\'#content_pointer_id\');
+            if (contentCheck&&!contentPointerCheck) {
+//                if (contentCheck1) {
+//                    contentCheck = contentCheck1;
+//                } else {
+//                    contentCheck = contentCheck2;
+//                }
+                
+                console.log(\'content is here\');
+                let cpSpan = document.createElement(\'SPAN\');
+                cpSpan.setAttribute(\'id\', \'content_pointer_id\');
+                cpSpan.setAttribute(\'data-content-length\', \'0\');
+                cpSpan.setAttribute(\'data-accepted-blocks\', \''.$adBlocksIdsString.'\');
+                cpSpan.setAttribute(\'data-rejected-blocks\', \''.$rejectedIdsString.'\');
+                jsInputerLaunch = 10;
+                
+                contentCheck.prepend(cpSpan);
+                
+                asyncFunctionLauncher();
+            } else {
+                setTimeout(function () {
+                    contentMonitoring();
+                }, 200);
+            }
+        } else {
+            console.log(\'jsInputerLaunch is here\');
+        }
+    }
+    contentMonitoring();
+</script>';
+                }
+
+				return $newContent;
+			} catch (Exception $ex) {
+				$messageFLog = 'Some error in RFWP_launch_without_content_function: '.$ex->getMessage().';';
+				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+				return $content;
+			} catch (Error $er) {
+				$messageFLog = 'Some error in RFWP_launch_without_content_function: '.$er->getMessage().';';
+				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+				return $content;
+			}
+		}
+	}
+	if (!function_exists('RFWP_getTagsCategories')) {
+	    function RFWP_getTagsCategories() {
+	        global $rb_tagsCategories;
+	        $args = ['hide_empty'=>false];
+	        $rb_tagsCategoriesFinal = [];
+
+		    if (empty($rb_tagsCategories)) {
+			    $rb_tagsCategories = [];
+            }
+
+	        if (empty($rb_tagsCategories['categories'])) {
+		        $rb_tagsCategories['categories'] = get_categories($args);
+		        $rb_tagsCategoriesFinal['categories'] = [];
+		        if (!empty($rb_tagsCategories['categories'])) {
+		            foreach ($rb_tagsCategories['categories'] AS $item) {
+//			            $rb_tagsCategoriesFinal['categories'][$item->slug] = $item->name;
+			            $rb_tagsCategoriesFinal['categories'][$item->term_id] = $item->name;
+                    }
+		            unset($item);
+                } else {
+			        $rb_tagsCategoriesFinal['categories'] = '_nun_';
+                }
+            }
+
+	        if (empty($rb_tagsCategories['tags'])) {
+		        $rb_tagsCategories['tags'] = get_tags($args);
+		        $rb_tagsCategoriesFinal['tags'] = [];
+		        if (!empty($rb_tagsCategories['tags'])) {
+			        foreach ($rb_tagsCategories['tags'] AS $item) {
+//				        $rb_tagsCategoriesFinal['tags'][$item->slug] = $item->name;
+				        $rb_tagsCategoriesFinal['tags'][$item->term_id] = $item->name;
+			        }
+			        unset($item);
+		        }
+	        }
+
+	        if (!empty($rb_tagsCategoriesFinal)) {
+		        $rb_tagsCategories = $rb_tagsCategoriesFinal;
+            }
+
+	        $GLOBALS['rb_tagsCategories'] = $rb_tagsCategories;
+	        return $rb_tagsCategories;
+        }
+    }
 }
 catch (Exception $ex)
 {

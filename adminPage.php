@@ -145,7 +145,7 @@ try {
 						<?php if (!empty($GLOBALS['tokenStatusMessage'])): ?>
 							<div name="rezultDiv" style="font-size: 16px"><?php echo $GLOBALS['tokenStatusMessage'] ?></div>
 						<?php endif; ?>
-						<?php if ($checkDirName=='realbigForWP'): ?>
+						<?php if (!empty($checkDirName)&&strpos($checkDirName,'realbigForWP')!==false): ?>
 							<?php submit_button('Rename', 'folderRename', 'folderRename') ?>
 						<?php endif; ?>
 					</form>
