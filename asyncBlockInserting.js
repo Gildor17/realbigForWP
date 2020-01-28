@@ -49,6 +49,14 @@ function shortcodesInsert() {
     let scContainer;
     let sci;
     let i1 = 0;
+    let skyscraperCheck = [];
+    let skyscraperStatus = false;
+    let splitedSkyscraper = [];
+    let gatheredBlockChildSkyParts = [];
+    let stickyStatus = false;
+    let stickyCheck = [];
+    let stickyFixedStatus = false;
+    let stickyFixedCheck = [];
 
     if (typeof scArray !== 'undefined') {
         if (scArray&&scArray.length > 0&&gatheredBlocks&&gatheredBlocks.length > 0) {
@@ -61,6 +69,13 @@ function shortcodesInsert() {
                 blockStatus = null;
                 scContainer = null;
                 dataFull = -1;
+                skyscraperStatus = false;
+                splitedSkyscraper = [];
+                gatheredBlockChildSkyParts = [];
+                stickyStatus = false;
+                stickyCheck = [];
+                stickyFixedStatus = false;
+                stickyFixedCheck = [];
 
                 scAdId = gatheredBlockChild.getAttribute('data-aid');
                 scBlockId = gatheredBlockChild.getAttribute('data-id');
@@ -77,15 +92,58 @@ function shortcodesInsert() {
 
                     if (sci > -1) {
                         if (blockStatus&&okStates.includes(blockStatus)) {
+                            skyscraperCheck = scArray[sci]['text'].match(/\<skyscraper\>/);
+                            if (skyscraperCheck&&skyscraperCheck.length > 0) {
+                                scArray[sci]['text'].replace(/\<skyscraper\>/, '');
+                                splitedSkyscraper = scArray[sci]['text'].split('<skyscraper_separotor>');
+                                if (splitedSkyscraper&&splitedSkyscraper.length > 0) {
+                                    skyscraperStatus = true;
+                                }
+                            }
+
+                            stickyCheck = scArray[sci]['text'].match(/\<sticky\>/);
+                            if (stickyCheck&&stickyCheck.length > 0) {
+                                scArray[sci]['text'].replace(/\<sticky\>/, '');
+                                stickyStatus = true;
+                            }
+
+                            stickyFixedCheck = scArray[sci]['text'].match(/\<stickyFixed\>/);
+                            if (stickyFixedCheck&&stickyFixedCheck.length > 0) {
+                                scArray[sci]['text'].replace(/\<stickyFixed\>/, '');
+                                stickyFixedStatus = true;
+                            }
+
                             if (blockStatus=='no-block') {
                                 gatheredBlockChild.innerHTML = '';
-                            } else if (blockStatus=='fetched') {
-                                if (dataFull==1) {
+                            } else if ((blockStatus=='fetched'&&dataFull==1)||!['no-block','fetched'].includes(blockStatus)) {
+                                if (skyscraperStatus===true) {
+                                    gatheredBlockChildSkyParts = gatheredBlockChild.querySelectorAll('.rb_item div');
+                                    if (gatheredBlockChildSkyParts&&gatheredBlockChildSkyParts.length==splitedSkyscraper.length) {
+                                        for (let i2 = 0; i2 < splitedSkyscraper.length; i2++) {
+                                            jQuery(gatheredBlockChildSkyParts[i2]).html(splitedSkyscraper[i2]);
+                                        }
+                                    }
+                                } else if (stickyStatus===true) {
+                                    gatheredBlockChildSkyParts = gatheredBlockChild.querySelectorAll('.displayBlock.sticky div div:not(.display-close)');
+                                    if (gatheredBlockChildSkyParts&&gatheredBlockChildSkyParts.length > 0) {
+                                        for (let i2 = 0; i2 < gatheredBlockChildSkyParts.length; i2++) {
+                                            jQuery(gatheredBlockChildSkyParts[i2]).html(scArray[sci]['text']);
+                                        }
+                                    }
+                                } else if (stickyFixedStatus===true) {
+                                    gatheredBlockChildSkyParts = gatheredBlockChild.querySelectorAll('.displayBlock div[data-type=stickyFixed]');
+                                    if (gatheredBlockChildSkyParts&&gatheredBlockChildSkyParts.length > 0) {
+                                        for (let i2 = 0; i2 < gatheredBlockChildSkyParts.length; i2++) {
+                                            jQuery(gatheredBlockChildSkyParts[i2]).html(scArray[sci]['text']);
+                                        }
+                                    }
+                                } else {
                                     jQuery(gatheredBlockChild).html(scArray[sci]['text']);
                                 }
-                            } else {
-                                jQuery(gatheredBlockChild).html(scArray[sci]['text']);
                             }
+                            // else {
+                            //     jQuery(gatheredBlockChild).html(scArray[sci]['text']);
+                            // }
                             if (blockStatus!='fetched'||(blockStatus=='fetched'&&dataFull==1)) {
                                 for (i1 = 0; i1 < scArray.length; i1++) {
                                     if (scBlockId == scArray[i1]['blockId']) {
@@ -424,7 +482,7 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
                 elementToAdd.innerHTML = blockSettingArray[i]["text"];
                 block_number = elementToAdd.children[0].attributes['data-id'].value;
 
-                if (rejectedBlocks&&rejectedBlocks.includes(block_number)) {
+                if (rejectedBlocks&&rejectedBlocks.includes(blockSettingArray[i]["id"])) {
                     blockSettingArray.splice(i, 1);
                     poolbackI = 1;
                     i--;
@@ -849,7 +907,7 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
 }
 
 function asyncFunctionLauncher() {
-    if (window.jsInputerLaunch !== undefined&&jsInputerLaunch == 15) {
+    if (window.jsInputerLaunch !== undefined&&[15, 10].includes(jsInputerLaunch)) {
         // asyncBlocksInsertingFunction(blockSettingArray, contentLength);
         asyncBlocksInsertingFunction(blockSettingArray);
         if (!endedSc) {
@@ -1340,3 +1398,31 @@ function percentInserter(lordOfElements, containerFor6th) {
         }
     } catch (e) {}
 }
+
+if (typeof jsInputerLaunch === 'undefined') {
+    var jsInputerLaunch = -1;
+}
+// function contentMonitoring() {
+//     if (typeof jsInputerLaunch==='undefined'||(typeof jsInputerLaunch!=='undefined'&&jsInputerLaunch==-1)) {
+//         let contentCheck  = document.querySelector('.entry-content');
+//         if (contentCheck) {
+//             console.log('content is here');
+//             let cpSpan = document.createElement('SPAN');
+//             cpSpan.setAttribute('id', 'content_pointer_id');
+//             cpSpan.setAttribute('data-content-length', '0');
+//             // cpSpan.setAttribute('data-accepted-blocks', ''.$adBlocksIdsString.'');
+//             jsInputerLaunch = 10;
+//
+//             contentCheck.prepend(cpSpan);
+//
+//             asyncFunctionLauncher();
+//         } else {
+//             setTimeout(function () {
+//                 contentMonitoring();
+//             }, 200);
+//         }
+//     } else {
+//         console.log('jsInputerLaunch is here');
+//     }
+// }
+// contentMonitoring();
