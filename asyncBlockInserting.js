@@ -258,6 +258,61 @@ function blocksRepositionUse(containerString, blType, searchType) {
     return false;
 }
 
+function blocksRepositionTestUse(containerString, blType, searchType, elementList, elementIndex, content_pointer, elementPosition) {
+    let blocksInContainer;
+    let blockPassed = false;
+    let currentBlock;
+    let currentBlockId;
+    let currentBlockPosition;
+    let currentContainer;
+    let checkWidthResult = false;
+    let i = 0;
+    let j = 0;
+    let blockStrJs = ' .percentPointerClass.marked';
+    let blockStrPhp = ' .percentPointerClass:not(.marked)';
+    let blockStr = ' .percentPointerClass';
+
+    if (searchType) {
+        if (searchType == 'marked') {
+            if (elementList!=null&&elementIndex!=null&&content_pointer!=null&&elementPosition!=null) {
+                while (blockPassed!=true&&elementList.length > elementIndex) {
+                    // checkWidthResult = checkAdsWidth(content_pointer, elementPosition, elementList[elementIndex]);
+                }
+            } else {
+                blocksInContainer = blType.closest(containerString);
+
+                if (blocksInContainer) {
+                    return blocksInContainer;
+                } else {
+                    return blType;
+                }
+            }
+        } else if (searchType == 'non-marked') {
+            blocksInContainer = document.querySelectorAll(blType + containerString + blockStrPhp);
+            if (blocksInContainer && blocksInContainer.length > 0 && usedBlockSettingArray && usedBlockSettingArray.length > 0) {
+                for (i = 0; i < blocksInContainer.length; i++) {
+                    currentBlock = blocksInContainer[i];
+                    currentBlockId = currentBlock.querySelector('.content_rb').getAttribute('data-id');
+                    currentContainer = null;
+                    for (j = 0; j < usedBlockSettingArray.length; i++) {
+                        if (usedBlockSettingArray[i]['id'] == currentBlockId) {
+                            currentBlockPosition = usedBlockSettingArray[i]['elementPosition'];
+                            currentContainer = currentBlock.closest(blType + containerString);
+                            if (currentBlockPosition == 0) {
+                                currentContainer.parentNode.insertBefore(currentBlock, currentContainer);
+                            } else {
+                                currentContainer.parentNode.insertBefore(currentBlock, currentContainer.nextSibling);
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}
+
 function blocksReposition() {
     let containersArray = [];
     containersArray[0] = [];
@@ -348,6 +403,30 @@ function createStyleElement(blockNumber, localElementCss) {
     return textAlignString;
 }
 
+function checkAdsWidth(content_pointer, posCurrentElement, currentElement) {
+    let widthChecker = document.querySelector('widthChecker');
+    let widthCheckerStyle = null;
+    let penyok_stoparik = 0;
+    let content_pointerStyle = getComputedStyle(content_pointer);
+
+    if (!widthChecker) {
+        widthChecker = document.createElement("div");
+        widthChecker.setAttribute('id','widthChecker');
+    }
+
+    let content = content_pointer.parentElement;
+    if (content) {
+        currentElement.parentNode.insertBefore(widthChecker, posCurrentElement);
+        widthCheckerStyle = getComputedStyle(widthChecker);
+        if (content_pointerStyle.width == widthCheckerStyle.width) {
+            return true;
+        }
+        penyok_stoparik = 1;
+    }
+
+    return false;
+}
+
 // function asyncBlocksInsertingFunction(blockSettingArray, contentLength) {
 function asyncBlocksInsertingFunction(blockSettingArray) {
     try {
@@ -381,6 +460,14 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
         let rejectedBlocks = content_pointer.getAttribute('data-rejected-blocks');
         if (rejectedBlocks&&rejectedBlocks.length > 0) {
             rejectedBlocks = rejectedBlocks.split(',');
+        }
+        let widthCheck = false;
+        let currentElementList;
+        var sameElementAfterWidth = false;
+        var sameElementAfterExcClassId = false;
+
+        if (contentLength < 1) {
+            contentLength = parent_with_content.innerText.length
         }
 
         function getFromConstructions(currentElement) {
@@ -567,12 +654,19 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
                     } else {
                         sumResult = blockSettingArray[i]["elementPlace"] - 1;
                         if (sumResult < currentElement.length) {
+                            currentElementList = currentElement;
                             currentElement = currentElement[sumResult];
-                            currentElement = getFromConstructions(currentElement);
-                            if (excIdClass&&excIdClass.length > 0) {
-                                for (let i2 = 0; i2 < excIdClass.length; i2++) {
-                                    if (excIdClass[i2].length > 0) {
-                                        currentElement = blocksRepositionUse(excIdClass[i2], currentElement, 'marked');
+                            while (sameElementAfterWidth==true&&sameElementAfterExcClassId==true) {
+                                sameElementAfterWidth=true;
+                                sameElementAfterExcClassId=true;
+                                currentElement = getFromConstructions(currentElement);
+                                currentElement = checkAdsWidth(content_pointer, blockSettingArray[i]["elementPosition"], currentElement);
+                                if (excIdClass&&excIdClass.length > 0) {
+                                    for (let i2 = 0; i2 < excIdClass.length; i2++) {
+                                        if (excIdClass[i2].length > 0) {
+                                            currentElement = blocksRepositionUse(excIdClass[i2], currentElement, 'marked');
+                                            // currentElement = blocksRepositionTestUse(excIdClass[i2], currentElement, 'marked', currentElementList, sumResult, content_pointer, blockSettingArray[i]["elementPosition"]);
+                                        }
                                     }
                                 }
                             }

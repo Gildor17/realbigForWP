@@ -35,7 +35,7 @@ include_once (dirname(__FILE__)."/textEditing.php");
 /*
 Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.2.7
+Version:      0.2.8
 Author:       Realbig Team
 Author URI:   https://realbig.media
 License:      GPLv2 or later
@@ -137,6 +137,11 @@ try {
 
 	$GLOBALS['kill_rb'] = $kill_rb;
 	/** End of kill rb connection emulation */
+	/** Cron check */
+	if (!empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
+		RFWP_cronCheckLog('cron passed');
+    }
+	/** End of cron check */
 	/***************** End of test zone ***********************************************************************************/
 	/***************** Cached AD blocks saving ***************************************************************************************/
     function saveAdBlocks($tunnelData) {
@@ -178,7 +183,7 @@ try {
 	    if (!empty($pluginData['Version'])) {
 		    $GLOBALS['realbigForWP_version'] = $pluginData['Version'];
 	    } else {
-		    $GLOBALS['realbigForWP_version'] = '0.2.6';
+		    $GLOBALS['realbigForWP_version'] = '0.2.8';
 	    }
     }
 
@@ -806,7 +811,7 @@ try {
             'is_category' => is_category(),
 		];
 
-	    if ((!empty($arrayOfCheckedTypes['is_home'])||!empty($arrayOfCheckedTypes['is_front_page']))&&!empty($GLOBALS['pageChecks']['excludedMainPage'])) {
+		if ((!empty($arrayOfCheckedTypes['is_home'])||!empty($arrayOfCheckedTypes['is_front_page']))&&!empty($GLOBALS['pageChecks']['excludedMainPage'])) {
 		    return $content;
 	    } elseif (in_array(true, $arrayOfCheckedTypes)) {
 	        if (!empty($GLOBALS['pageChecks']['excludedPageTypes'])) {
@@ -923,7 +928,7 @@ catch (Exception $ex)
 			    'optionValue' => 'realbigForWP: '.$ex->getMessage()
 		    ]);
 	    } else {
-		    $wpdb->update( $wpPrefix.'realbig_settings', [
+		    $wpdb->update($wpPrefix.'realbig_settings', [
 			    'optionName'  => 'deactError',
 			    'optionValue' => 'realbigForWP: '.$ex->getMessage()
 		    ], ['optionName'  => 'deactError']);

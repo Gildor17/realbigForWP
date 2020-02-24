@@ -15,6 +15,10 @@ try {
 			global $rb_logFile;
 			$unsuccessfullAjaxSyncAttempt = 0;
 
+			if (!empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
+				RFWP_cronCheckLog('cron in sync passed');
+			}
+
 			if (!empty($_SERVER['HTTP_HOST'])) {
 				$urlData = $_SERVER['HTTP_HOST'];
 			} elseif (!empty($_SERVER['SERVER_NAME'])) {
@@ -42,8 +46,8 @@ try {
 			$penyok_stoparik = 0;
 
 			try {
-    			$url = 'https://realbig.web/api/wp-get-settings';     // orig web post
-//    			$url = 'https://beta.realbig.media/api/wp-get-settings';     // beta post
+//    			$url = 'https://realbig.web/api/wp-get-settings';     // orig web post
+    			$url = 'https://beta.realbig.media/api/wp-get-settings';     // beta post
 //                $url = 'https://realbig.media/api/wp-get-settings';     // orig post
 
                 /** for WP request **/
@@ -56,8 +60,8 @@ try {
                     ]
 				];
 				try {
-//					$jsonToken = wp_safe_remote_post($url, $dataForSending);
-					$jsonToken = wp_remote_post($url, $dataForSending);
+					$jsonToken = wp_safe_remote_post($url, $dataForSending);
+//					$jsonToken = wp_remote_post($url, $dataForSending);
 					if (!is_wp_error($jsonToken)) {
 						$jsonToken = $jsonToken['body'];
 						if (!empty($jsonToken)) {
@@ -406,7 +410,7 @@ try {
 
             try {
 //    			$url = 'https://realbig.web/api/wp-get-ads';     // orig web post
-//              $url = 'https://beta.realbig.media/api/wp-get-ads';     // beta post
+//                $url = 'https://beta.realbig.media/api/wp-get-ads';     // beta post
     			$url = 'https://realbig.media/api/wp-get-ads';     // orig post
 
 	            $dataForSending = [
@@ -452,6 +456,7 @@ try {
 
                                 $postContent = $ritem['code'];
                                 $postContent = htmlspecialchars_decode($postContent);
+                                $postContent = json_encode($postContent, JSON_UNESCAPED_UNICODE);
                                 $postContent = preg_replace('~\<script~', '<scr_pt_open;', $postContent);
                                 $postContent = preg_replace('~\/script~', '/scr_pt_close;', $postContent);
                                 $postContent = preg_replace('~\<~', 'corner_open;', $postContent);

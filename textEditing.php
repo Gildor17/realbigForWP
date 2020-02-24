@@ -21,6 +21,7 @@ try {
 				$listOfTags['unavailable'] = ['ins','script','style'];
 				$listOfTags['available'] = ['p','div','span','blockquote','table','ul','ol','h1','h2','h3','h4','h5','h6','strong','article'];
 				$listOfSymbolsForEcranising = '(\/|\$|\^|\.|\,|\&|\||\(|\)|\+|\-|\*|\?|\!|\[|\]|\{|\}|\<|\>|\\\|\~){1}';
+//				$listOfSymbolsForEcranising = '[a--z]|(\/|\$|\^|\.|\,|\&|\||\(|\)|\+|\-|\*|\?|\!|\[|\]|\{|\}|\<|\>|\\\|\~){1}';
 				if (empty($isRepeated)) {
 					foreach ($listOfTags AS $affiliation => $listItems) {
 						for ($lc = 0; $lc < count($listItems); $lc++) {
@@ -68,302 +69,15 @@ try {
 				$messageFLog = 'Some error in content length: '.$er1->getMessage().';';
 				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
 				return 0;
-			}
-		}
-	}
-	if (!function_exists('RFWP_addIcons')) {
-		function RFWP_addIcons($fromDb, $content, $contentType, $cachedBlocks, $inserts=null, $shortcodes, $excIdClass, $blockDuplicate) {
-			global $rb_logFile;
-			try {
-				global $wp_query;
-				global $post;
-
-				$editedContent         = $content;
-				$contentLength         = 0;
-
-				$getPageTags = get_the_tags(get_the_ID());
-				$getPageCategories = get_the_category(get_the_ID());
-
-				$previousEditedContent = $editedContent;
-				$usedBlocksCounter     = 0;
-				$usedBlocks            = [];
-				$rejectedBlocksCounter = 0;
-				$rejectedBlocks        = [];
-				$objArray              = [];
-				$onCategoriesArray     = [];
-				$offCategoriesArray    = [];
-				$onTagsArray           = [];
-				$offTagsArray          = [];
-				$pageCategories        = [];
-				$pageTags              = [];
-
-				if (!empty($fromDb)) {
-					/** New system for content length checking **/
-					$contentLength = RFWP_gatheringContentLength($content);
-					/** End of new system for content length checking **/
-					if ($contentLength < 1) {
-						$contentLength = mb_strlen(strip_tags($content), 'utf-8');
-					}
-					$contentLengthOld = mb_strlen(strip_tags($content), 'utf-8');
-
-					$headersMatchesResult = preg_match_all('~<(h1|h2|h3|h4|h5|h6)~', $content, $headM);
-					$headersMatchesResult = count($headM[0]);
-					$headersMatchesResult += 1;
-
-					if (!empty($getPageCategories)) {
-						$ctCounter = 0;
-
-						foreach ($getPageCategories AS $k1 => $item1) {
-							$pageCategories[$ctCounter] = $item1->name;
-							$pageCategories[$ctCounter] = trim($pageCategories[$ctCounter]);
-							$pageCategories[$ctCounter] = strtolower($pageCategories[$ctCounter]);
-							$ctCounter++;
-						}
-						unset($k1,$item1);
-					}
-					if (!empty($getPageTags)) {
-						$ctCounter = 0;
-
-						foreach ($getPageTags AS $k1 => $item1) {
-							$pageTags[$ctCounter] = $item1->name;
-							$pageTags[$ctCounter] = trim($pageTags[$ctCounter]);
-							$pageTags[$ctCounter] = strtolower($pageTags[$ctCounter]);
-							$ctCounter++;
-						}
-						unset($k1,$item1);
-					}
-
-					$excIdClass .= ".percentPointerClass;.content_rb;#toc_container;table;blockquote";
-					if (!empty($excIdClass)) {
-						$excIdClass = explode(';', $excIdClass);
-						foreach ($excIdClass AS $k1 => $item1) {
-							$excIdClass[$k1] = trim($excIdClass[$k1]);
-						}
-						$excIdClass = implode('","', $excIdClass);
-					}
-
-					foreach ($fromDb AS $k => $item) {
-						$countReplaces = 0;
-						if (is_object($item)) {
-							$item = get_object_vars($item);
-						}
-						if (empty($item['setting_type'])) {
-//							$usedBlocks[$usedBlocksCounter] = $item['id'];
-//							$usedBlocksCounter ++;
-							$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
-							$rejectedBlocksCounter ++;
-							continue;
-						}
-						if (!empty($headersMatchesResult)) {
-							if (!empty($item['minHeaders']) && $item['minHeaders'] > 0 && $item['minHeaders'] > $headersMatchesResult) {
-//								$usedBlocks[$usedBlocksCounter] = $item['id'];
-//								$usedBlocksCounter ++;
-								$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
-								$rejectedBlocksCounter ++;
-								continue;
-							}
-							if (!empty($item['maxHeaders']) && $item['maxHeaders'] > 0 && $item['maxHeaders'] < $headersMatchesResult) {
-//								$usedBlocks[$usedBlocksCounter] = $item['id'];
-//								$usedBlocksCounter ++;
-								$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
-								$rejectedBlocksCounter ++;
-								continue;
-							}
-						}
-						if (!empty($item['minSymbols']) && $item['minSymbols'] > 0 && $item['minSymbols'] > $contentLength) {
-//							$usedBlocks[$usedBlocksCounter] = $item['id'];
-//							$usedBlocksCounter ++;
-							$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
-							$rejectedBlocksCounter ++;
-							continue;
-						}
-						if (!empty($item['maxSymbols']) && $item['maxSymbols'] > 0 && $item['maxSymbols'] < $contentLength) {
-//							$usedBlocks[$usedBlocksCounter] = $item['id'];
-//							$usedBlocksCounter ++;
-							$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
-							$rejectedBlocksCounter ++;
-							continue;
-						}
-
-						/************************************* */
-						$passAllowed = false;
-						$passRejected = false;
-
-						if (!empty($item['onCategories'])) {
-							if (empty($pageCategories)) {
-//								$usedBlocks[$usedBlocksCounter] = $item['id'];
-//								$usedBlocksCounter ++;
-								$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
-								$rejectedBlocksCounter ++;
-								continue;
-							}
-							$onCategoriesArray = explode(':',trim($item['onCategories']));
-							if (!empty($onCategoriesArray)&&count($onCategoriesArray) > 0) {
-								foreach ($onCategoriesArray AS $k1 => $item1) {
-									$currentCategory = trim($item1);
-									$currentCategory = strtolower($currentCategory);
-
-									if (in_array($currentCategory, $pageCategories)) {
-										$passAllowed = true;
-										break;
-									}
-								}
-								unset($k1,$item1);
-								if (empty($passAllowed)) {
-//									$usedBlocks[$usedBlocksCounter] = $item['id'];
-//									$usedBlocksCounter ++;
-									$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
-									$rejectedBlocksCounter ++;
-									continue;
-								}
-							}
-						} elseif (!empty($item['offCategories'])&&!empty($pageCategories)) {
-							$offCategoriesArray = explode(':',trim($item['offCategories']));
-							if (!empty($offCategoriesArray)&&count($offCategoriesArray) > 0) {
-								foreach ($offCategoriesArray AS $k1 => $item1) {
-									$currentCategory = trim($item1);
-									$currentCategory = strtolower($currentCategory);
-
-									if (in_array($currentCategory, $pageCategories)) {
-										$passRejected = true;
-										break;
-									}
-								}
-								unset($k1,$item1);
-								if (!empty($passRejected)) {
-//									$usedBlocks[$usedBlocksCounter] = $item['id'];
-//									$usedBlocksCounter ++;
-									$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
-									$rejectedBlocksCounter ++;
-									continue;
-								}
-							}
-						}
-
-						/************************************* */
-						$passAllowed = false;
-						$passRejected = false;
-
-						if (!empty($item['onTags'])) {
-							if (empty($pageTags)) {
-//								$usedBlocks[$usedBlocksCounter] = $item['id'];
-//								$usedBlocksCounter ++;
-								$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
-								$rejectedBlocksCounter ++;
-								continue;
-							}
-							$onTagsArray = explode(':',trim($item['onTags']));
-							if (!empty($onTagsArray)&&count($onTagsArray) > 0) {
-								foreach ($onTagsArray AS $k1 => $item1) {
-									$currentTag = trim($item1);
-									$currentTag = strtolower($currentTag);
-
-									if (in_array($currentTag, $pageTags)) {
-										$passAllowed = true;
-										break;
-									}
-								}
-								unset($k1,$item1);
-								if (empty($passAllowed)) {
-//									$usedBlocks[$usedBlocksCounter] = $item['id'];
-//									$usedBlocksCounter ++;
-									$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
-									$rejectedBlocksCounter ++;
-									continue;
-								}
-							}
-						} elseif (!empty($item['offTags'])&&!empty($pageTags)) {
-							$offTagsArray = explode(':',trim($item['offTags']));
-							if (!empty($offTagsArray)&&count($offTagsArray) > 0) {
-								foreach ($offTagsArray AS $k1 => $item1) {
-									$currentTag = trim($item1);
-									$currentTag = strtolower($currentTag);
-
-									if (in_array($currentTag, $pageTags)) {
-										$passRejected = true;
-										break;
-									}
-								}
-								unset($k1,$item1);
-								if (!empty($passRejected)) {
-//									$usedBlocks[$usedBlocksCounter] = $item['id'];
-//									$usedBlocksCounter ++;
-									$rejectedBlocks[$rejectedBlocksCounter] = $item['id'];
-									$rejectedBlocksCounter ++;
-									continue;
-								}
-							}
-						}
-
-						/************************************* */
-
-						$elementText     = $item['text'];
-						if (!empty($cachedBlocks)&&!empty($elementText)) {
-							foreach ($cachedBlocks AS $k1 => $item1) {
-								if ($item1->post_title==$item['block_number']) {
-									if (empty($item1->post_content)) {
-										break;
-									} elseif (!empty($item1->post_content)) {
-										$loweredText = strtolower($item1->post_content);
-										if ($loweredText=='undefined') {
-											break;
-										}
-									}
-									$elementTextCache = $item1->post_content;
-									$elementTextCache = preg_replace('~corner_open;~', '<', $elementTextCache);
-									$elementTextCache = preg_replace('~corner_close;~', '>', $elementTextCache);
-									$elementTextCache = preg_replace('~\<scr_pt_open;~', '<script', $elementTextCache);
-									$elementTextCache = preg_replace('~\/scr_pt_close;~', '/script', $elementTextCache);
-
-									if (empty($elementTextCache)) {
-										break;
-									}
-									$elementText = preg_replace('~\<\/div\>~', $elementTextCache.'</div>', $elementText);
-									$fromDb[$k]->text = $elementText;
-									break;
-								}
-							}
-						}
-
-						if (!empty($shortcodes)&&!empty($shortcodes[$item['block_number']])) {
-							$shortcodesMark = ' scMark';
-						} else {
-							$shortcodesMark = '';
-						}
-
-                        $elementText = "<div class='percentPointerClass".$shortcodesMark."' data-id='".$item['id']."' style='clear:both;'>".$elementText."</div>";
-
-						if (!empty($editedContent)) {
-							$previousEditedContent = $editedContent;
-						} else {
-							$messageFLog = 'Emptied edited content;';
-							error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
-
-							$editedContent = $previousEditedContent;
-						}
-					}
-					$editedContent = '<span id="content_pointer_id"></span>'.$editedContent;
-
-//				$editedContent = RFWP_rb_cache_gathering($editedContent, $cachedBlocks);
-//			    $usedBlocks = [];
-					$creatingJavascriptParserForContent = RFWP_creatingJavascriptParserForContentFunction($fromDb, $usedBlocks, $contentLength, $excIdClass, $shortcodes, $rejectedBlocks, $blockDuplicate);
-					$editedContent                      = $creatingJavascriptParserForContent['before'].$editedContent.$creatingJavascriptParserForContent['after'];
-
-					return $editedContent;
-				} else {
-					return $editedContent;
-				}
-			} catch (Exception $ex) {
-				$messageFLog = 'Some error in addIcons: '.$ex->getMessage().';';
+			} catch (E_WARNING $ew) {
+				$messageFLog = 'Some error in content length: '.$ew->getMessage().';';
 				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
-
-				return $content;
-			} catch (Error $er) {
-				$messageFLog = 'Some error in addIcons: '.$er->getMessage().';';
+				return 0;
+            } catch (E_DEPRECATED $ed) {
+				$messageFLog = 'Some error in content length: '.$ed->getMessage().';';
 				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
-
-				return $content;
-			}
+				return 0;
+            }
 		}
 	}
 	if (!function_exists('RFWP_addIcons_test')) {
@@ -839,7 +553,7 @@ try {
 					        $scContent .= 'scArray['.$cou.']["fetched"] = 0;'.PHP_EOL;
 					        $scText = $item2;
 					        $scText = preg_replace('~(\'|\")~','\\\$1',$scText);
-					        $scText = preg_replace('~(\r\n|\r|\n)~',' ',$scText);
+					        $scText = preg_replace('~(\r\n|\n|\r)~',' ',$scText);
 					        $scText = preg_replace('~\<script~', '<scr"+"ipt', $scText);
 					        $scText = preg_replace('~\/script~', '/scr"+"ipt', $scText);
 					        $scContent .= 'scArray['.$cou.']["text"] = "'.$scText.'";'.PHP_EOL;
@@ -888,7 +602,7 @@ try {
 			        $elementTextCache = preg_replace('~\/scr_pt_close;~', '/scr"+"ipt',$elementTextCache);
 			        $elementTextCache = preg_replace('~\<script~', '<scr"+"ipt',$elementTextCache);
 			        $elementTextCache = preg_replace('~\/script~', '/scr"+"ipt',$elementTextCache);
-			        $elementTextCache = preg_replace('~(\r\n|\r|\n)~',' ',$elementTextCache);
+			        $elementTextCache = preg_replace('~(\r\n|\n|\r)~',' ',$elementTextCache);
 
 			        $scriptString .= 'cachedBlocksArray['.$item->post_title.'] = "'.$elementTextCache.'";'.PHP_EOL;
 		        }
@@ -966,7 +680,7 @@ try {
 				$wp_cur_theme_name = $wp_cur_theme->get_template();
 				$themeHeaderFileOpen = file_get_contents(ABSPATH.'wp-content/themes/'.$wp_cur_theme_name.'/header.php');
 
-				$checkedHeader = preg_match('~rbConfig=(\s|\n|\r\n)*\{start\:performance\.now\(\)~iu', $themeHeaderFileOpen, $m);
+				$checkedHeader = preg_match('~rbConfig=(\s|\r\n|\n|\r)*\{start\:performance\.now\(\)~iu', $themeHeaderFileOpen, $m);
 				if (count($m) == 0) {
 					$result = true;
 				} else {
@@ -1018,7 +732,7 @@ try {
 			try {
 			    $detectedHeader = false;
 				if ($patternType=='ad') {
-					$checkedHeaderPattern = '~rbConfig=(\s|\n|\r\n)*?\{start\:performance\.now\(\)~iu';
+					$checkedHeaderPattern = '~rbConfig=(\s|\r\n|\n|\r)*?\{start\:performance\.now\(\)~iu';
 				} elseif ($patternType=='push') {
 					$checkedHeaderPattern = '~\<script\s+?.*?src\s*?=\s*?["\']{1}[^"\']+?\/pushJs\/[^"\']+?["\']{1}[^>]*?\>\<\/script\>~iu';
 				} elseif ($patternType=='pushNative') {
@@ -1259,6 +973,10 @@ launchInsertingsFunctionLaunch();'.PHP_EOL;
         max-height: 1px;
         overflow: hidden;
     } 
+    #content_pointer_id {
+        display: block !important;
+        width: 100% !important;
+    }
 </style>';
 				$scriptingCode = '
             <script>
@@ -1466,6 +1184,10 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
         max-height: 1px;
         overflow: hidden;
     } 
+    #content_pointer_id {
+        display: block !important;
+        width: 100% !important;
+    }
 </style>';
 				$scriptingCode = '
             <script>
@@ -1607,6 +1329,21 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
             }
         }
     }
+	if (!function_exists('RFWP_cronCheckLog')) {
+	    function RFWP_cronCheckLog($message='placeholder') {
+            if (!isset($GLOBALS['rb_cronCheckFile'])) {
+                $rb_cronCheckFile = plugin_dir_path(__FILE__).'cronCheck.log';
+                $GLOBALS['rb_cronCheckFile'] = $rb_cronCheckFile;
+            } else {
+                global $rb_cronCheckFile;
+            }
+
+            if (!empty($rb_cronCheckFile)) {
+	            error_log(PHP_EOL.current_time('mysql').': '
+	                      .PHP_EOL.$message.PHP_EOL, 3, $rb_cronCheckFile);
+            }
+        }
+    }
 	if (!function_exists('RFWP_gatherBlocksFromDb')) {
 		function RFWP_gatherBlocksFromDb() {
 			global $wpdb;
@@ -1726,17 +1463,16 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
     }
     function contentMonitoring() {
         if (typeof jsInputerLaunch===\'undefined\'||(typeof jsInputerLaunch!==\'undefined\'&&jsInputerLaunch==-1)) {
-            let contentCheck = document.querySelector(\'.post-wrap\');
-//            let contentCheck1 = document.querySelector(\'.post-wrap\');
-//            let contentCheck2 = document.querySelector(\'.taxonomy-description\');
+            let possibleClasses = [\'.taxonomy-description\',\'.entry-content\',\'.post-wrap\',];
+            let contentCheck = null;
+            for (let i = 0; i < possibleClasses.length; i++) {
+                contentCheck = document.querySelector(possibleClasses[i]);
+                if (contentCheck) {
+                    break;
+                }
+            }
             let contentPointerCheck = document.querySelector(\'#content_pointer_id\');
-            if (contentCheck&&!contentPointerCheck) {
-//                if (contentCheck1) {
-//                    contentCheck = contentCheck1;
-//                } else {
-//                    contentCheck = contentCheck2;
-//                }
-                
+            if (contentCheck&&!contentPointerCheck) {                
                 console.log(\'content is here\');
                 let cpSpan = document.createElement(\'SPAN\');
                 cpSpan.setAttribute(\'id\', \'content_pointer_id\');

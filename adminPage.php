@@ -134,12 +134,12 @@ try {
 								<input type="checkbox" name="kill_rb" id="kill_rb_id" <?php echo $killRbCheck ?>>
 							</div>
 						<?php endif; ?>
-						<?//php if (!empty($GLOBALS['dev_mode'])): ?>
+						<?php //if (!empty($GLOBALS['dev_mode'])): ?>
                         <div class="element-separator">
                             <label for="process_log">activate process log</label>
                             <input type="checkbox" name="process_log" id="process_log_id" <?php echo $workProcess ?>>
                         </div>
-						<?//php endif; ?>
+						<?php //endif; ?>
 						<br>
 						<?php submit_button( 'Синхронизировать', 'primary', 'saveTokenButton' ) ?>
 						<?php if (!empty($GLOBALS['tokenStatusMessage'])): ?>
