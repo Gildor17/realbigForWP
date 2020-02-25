@@ -6,25 +6,43 @@ if (!defined("ABSPATH")) { exit;}
 require_once (ABSPATH."/wp-admin/includes/plugin.php");
 
 /** Rename plugin folder */
-if (empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))&&!empty($_POST['folderRename'])) {
-	$checkDirName = basename(dirname(__FILE__));
-	$pluginDirname = dirname(__DIR__);
-	$curFileName = basename(plugin_basename( __FILE__ ));
-	$plBaseName = plugin_basename(__FILE__);
-	$renameResult = false;
+try {
+	//if (empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))&&!empty($_POST['folderRename'])) {
+//	if (empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
+		$checkDirName = basename(dirname(__FILE__));
+		$pluginDirname = dirname(__DIR__);
+		$curFileName = basename(plugin_basename( __FILE__ ));
+		$plBaseName = plugin_basename(__FILE__);
+		$renameResult = false;
+		$activatablePluginCheck = false;
+		if (!empty($_GET)&&!empty($_GET['action'])&&!empty($_GET['plugin'])&&in_array($_GET['action'], ['activate','deactivate'])) {
+		    $activatablePlugin = strtolower($_GET['plugin']);
+        }
 
-	if (!empty($pluginDirname)&&!empty($curFileName)&&!empty($checkDirName)&&strpos($checkDirName,'realbigForWP')!==false) {
-		require_once (ABSPATH."/wp-includes/pluggable.php");
-		$rndIntval = rand(1000,9999);
-		$newDirName = 'rb-'.$rndIntval.'-git';
-		deactivate_plugins($plBaseName);
-		$renameResult = rename(dirname(__FILE__),$pluginDirname.'/'.$newDirName);
-		if (!empty($renameResult)) {
-			activate_plugin($newDirName.'/'.$curFileName, admin_url('plugins.php'));
-		} else {
-			activate_plugin($plBaseName, admin_url('plugins.php'));
+		if (!empty($pluginDirname)&&!empty($curFileName)&&!empty($checkDirName)&&strpos(strtolower($checkDirName),'realbigforwp')!==false) {
+		    if (!empty($activatablePlugin)) {
+			    $activatablePluginCheck = strpos($activatablePlugin, strtolower($checkDirName));
+		    }
+		    if ($activatablePluginCheck===false) {
+			    require_once (ABSPATH."/wp-includes/pluggable.php");
+			    $rndIntval = rand(1000,9999);
+			    $newDirName = 'rb-'.$rndIntval.'-git';
+			    deactivate_plugins($plBaseName);
+			    $renameResult = rename(dirname(__FILE__),$pluginDirname.'/'.$newDirName);
+			    if (!empty($renameResult)) {
+				    activate_plugin($newDirName.'/'.$curFileName, admin_url('plugins.php'));
+			    } else {
+				    activate_plugin($plBaseName, admin_url('plugins.php'));
+			    }
+            }
 		}
-	}
+//	}
+} catch (Exception $ex1) {
+	$messageFLog = 'rename folder error : '.$ex1->getMessage();
+	error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+} catch (Error $er1) {
+	$messageFLog = 'rename folder error : '.$er1->getMessage();
+	error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
 }
 /** End of rename plugin folder */
 
@@ -35,7 +53,7 @@ include_once (dirname(__FILE__)."/textEditing.php");
 /*
 Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.2.8
+Version:      0.2.9
 Author:       Realbig Team
 Author URI:   https://realbig.media
 License:      GPLv2 or later
@@ -178,7 +196,7 @@ try {
 	    if (!empty($pluginData['Version'])) {
 		    $GLOBALS['realbigForWP_version'] = $pluginData['Version'];
 	    } else {
-		    $GLOBALS['realbigForWP_version'] = '0.2.8';
+		    $GLOBALS['realbigForWP_version'] = '0.2.9';
 	    }
     }
 
