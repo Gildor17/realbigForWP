@@ -5,6 +5,8 @@ if (!defined("ABSPATH")) { exit;}
 //require_once (dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
 require_once (ABSPATH."/wp-admin/includes/plugin.php");
 
+$rb_logFile = plugin_dir_path(__FILE__).'wpPluginErrors.log';
+global $rb_logFile;
 /** Rename plugin folder */
 try {
 	//if (empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))&&!empty($_POST['folderRename'])) {
@@ -70,8 +72,6 @@ try {
 		$GLOBALS['dev_mode'] = $devMode;
     }
 
-	$rb_logFile = plugin_dir_path(__FILE__).'wpPluginErrors.log';
-	global $rb_logFile;
 	$rb_processlogFile = plugin_dir_path(__FILE__).'workProcess.log';
 	global $rb_processlogFile;
     if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
