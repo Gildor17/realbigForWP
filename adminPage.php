@@ -24,6 +24,10 @@ try {
 		function RFWP_TokenSync() {
 			global $wpdb;
 			global $wpPrefix;
+			global $curlResult;
+			global $devMode;
+
+			$turboTrashUrl = 'rb_turbo_trash_rss';
 
 			$blocksCounter = 1;
 			$checkDirName = basename(dirname(__FILE__));
@@ -39,6 +43,7 @@ try {
 			if (!empty($getWorkProcess)&&$getWorkProcess=='enabled') {
 				$workProcess = 'checked';
             }
+			$rb_rssFeedUrls = $GLOBALS['rb_rssFeedUrls'];
 
 			try {
 				$rbSettings = $wpdb->get_results('SELECT optionName, optionValue, timeUpdate FROM ' . $GLOBALS["wpPrefix"] . 'realbig_settings WHERE optionName IN ("deactError","domain","excludedMainPage","excludedPages","pushStatus","excludedPageTypes","kill_rb")', ARRAY_A);
@@ -111,7 +116,14 @@ try {
 				#folderRename {
 					background-color: #B1FFB0;
 				}
-
+				#rssTest {
+					background-color: #e8ff89;
+					/*color: #000000;*/
+				}
+                #ip-result {
+                    color: green;
+                    font-size: 20px;
+                }
 			</style>
 			<div class="wrap">
 				<div class="separated-blocks">
@@ -134,20 +146,49 @@ try {
 								<input type="checkbox" name="kill_rb" id="kill_rb_id" <?php echo $killRbCheck ?>>
 							</div>
 						<?php endif; ?>
-						<?//php if (!empty($GLOBALS['dev_mode'])): ?>
+						<?php //if (!empty($GLOBALS['dev_mode'])): ?>
                         <div class="element-separator">
                             <label for="process_log">activate process log</label>
                             <input type="checkbox" name="process_log" id="process_log_id" <?php echo $workProcess ?>>
                         </div>
-						<?//php endif; ?>
+						<?php //endif; ?>
 						<br>
 						<?php submit_button( 'Синхронизировать', 'primary', 'saveTokenButton' ) ?>
+                        <?php if (!empty($devMode)): ?>
+	                        <?php submit_button( 'Check-Ip', 'big', 'checkIp', true) ?>
+	                        <?php if (!empty($curlResult)): ?>
+                                <span id="ip-result"><?php echo $curlResult ?></span>
+	                        <?php endif; ?>
+                        <?php endif; ?>
 						<?php if (!empty($GLOBALS['tokenStatusMessage'])): ?>
 							<div name="rezultDiv" style="font-size: 16px"><?php echo $GLOBALS['tokenStatusMessage'] ?></div>
 						<?php endif; ?>
 						<?php if (!empty($checkDirName)&&strpos($checkDirName,'realbigForWP')!==false): ?>
 							<?php submit_button('Rename', 'folderRename', 'folderRename') ?>
 						<?php endif; ?>
+                        <?php if (!empty($devMode)): ?>
+                            <?php if (!empty($rb_rssFeedUrls)): ?>
+                                <?php foreach ($rb_rssFeedUrls AS $k => $item): ?>
+                                    <?php if(get_option('permalink_structure')): ?>
+                                        <a target="_blank" href="<?php echo home_url() ?>/feed/<?php echo $item; ?>"><?php echo home_url() ?>/feed/<?php echo $item; ?></a><br>
+                                    <?php else: ?>
+                                        <a target="_blank" href="<?php echo home_url() ?>/?feed=<?php echo $item; ?>"><?php echo home_url() ?>/?feed=<?php echo $item; ?></a><br>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
+                                <?php unset($k,$item); ?>
+                            <?php endif; ?>
+                        <?php endif; ?>
+                        <div>
+                            <?php if (!empty($devMode)): ?>
+                                <?php // if (!empty($rssOptions['selectiveOff'])): ?>
+                                    <?php if(get_option('permalink_structure')): ?>
+                                        <a target="_blank" href="<?php echo home_url() ?>/feed/<?php echo $turboTrashUrl; ?>"><?php echo home_url() ?>/feed/<?php echo $turboTrashUrl; ?></a><br>
+                                    <?php else: ?>
+                                        <a target="_blank" href="<?php echo home_url() ?>/?feed=<?php echo $turboTrashUrl; ?>"><?php echo home_url() ?>/?feed=<?php echo $turboTrashUrl; ?></a><br>
+                                    <?php endif; ?>
+                                <?php // endif; ?>
+                            <?php endif; ?>
+                        </div>
 					</form>
 				</div>
 				<div class="separated-blocks">

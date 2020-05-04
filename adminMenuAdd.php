@@ -31,36 +31,6 @@ try {
             }
 			unset($k,$item,$cou);
 
-//			$k=0;
-//			$cachesArray[$k] = [];
-//			$cachesArray[$k]['name'] = 'longCacheUse';
-//			$cachesArray[$k]['time'] = get_transient('rb_longCacheDeploy');
-//			$k++;
-//			$cachesArray[$k] = [];
-//			$cachesArray[$k]['name'] = 'activeCache';
-//			$cachesArray[$k]['time'] = get_transient('rb_active_cache');
-//			$k++;
-//			$cachesArray[$k] = [];
-//			$cachesArray[$k]['name'] = 'syncAttempt';
-//			$cachesArray[$k]['time'] = get_transient('realbigPluginSyncAttempt');
-//			$k++;
-//			$cachesArray[$k] = [];
-//			$cachesArray[$k]['name'] = 'syncProcess';
-//			$cachesArray[$k]['time'] = get_transient('realbigPluginSyncProcess');
-//			$k++;
-//			$cachesArray[$k] = [];
-//			$cachesArray[$k]['name'] = 'cache';
-//			$cachesArray[$k]['time'] = get_transient('rb_cache_timeout');
-//			$k++;
-//			$cachesArray[$k] = [];
-//			$cachesArray[$k]['name'] = 'mobileCache';
-//			$cachesArray[$k]['time'] = get_transient('rb_mobile_cache_timeout');
-//			$k++;
-//			$cachesArray[$k] = [];
-//			$cachesArray[$k]['name'] = 'desktopCache';
-//			$cachesArray[$k]['time'] = get_transient('rb_desktop_cache_timeout');
-//			unset($k);
-
 			$admin_bar->add_menu(array(
 				'id'    => 'rb_item_1',
 				'title' => '<span class="ab-icon dashicons dashicons-admin-site"></span> Realbig',

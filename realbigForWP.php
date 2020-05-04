@@ -9,45 +9,53 @@ require_once (ABSPATH."/wp-admin/includes/plugin.php");
 try {
 	//if (empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))&&!empty($_POST['folderRename'])) {
 //	if (empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
-		$checkDirName = basename(dirname(__FILE__));
-		$pluginDirname = dirname(__DIR__);
-		$curFileName = basename(plugin_basename( __FILE__ ));
-		$plBaseName = plugin_basename(__FILE__);
-		$renameResult = false;
-		$activatablePluginCheck = false;
-		if (!empty($_GET)&&!empty($_GET['action'])&&!empty($_GET['plugin'])&&in_array($_GET['action'], ['activate','deactivate'])) {
-		    $activatablePlugin = strtolower($_GET['plugin']);
-        }
+	$checkDirName = basename(dirname(__FILE__));
+	$pluginDirname = dirname(__DIR__);
+	$curFileName = basename(plugin_basename( __FILE__ ));
+	$plBaseName = plugin_basename(__FILE__);
+	$renameResult = false;
+	$activatablePluginCheck = false;
+	if (!empty($_GET)&&!empty($_GET['action'])&&!empty($_GET['plugin'])&&in_array($_GET['action'], ['activate','deactivate'])) {
+		$activatablePlugin = strtolower($_GET['plugin']);
+	}
 
-		if (!empty($pluginDirname)&&!empty($curFileName)&&!empty($checkDirName)&&strpos(strtolower($checkDirName),'realbigforwp')!==false) {
-		    if (!empty($activatablePlugin)) {
-			    $activatablePluginCheck = strpos($activatablePlugin, strtolower($checkDirName));
-		    }
-		    if ($activatablePluginCheck===false) {
-			    require_once (ABSPATH."/wp-includes/pluggable.php");
-			    $rndIntval = rand(1000,9999);
-			    $newDirName = 'rb-'.$rndIntval.'-git';
-			    deactivate_plugins($plBaseName);
-			    $renameResult = rename(dirname(__FILE__),$pluginDirname.'/'.$newDirName);
-			    if (!empty($renameResult)) {
-				    activate_plugin($newDirName.'/'.$curFileName, admin_url('plugins.php'));
-			    } else {
-				    activate_plugin($plBaseName, admin_url('plugins.php'));
-			    }
-            }
+	if (!empty($pluginDirname)&&!empty($curFileName)&&!empty($checkDirName)&&strpos(strtolower($checkDirName),'realbigforwp')!==false) {
+		if (!empty($activatablePlugin)) {
+			$activatablePluginCheck = strpos($activatablePlugin, strtolower($checkDirName));
 		}
+		if ($activatablePluginCheck===false) {
+			require_once (ABSPATH."/wp-includes/pluggable.php");
+			$rndIntval = rand(1000,9999);
+			$newDirName = 'rb-'.$rndIntval.'-git';
+			deactivate_plugins($plBaseName);
+			$renameResult = rename(dirname(__FILE__),$pluginDirname.'/'.$newDirName);
+			if (!empty($renameResult)) {
+				activate_plugin($newDirName.'/'.$curFileName, admin_url('plugins.php'));
+			} else {
+				activate_plugin($plBaseName, admin_url('plugins.php'));
+			}
+		}
+	}
 //	}
-} catch (Exception $ex1) {} catch (Error $er1) {}
+} catch (Exception $ex1) {
+//	$messageFLog = 'rename folder error : '.$ex1->getMessage();
+//	error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+} catch (Error $er1) {
+//	$messageFLog = 'rename folder error : '.$er1->getMessage();
+//	error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+}
 /** End of rename plugin folder */
 
 include_once (dirname(__FILE__)."/update.php");
 include_once (dirname(__FILE__)."/synchronising.php");
 include_once (dirname(__FILE__)."/textEditing.php");
+//include_once (dirname(__FILE__).'/rssGenerator.php');
+include_once (dirname(__FILE__)."/syncApi.php");
 
 /*
 Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.2.9
+Version:      0.3.0
 Author:       Realbig Team
 Author URI:   https://realbig.media
 License:      GPLv2 or later
@@ -68,6 +76,8 @@ try {
 	global $rb_logFile;
 	$rb_processlogFile = plugin_dir_path(__FILE__).'workProcess.log';
 	global $rb_processlogFile;
+	$rb_testCheckLog = plugin_dir_path(__FILE__).'testCheckLog.log';
+	global $rb_testCheckLog;
     if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
 	    RFWP_WorkProgressLog(false,'begin of process');
     }
@@ -79,10 +89,10 @@ try {
 
 	if (!empty($GLOBALS['dev_mode'])) {
 		if (empty($GLOBALS['rb_admin_menu_loaded'])) {
-			require_once (dirname(__FILE__)."/adminMenuAdd.php");
+			require_once(dirname(__FILE__)."/adminMenuAdd.php");
 			$GLOBALS['rb_admin_menu_loaded'] = true;
 		}
-    }
+	}
 
 	if (!isset($GLOBALS['wpPrefix'])) {
 //		if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
@@ -93,7 +103,7 @@ try {
 			$wpPrefix = $wpdb->base_prefix;
 		}
 		$GLOBALS['wpPrefix'] = $wpPrefix;
-    }
+	}
 
     if (!isset($GLOBALS['excludedPagesChecked'])) {
 	    $GLOBALS['excludedPagesChecked'] = false;
@@ -149,20 +159,137 @@ try {
 
 	$GLOBALS['kill_rb'] = $kill_rb;
 	/** End of kill rb connection emulation */
+	/** Cron check */
+//	if (!empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
+//		RFWP_cronCheckLog('cron passed');
+//    }
+	/** End of cron check */
+	/***/
+	if (!empty($devMode)) {
+		if (!empty($_POST['checkIp'])&&is_admin()&&empty(apply_filters('wp_doing_cron', defined('DOING_CRON')&&DOING_CRON))) {
+			$thisUrl = 'http://ifconfig.co/ip';
+			$checkIpLogFile = plugin_dir_path(__FILE__).'checkIpLog.log';
+//		    $thisResultSaved = get_option('checkIpResult');
+//		    if (empty($thisResultSaved)) {
+//			    $thisResult = wp_remote_get($thisUrl);
+//			    if (!empty($thisResult)&&!empty($thisResult['body'])) {
+//				    error_log(PHP_EOL.current_time('mysql').':'.$thisResult['body'].PHP_EOL, 3, $checkIpLogFile);
+//			    }
+//		    }
+			$curl = curl_init();
+			curl_setopt($curl,CURLOPT_URL, $thisUrl);
+			curl_setopt($curl,CURLOPT_RETURNTRANSFER, 1);
+			curl_setopt($curl,CURLOPT_IPRESOLVE,CURL_IPRESOLVE_V4);
+			$curlResult = curl_exec($curl);
+			if (!empty($curlResult)) {
+			    global $curlResult;
+				error_log(PHP_EOL.current_time('mysql').':'.PHP_EOL.$curlResult.PHP_EOL, 3, $checkIpLogFile);
+			}
+			curl_close($curl);
+		}
+
+		if (!empty($curUserCan)) {
+			$testServerName = 'placeholder';
+			$testHttpOrigin = 'placeholder';
+			$testHttpHost = 'placeholder';
+
+			if (!empty($_SERVER['SERVER_NAME'])) {
+				$testServerName = $_SERVER['SERVER_NAME'];
+			}
+			if (!empty($_SERVER['HTTP_ORIGIN'])) {
+				$testHttpOrigin = $_SERVER['HTTP_ORIGIN'];
+			}
+			if (!empty($_SERVER['HTTP_HOST'])) {
+				$testHttpHost = $_SERVER['HTTP_HOST'];
+			}
+			/*?><script>console.log('SERVER_NAME:<?php echo $testServerName.';';?>');console.log('HTTP_ORIGIN:<?php echo $testHttpOrigin.';';?>');console.log('HTTP_HOST:<?php echo $testHttpHost.';';?>')</script><?php*/
+		}
+	}
+
+	/***/
+    /** Rss test */
+	if (!function_exists('rssTestTemplate')) {
+		function rssTestTemplate() {
+//			include_once (dirname(__FILE__).'/rssGenerator.php');
+			$posts = [];
+			$rb_rssFeedUrls = [];
+			$rssPartsCount = 1;
+			$rssOptions = RFWP_rssOptionsGet();
+			$postTypes = $rssOptions['typesPost'];
+			$feedTrashName = 'rb_turbo_trash_rss';
+			add_feed($feedTrashName, 'RFWP_rssCreate');
+			$feedName = 'rb_turbo_rss';
+			add_feed($feedName, 'RFWP_rssCreate');
+			array_push($rb_rssFeedUrls, $feedName);
+			if (!empty($postTypes)) {
+				$tax_query = RFWP_rss_taxonomy_get($rssOptions);
+			    $postTypes = explode(';', $postTypes);
+				$posts = get_posts([
+					'numberposts' => $rssOptions['pagesCount'],
+                    'post_type' => $postTypes,
+					'tax_query' => $tax_query,
+					'fields' => ['ID'],
+				]);
+            }
+
+			if (!empty($posts)) {
+				$rssDividedPosts = RFWP_rssDivine($posts, $rssOptions);
+				$GLOBALS['rb_rssDivideOptions'] = [];
+				$GLOBALS['rb_rssDivideOptions']['posts'] = $rssDividedPosts;
+				$GLOBALS['rb_rssDivideOptions']['iteration'] = 0;
+				$rssOptions['rssPartsSeparated'] = intval($rssOptions['rssPartsSeparated']);
+				if ($rssOptions['rssPartsSeparated']  < 1) {
+					$rssOptions['rssPartsSeparated'] = 1;
+				}
+				if (!empty($rssOptions['divide'])&&!($rssOptions['rssPartsSeparated'] >= count($posts))) {
+					$rssPartsCount = count($posts)/$rssOptions['rssPartsSeparated'];
+					$rssPartsCount = ceil($rssPartsCount);
+					$feed = [];
+					for ($cou = 0; $cou < $rssPartsCount; $cou++) {
+						if ($cou > 0) {
+							$feedName = 'rb_turbo_rss';
+							if (get_option('permalink_structure')) {
+								$feedPage = '/?paged='.($cou+1);
+							} else {
+								$feedPage = '&paged='.($cou+1);
+							}
+							$feedName = $feedName.$feedPage;
+							add_feed($feedName, 'RFWP_rssCreate');
+							array_push($rb_rssFeedUrls, $feedName);
+						}
+					}
+				}
+			}
+			if (!empty($rb_rssFeedUrls)) {
+				$GLOBALS['rb_rssFeedUrls'] = $rb_rssFeedUrls;
+			}
+
+			global $wp_rewrite;
+			$wp_rewrite->flush_rules();
+		}
+    }
+	if (!empty($devMode)) {
+		add_action('init', 'rssTestTemplate');
+    }
+	/** End of Rss test */
 	/***************** End of test zone ***********************************************************************************/
 	/***************** Cached AD blocks saving ***************************************************************************************/
-    function saveAdBlocks($tunnelData) {
-	    if (!empty($_POST['type'])&&$_POST['type']=='blocksGethering') {
-		    include_once (dirname(__FILE__).'/connectTestFile.php');
-	    }
-	    return $tunnelData;
+	if (!function_exists('saveAdBlocks')) {
+		function saveAdBlocks($tunnelData) {
+			if (!empty($_POST['type'])&&$_POST['type']=='blocksGethering') {
+				include_once (dirname(__FILE__).'/connectTestFile.php');
+			}
+			return $tunnelData;
+		}
     }
 
-    function setLongCache($tunnelData) {
-        if (!empty($_POST['type'])&&$_POST['type']=='longCatching') {
-	        set_transient('rb_longCacheDeploy', time()+300, 300);
-        }
-	    return $tunnelData;
+	if (!function_exists('setLongCache')) {
+		function setLongCache($tunnelData) {
+			if (!empty($_POST['type'])&&$_POST['type']=='longCatching') {
+				set_transient('rb_longCacheDeploy', time()+300, 300);
+			}
+			return $tunnelData;
+		}
     }
 	/***************** End of cached AD blocks saving *********************************************************************************/
 	$tableForCurrentPluginChecker = $wpdb->get_var('SHOW TABLES LIKE "' . $wpPrefix . 'realbig_plugin_settings"');   //settings for block table checking
@@ -180,6 +307,17 @@ try {
 	        delete_transient('rb_desktop_cache_timeout');
 		    delete_option('realbig_status_gatherer_version');
 
+		    if (empty($GLOBALS['wp_rewrite'])) {
+			    $GLOBALS['wp_rewrite'] = new WP_Rewrite();
+		    }
+		    $oldShortcodes = get_posts(['post_type' => 'rb_shortcodes','numberposts' => 100]);
+		    if (!empty($oldShortcodes)) {
+			    foreach ($oldShortcodes AS $k => $item) {
+				    wp_delete_post($item->ID);
+			    }
+			    unset($k, $item);
+		    }
+
 		    $messageFLog = 'clear cached ads';
 		    error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
 	    }
@@ -190,7 +328,7 @@ try {
 	    if (!empty($pluginData['Version'])) {
 		    $GLOBALS['realbigForWP_version'] = $pluginData['Version'];
 	    } else {
-		    $GLOBALS['realbigForWP_version'] = '0.2.9';
+		    $GLOBALS['realbigForWP_version'] = '0.3.0';
 	    }
     }
 
@@ -408,51 +546,55 @@ try {
 //    }
 	/********** end of checking requested page for excluding **************************************************************/
 	/********** new working system ****************************************************************************************/
-	function RFWP_blocks_in_head_add() {
-		global $rb_logFile;
-		try {
-			if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
-				RFWP_WorkProgressLog(false,'blocks_in_head_add begin');
+	if (!function_exists('RFWP_blocks_in_head_add')) {
+		function RFWP_blocks_in_head_add() {
+			global $rb_logFile;
+			try {
+				if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
+					RFWP_WorkProgressLog(false,'blocks_in_head_add begin');
+				}
+				$content = RFWP_shortCodesAdd('');
+				$fromDb = RFWP_gatherBlocksFromDb();
+				$GLOBALS['fromDb'] = $fromDb;
+				$contentBlocks = RFWP_creatingJavascriptParserForContentFunction_test($fromDb['adBlocks'], $fromDb['excIdClass'], $fromDb['blockDuplicate']);
+				$content = $contentBlocks['before'].$content.$contentBlocks['after'];
+				if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
+					RFWP_WorkProgressLog(false,'blocks_in_head_add end');
+				}
+
+				?><?php echo $content ?><?php
+			} catch (Exception $ex) {
+				$messageFLog = 'RFWP_blocks_in_head_add errors: '.$ex->getMessage().';';
+				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+			} catch (Error $er) {
+				$messageFLog = 'RFWP_blocks_in_head_add errors: '.$er->getMessage().';';
+				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
 			}
-			$content = RFWP_shortCodesAdd('');
-			$fromDb = RFWP_gatherBlocksFromDb();
-			$GLOBALS['fromDb'] = $fromDb;
-			$contentBlocks = RFWP_creatingJavascriptParserForContentFunction_test($fromDb['adBlocks'], $fromDb['excIdClass'], $fromDb['blockDuplicate']);
-			$content = $contentBlocks['before'].$content.$contentBlocks['after'];
-			if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
-				RFWP_WorkProgressLog(false,'blocks_in_head_add end');
+		}
+	}
+
+	if (!function_exists('RFWP_launch_without_content')) {
+		function RFWP_launch_without_content() {
+			global $rb_logFile;
+			try {
+				if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
+					RFWP_WorkProgressLog(false,'launch_without_content begin');
+				}
+				$content = '';
+				$content = RFWP_launch_without_content_function($content);
+
+				?><?php echo $content ?><?php
+			} catch (Exception $ex) {
+				$messageFLog = 'RFWP_launch_without_content errors: '.$ex->getMessage().';';
+				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+			} catch (Error $er) {
+				$messageFLog = 'RFWP_launch_without_content errors: '.$er->getMessage().';';
+				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
 			}
+		}
+	}
 
-			?><?php echo $content ?><?php
-        } catch (Exception $ex) {
-		    $messageFLog = 'RFWP_blocks_in_head_add errors: '.$ex->getMessage().';';
-		    error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
-	    } catch (Error $er) {
-		    $messageFLog = 'RFWP_blocks_in_head_add errors: '.$er->getMessage().';';
-		    error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
-	    }
-    }
-
-    function RFWP_launch_without_content() {
-	    global $rb_logFile;
-	    try {
-		    if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
-			    RFWP_WorkProgressLog(false,'launch_without_content begin');
-		    }
-		    $content = '';
-		    $content = RFWP_launch_without_content_function($content);
-
-		    ?><?php echo $content ?><?php
-	    } catch (Exception $ex) {
-		    $messageFLog = 'RFWP_launch_without_content errors: '.$ex->getMessage().';';
-		    error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
-	    } catch (Error $er) {
-		    $messageFLog = 'RFWP_launch_without_content errors: '.$er->getMessage().';';
-		    error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
-	    }
-    }
-
-    if ($excludedPage==false&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))) {
+    if (isset($excludedPage)&&$excludedPage==false&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))) {
 	    add_shortcode('test_sc_oval', 'test_sc_oval_exec');
 
 //	    RFWP_shortcodesInGlobal();
@@ -462,43 +604,47 @@ try {
     }
 	/********** end of new working system *********************************************************************************/
 	/********** autosync and JS text edit *********************************************************************************/
-	function RFWP_syncFunctionAdd1() {
-		wp_enqueue_script(
-		    'asyncBlockInserting',
-			plugins_url().'/'.basename(__DIR__).'/asyncBlockInserting.js',
-			array('jquery'),
-			$GLOBALS['realbigForWP_version'],
-			false
-        );
+	if (!function_exists('RFWP_syncFunctionAdd1')) {
+		function RFWP_syncFunctionAdd1() {
+			wp_enqueue_script(
+				'asyncBlockInserting',
+				plugins_url().'/'.basename(__DIR__).'/asyncBlockInserting.js',
+				array('jquery'),
+				$GLOBALS['realbigForWP_version'],
+				false
+			);
 
-		wp_localize_script(
-			'asyncBlockInserting',
-			'adg_object_ad',
-			array('ajax_url' => admin_url('admin-ajax.php'))
-		);
+			wp_localize_script(
+				'asyncBlockInserting',
+				'adg_object_ad',
+				array('ajax_url' => admin_url('admin-ajax.php'))
+			);
 
-		if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
-			RFWP_WorkProgressLog(false,'asyncBlockInserting file add');
+			if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
+				RFWP_WorkProgressLog(false,'asyncBlockInserting file add');
+			}
 		}
 	}
 
-	function RFWP_syncFunctionAdd2() {
-		wp_enqueue_script(
-            'readyAdGather',
-			plugins_url().'/'.basename(__DIR__).'/readyAdGather.js',
-			array('jquery'),
-			$GLOBALS['realbigForWP_version'],
-            false
-        );
+	if (!function_exists('RFWP_syncFunctionAdd2')) {
+		function RFWP_syncFunctionAdd2() {
+			wp_enqueue_script(
+				'readyAdGather',
+				plugins_url().'/'.basename(__DIR__).'/readyAdGather.js',
+				array('jquery'),
+				$GLOBALS['realbigForWP_version'],
+				false
+			);
 
-		wp_localize_script(
-			'readyAdGather',
-			'adg_object',
-			array('ajax_url' => admin_url('admin-ajax.php'))
-		);
+			wp_localize_script(
+				'readyAdGather',
+				'adg_object',
+				array('ajax_url' => admin_url('admin-ajax.php'))
+			);
 
-		if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
-			RFWP_WorkProgressLog(false,'readyAdGather file add');
+			if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
+				RFWP_WorkProgressLog(false,'readyAdGather file add');
+			}
 		}
 	}
 
@@ -509,30 +655,32 @@ try {
 		add_action('wp_ajax_nopriv_setLongCache', 'setLongCache');
     }
 
-    function RFWP_js_add() {
-        add_action('wp_enqueue_scripts', 'RFWP_syncFunctionAdd1', 10);
-	    $cacheTimeoutMobile = get_transient('rb_mobile_cache_timeout');
-	    $cacheTimeoutDesktop = get_transient('rb_desktop_cache_timeout');
-	    if (!empty($GLOBALS['dev_mode'])) {
-		    $cacheTimeoutMobile = 0;
-		    $cacheTimeoutDesktop = 0;
-	    }
+	if (!function_exists('RFWP_js_add')) {
+		function RFWP_js_add() {
+			add_action('wp_enqueue_scripts', 'RFWP_syncFunctionAdd1', 10);
+			$cacheTimeoutMobile = get_transient('rb_mobile_cache_timeout');
+			$cacheTimeoutDesktop = get_transient('rb_desktop_cache_timeout');
+			if (!empty($GLOBALS['dev_mode'])) {
+				$cacheTimeoutMobile = 0;
+				$cacheTimeoutDesktop = 0;
+			}
 
-	    if (empty($cacheTimeoutDesktop)||empty($cacheTimeoutMobile)) {
-		    $cacheTimeout = get_transient('rb_cache_timeout');
+			if (empty($cacheTimeoutDesktop)||empty($cacheTimeoutMobile)) {
+				$cacheTimeout = get_transient('rb_cache_timeout');
 
-		    if (!empty($GLOBALS['dev_mode'])) {
-			    $cacheTimeout = 0;
-		    }
+				if (!empty($GLOBALS['dev_mode'])) {
+					$cacheTimeout = 0;
+				}
 
-		    if (empty($cacheTimeout)) {
-			    add_action('wp_enqueue_scripts', 'RFWP_syncFunctionAdd2', 11);
-		    }
-	    }
-	    if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
-		    RFWP_WorkProgressLog(false,'js_add end');
-	    }
-    }
+				if (empty($cacheTimeout)) {
+					add_action('wp_enqueue_scripts', 'RFWP_syncFunctionAdd2', 11);
+				}
+			}
+			if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
+				RFWP_WorkProgressLog(false,'js_add end');
+			}
+		}
+	}
 
 	$lastSyncTimeTransient = get_transient('realbigPluginSyncAttempt');
 	$activeSyncTransient   = get_transient('realbigPluginSyncProcess');
@@ -554,136 +702,144 @@ try {
 	}
 	/********** end autosync and JS text edit *****************************************************************************/
 	/********** adding AD code in head area *******************************************************************************/
-	function RFWP_AD_header_add() {
+	if (!function_exists('RFWP_AD_header_add')) {
+		function RFWP_AD_header_add() {
 //		if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
 //			RFWP_WorkProgressLog(false,'ad header add begin');
 //		}
-		global $wpdb;
-		$getDomain = 'any.realbig.media';
-		$getRotator = 'rotator';
+			global $wpdb;
+			$getDomain = 'any.realbig.media';
+			$getRotator = 'rotator';
 
-		$getOV = $wpdb->get_results('SELECT optionName, optionValue FROM '.$GLOBALS['wpPrefix'].'realbig_settings WHERE optionName IN ("domain","rotator")');
-		foreach ($getOV AS $k => $item) {
-			if (!empty($item->optionValue)) {
-				if ($item->optionName == 'domain') {
-					$getDomain = $item->optionValue;
-				} else {
-					$getRotator = $item->optionValue;
+			$getOV = $wpdb->get_results('SELECT optionName, optionValue FROM '.$GLOBALS['wpPrefix'].'realbig_settings WHERE optionName IN ("domain","rotator")');
+			foreach ($getOV AS $k => $item) {
+				if (!empty($item->optionValue)) {
+					if ($item->optionName == 'domain') {
+						$getDomain = $item->optionValue;
+					} else {
+						$getRotator = $item->optionValue;
+					}
 				}
 			}
-		}
-		unset($k, $item);
+			unset($k, $item);
 
-		if (!empty($GLOBALS['dev_mode'])&&!empty($GLOBALS['kill_rb'])&&$GLOBALS['kill_rb']==2) {
-			$getDomain  = "ex.ua";
-		}
-        $rotatorUrl = "https://".$getDomain."/".$getRotator.".min.js";
+			if (!empty($GLOBALS['dev_mode'])&&!empty($GLOBALS['kill_rb'])&&$GLOBALS['kill_rb']==2) {
+				$getDomain  = "ex.ua";
+			}
+			$rotatorUrl = "https://".$getDomain."/".$getRotator.".min.js";
 
-		$GLOBALS['rotatorUrl'] = $rotatorUrl;
+			$GLOBALS['rotatorUrl'] = $rotatorUrl;
 
-		require_once (dirname(__FILE__)."/textEditing.php");
+			require_once (dirname(__FILE__)."/textEditing.php");
 //		$headerParsingResult = RFWP_headerADInsertor();
-		$headerParsingResult = RFWP_headerInsertor('ad');
+			$headerParsingResult = RFWP_headerInsertor('ad');
 
-        $longCache = RFWP_getLongCache();
+			$longCache = RFWP_getLongCache();
 
-		/*if ($headerParsingResult == true&&empty($longCache)) {
-            ?><!--rb_ad_header_placeholder--><?php
-        }*/
+			/*if ($headerParsingResult == true&&empty($longCache)) {
+				?><!--rb_ad_header_placeholder--><?php
+			}*/
 
-		if ($headerParsingResult == true&&empty($longCache)) {
-            ?><script type="text/javascript"> rbConfig = {start: performance.now(),rotator:'<?php echo $getRotator ?>'}; </script>
-            <script type="text/javascript">
-                function onErrorPlacing() {
-                    if (typeof cachePlacing !== 'undefined' && typeof cachePlacing === 'function' && typeof jsInputerLaunch !== 'undefined' && jsInputerLaunch == 15) {
-                        let errorInfo = [];
-                        cachePlacing('low',errorInfo);
-                    } else {
-                        setTimeout(function () {
-                            onErrorPlacing();
-                        }, 100)
-                    }
-                }
-                let rotatorScript = document.createElement('script');
-                rotatorScript.src = "//<?php echo $getDomain ?>/<?php echo $getRotator ?>.min.js";
-                rotatorScript.type = "text/javascript";
-                rotatorScript.async = true;
-
-                document.head.append(rotatorScript);
-            </script>
-            <script>
-                var xhr = new XMLHttpRequest();
-                xhr.open('GET',"//<?php echo $getDomain ?>/<?php echo $getRotator ?>.min.js",true);
-                xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-                xhr.onreadystatechange = function() {
-                    console.log('xhr_status: '+xhr.status);
-                    console.log('xhr_status_text: '+xhr.statusText);
-                    if (xhr.status != 200) {
-                        if (xhr.statusText != 'abort') {
-                            onErrorPlacing();
+			if ($headerParsingResult == true&&empty($longCache)) {
+				?><script type="text/javascript"> rbConfig = {start: performance.now(),rotator:'<?php echo $getRotator ?>'}; </script>
+                <script type="text/javascript">
+                    function onErrorPlacing() {
+                        if (typeof cachePlacing !== 'undefined' && typeof cachePlacing === 'function' && typeof jsInputerLaunch !== 'undefined' && jsInputerLaunch == 15) {
+                            let errorInfo = [];
+                            cachePlacing('low',errorInfo);
+                        } else {
+                            setTimeout(function () {
+                                onErrorPlacing();
+                            }, 100)
                         }
                     }
-                };
-                xhr.send();
-            </script><?php
-		}
-		if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
-			RFWP_WorkProgressLog(false,'AD_header_add end');
-		}
-	}
+                    let rotatorScript = document.createElement('script');
+                    rotatorScript.src = "//<?php echo $getDomain ?>/<?php echo $getRotator ?>.min.js";
+                    rotatorScript.type = "text/javascript";
+                    rotatorScript.async = true;
 
-	function RFWP_push_head_add() {
-		require_once (dirname(__FILE__)."/textEditing.php");
+                    document.head.append(rotatorScript);
+                </script>
+                <script>
+                    var xhr = new XMLHttpRequest();
+                    xhr.open('GET',"//<?php echo $getDomain ?>/<?php echo $getRotator ?>.min.js",true);
+                    xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                    xhr.onreadystatechange = function() {
+                        console.log('xhr_status: '+xhr.status);
+                        console.log('xhr_status_text: '+xhr.statusText);
+                        if (xhr.status != 200) {
+                            if (xhr.statusText != 'abort') {
+                                onErrorPlacing();
+                            }
+                        }
+                    };
+                    xhr.send();
+                </script><?php
+			}
+			if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
+				RFWP_WorkProgressLog(false,'AD_header_add end');
+			}
+		}
+    }
+
+	if (!function_exists('RFWP_push_head_add')) {
+		function RFWP_push_head_add() {
+			require_once (dirname(__FILE__)."/textEditing.php");
 //		if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
 //			RFWP_WorkProgressLog(false,'push header add begin');
 //		}
 //		$headerParsingResult = RFWP_headerPushInsertor();
-		$headerParsingResult = RFWP_headerInsertor('push');
-		if ($headerParsingResult == true) {
-		    global $wpdb;
+			$headerParsingResult = RFWP_headerInsertor('push');
+			if ($headerParsingResult == true) {
+				global $wpdb;
 
-			$pushDomain = $wpdb->get_var('SELECT optionValue FROM '.$GLOBALS['wpPrefix'].'realbig_settings WHERE optionName = "pushDomain"');
-		    if (empty($pushDomain)) {
-			    $pushDomain = 'bigreal.org';
-            }
+				$pushDomain = $wpdb->get_var('SELECT optionValue FROM '.$GLOBALS['wpPrefix'].'realbig_settings WHERE optionName = "pushDomain"');
+				if (empty($pushDomain)) {
+					$pushDomain = 'bigreal.org';
+				}
 
-			?><script charset="utf-8" async
-                src="https://<?php echo $pushDomain ?>/pushJs/<?php echo $GLOBALS['rb_push']['code'] ?>.js"></script><?php
+				?><script charset="utf-8" async
+                          src="https://<?php echo $pushDomain ?>/pushJs/<?php echo $GLOBALS['rb_push']['code'] ?>.js"></script><?php
+			}
+			if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
+				RFWP_WorkProgressLog(false,'push_head_add end');
+			}
 		}
-		if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
-			RFWP_WorkProgressLog(false,'push_head_add end');
+    }
+
+	if (!function_exists('RFWP_push_native_head_add')) {
+		function RFWP_push_native_head_add() {
+			require_once (dirname(__FILE__)."/textEditing.php");
+			$headerParsingResult = RFWP_headerInsertor('pushNative');
+			if ($headerParsingResult == true) {
+				global $wpdb;
+
+				$pushDomain = $wpdb->get_var('SELECT optionValue FROM '.$GLOBALS['wpPrefix'].'realbig_settings WHERE optionName = "pushNativeDomain"');
+				if (empty($pushDomain)) {
+					$pushDomain = 'truenat.bid';
+				}
+
+				?><script charset="utf-8" async
+                          src="https://<?php echo $pushDomain ?>/nat/<?php echo $GLOBALS['rb_push']['nativeCode'] ?>.js"></script><?php
+			}
+			if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
+				RFWP_WorkProgressLog(false,'push_native_head_add end');
+			}
 		}
-	}
+    }
 
-	function RFWP_push_native_head_add() {
-		require_once (dirname(__FILE__)."/textEditing.php");
-		$headerParsingResult = RFWP_headerInsertor('pushNative');
-		if ($headerParsingResult == true) {
-		    global $wpdb;
-
-			$pushDomain = $wpdb->get_var('SELECT optionValue FROM '.$GLOBALS['wpPrefix'].'realbig_settings WHERE optionName = "pushNativeDomain"');
-		    if (empty($pushDomain)) {
-			    $pushDomain = 'truenat.bid';
-            }
-
-			?><script charset="utf-8" async
-                src="https://<?php echo $pushDomain ?>/nat/<?php echo $GLOBALS['rb_push']['nativeCode'] ?>.js"></script><?php
+	if (!function_exists('RFWP_inserts_head_add')) {
+		function RFWP_inserts_head_add() {
+			$contentToAdd = RFWP_insertsToString('header');
+			$stringToAdd = '';
+			foreach ($contentToAdd['header'] AS $k=>$item) {
+				$stringToAdd .= $item['content'];
+			}
+			?><?php echo $stringToAdd ?><?php
+			if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
+				RFWP_WorkProgressLog(false,'inserts_head_add end');
+			}
 		}
-		if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
-			RFWP_WorkProgressLog(false,'push_native_head_add end');
-		}
-	}
-
-    function RFWP_inserts_head_add() {
-	    $contentToAdd = RFWP_insertsToString('header');
-	    $stringToAdd = '';
-	    foreach ($contentToAdd['header'] AS $k=>$item) {
-	        $stringToAdd .= $item['content'];
-        }
-        ?><?php echo $stringToAdd ?><?php
-	    if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
-		    RFWP_WorkProgressLog(false,'inserts_head_add end');
-	    }
     }
 
 	// new
@@ -702,7 +858,6 @@ try {
 		    foreach ($statuses AS $k => $item) {
 			    $separatedStatuses[$item['optionName']] = $item['optionValue'];
             }
-		    $penyok_stoparik = 0;
 			if (!empty($separatedStatuses)&&!empty($separatedStatuses['pushCode'])&&isset($separatedStatuses['pushStatus'])&&$separatedStatuses['pushStatus']==1) {
 				add_action('wp_head', 'RFWP_push_head_add', 0);
 //				$GLOBALS['pushCode'] = $separatedStatuses['pushCode'];
@@ -735,7 +890,6 @@ try {
 		    if (!empty($curUserCan)&&!empty($_POST['saveTokenButton'])) {
 		        $workProcess = null;
 		        $getWorkProcess = $wpdb->get_var($wpdb->prepare('SELECT id FROM '.$wpPrefix.'realbig_settings WHERE optionName = %s', ["work_process_status"]));
-		        $penyok_stoparik = 0;
 		        if (!empty($_POST['process_log'])) {
 			        $workProcess = 'enabled';
                 } else {
@@ -786,122 +940,123 @@ try {
 	}
 	/************* end blocks for text ************************************************************************************/
 	/************* adding insertings in text *****************************************************/
-    function RFWP_insertingsToContentAddingFunction($content) {
-	    if (empty($GLOBALS['used_ins'])||(!empty($GLOBALS['used_ins'])&&empty($GLOBALS['used_ins']['body_0']))) {
-		    $GLOBALS['used_ins']['body_0'] = true;
-		    $insertings = RFWP_insertsToString('body', 0);
-        }
-	    $content = RFWP_insertingsToContent($content);
-	    if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
-		    RFWP_WorkProgressLog(false,'RFWP_insertingsToContentAddingFunction end');
-	    }
-	    return $content;
-    }
+	if (!function_exists('RFWP_insertingsToContentAddingFunction')) {
+		function RFWP_insertingsToContentAddingFunction($content) {
+			if (empty($GLOBALS['used_ins'])||(!empty($GLOBALS['used_ins'])&&empty($GLOBALS['used_ins']['body_0']))) {
+				$GLOBALS['used_ins']['body_0'] = true;
+				$insertings = RFWP_insertsToString('body', 0);
+			}
+			$content = RFWP_insertingsToContent($content);
+			if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
+				RFWP_WorkProgressLog(false,'RFWP_insertingsToContentAddingFunction end');
+			}
+			return $content;
+		}
+	}
 	/************* end adding insertings in text *****************************************************/
 	/********** using settings in texts ***********************************************************************************/
-	function RFWP_adBlocksToContentInsertingFunction($content) {
-		global $wp_query;
-		global $post;
+	if (!function_exists('RFWP_adBlocksToContentInsertingFunction')) {
+		function RFWP_adBlocksToContentInsertingFunction($content) {
+			global $wp_query;
+			global $post;
 
-		if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
-			RFWP_WorkProgressLog(false,'adBlocksToContentInsertingFunction begin');
-		}
+			if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
+				RFWP_WorkProgressLog(false,'adBlocksToContentInsertingFunction begin');
+			}
 
-		$pasingAllowed = true;
-		$arrayOfCheckedTypes = [
-			'is_home' => is_home(),
-			'is_front_page' => is_front_page(),
-			'is_page' => is_page(),
-			'is_single' => is_single(),
-			'is_singular' => is_singular(),
-			'is_archive' => is_archive(),
-            'is_category' => is_category(),
-		];
+			$pasingAllowed = true;
+			$arrayOfCheckedTypes = [
+				'is_home' => is_home(),
+				'is_front_page' => is_front_page(),
+				'is_page' => is_page(),
+				'is_single' => is_single(),
+				'is_singular' => is_singular(),
+				'is_archive' => is_archive(),
+				'is_category' => is_category(),
+			];
 
-		if ((!empty($arrayOfCheckedTypes['is_home'])||!empty($arrayOfCheckedTypes['is_front_page']))&&!empty($GLOBALS['pageChecks']['excludedMainPage'])) {
-		    return $content;
-	    } elseif (in_array(true, $arrayOfCheckedTypes)) {
-	        if (!empty($GLOBALS['pageChecks']['excludedPageTypes'])) {
-		        $excludedPageTypesString = $GLOBALS['pageChecks']['excludedPageTypes'];
-		        $excludedPageTypes = explode(',', $excludedPageTypesString);
-		        foreach ($excludedPageTypes AS $k => $item) {
-		            if (!empty($arrayOfCheckedTypes[$item])) {
-			            $pasingAllowed = false;
-			            break;
-		            }
-		        }
-	        }
+			if ((!empty($arrayOfCheckedTypes['is_home'])||!empty($arrayOfCheckedTypes['is_front_page']))&&!empty($GLOBALS['pageChecks']['excludedMainPage'])) {
+				return $content;
+			} elseif (in_array(true, $arrayOfCheckedTypes)) {
+				if (!empty($GLOBALS['pageChecks']['excludedPageTypes'])) {
+					$excludedPageTypesString = $GLOBALS['pageChecks']['excludedPageTypes'];
+					$excludedPageTypes = explode(',', $excludedPageTypesString);
+					foreach ($excludedPageTypes AS $k => $item) {
+						if (!empty($arrayOfCheckedTypes[$item])) {
+							$pasingAllowed = false;
+							break;
+						}
+					}
+				}
 
-		    if (!empty($pasingAllowed)) {
-			    global $wpdb;
+				if (!empty($pasingAllowed)) {
+					global $wpdb;
 
 //			    $excIdClass = $wpdb->get_var('SELECT optionValue FROM '.$GLOBALS['wpPrefix'].'realbig_settings WGPS WHERE optionName = "excludedIdAndClasses"');
-			    $excIdClass = null;
-			    $blockDuplicate = 'yes';
-			    $realbig_settings_info = $wpdb->get_results('SELECT optionName, optionValue FROM '.$GLOBALS['wpPrefix'].'realbig_settings WGPS WHERE optionName IN ("excludedIdAndClasses","blockDuplicate")');
-			    if (!empty($realbig_settings_info)) {
-				    foreach ($realbig_settings_info AS $k => $item) {
-					    if (isset($item->optionValue)) {
-						    if ($item->optionName == 'excludedIdAndClasses') {
-							    $excIdClass = $item->optionValue;
-						    } elseif ($item->optionName == 'blockDuplicate') {
-						        if ($item->optionValue==0) {
-							        $blockDuplicate = 'no';
-						        }
-						    }
-					    }
-				    }
-				    unset($k,$item);
-                }
+					$excIdClass = null;
+					$blockDuplicate = 'yes';
+					$realbig_settings_info = $wpdb->get_results('SELECT optionName, optionValue FROM '.$GLOBALS['wpPrefix'].'realbig_settings WGPS WHERE optionName IN ("excludedIdAndClasses","blockDuplicate")');
+					if (!empty($realbig_settings_info)) {
+						foreach ($realbig_settings_info AS $k => $item) {
+							if (isset($item->optionValue)) {
+								if ($item->optionName == 'excludedIdAndClasses') {
+									$excIdClass = $item->optionValue;
+								} elseif ($item->optionName == 'blockDuplicate') {
+									if ($item->optionValue==0) {
+										$blockDuplicate = 'no';
+									}
+								}
+							}
+						}
+						unset($k,$item);
+					}
 
-                $cachedBlocks = '';
-			    if (!isset($GLOBALS['rb_mobile_check'])) {
-				    $GLOBALS['rb_mobile_check'] = RFWP_wp_is_mobile();
-                }
+					$cachedBlocks = '';
+					if (!isset($GLOBALS['rb_mobile_check'])) {
+						$GLOBALS['rb_mobile_check'] = RFWP_wp_is_mobile();
+					}
 
-                $shortcodesGathered = get_posts(['post_type'=>'rb_shortcodes','numberposts'=>-1]);
-                $shortcodes = [];
-                foreach ($shortcodesGathered AS $k=>$item) {
-                    if (empty($shortcodes[$item->post_excerpt])) {
-                        $shortcodes[$item->post_excerpt] = [];
-                    }
-                    $shortcodes[$item->post_excerpt][$item->post_title] = $item;
-                }
+					$shortcodesGathered = get_posts(['post_type'=>'rb_shortcodes','numberposts'=>-1]);
+					$shortcodes = [];
+					foreach ($shortcodesGathered AS $k=>$item) {
+						if (empty($shortcodes[$item->post_excerpt])) {
+							$shortcodes[$item->post_excerpt] = [];
+						}
+						$shortcodes[$item->post_excerpt][$item->post_title] = $item;
+					}
 
-			    if (!empty($content)) {
-				    $fromDb = $wpdb->get_results('SELECT * FROM '.$GLOBALS['wpPrefix'].'realbig_plugin_settings WGPS');
-			    } else {
-				    $fromDb = $wpdb->get_results('SELECT * FROM '.$GLOBALS['wpPrefix'].'realbig_plugin_settings WGPS WHERE setting_type = 3');
-			    }
-			    require_once (dirname(__FILE__)."/textEditing.php");
+					if (!empty($content)) {
+						$fromDb = $wpdb->get_results('SELECT * FROM '.$GLOBALS['wpPrefix'].'realbig_plugin_settings WGPS');
+					} else {
+						$fromDb = $wpdb->get_results('SELECT * FROM '.$GLOBALS['wpPrefix'].'realbig_plugin_settings WGPS WHERE setting_type = 3');
+					}
+					require_once (dirname(__FILE__)."/textEditing.php");
 //			    $content = RFWP_addIcons($fromDb, $content, 'content', null, null, $shortcodes, $excIdClass, $blockDuplicate);
-			    $content = RFWP_addIcons_test($fromDb, $content);
+					$content = RFWP_addIcons_test($fromDb, $content);
 
-			    if (empty($GLOBALS['used_ins'])||(!empty($GLOBALS['used_ins'])&&empty($GLOBALS['used_ins']['body_1']))) {
-				    $GLOBALS['used_ins']['body_1'] = true;
-				    $inserts = RFWP_insertsToString('body', 1);
-			    }
+					if (empty($GLOBALS['used_ins'])||(!empty($GLOBALS['used_ins'])&&empty($GLOBALS['used_ins']['body_1']))) {
+						$GLOBALS['used_ins']['body_1'] = true;
+						$inserts = RFWP_insertsToString('body', 1);
+					}
 
-                add_filter('the_content', 'RFWP_rbCacheGatheringLaunch', 5003);
-			    if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
-				    RFWP_WorkProgressLog(false,'adBlocksToContentInsertingFunction end');
-			    }
+					add_filter('the_content', 'RFWP_rbCacheGatheringLaunch', 5003);
+					if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
+						RFWP_WorkProgressLog(false,'adBlocksToContentInsertingFunction end');
+					}
 
-			    return $content;
-		    } else {
-			    if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
-				    RFWP_WorkProgressLog(false,'adBlocksToContentInsertingFunction empty content end');
-			    }
-
-			    return $content;
-		    }
-	    } else {
-		    if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
-			    RFWP_WorkProgressLog(false,'adBlocksToContentInsertingFunction forbidden page type end');
-		    }
-
-		    return $content;
-	    }
+					return $content;
+				} else {
+					if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
+						RFWP_WorkProgressLog(false,'adBlocksToContentInsertingFunction empty content end');
+					}
+				}
+			} else {
+				if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
+					RFWP_WorkProgressLog(false,'adBlocksToContentInsertingFunction forbidden page type end');
+				}
+			}
+			return $content;
+		}
 	}
 	/*********** end of using settings in texts ***************************************************************************/
 	/*********** begin of token input area ********************************************************************************/
@@ -935,7 +1090,7 @@ catch (Exception $ex)
 			    'optionValue' => 'realbigForWP: '.$ex->getMessage()
 		    ]);
 	    } else {
-		    $wpdb->update( $wpPrefix.'realbig_settings', [
+		    $wpdb->update($wpPrefix.'realbig_settings', [
 			    'optionName'  => 'deactError',
 			    'optionValue' => 'realbigForWP: '.$ex->getMessage()
 		    ], ['optionName'  => 'deactError']);
