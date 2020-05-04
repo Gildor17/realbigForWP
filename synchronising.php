@@ -13,7 +13,15 @@ try {
 		function RFWP_synchronize($tokenInput, $wpOptionsCheckerSyncTime, $sameTokenResult, $wpPrefix, $requestType) {
 			global $wpdb;
 			global $rb_logFile;
+			global $shortcode_tags;
+			$shortcodesToSend = array_keys($shortcode_tags);
+			$menuItemList = RFWP_getMenuList();
+			$permalinkStatus = RFWP_checkPermalink();
 			$unsuccessfullAjaxSyncAttempt = 0;
+
+			if (!empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
+				RFWP_cronCheckLog('cron in sync passed');
+			}
 
 			if (!empty($_SERVER['HTTP_HOST'])) {
 				$urlData = $_SERVER['HTTP_HOST'];
@@ -26,25 +34,14 @@ try {
 			$getCategoriesTags = RFWP_getTagsCategories();
 			if (!empty($getCategoriesTags)) {
 				$getCategoriesTags = json_encode($getCategoriesTags);
-
-//			    foreach ($getCategoriesTags AS $k1 => $item1) {
-//				    $tagCatString = '';
-//				    if (!empty($item1)) {
-//					    foreach ($item1 AS $k => $item) {
-//						    $tagCatString .= $k.':'.$item.';';
-//					    }
-//					    unset($k,$item);
-//				    }
-//				    $getCategoriesTags[$k1] = $tagCatString;
-//			    }
-//			    unset($k1,$item1);
 			}
-			$penyok_stoparik = 0;
+
+			$otherInfo = RFWP_otherInfoGather();
 
 			try {
 //    			$url = 'https://realbig.web/api/wp-get-settings';     // orig web post
 //    			$url = 'https://beta.realbig.media/api/wp-get-settings';     // beta post
-                $url = 'https://realbig.media/api/wp-get-settings';     // orig post
+              $url = 'https://realbig.media/api/wp-get-settings';     // orig post
 
                 /** for WP request **/
 				$dataForSending = [
@@ -52,7 +49,10 @@ try {
                         'token'     => $tokenInput,
                         'sameToken' => $sameTokenResult,
                         'urlData'   => $urlData,
-                        'getCategoriesTags' => $getCategoriesTags
+                        'getCategoriesTags' => $getCategoriesTags,
+                        'getShortcodes' => json_encode($shortcodesToSend),
+                        'getMenuList' => json_encode($menuItemList),
+                        'otherInfo' => $otherInfo,
                     ]
 				];
 				try {
@@ -258,6 +258,7 @@ try {
 							    if (empty($GLOBALS['wp_rewrite'])) {
 								    $GLOBALS['wp_rewrite'] = new WP_Rewrite();
 							    }
+							    $GLOBALS['wp_rewrite']->flush_rules();
 							    /** End of creating of that for compatibility with some plugins */
 							    /** Insertings */
 							    if (!empty($decodedToken['insertings'])) {
@@ -295,15 +296,15 @@ try {
                                 }
 							    /** End of insertings */
 							    /** Shortcodes */
+							    $oldShortcodes = get_posts(['post_type' => 'rb_shortcodes','numberposts' => 100]);
+							    if (!empty($oldShortcodes)) {
+								    foreach ($oldShortcodes AS $k => $item) {
+									    wp_delete_post($item->ID);
+								    }
+								    unset($k, $item);
+							    }
 							    if (!empty($decodedToken['shortcodes'])) {
 							        $shortcodes = $decodedToken['shortcodes'];
-								    $oldShortcodes = get_posts(['post_type' => 'rb_shortcodes','numberposts' => 100]);
-								    if (!empty($oldShortcodes)) {
-									    foreach ($oldShortcodes AS $k => $item) {
-										    wp_delete_post($item->ID);
-									    }
-									    unset($k, $item);
-								    }
 
                                     foreach ($shortcodes AS $k=>$item) {
 								        if (!empty($item)) {
@@ -325,6 +326,12 @@ try {
                                     unset($k, $item);
                                 }
 							    /** End of shortcodes */
+                                /** Turbo rss */
+                                if (!empty($decodedToken['turboSettings'])) {
+                                    $turboSettings = json_encode($decodedToken['turboSettings'], JSON_UNESCAPED_UNICODE);
+                                    update_option('rb_TurboRssOptions', $turboSettings, false);
+                                }
+                                /** End of Turbo rss */
 							    $GLOBALS['token'] = $tokenInput;
 
 							    delete_transient('rb_mobile_cache_timeout' );
@@ -406,7 +413,7 @@ try {
 
             try {
 //    			$url = 'https://realbig.web/api/wp-get-ads';     // orig web post
-//                $url = 'https://beta.realbig.media/api/wp-get-ads';     // beta post
+//              $url = 'https://beta.realbig.media/api/wp-get-ads';     // beta post
     			$url = 'https://realbig.media/api/wp-get-ads';     // orig post
 
 	            $dataForSending = [
@@ -695,6 +702,38 @@ try {
 			wp_unschedule_event( $checkIt, 'rb_cron_hook' );
 		}
 	}
+	if (!function_exists('RFWP_getMenuList')) {
+		function RFWP_getMenuList() {
+			$menuMap = [];
+			try {
+				$menuTerms = get_terms('nav_menu', array('hide_empty' => true));
+				if (!empty($menuTerms)) {
+				    foreach ($menuTerms AS $k => $item) {
+				        $menuMap[$item->term_id] = $item->name;
+				    }
+				    unset($k,$item);
+				}
+			} catch (Exception $ex) {} catch (Error $er) {}
+			return $menuMap;
+		}
+	}
+	if (!function_exists('RFWP_otherInfoGather')) {
+		function RFWP_otherInfoGather() {
+		    $result = [];
+			$result['permalinkStatus'] = RFWP_checkPermalink();
+
+			return $result;
+		}
+    }
+	if (!function_exists('RFWP_checkPermalink')) {
+		function RFWP_checkPermalink() {
+		    $result = false;
+			if (get_option('permalink_structure')) {
+				$result = true;
+			}
+			return $result;
+		}
+    }
 	/** End of Creating Cron RB auto sync */
 }
 catch (Exception $ex)
