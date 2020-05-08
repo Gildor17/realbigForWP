@@ -264,8 +264,8 @@ try {
 				$GLOBALS['rb_rssFeedUrls'] = $rb_rssFeedUrls;
 			}
 
-			global $wp_rewrite;
-			$wp_rewrite->flush_rules(false);
+//			global $wp_rewrite;
+//			$wp_rewrite->flush_rules(false);
 		}
     }
 	if (!empty($devMode)) {

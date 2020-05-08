@@ -258,7 +258,7 @@ try {
 							    if (empty($GLOBALS['wp_rewrite'])) {
 								    $GLOBALS['wp_rewrite'] = new WP_Rewrite();
 							    }
-							    $GLOBALS['wp_rewrite']->flush_rules(false);
+//							    $GLOBALS['wp_rewrite']->flush_rules(false);
 							    /** End of creating of that for compatibility with some plugins */
 							    /** Insertings */
 							    if (!empty($decodedToken['insertings'])) {
