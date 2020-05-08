@@ -55,7 +55,7 @@ include_once (dirname(__FILE__)."/syncApi.php");
 /*
 Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.3.0
+Version:      0.3.2
 Author:       Realbig Team
 Author URI:   https://realbig.media
 License:      GPLv2 or later
@@ -265,7 +265,7 @@ try {
 			}
 
 			global $wp_rewrite;
-			$wp_rewrite->flush_rules();
+			$wp_rewrite->flush_rules(false);
 		}
     }
 	if (!empty($devMode)) {
