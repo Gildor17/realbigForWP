@@ -55,7 +55,7 @@ include_once (dirname(__FILE__)."/syncApi.php");
 /*
 Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.3.3
+Version:      0.3.4
 Author:       Realbig Team
 Author URI:   https://realbig.media
 License:      GPLv2 or later
@@ -328,7 +328,7 @@ try {
 	    if (!empty($pluginData['Version'])) {
 		    $GLOBALS['realbigForWP_version'] = $pluginData['Version'];
 	    } else {
-		    $GLOBALS['realbigForWP_version'] = '0.3.0';
+		    $GLOBALS['realbigForWP_version'] = '0.3.4';
 	    }
     }
 

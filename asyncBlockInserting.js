@@ -762,6 +762,17 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
                     continue;
                 }
 
+                block_number = 0;
+
+                elementToAdd = document.createElement("div");
+                elementToAdd.classList.add("percentPointerClass");
+                elementToAdd.classList.add("marked");
+                if (blockSettingArray[i]["sc"]==1) {
+                    elementToAdd.classList.add("scMark");
+                }
+                elementToAdd.innerHTML = blockSettingArray[i]["text"];
+                block_number = elementToAdd.children[0].attributes['data-id'].value;
+
                 if (blockDuplicate == 'no') {
                     if (usedBlockSettingArrayIds.length > 0) {
                         for (let i1 = 0; i1 < usedBlockSettingArrayIds.length; i1++) {
@@ -773,17 +784,6 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
                         }
                     }
                 }
-
-                block_number = 0;
-
-                elementToAdd = document.createElement("div");
-                elementToAdd.classList.add("percentPointerClass");
-                elementToAdd.classList.add("marked");
-                if (blockSettingArray[i]["sc"]==1) {
-                    elementToAdd.classList.add("scMark");
-                }
-                elementToAdd.innerHTML = blockSettingArray[i]["text"];
-                block_number = elementToAdd.children[0].attributes['data-id'].value;
 
                 elementToAddStyle = createStyleElement(block_number, blockSettingArray[i]["elementCss"]);
 
