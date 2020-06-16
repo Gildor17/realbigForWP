@@ -386,7 +386,7 @@ function checkAdsWidth(content_pointer, posCurrentElement, currentElement) {
         //         testImgCou++;
         //     }
         // }
-        console.log('cp_w:'+parseInt(content_pointerStyle.width)+'; wc_w:'+parseInt(widthCheckerStyle.width)+';');
+        // console.log('cp_w:'+parseInt(content_pointerStyle.width)+'; wc_w:'+parseInt(widthCheckerStyle.width)+';');
         if (parseInt(widthCheckerStyle.width) > (parseInt(content_pointerStyle.width) - 20)) {
             return true;
         }
@@ -559,9 +559,33 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
             let findQuery = 0;
             let directClassElementResult = [];
 
-            if (blockSettingArray[i]['elementPlace'] > 1) {
-                currentElement = document.querySelectorAll(directElement);
-                if (currentElement.length > 0) {
+            // if (blockSettingArray[i]['elementPlace'] > 1) {
+            //     currentElement = document.querySelectorAll(directElement);
+            //     if (currentElement.length > 0) {
+            //         if (currentElement.length > blockSettingArray[i]['elementPlace']) {
+            //             currentElement = currentElement[blockSettingArray[i]['elementPlace']-1];
+            //         } else if (currentElement.length < blockSettingArray[i]['elementPlace']) {
+            //             currentElement = currentElement[currentElement.length - 1];
+            //         } else {
+            //             findQuery = 1;
+            //         }
+            //     }
+            // } else if (blockSettingArray[i]['elementPlace'] < 0) {
+            //     currentElement = document.querySelectorAll(directElement);
+            //     if (currentElement.length > 0) {
+            //         if ((currentElement.length + blockSettingArray[i]['elementPlace'] + 1) > 0) {
+            //             currentElement = currentElement[currentElement.length + blockSettingArray[i]['elementPlace']];
+            //         } else {
+            //             findQuery = 1;
+            //         }
+            //     }
+            // } else {
+            //     findQuery = 1;
+            // }
+
+            currentElement = document.querySelectorAll(directElement);
+            if (currentElement.length > 0) {
+                if (blockSettingArray[i]['elementPlace'] > 1) {
                     if (currentElement.length > blockSettingArray[i]['elementPlace']) {
                         currentElement = currentElement[blockSettingArray[i]['elementPlace']-1];
                     } else if (currentElement.length < blockSettingArray[i]['elementPlace']) {
@@ -569,19 +593,43 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
                     } else {
                         findQuery = 1;
                     }
-                }
-            } else if (blockSettingArray[i]['elementPlace'] < 0) {
-                currentElement = document.querySelectorAll(directElement);
-                if (currentElement.length > 0) {
+                } else if (blockSettingArray[i]['elementPlace'] < 0) {
                     if ((currentElement.length + blockSettingArray[i]['elementPlace'] + 1) > 0) {
                         currentElement = currentElement[currentElement.length + blockSettingArray[i]['elementPlace']];
                     } else {
                         findQuery = 1;
                     }
+                } else {
+                    findQuery = 1;
                 }
             } else {
                 findQuery = 1;
             }
+
+            // if (blockSettingArray[i]['elementPlace'] > 1) {
+            //     currentElement = document.querySelectorAll(directElement);
+            //     if (currentElement.length > 0) {
+            //         if (currentElement.length > blockSettingArray[i]['elementPlace']) {
+            //             currentElement = currentElement[blockSettingArray[i]['elementPlace']-1];
+            //         } else if (currentElement.length < blockSettingArray[i]['elementPlace']) {
+            //             currentElement = currentElement[currentElement.length - 1];
+            //         } else {
+            //             findQuery = 1;
+            //         }
+            //     }
+            // } else if (blockSettingArray[i]['elementPlace'] < 0) {
+            //     currentElement = document.querySelectorAll(directElement);
+            //     if (currentElement.length > 0) {
+            //         if ((currentElement.length + blockSettingArray[i]['elementPlace'] + 1) > 0) {
+            //             currentElement = currentElement[currentElement.length + blockSettingArray[i]['elementPlace']];
+            //         } else {
+            //             findQuery = 1;
+            //         }
+            //     }
+            // } else {
+            //     findQuery = 1;
+            // }
+
             directClassElementResult['findQuery'] = findQuery;
             directClassElementResult['currentElement'] = currentElement;
 
@@ -589,13 +637,15 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
         }
 
         function placingToH1(usedElement, elementTagToFind) {
+            let uselessLet;
             currentElement = usedElement.querySelectorAll(elementTagToFind);
 
             if (currentElement.length < 1) {
                 if (usedElement.parentElement) {
-                    placingToH1(usedElement.parentElement, elementTagToFind);
+                    uselessLet = placingToH1(usedElement.parentElement, elementTagToFind);
                 }
             }
+            return currentElement;
         }
 
         function elementsCleaning(excArr, elList, pwcLocal, gatherString) {
@@ -670,7 +720,7 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
             let tagListCou = 0;
 
             if (usedElement=='h1') {
-                placingToH1(localPwc, usedElement);
+                currentElementLoc = placingToH1(localPwc, usedElement);
             } else {
                 if (usedElement=='h2-4') {tagList = ['h2','h3','h3'];}
                 else                     {tagList = [usedElement];   }
@@ -690,11 +740,10 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
                 }
                 detailedQueryString += tagListString+','+ExcludedString;
 
-                console.log(detailedQueryString);
+                // console.log(detailedQueryString);
                 while (curElementSearchRepeater&&curElementSearchCounter < loopLimit) {
                     try {
                         currentElementLoc = localPwc.querySelectorAll(tagListString);
-                        console.log(currentElementLoc);
                     } catch (e1) {console.log(e1.message);}
                     if (!currentElementLoc) {
                         if (localPwc.parentElement) {
@@ -900,9 +949,7 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
 
                     if (directElement.search('#') > -1) {
                         findQuery = 1;
-                    } else if ((directElement.search('#') < 0)&&(!blockSettingArray[i]['element']||
-                        (blockSettingArray[i]['element']&&directElement.indexOf('.') > 0))) {
-
+                    } else if ((directElement.search('#') < 0)&&(directElement.search('.') > -1)) {
                         directClassResult = directClassElementDetecting(blockSettingArray, directElement);
                         findQuery = directClassResult['findQuery'];
                         currentElement = directClassResult['currentElement'];
@@ -910,47 +957,42 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
                     if (findQuery == 1) {
                         currentElement = document.querySelector(directElement);
                     }
-                    if (!currentElement) {
-                        findQuery = 0;
-                        elementTypeSymbol = directElement.search('#');
-                        if (elementTypeSymbol < 0) {
-                            elementTypeSymbol = directElement.indexOf('.');
-                            elementType = 'class';
-                            elementName = directElement.replace(/\s/, '.');
-                            if (elementTypeSymbol < 0) {
-                                elementName = '.' + elementName;
-                            } else {
-                                if (blockSettingArray[i]['element']) {
-                                    if (blockSettingArray[i]['element']=='h2-4') {
-                                        elementName = 'h2'+elementName+',h3'+elementName+',h4'+elementName;
-                                    } else {
-                                        elementName = blockSettingArray[i]['element']+elementName;
-                                    }
-                                }
-                            }
-
-                            directClassResult = directClassElementDetecting(blockSettingArray, elementName);
-                            findQuery = directClassResult['findQuery'];
-                            currentElement = directClassResult['currentElement'];
-
-                            if (findQuery == 1) {
-                                currentElement = document.querySelector(elementName);
-                            }
-
-                            if (currentElement) {
-                                currentElementChecker = true;
-                            }
-                        } else {
-                            elementType = 'id';
-                            elementName = directElement.subString(elementTypeSymbol);
-                            elementSpaceSymbol = elementName.search('\s');
-                            elementName = elementName.substring(0, elementSpaceSymbol - 1);
-                            currentElement = document.querySelector(elementName);
-                            if (currentElement) {
-                                currentElementChecker = true;
-                            }
-                        }
-                    } else {
+                    // if (!currentElement) {
+                    if (currentElement) {
+                    //     findQuery = 0;
+                    //     elementTypeSymbol = directElement.search('#');
+                    //     if (elementTypeSymbol < 0) {
+                    //         elementTypeSymbol = directElement.indexOf('.');
+                    //         elementType = 'class';
+                    //         elementName = directElement.replace(/\s/, '.');
+                    //         if (elementTypeSymbol < 0) {
+                    //             elementName = '.' + elementName;
+                    //         }
+                    //
+                    //         directClassResult = directClassElementDetecting(blockSettingArray, elementName);
+                    //         findQuery = directClassResult['findQuery'];
+                    //         currentElement = directClassResult['currentElement'];
+                    //
+                    //         if (findQuery == 1) {
+                    //             currentElement = document.querySelector(elementName);
+                    //         }
+                    //
+                    //         if (currentElement) {
+                    //             currentElementChecker = true;
+                    //         }
+                    //     } else {
+                    //         elementType = 'id';
+                    //         elementName = directElement.substring(elementTypeSymbol);
+                    //         elementSpaceSymbol = elementName.search('/( |\n|\r\n)/');
+                    //         if (elementSpaceSymbol > -1) {
+                    //             elementName = elementName.substring(0, elementSpaceSymbol - 1);
+                    //         }
+                    //         currentElement = document.querySelector(elementName);
+                    //         if (currentElement) {
+                    //             currentElementChecker = true;
+                    //         }
+                    //     }
+                    // } else {
                         currentElementChecker = true;
                     }
 

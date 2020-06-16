@@ -507,7 +507,16 @@ try {
 			        $elementTextCache = preg_replace('~\/script~', '/scr"+"ipt',$elementTextCache);
 			        $elementTextCache = preg_replace('~(\r\n|\n|\r)~',' ',$elementTextCache);
 
-			        $scriptString .= 'cachedBlocksArray['.$item->post_title.'] = "'.$elementTextCache.'";'.PHP_EOL;
+			        $checkQuotesBegin = substr($elementTextCache, 0, 1);
+			        $checkQuotesEnd = substr($elementTextCache, -1);
+			        if ($checkQuotesBegin=="'"&&$checkQuotesEnd=="'") {
+				        $elementTextCache = substr_replace($elementTextCache, '"', 0, 1);
+				        $elementTextCache = substr_replace($elementTextCache, '"', -1);
+                    } elseif (!($checkQuotesBegin=='"'&&$checkQuotesEnd=='"')) {
+				        $elementTextCache = '"'.$elementTextCache.'"';
+                    }
+
+			        $scriptString .= 'cachedBlocksArray['.$item->post_title.'] = '.$elementTextCache.';'.PHP_EOL;
 		        }
 		        if (!empty($longCache)) {
 			        $scriptString .=
@@ -1204,7 +1213,7 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 	}
 	if (!function_exists('RFWP_WorkProgressLog')) {
 	    function RFWP_WorkProgressLog($begin=false, $message='placeholder') {
-	        if (!empty($GLOBALS['workProgressLogs'])&&$GLOBALS['workProgressLogs']=='enabled') {
+	        if (!empty($GLOBALS['rb_testMode'])&&!empty($GLOBALS['workProgressLogs'])&&$GLOBALS['workProgressLogs']=='enabled'&&!empty($GLOBALS['dev_mode'])) {
 		        if (!isset($GLOBALS['rb_processlogFile'])) {
 			        $rb_processlogFile = plugin_dir_path(__FILE__).'workProcess.log';
 			        $GLOBALS['rb_processlogFile'] = $rb_processlogFile;
@@ -1234,6 +1243,40 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
             }
         }
     }
+
+	if (!function_exists('RFWP_initTestMode')) {
+		function RFWP_initTestMode($forced = false) {
+			if (!isset($GLOBALS['rb_testMode'])||!empty($forced)) {
+				$rb_testMode = get_option('rb_testMode');
+				if (!empty($rb_testMode)) {
+					$GLOBALS['rb_testMode'] = true;
+				} else {
+					$GLOBALS['rb_testMode'] = false;
+				}
+			}
+		}
+	}
+
+	if (!function_exists('RFWP_cleanWorkProcessFile')) {
+		function RFWP_cleanWorkProcessFile() {
+			global $rb_logFile;
+			try {
+				$rb_processlogFile = plugin_dir_path(__FILE__).'workProcess.log';
+//                $myfile = fopen($rb_processlogFile, "w") or die("Unable to open file!");
+                $myfile = fopen($rb_processlogFile, "w");
+                $txt = "1\n\n";
+                fwrite($myfile, $txt);
+                fclose($myfile);
+			}  catch (Exception $ex1) {
+				$messageFLog = 'Error in work process log file cleaning: '.$ex1->getMessage().';';
+				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+			} catch (Error $er1) {
+				$messageFLog = 'Error in work process log file cleaning: '.$er1->getMessage().';';
+				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+			}
+		}
+	}
+
 	if (!function_exists('RFWP_cronCheckLog')) {
 	    function RFWP_cronCheckLog($message='placeholder') {
             if (!isset($GLOBALS['rb_cronCheckFile'])) {

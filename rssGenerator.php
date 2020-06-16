@@ -1209,6 +1209,8 @@ try {
 
 	if (!function_exists('RFWP_rssCreate')) {
 		function RFWP_rssCreate() {
+			global $rb_rssCheckLog;
+
 			$rssOptions = RFWP_rssOptionsGet();
 			$GLOBALS['$rssOptions'] = $rssOptions;
 			$rssDivided = [];
@@ -1216,6 +1218,9 @@ try {
 			$rssDivideOptions = $GLOBALS['rb_rssDivideOptions'];
 			$paged = 0;
 			$postTypes = ['post','page'];
+
+			$messageFLog = 'point 1;';
+			error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_rssCheckLog);
 
 			if (!empty($_GET)&&!empty($_GET['paged'])) {
 				$paged = (intval($_GET['paged'])-1);
@@ -1225,6 +1230,9 @@ try {
 //				if (!empty($rssOptions['selectiveOff'])) {
 					RFWP_rss_lenta_trash($rssOptions);
 //				}
+				$messageFLog = 'point 2;';
+				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_rssCheckLog);
+
 				exit;
 			}
 
@@ -1250,8 +1258,14 @@ try {
 			$rssOptions['contentType'] = feed_content_type('rss2');
 			$rssOptions['charset'] = get_option('blog_charset');
 
+			$messageFLog = 'point 3;';
+			error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_rssCheckLog);
+
 			if (!empty($rssDivided)) {
 				foreach ($rssDivided AS $k1 => $item1) {
+					$messageFLog = 'point 4;';
+					error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_rssCheckLog);
+
 					header('Content-Type: '.$rssOptions['contentType'].'; charset='.$rssOptions['charset'], true);
 					echo '<?xml version="1.0" encoding="'.$rssOptions['charset'].'"?'.'>'.PHP_EOL;
 					?>
