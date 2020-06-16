@@ -26,6 +26,7 @@ try {
 			global $wpPrefix;
 			global $curlResult;
 			global $devMode;
+			RFWP_initTestMode();
 
 			$turboTrashUrl = 'rb_turbo_trash_rss';
 
@@ -146,12 +147,12 @@ try {
 								<input type="checkbox" name="kill_rb" id="kill_rb_id" <?php echo $killRbCheck ?>>
 							</div>
 						<?php endif; ?>
-						<?php //if (!empty($GLOBALS['dev_mode'])): ?>
-                        <div class="element-separator">
-                            <label for="process_log">activate process log</label>
-                            <input type="checkbox" name="process_log" id="process_log_id" <?php echo $workProcess ?>>
-                        </div>
-						<?php //endif; ?>
+						<?php if (!empty($GLOBALS['rb_testMode'])): ?>
+                            <div class="element-separator">
+                                <label for="process_log">activate process log</label>
+                                <input type="checkbox" name="process_log" id="process_log_id" <?php echo $workProcess ?>>
+                            </div>
+						<?php endif; ?>
 						<br>
 						<?php submit_button( 'Синхронизировать', 'primary', 'saveTokenButton' ) ?>
                         <?php if (!empty($devMode)): ?>
@@ -267,6 +268,14 @@ try {
 								</ol>
 							</div>
 						<?php endif; ?>
+                        <div class="squads-blocks">
+                            Режим отладки:
+                            <?php if (!empty($GLOBALS['rb_testMode'])) {
+                                ?><span style="color: green;">On</span><?php
+                            } else {
+                                ?><span style="color: red;">Off</span><?php
+                            } ?>.
+                        </div>
 					<?php endif; ?>
 				</div>
 			</div>

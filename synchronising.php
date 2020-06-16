@@ -41,7 +41,7 @@ try {
 			try {
 //    			$url = 'https://realbig.web/api/wp-get-settings';     // orig web post
 //    			$url = 'https://beta.realbig.media/api/wp-get-settings';     // beta post
-              $url = 'https://realbig.media/api/wp-get-settings';     // orig post
+                $url = 'https://realbig.media/api/wp-get-settings';     // orig post
 
                 /** for WP request **/
 				$dataForSending = [
@@ -332,6 +332,18 @@ try {
                                     update_option('rb_TurboRssOptions', $turboSettings, false);
                                 }
                                 /** End of Turbo rss */
+                                /** Test Mode */
+							    if (isset($decodedToken['testMode'])) {
+								    $testMode = intval($decodedToken['testMode']);
+								    $oldTestOption = get_option('rb_testMode');
+								    update_option('rb_testMode', $testMode, false);
+								    RFWP_initTestMode(true);
+								    if (!empty($oldTestOption)&&empty($testMode)) {
+									    RFWP_cleanWorkProcessFile();
+                                    }
+							    }
+							    /** End of Test Mode */
+
 							    $GLOBALS['token'] = $tokenInput;
 
 							    delete_transient('rb_mobile_cache_timeout' );
@@ -413,7 +425,7 @@ try {
 
             try {
 //    			$url = 'https://realbig.web/api/wp-get-ads';     // orig web post
-//              $url = 'https://beta.realbig.media/api/wp-get-ads';     // beta post
+//                $url = 'https://beta.realbig.media/api/wp-get-ads';     // beta post
     			$url = 'https://realbig.media/api/wp-get-ads';     // orig post
 
 	            $dataForSending = [
@@ -684,6 +696,7 @@ try {
 //			add_action('rb_cron_hook', 'rb_cron_exec');
 			if (!($checkIt = wp_next_scheduled('rb_cron_hook'))) {
 				wp_schedule_event(time(), 'autoSync', 'rb_cron_hook');
+//				$spawnResult = spawn_cron();
 			}
 		}
 	}

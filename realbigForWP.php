@@ -7,36 +7,36 @@ require_once (ABSPATH."/wp-admin/includes/plugin.php");
 
 /** Rename plugin folder */
 try {
-	//if (empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))&&!empty($_POST['folderRename'])) {
-//	if (empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
-	$checkDirName = basename(dirname(__FILE__));
-	$pluginDirname = dirname(__DIR__);
-	$curFileName = basename(plugin_basename( __FILE__ ));
-	$plBaseName = plugin_basename(__FILE__);
-	$renameResult = false;
-	$activatablePluginCheck = false;
-	if (!empty($_GET)&&!empty($_GET['action'])&&!empty($_GET['plugin'])&&in_array($_GET['action'], ['activate','deactivate'])) {
-		$activatablePlugin = strtolower($_GET['plugin']);
-	}
-
-	if (!empty($pluginDirname)&&!empty($curFileName)&&!empty($checkDirName)&&strpos(strtolower($checkDirName),'realbigforwp')!==false) {
-		if (!empty($activatablePlugin)) {
-			$activatablePluginCheck = strpos($activatablePlugin, strtolower($checkDirName));
-		}
-		if ($activatablePluginCheck===false) {
-			require_once (ABSPATH."/wp-includes/pluggable.php");
-			$rndIntval = rand(1000,9999);
-			$newDirName = 'rb-'.$rndIntval.'-git';
-			deactivate_plugins($plBaseName);
-			$renameResult = rename(dirname(__FILE__),$pluginDirname.'/'.$newDirName);
-			if (!empty($renameResult)) {
-				activate_plugin($newDirName.'/'.$curFileName, admin_url('plugins.php'));
-			} else {
-				activate_plugin($plBaseName, admin_url('plugins.php'));
-			}
-		}
-	}
-//	}
+    $checkDirName           = basename(dirname(__FILE__));
+    $pluginDirname          = dirname(__DIR__);
+    $curFileName            = basename(plugin_basename(__FILE__));
+    $plBaseName             = plugin_basename(__FILE__);
+    $renameResult           = false;
+    $activatablePluginCheck = false;
+    if ( ! empty($_GET) && ! empty($_GET['action']) && ! empty($_GET['plugin']) && in_array($_GET['action'], [
+            'activate',
+            'deactivate'
+        ])) {
+        $activatablePlugin = strtolower($_GET['plugin']);
+        if ( ! empty($pluginDirname) && ! empty($curFileName) && ! empty($checkDirName) && strpos(strtolower($checkDirName), 'realbigforwp') !== false) {
+            if ( ! empty($activatablePlugin)) {
+                $activatablePluginCheck = strpos($activatablePlugin, strtolower($checkDirName));
+            }
+            if ($activatablePluginCheck === false) {
+                require_once(ABSPATH . "/wp-includes/pluggable.php");
+                $rndIntval  = rand(1000, 9999);
+                $newDirName = 'rb-' . $rndIntval . '-git';
+                deactivate_plugins($plBaseName);
+                sleep(10);
+                $renameResult = rename(dirname(__FILE__), $pluginDirname . '/' . $newDirName);
+                if ( ! empty($renameResult)) {
+                    activate_plugin($newDirName . '/' . $curFileName, admin_url('plugins.php'));
+                } else {
+                    activate_plugin($plBaseName, admin_url('plugins.php'));
+                }
+            }
+        }
+    }
 } catch (Exception $ex1) {
 //	$messageFLog = 'rename folder error : '.$ex1->getMessage();
 //	error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
@@ -49,13 +49,13 @@ try {
 include_once (dirname(__FILE__)."/update.php");
 include_once (dirname(__FILE__)."/synchronising.php");
 include_once (dirname(__FILE__)."/textEditing.php");
-//include_once (dirname(__FILE__).'/rssGenerator.php');
+include_once (dirname(__FILE__).'/rssGenerator.php');
 include_once (dirname(__FILE__)."/syncApi.php");
 
 /*
 Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.3.4
+Version:      0.3.5
 Author:       Realbig Team
 Author URI:   https://realbig.media
 License:      GPLv2 or later
@@ -71,6 +71,9 @@ try {
 		$devMode = false;
 		$GLOBALS['dev_mode'] = $devMode;
     }
+	if (!isset($GLOBALS['rb_testMode'])) {
+		RFWP_initTestMode();
+    }
 
 	$rb_logFile = plugin_dir_path(__FILE__).'wpPluginErrors.log';
 	global $rb_logFile;
@@ -78,6 +81,8 @@ try {
 	global $rb_processlogFile;
 	$rb_testCheckLog = plugin_dir_path(__FILE__).'testCheckLog.log';
 	global $rb_testCheckLog;
+	$rb_rssCheckLog = plugin_dir_path(__FILE__).'rssCheckLog.log';
+	global $rb_rssCheckLog;
     if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
 	    RFWP_WorkProgressLog(false,'begin of process');
     }
@@ -210,6 +215,11 @@ try {
     /** Rss test */
 	if (!function_exists('rssTestTemplate')) {
 		function rssTestTemplate() {
+			global $rb_rssCheckLog;
+
+			$messageFLog = 'point_dop 1;';
+			error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_rssCheckLog);
+
 //			include_once (dirname(__FILE__).'/rssGenerator.php');
 			$posts = [];
 			$rb_rssFeedUrls = [];
@@ -233,6 +243,9 @@ try {
             }
 
 			if (!empty($posts)) {
+				$messageFLog = 'point_dop 2;';
+				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_rssCheckLog);
+
 				$rssDividedPosts = RFWP_rssDivine($posts, $rssOptions);
 				$GLOBALS['rb_rssDivideOptions'] = [];
 				$GLOBALS['rb_rssDivideOptions']['posts'] = $rssDividedPosts;
@@ -264,8 +277,11 @@ try {
 				$GLOBALS['rb_rssFeedUrls'] = $rb_rssFeedUrls;
 			}
 
-//			global $wp_rewrite;
-//			$wp_rewrite->flush_rules(false);
+			$messageFLog = 'point_dop 3;';
+			error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_rssCheckLog);
+
+			global $wp_rewrite;
+			$wp_rewrite->flush_rules(false);
 		}
     }
 	if (!empty($devMode)) {
@@ -328,7 +344,7 @@ try {
 	    if (!empty($pluginData['Version'])) {
 		    $GLOBALS['realbigForWP_version'] = $pluginData['Version'];
 	    } else {
-		    $GLOBALS['realbigForWP_version'] = '0.3.4';
+		    $GLOBALS['realbigForWP_version'] = '0.3.5';
 	    }
     }
 
@@ -702,11 +718,37 @@ try {
 	}
 	/********** end autosync and JS text edit *****************************************************************************/
 	/********** adding AD code in head area *******************************************************************************/
+	if (!function_exists('RFWP_launch_cache')) {
+		function RFWP_launch_cache($getRotator, $getDomain) {
+            ?><script>
+                function onErrorPlacing() {
+                    if (typeof cachePlacing !== 'undefined' && typeof cachePlacing === 'function' && typeof jsInputerLaunch !== 'undefined' && [15, 10].includes(jsInputerLaunch)) {
+                        let errorInfo = [];
+                        cachePlacing('low',errorInfo);
+                    } else {
+                        setTimeout(function () {
+                            onErrorPlacing();
+                        }, 100)
+                    }
+                }
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET',"//<?php echo $getDomain ?>/<?php echo $getRotator ?>.min.js",true);
+                xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                xhr.onreadystatechange = function() {
+                    console.log('xhr_status: '+xhr.status);
+                    console.log('xhr_status_text: '+xhr.statusText);
+                    if (xhr.status != 200) {
+                        if (xhr.statusText != 'abort') {
+                            onErrorPlacing();
+                        }
+                    }
+                };
+                xhr.send();
+            </script><?php
+		}
+    }
 	if (!function_exists('RFWP_AD_header_add')) {
 		function RFWP_AD_header_add() {
-//		if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
-//			RFWP_WorkProgressLog(false,'ad header add begin');
-//		}
 			global $wpdb;
 			$getDomain = 'any.realbig.media';
 			$getRotator = 'rotator';
@@ -727,55 +769,27 @@ try {
 				$getDomain  = "ex.ua";
 			}
 			$rotatorUrl = "https://".$getDomain."/".$getRotator.".min.js";
-
 			$GLOBALS['rotatorUrl'] = $rotatorUrl;
 
 			require_once (dirname(__FILE__)."/textEditing.php");
-//		$headerParsingResult = RFWP_headerADInsertor();
 			$headerParsingResult = RFWP_headerInsertor('ad');
-
 			$longCache = RFWP_getLongCache();
 
-			/*if ($headerParsingResult == true&&empty($longCache)) {
-				?><!--rb_ad_header_placeholder--><?php
-			}*/
+			if (empty($longCache)) {
+				RFWP_launch_cache($getRotator, $getDomain);
 
-			if ($headerParsingResult == true&&empty($longCache)) {
-				?><script type="text/javascript"> rbConfig = {start: performance.now(),rotator:'<?php echo $getRotator ?>'}; </script>
-                <script type="text/javascript">
-                    function onErrorPlacing() {
-                        if (typeof cachePlacing !== 'undefined' && typeof cachePlacing === 'function' && typeof jsInputerLaunch !== 'undefined' && jsInputerLaunch == 15) {
-                            let errorInfo = [];
-                            cachePlacing('low',errorInfo);
-                        } else {
-                            setTimeout(function () {
-                                onErrorPlacing();
-                            }, 100)
-                        }
-                    }
-                    let rotatorScript = document.createElement('script');
-                    rotatorScript.src = "//<?php echo $getDomain ?>/<?php echo $getRotator ?>.min.js";
-                    rotatorScript.type = "text/javascript";
-                    rotatorScript.async = true;
+				if ($headerParsingResult == true) {
+					?><script type="text/javascript"> rbConfig = {start: performance.now(),rotator:'<?php echo $getRotator ?>'}; </script>
+                    <script type="text/javascript">
+                        let rotatorScript = document.createElement('script');
+                        rotatorScript.src = "//<?php echo $getDomain ?>/<?php echo $getRotator ?>.min.js";
+                        rotatorScript.type = "text/javascript";
+                        rotatorScript.async = true;
 
-                    document.head.append(rotatorScript);
-                </script>
-                <script>
-                    var xhr = new XMLHttpRequest();
-                    xhr.open('GET',"//<?php echo $getDomain ?>/<?php echo $getRotator ?>.min.js",true);
-                    xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-                    xhr.onreadystatechange = function() {
-                        console.log('xhr_status: '+xhr.status);
-                        console.log('xhr_status_text: '+xhr.statusText);
-                        if (xhr.status != 200) {
-                            if (xhr.statusText != 'abort') {
-                                onErrorPlacing();
-                            }
-                        }
-                    };
-                    xhr.send();
-                </script><?php
-			}
+                        document.head.append(rotatorScript);
+                    </script><?php
+				}
+            }
 			if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
 				RFWP_WorkProgressLog(false,'AD_header_add end');
 			}
@@ -785,10 +799,6 @@ try {
 	if (!function_exists('RFWP_push_head_add')) {
 		function RFWP_push_head_add() {
 			require_once (dirname(__FILE__)."/textEditing.php");
-//		if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
-//			RFWP_WorkProgressLog(false,'push header add begin');
-//		}
-//		$headerParsingResult = RFWP_headerPushInsertor();
 			$headerParsingResult = RFWP_headerInsertor('push');
 			if ($headerParsingResult == true) {
 				global $wpdb;
