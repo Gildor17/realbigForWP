@@ -1213,7 +1213,7 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 	}
 	if (!function_exists('RFWP_WorkProgressLog')) {
 	    function RFWP_WorkProgressLog($begin=false, $message='placeholder') {
-	        if (!empty($GLOBALS['rb_testMode'])&&!empty($GLOBALS['workProgressLogs'])&&$GLOBALS['workProgressLogs']=='enabled'&&!empty($GLOBALS['dev_mode'])) {
+	        if (!empty($GLOBALS['rb_testMode'])&&!empty($GLOBALS['workProgressLogs'])&&$GLOBALS['workProgressLogs']=='enabled') {
 		        if (!isset($GLOBALS['rb_processlogFile'])) {
 			        $rb_processlogFile = plugin_dir_path(__FILE__).'workProcess.log';
 			        $GLOBALS['rb_processlogFile'] = $rb_processlogFile;
