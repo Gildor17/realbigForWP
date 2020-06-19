@@ -44,7 +44,9 @@ try {
 			if (!empty($getWorkProcess)&&$getWorkProcess=='enabled') {
 				$workProcess = 'checked';
             }
-			$rb_rssFeedUrls = $GLOBALS['rb_rssFeedUrls'];
+			if (!empty($GLOBALS['rb_rssFeedUrls'])) {
+				$rb_rssFeedUrls = $GLOBALS['rb_rssFeedUrls'];
+			}
 
 			try {
 				$rbSettings = $wpdb->get_results('SELECT optionName, optionValue, timeUpdate FROM ' . $GLOBALS["wpPrefix"] . 'realbig_settings WHERE optionName IN ("deactError","domain","excludedMainPage","excludedPages","pushStatus","excludedPageTypes","kill_rb")', ARRAY_A);

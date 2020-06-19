@@ -9,7 +9,7 @@ function sendReadyBlocksNew(blocks) {
             console.log('cache succeed');
         }
     };
-    xhttp.open("POST", adg_object.ajax_url, true);
+    xhttp.open("POST", rb_ajaxurl, true);
     xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
     xhttp.send(sendData);
 }
@@ -77,8 +77,11 @@ function timeBeforeGathering() {
     }
 }
 
-if (document.readyState === "complete" || (document.readyState !== "loading" && !document.documentElement.doScroll)) {
-    timeBeforeGathering();
-} else {
-    document.addEventListener("DOMContentLoaded", timeBeforeGathering, false);
+function launchTimeBeforeGathering() {
+    if (document.readyState === "complete" || (document.readyState !== "loading" && !document.documentElement.doScroll)) {
+        timeBeforeGathering();
+    } else {
+        setTimeout(launchTimeBeforeGathering,100);
+    }
 }
+launchTimeBeforeGathering();
