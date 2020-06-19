@@ -2,56 +2,6 @@
 
 if (!defined("ABSPATH")) { exit;}
 
-//require_once (dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
-require_once (ABSPATH."/wp-admin/includes/plugin.php");
-
-/** Rename plugin folder */
-try {
-    $checkDirName           = basename(dirname(__FILE__));
-    $pluginDirname          = dirname(__DIR__);
-    $curFileName            = basename(plugin_basename(__FILE__));
-    $plBaseName             = plugin_basename(__FILE__);
-    $renameResult           = false;
-    $activatablePluginCheck = false;
-    if ( ! empty($_GET) && ! empty($_GET['action']) && ! empty($_GET['plugin']) && in_array($_GET['action'], [
-            'activate',
-            'deactivate'
-        ])) {
-        $activatablePlugin = strtolower($_GET['plugin']);
-        if ( ! empty($pluginDirname) && ! empty($curFileName) && ! empty($checkDirName) && strpos(strtolower($checkDirName), 'realbigforwp') !== false) {
-            if ( ! empty($activatablePlugin)) {
-                $activatablePluginCheck = strpos($activatablePlugin, strtolower($checkDirName));
-            }
-            if ($activatablePluginCheck === false) {
-                require_once(ABSPATH . "/wp-includes/pluggable.php");
-                $rndIntval  = rand(1000, 9999);
-                $newDirName = 'rb-' . $rndIntval . '-git';
-                deactivate_plugins($plBaseName);
-                sleep(10);
-                $renameResult = rename(dirname(__FILE__), $pluginDirname . '/' . $newDirName);
-                if ( ! empty($renameResult)) {
-                    activate_plugin($newDirName . '/' . $curFileName, admin_url('plugins.php'));
-                } else {
-                    activate_plugin($plBaseName, admin_url('plugins.php'));
-                }
-            }
-        }
-    }
-} catch (Exception $ex1) {
-//	$messageFLog = 'rename folder error : '.$ex1->getMessage();
-//	error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
-} catch (Error $er1) {
-//	$messageFLog = 'rename folder error : '.$er1->getMessage();
-//	error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
-}
-/** End of rename plugin folder */
-
-include_once (dirname(__FILE__)."/update.php");
-include_once (dirname(__FILE__)."/synchronising.php");
-include_once (dirname(__FILE__)."/textEditing.php");
-include_once (dirname(__FILE__).'/rssGenerator.php');
-include_once (dirname(__FILE__)."/syncApi.php");
-
 /*
 Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
@@ -61,6 +11,14 @@ Author URI:   https://realbig.media
 License:      GPLv2 or later
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
 */
+
+require_once (ABSPATH."/wp-admin/includes/plugin.php");
+
+include_once (dirname(__FILE__)."/update.php");
+include_once (dirname(__FILE__)."/synchronising.php");
+include_once (dirname(__FILE__)."/textEditing.php");
+include_once (dirname(__FILE__).'/rssGenerator.php');
+include_once (dirname(__FILE__)."/syncApi.php");
 
 try {
 	/** **************************************************************************************************************** **/
@@ -664,6 +622,32 @@ try {
 		}
 	}
 
+	if (!function_exists('RFWP_syncFunctionAdd11')) {
+		function RFWP_syncFunctionAdd11() {
+			if (empty($GLOBALS['rfwp_addedAlready']['asyncBlockInserting'])) {
+				$ajaxurl = admin_url('admin-ajax.php');
+				?><script>if (typeof rb_ajaxurl==='undefined') {var rb_ajaxurl = '<?php echo $ajaxurl ?>';}<?php include_once (dirname(__FILE__).'/asyncBlockInserting.js'); ?></script><?php
+				$GLOBALS['rfwp_addedAlready']['asyncBlockInserting'] = true;
+				if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
+					RFWP_WorkProgressLog(false,'asyncBlockInserting file add');
+				}
+			}
+		}
+	}
+
+	if (!function_exists('RFWP_syncFunctionAdd21')) {
+		function RFWP_syncFunctionAdd21() {
+			if (empty($GLOBALS['rfwp_addedAlready']['readyAdGather'])) {
+				$ajaxurl = admin_url('admin-ajax.php');
+				?><script>if (typeof rb_ajaxurl==='undefined') {var rb_ajaxurl = '<?php echo $ajaxurl ?>';}<?php include_once (dirname(__FILE__).'/readyAdGather.js'); ?></script><?php
+				$GLOBALS['rfwp_addedAlready']['readyAdGather'] = true;
+				if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
+					RFWP_WorkProgressLog(false,'readyAdGather file add');
+				}
+			}
+		}
+	}
+
 	if (empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))) {
 		add_action('wp_ajax_saveAdBlocks', 'saveAdBlocks');
 		add_action('wp_ajax_nopriv_saveAdBlocks', 'saveAdBlocks');
@@ -673,7 +657,9 @@ try {
 
 	if (!function_exists('RFWP_js_add')) {
 		function RFWP_js_add() {
-			add_action('wp_enqueue_scripts', 'RFWP_syncFunctionAdd1', 10);
+//			add_action('wp_enqueue_scripts', 'RFWP_syncFunctionAdd1', 10);
+			add_action('wp_footer', 'RFWP_syncFunctionAdd11', 10);
+
 			$cacheTimeoutMobile = get_transient('rb_mobile_cache_timeout');
 			$cacheTimeoutDesktop = get_transient('rb_desktop_cache_timeout');
 			if (!empty($GLOBALS['dev_mode'])) {
@@ -689,7 +675,9 @@ try {
 				}
 
 				if (empty($cacheTimeout)) {
-					add_action('wp_enqueue_scripts', 'RFWP_syncFunctionAdd2', 11);
+//					add_action('wp_enqueue_scripts', 'RFWP_syncFunctionAdd2', 11);
+					add_action('wp_footer', 'RFWP_syncFunctionAdd21', 10);
+
 				}
 			}
 			if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {

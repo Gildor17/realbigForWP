@@ -1207,7 +1207,7 @@ function setLongCache() {
             console.log('long cache deployed');
         }
     };
-    xhttp.open("POST", adg_object_ad.ajax_url, true);
+    xhttp.open("POST", rb_ajaxurl, true);
     xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
     xhttp.send(sendData);
 }
