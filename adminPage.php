@@ -40,6 +40,7 @@ try {
 			$postsGatherDesktop = $wpdb->get_results('SELECT post_title FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_desktop_new")');
 			$postsGatherMobile  = $wpdb->get_results('SELECT post_title FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_mobile_new" )');
 			$getWorkProcess = $wpdb->get_var($wpdb->prepare('SELECT optionValue FROM '.$wpPrefix.'realbig_settings WHERE optionName = %s', ["work_process_status"]));
+			$getBlocks = $wpdb->get_results('SELECT block_number FROM '.$wpPrefix.'realbig_plugin_settings', ARRAY_A);
 			$workProcess = '';
 			if (!empty($getWorkProcess)&&$getWorkProcess=='enabled') {
 				$workProcess = 'checked';
@@ -242,6 +243,19 @@ try {
 								</div>
 							</div>
 						<?php endif; ?>
+                        <?php if (!empty($getBlocks)): ?>
+                            <div class="squads-blocks">
+                                Сохранённые блоки:
+                                <ol class="o-lists">
+		                            <?php foreach ($getBlocks AS $item): ?>
+                                        <li>
+				                            <?php echo $item['block_number']; ?>;
+                                        </li>
+		                            <?php endforeach; ?>
+                                    <?php unset($item); ?>
+                                </ol>
+                            </div>
+                        <?php endif; ?>
 						<?php if (!empty($excludedMainPage)):?>
 							<div class="squads-blocks">
 								Главная страница исключена: <?php echo $excludedMainPage ?>.<br>

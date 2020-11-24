@@ -23,6 +23,8 @@ try {
 				RFWP_cronCheckLog('cron in sync passed');
 			}
 
+//			RFWP_checkModules();
+
 			if (!empty($_SERVER['HTTP_HOST'])) {
 				$urlData = $_SERVER['HTTP_HOST'];
 			} elseif (!empty($_SERVER['SERVER_NAME'])) {
@@ -92,7 +94,6 @@ try {
 					    if ($sanitisedStatus=='success'||$sanitisedStatus=='empty_success') {
 						    try {
 							    if (!empty($decodedToken['data'])) {
-								    wp_cache_flush();
 								    if (!empty($decodedToken['excludedPages'])) {
 								        $sanitisedExcludedPages = sanitize_text_field($decodedToken['excludedPages']);
                                     } else {
@@ -105,7 +106,6 @@ try {
 									    $wpdb->update( $wpPrefix.'realbig_settings', ['optionName'  => 'excludedPages', 'optionValue' => $sanitisedExcludedPages],
 										    ['optionName'  => 'excludedPages']);
 								    }
-
 								    if (!empty($decodedToken['excludedMainPage'])) {
 									    $sanitisedExcludedMainPages = sanitize_text_field($decodedToken['excludedMainPage']);
 									    if (intval($sanitisedExcludedMainPages)) {
@@ -332,6 +332,27 @@ try {
                                     update_option('rb_TurboRssOptions', $turboSettings, false);
                                 }
                                 /** End of Turbo rss */
+							    /** Turbo rss ads */
+							    if (!empty($decodedToken['turboAdSettings'])) {
+							    	$listOfColums = ['blockId', 'adNetwork', 'adNetworkYandex', 'adNetworkAdfox', 'settingType', 'element', 'elementPosition', 'elementPlace'];
+								    $counter = 0;
+								    $wpdb->query('DELETE FROM '.$wpPrefix.'realbig_turbo_ads');
+//								    $sqlTokenSave = "INSERT INTO ".$wpPrefix."realbig_turbo_ads (blockId, adNetwork, adNetworkYandex, adNetworkAdfox, settingType, element, elementPosition, elementPlace) VALUES ";
+								    $sqlTokenSave = "INSERT INTO ".$wpPrefix."realbig_turbo_ads (";
+								    foreach ($listOfColums AS $k => $item) {
+									    $sqlTokenSave .= ($k != 0 ?", ":"").$item;
+								    }
+								    unset($k, $item);
+								    $sqlTokenSave .= ") VALUES ";
+								    foreach ($decodedToken['turboAdSettings'] AS $k => $item) {
+									    $counter ++;
+									    $sqlTokenSave .= ($counter != 1 ?", ":"")."(".(int) sanitize_text_field($item['blockId']).",'".sanitize_text_field($item['adNetwork'])."','".sanitize_text_field($item['adNetworkYandex'])."','".$item['adNetworkAdfox']."','".sanitize_text_field($item['settingType'])."','".sanitize_text_field($item['element'])."',".(int) sanitize_text_field($item['elementPosition']).",".(int) sanitize_text_field($item['elementPlace']).")";
+								    }
+								    unset($k, $item);
+								    $sqlTokenSave .= " ON DUPLICATE KEY UPDATE blockId = values(blockId), adNetwork = values(adNetwork), adNetworkYandex = values(adNetworkYandex), adNetworkAdfox = values(adNetworkAdfox), settingType = values(settingType), element = values(element), elementPosition = values(elementPosition), elementPlace = values(elementPlace) ";
+								    $wpdb->query($sqlTokenSave);
+							    }
+							    /** End of Turbo rss ads */
                                 /** Test Mode */
 							    if (isset($decodedToken['testMode'])) {
 								    $testMode = intval($decodedToken['testMode']);
@@ -345,6 +366,8 @@ try {
 							    /** End of Test Mode */
 
 							    $GLOBALS['token'] = $tokenInput;
+
+							    wp_cache_flush();
 
 							    delete_transient('rb_mobile_cache_timeout' );
 							    delete_transient('rb_desktop_cache_timeout');
@@ -376,6 +399,7 @@ try {
 				}
 
 				try {
+					delete_transient('realbigPluginSyncAttempt');
 					set_transient('realbigPluginSyncAttempt', time()+300, 300);
 					if ($decodedToken['status'] == 'success') {
 						if (empty($wpOptionsCheckerSyncTime)) {
@@ -401,6 +425,7 @@ try {
 				} else {
 					wp_cache_flush();
                 }
+				delete_transient('realbigPluginSyncProcess');
 			} catch (Exception $e) {
 //				echo $e->getMessage();
 				$messageFLog = 'Some error in synchronize: '.$e->getMessage().';';
@@ -416,146 +441,197 @@ try {
 			}
 		}
 	}
-	if (!function_exists('RFWP_savingCodeForCache')) {
-		function RFWP_savingCodeForCache($blocksAd=null) {
-			global $wpdb;
-			global $wpPrefix;
-			global $rb_logFile;
-			$resultTypes = [];
+	if (empty(apply_filters('wp_doing_cron', defined('DOING_CRON') && DOING_CRON))) {
+		if (!function_exists('RFWP_savingCodeForCache')) {
+			function RFWP_savingCodeForCache($blocksAd=null) {
+				global $wpdb;
+				global $wpPrefix;
+				global $rb_logFile;
+				$resultTypes = [];
 
-            try {
+				try {
 //    			$url = 'https://realbig.web/api/wp-get-ads';     // orig web post
-//                $url = 'https://beta.realbig.media/api/wp-get-ads';     // beta post
+//				$url = 'https://beta.realbig.media/api/wp-get-ads';     // beta post
     			$url = 'https://realbig.media/api/wp-get-ads';     // orig post
 
-	            $dataForSending = [
-		            'body'  => [
-			            'blocksAd' => $blocksAd
-		            ]
-	            ];
+					$dataForSending = [
+						'body'  => [
+							'blocksAd' => $blocksAd
+						]
+					];
 
-	            $jsonResult = wp_safe_remote_post($url, $dataForSending);
+					$jsonResult = wp_safe_remote_post($url, $dataForSending);
 //	            $jsonResult = wp_remote_post($url, $dataForSending);
 
-                if (!empty($jsonResult)&&!is_wp_error($jsonResult)) {
-                    $decodedResult = json_decode($jsonResult['body'], true);
-                    if (!empty($decodedResult)) {
-	                    $sanitisedStatus = sanitize_text_field($decodedResult['status']);
-	                    if ($sanitisedStatus=='success') {
-	                        $resultData = $decodedResult['data'];
+					if (!empty($jsonResult)&&!is_wp_error($jsonResult)) {
+						$decodedResult = json_decode($jsonResult['body'], true);
+						if (!empty($decodedResult)) {
+							$sanitisedStatus = sanitize_text_field($decodedResult['status']);
+							if ($sanitisedStatus=='success') {
+								$resultData = $decodedResult['data'];
 
-		                    $resultTypes['mobile'] = false;
-		                    $resultTypes['desktop'] = false;
-		                    $resultTypes['universal'] = false;
+								$resultTypes['mobile'] = false;
+								$resultTypes['desktop'] = false;
+								$resultTypes['universal'] = false;
 
-		                    require_once(ABSPATH."/wp-includes/pluggable.php");
-		                    foreach ($resultData AS $rk => $ritem) {
-			                    $postCheckMobile = null;
-			                    $postCheckDesktop = null;
+								require_once(ABSPATH."/wp-includes/pluggable.php");
+								foreach ($resultData AS $rk => $ritem) {
+									$postCheckMobile = null;
+									$postCheckDesktop = null;
 
-			                    switch ($ritem['type']) {
-                                    case 'mobile':
-	                                    $postCheckMobile  = $wpdb->get_var($wpdb->prepare('SELECT id FROM '.$wpPrefix.'posts WHERE post_type = %s AND post_title = %s',['rb_block_mobile_new',$ritem['blockId']]));
-	                                    $resultTypes['mobile'] = true;
-	                                    break;
-                                    case 'desktop':
-	                                    $postCheckDesktop = $wpdb->get_var($wpdb->prepare('SELECT id FROM '.$wpPrefix.'posts WHERE post_type = %s AND post_title = %s',['rb_block_desktop_new',$ritem['blockId']]));
-	                                    $resultTypes['desktop'] = true;
-	                                    break;
-                                    case 'universal':
-	                                    $postCheckMobile  = $wpdb->get_var($wpdb->prepare('SELECT id FROM '.$wpPrefix.'posts WHERE post_type = %s AND post_title = %s',['rb_block_mobile_new',$ritem['blockId']]));
-	                                    $postCheckDesktop = $wpdb->get_var($wpdb->prepare('SELECT id FROM '.$wpPrefix.'posts WHERE post_type = %s AND post_title = %s',['rb_block_desktop_new',$ritem['blockId']]));
-	                                    $resultTypes['universal'] = true;
-	                                    break;
-                                }
+									switch ($ritem['type']) {
+										case 'mobile':
+											$postCheckMobile  = $wpdb->get_var($wpdb->prepare('SELECT id FROM '.$wpPrefix.'posts WHERE post_type = %s AND post_title = %s',['rb_block_mobile_new',$ritem['blockId']]));
+											$resultTypes['mobile'] = true;
+											break;
+										case 'desktop':
+											$postCheckDesktop = $wpdb->get_var($wpdb->prepare('SELECT id FROM '.$wpPrefix.'posts WHERE post_type = %s AND post_title = %s',['rb_block_desktop_new',$ritem['blockId']]));
+											$resultTypes['desktop'] = true;
+											break;
+										case 'universal':
+											$postCheckMobile  = $wpdb->get_var($wpdb->prepare('SELECT id FROM '.$wpPrefix.'posts WHERE post_type = %s AND post_title = %s',['rb_block_mobile_new',$ritem['blockId']]));
+											$postCheckDesktop = $wpdb->get_var($wpdb->prepare('SELECT id FROM '.$wpPrefix.'posts WHERE post_type = %s AND post_title = %s',['rb_block_desktop_new',$ritem['blockId']]));
+											$resultTypes['universal'] = true;
+											break;
+									}
 
-                                $postContent = $ritem['code'];
-                                $postContent = htmlspecialchars_decode($postContent);
-                                $postContent = json_encode($postContent, JSON_UNESCAPED_UNICODE);
-                                $postContent = preg_replace('~\<script~', '<scr_pt_open;', $postContent);
-                                $postContent = preg_replace('~\/script~', '/scr_pt_close;', $postContent);
-                                $postContent = preg_replace('~\<~', 'corner_open;', $postContent);
-                                $postContent = preg_replace('~\>~', 'corner_close;', $postContent);
+									$postContent = $ritem['code'];
+									$postContent = htmlspecialchars_decode($postContent);
+									$postContent = json_encode($postContent, JSON_UNESCAPED_UNICODE);
+									$postContent = preg_replace('~\<script~', '<scr_pt_open;', $postContent);
+									$postContent = preg_replace('~\/script~', '/scr_pt_close;', $postContent);
+									$postContent = preg_replace('~\<~', 'corner_open;', $postContent);
+									$postContent = preg_replace('~\>~', 'corner_close;', $postContent);
 
-                                if (in_array($ritem['type'], ['mobile','universal'])) {
-	                                if (!empty($postCheckMobile)) {
-		                                $postarr = ['ID' => $postCheckMobile, 'post_content' => $postContent];
-		                                $updateBlockResultMobile = wp_update_post($postarr, true);
-	                                } else {
-		                                $postarr = [
-			                                'post_content' => $postContent,
-			                                'post_title'   => $ritem['blockId'],
-			                                'post_status'  => "publish",
-			                                'post_type'    => 'rb_block_mobile_new',
-			                                'post_author'  => 0
-		                                ];
-		                                $saveBlockResultMobile = wp_insert_post($postarr, true);
-	                                }
-                                }
-                                if (in_array($ritem['type'], ['desktop','universal'])) {
-	                                if (!empty($postCheckDesktop)) {
-		                                $postarr = ['ID' => $postCheckDesktop, 'post_content' => $postContent];
-		                                $updateBlockResultDesktop = wp_update_post($postarr, true);
-	                                } else {
-		                                $postarr = [
-			                                'post_content' => $postContent,
-			                                'post_title'   => $ritem['blockId'],
-			                                'post_status'  => "publish",
-			                                'post_type'    => 'rb_block_desktop_new',
-			                                'post_author'  => 0
-		                                ];
-		                                $saveBlockResultDesktop = wp_insert_post($postarr, true);
-	                                }
-                                }
-	                        }
-                            unset($rk,$ritem);
+									if (in_array($ritem['type'], ['mobile','universal'])) {
+										if (!empty($postCheckMobile)) {
+											$postarr = ['ID' => $postCheckMobile, 'post_content' => $postContent];
+											$updateBlockResultMobile = wp_update_post($postarr, true);
+										} else {
+											$postarr = [
+												'post_content' => $postContent,
+												'post_title'   => $ritem['blockId'],
+												'post_status'  => "publish",
+												'post_type'    => 'rb_block_mobile_new',
+												'post_author'  => 0
+											];
+											$saveBlockResultMobile = wp_insert_post($postarr, true);
+										}
+									}
+									if (in_array($ritem['type'], ['desktop','universal'])) {
+										if (!empty($postCheckDesktop)) {
+											$postarr = ['ID' => $postCheckDesktop, 'post_content' => $postContent];
+											$updateBlockResultDesktop = wp_update_post($postarr, true);
+										} else {
+											$postarr = [
+												'post_content' => $postContent,
+												'post_title'   => $ritem['blockId'],
+												'post_status'  => "publish",
+												'post_type'    => 'rb_block_desktop_new',
+												'post_author'  => 0
+											];
+											$saveBlockResultDesktop = wp_insert_post($postarr, true);
+										}
+									}
+								}
+								unset($rk,$ritem);
 
-		                    set_transient('rb_cache_timeout', time()+60, 60);
-		                    if (!empty($resultTypes['mobile'])&&empty($resultTypes['desktop'])) {
-			                    set_transient('rb_mobile_cache_timeout', time()+(60*60), 60*60);
-                            } elseif (empty($resultTypes['mobile'])&&!empty($resultTypes['desktop'])) {
-			                    set_transient('rb_desktop_cache_timeout', time()+(60*60), 60*60);
-                            } elseif (empty($resultTypes['mobile'])&&empty($resultTypes['desktop'])&&!empty($resultTypes['universal'])) {
-			                    set_transient('rb_mobile_cache_timeout', time()+(60*60), 60*60);
-			                    set_transient('rb_desktop_cache_timeout', time()+(60*60), 60*60);
-                            }
-		                    delete_transient('rb_active_cache');
-	                    }
-                    }
-                } elseif(is_wp_error($jsonResult)) {
-	                $error                                  = $jsonResult->get_error_message();
-	                $messageFLog                            = 'Saving code for cache error: '.$error.';';
-	                error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL,3,$rb_logFile);
-                }
+								set_transient('rb_cache_timeout', time()+60, 60);
+								if (!empty($resultTypes['mobile'])&&empty($resultTypes['desktop'])) {
+									set_transient('rb_mobile_cache_timeout', time()+(60*60), 60*60);
+								} elseif (empty($resultTypes['mobile'])&&!empty($resultTypes['desktop'])) {
+									set_transient('rb_desktop_cache_timeout', time()+(60*60), 60*60);
+								} elseif (empty($resultTypes['mobile'])&&empty($resultTypes['desktop'])&&!empty($resultTypes['universal'])) {
+									set_transient('rb_mobile_cache_timeout', time()+(60*60), 60*60);
+									set_transient('rb_desktop_cache_timeout', time()+(60*60), 60*60);
+								}
+								delete_transient('rb_active_cache');
+							}
+						}
+					} elseif(is_wp_error($jsonResult)) {
+						$error                                  = $jsonResult->get_error_message();
+						$messageFLog                            = 'Saving code for cache error: '.$error.';';
+						error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL,3,$rb_logFile);
+					}
 
-	            return true;
-            } catch (Exception $e) {
-	            $messageFLog = 'Some error in saving code for cache: '.$e->getMessage().';';
-	            error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
-	            delete_transient('rb_active_cache');
-	            return false;
-            }
+					return true;
+				} catch (Exception $e) {
+					$messageFLog = 'Some error in saving code for cache: '.$e->getMessage().';';
+					error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+					delete_transient('rb_active_cache');
+					return false;
+				}
+			}
+		}
+		if (!function_exists('RFWP_tokenMDValidate')) {
+			function RFWP_tokenMDValidate($token) {
+				if (strlen($token) != 32) {
+					return false;
+				}
+				preg_match('~[^0-9a-z]+~', $token, $validateMatch);
+				if (!empty($validateMatch)) {
+					return false;
+				}
+
+				return true;
+			}
+		}
+		if (!function_exists('RFWP_tokenTimeUpdateChecking')) {
+			function RFWP_tokenTimeUpdateChecking($token, $wpPrefix) {
+				global $wpdb;
+				global $rb_logFile;
+				try {
+					$timeUpdate = $wpdb->get_results("SELECT timeUpdate FROM ".$wpPrefix."realbig_settings WHERE optionName = 'token_sync_time'");
+					if (empty($timeUpdate)) {
+						$updateResult = RFWP_wpRealbigSettingsTableUpdateFunction($wpPrefix);
+						if ($updateResult == true) {
+							$timeUpdate = $wpdb->get_results("SELECT timeUpdate FROM ".$wpPrefix."realbig_settings WHERE optionName = 'token_sync_time'");
+						}
+					}
+					if (!empty($token)&&$token != 'no token'&&((!empty($GLOBALS['tokenStatusMessage'])&&($GLOBALS['tokenStatusMessage'] == 'Синхронизация прошла успешно' || $GLOBALS['tokenStatusMessage'] == 'Не нашло позиций для блоков на указанном сайте, добавьте позиции для сайтов на странице настроек плагина')) || empty($GLOBALS['tokenStatusMessage'])) && !empty($timeUpdate)) {
+						if (!empty($timeUpdate)) {
+							$timeUpdate                 = get_object_vars($timeUpdate[0]);
+							$GLOBALS['tokenTimeUpdate'] = $timeUpdate['timeUpdate'];
+							$GLOBALS['statusColor']     = 'green';
+						} else {
+							$GLOBALS['tokenTimeUpdate'] = '';
+							$GLOBALS['statusColor']     = 'red';
+						}
+					} else {
+						$GLOBALS['tokenTimeUpdate'] = 'never';
+						$GLOBALS['statusColor']     = 'red';
+					}
+				} catch (Exception $e) {
+//				echo $e;
+					$messageFLog = 'Some error in token time update check: '.$e->getMessage().';';
+					error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+				}
+			}
 		}
 	}
 	if (!function_exists('RFWP_tokenChecking')) {
 		function RFWP_tokenChecking($wpPrefix) {
-			global $wpdb;
 			global $rb_logFile;
 
 			try {
-				$GLOBALS['tokenStatusMessage'] = null;
-				$token                         = $wpdb->get_results("SELECT optionValue FROM ".$wpPrefix."realbig_settings WHERE optionName = '_wpRealbigPluginToken'");
+			    if (!empty($GLOBALS['token'])&&$GLOBALS['token']!='no token') {
+				    $token = $GLOBALS['token'];
+                } else {
+				    global $wpdb;
+				    $GLOBALS['tokenStatusMessage'] = null;
+				    $token                         = $wpdb->get_results("SELECT optionValue FROM ".$wpPrefix."realbig_settings WHERE optionName = '_wpRealbigPluginToken'");
 
-				if (!empty($token)) {
-					$token            = get_object_vars($token[0]);
-					$GLOBALS['token'] = $token['optionValue'];
-					$token            = $token['optionValue'];
-				} else {
-					$GLOBALS['token'] = 'no token';
-					$token            = 'no token';
-					$messageFLog = 'Token check: '.$token.';';
-					error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
-				}
+				    if (!empty($token)) {
+					    $token            = get_object_vars($token[0]);
+					    $GLOBALS['token'] = $token['optionValue'];
+					    $token            = $token['optionValue'];
+				    } else {
+					    $GLOBALS['token'] = 'no token';
+					    $token            = 'no token';
+					    $messageFLog = 'Token check: '.$token.';';
+					    error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+				    }
+                }
 
 				return $token;
 			} catch (Exception $e) {
@@ -565,53 +641,8 @@ try {
 			}
 		}
 	}
-	if (!function_exists('RFWP_tokenMDValidate')) {
-	    function RFWP_tokenMDValidate($token) {
-	        if (strlen($token) != 32) {
-		        return false;
-            }
-            preg_match('~[^0-9a-z]+~', $token, $validateMatch);
-	        if (!empty($validateMatch)) {
-		        return false;
-	        }
-
-            return true;
-        }
-    }
-	if (!function_exists('RFWP_tokenTimeUpdateChecking')) {
-		function RFWP_tokenTimeUpdateChecking($token, $wpPrefix) {
-			global $wpdb;
-			global $rb_logFile;
-			try {
-				$timeUpdate = $wpdb->get_results("SELECT timeUpdate FROM ".$wpPrefix."realbig_settings WHERE optionName = 'token_sync_time'");
-				if (empty($timeUpdate)) {
-					$updateResult = RFWP_wpRealbigSettingsTableUpdateFunction($wpPrefix);
-					if ($updateResult == true) {
-						$timeUpdate = $wpdb->get_results("SELECT timeUpdate FROM ".$wpPrefix."realbig_settings WHERE optionName = 'token_sync_time'");
-					}
-				}
-				if (!empty($token)&&$token != 'no token'&&((!empty($GLOBALS['tokenStatusMessage'])&&($GLOBALS['tokenStatusMessage'] == 'Синхронизация прошла успешно' || $GLOBALS['tokenStatusMessage'] == 'Не нашло позиций для блоков на указанном сайте, добавьте позиции для сайтов на странице настроек плагина')) || empty($GLOBALS['tokenStatusMessage'])) && !empty($timeUpdate)) {
-					if (!empty($timeUpdate)) {
-						$timeUpdate                 = get_object_vars($timeUpdate[0]);
-						$GLOBALS['tokenTimeUpdate'] = $timeUpdate['timeUpdate'];
-						$GLOBALS['statusColor']     = 'green';
-					} else {
-						$GLOBALS['tokenTimeUpdate'] = '';
-						$GLOBALS['statusColor']     = 'red';
-					}
-				} else {
-					$GLOBALS['tokenTimeUpdate'] = 'never';
-					$GLOBALS['statusColor']     = 'red';
-				}
-			} catch (Exception $e) {
-//				echo $e;
-				$messageFLog = 'Some error in token time update check: '.$e->getMessage().';';
-				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
-			}
-		}
-	}
-	if (!function_exists('RFWP_statusGathererConstructor')) {
-		function RFWP_statusGathererConstructor($pointer) {
+	if (!function_exists('RFWP_statusGathererConstructorOld')) {
+		function RFWP_statusGathererConstructorOld($pointer) {
 			global $wpdb;
 			global $rb_logFile;
 
@@ -662,6 +693,41 @@ try {
 			}
 		}
 	}
+	if (!function_exists('RFWP_statusGathererConstructor')) {
+		function RFWP_statusGathererConstructor($pointer) {
+			global $wpdb;
+			global $rb_logFile;
+
+			try {
+				$statusGatherer        = [];
+				$realbigStatusGatherer = get_option('realbig_status_gatherer');
+
+				if ($pointer == false) {
+					if (!empty($realbigStatusGatherer)) {
+						$statusGatherer['update_status_gatherer'] = true;
+					}
+				} else {
+					if (!empty($realbigStatusGatherer)) {
+						$realbigStatusGatherer                             = json_decode($realbigStatusGatherer, true);
+						foreach ($realbigStatusGatherer AS $k => $item) {
+							$statusGatherer[$k] = $item;
+						}
+						unset($k, $item);
+						$statusGatherer['update_status_gatherer']          = true;
+					}
+				}
+				return $statusGatherer;
+			} catch (Exception $exception) {
+				$messageFLog = 'Some error in token time update check: '.$exception->getMessage().';';
+				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+				return $statusGatherer = [];
+			} catch (Error $error) {
+				$messageFLog = 'Some error in token time update check: '.$error->getMessage().';';
+				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+				return $statusGatherer = [];
+			}
+		}
+	}
 	if (!function_exists('RFWP_getPageTypes')) {
 		function RFWP_getPageTypes() {
 			return [
@@ -685,6 +751,7 @@ try {
 				$wpOptionsCheckerSyncTime = get_object_vars($wpOptionsCheckerSyncTime);
 			}
 			$token      = RFWP_tokenChecking($GLOBALS['table_prefix']);
+			RFWP_cronCheckLog('cron going to sync 2');
 			$ajaxResult = RFWP_synchronize($token, $wpOptionsCheckerSyncTime, true, $GLOBALS['table_prefix'], 'ajax');
 		}
 	}
@@ -715,16 +782,17 @@ try {
 			wp_unschedule_event( $checkIt, 'rb_cron_hook' );
 		}
 	}
+	/** End of Creating Cron RB auto sync */
 	if (!function_exists('RFWP_getMenuList')) {
 		function RFWP_getMenuList() {
 			$menuMap = [];
 			try {
 				$menuTerms = get_terms('nav_menu', array('hide_empty' => true));
 				if (!empty($menuTerms)) {
-				    foreach ($menuTerms AS $k => $item) {
-				        $menuMap[$item->term_id] = $item->name;
-				    }
-				    unset($k,$item);
+					foreach ($menuTerms AS $k => $item) {
+						$menuMap[$item->term_id] = $item->name;
+					}
+					unset($k,$item);
 				}
 			} catch (Exception $ex) {} catch (Error $er) {}
 			return $menuMap;
@@ -732,22 +800,52 @@ try {
 	}
 	if (!function_exists('RFWP_otherInfoGather')) {
 		function RFWP_otherInfoGather() {
-		    $result = [];
+			$result = [];
 			$result['permalinkStatus'] = RFWP_checkPermalink();
 
 			return $result;
 		}
-    }
+	}
 	if (!function_exists('RFWP_checkPermalink')) {
 		function RFWP_checkPermalink() {
-		    $result = false;
+			$result = false;
 			if (get_option('permalink_structure')) {
 				$result = true;
 			}
 			return $result;
 		}
-    }
-	/** End of Creating Cron RB auto sync */
+	}
+	if (!function_exists('RFWP_checkModules')) {
+		function RFWP_checkModules() {
+//			error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+		}
+	}
+	if (!function_exists('RFWP_createAndFillLocalRotator')) {
+		function RFWP_createAndFillLocalRotator($rotatorFileInfo) {
+			global $rb_logFile;
+			try {
+				$rotatorFile = fopen($rotatorFileInfo['pathToFile'], 'w');
+				$rotatorFileInfo['fileRotatorContent'] = file_get_contents($rotatorFileInfo['urlToRotator']);
+				if (!empty($rotatorFileInfo['fileRotatorContent'])) {
+					file_put_contents($rotatorFileInfo['pathToFile'], $rotatorFileInfo['fileRotatorContent']);
+				}
+				fclose($rotatorFile);
+				unset($rotatorFile);
+				$rotatorFileInfo['checkFileExists'] = file_exists($rotatorFileInfo['pathToFile']);
+				if (!empty($rotatorFileInfo['checkFileExists'])) {
+					set_transient('localRotatorGatherTimeout', true, 15*60);
+					$GLOBALS['rb_variables']['localRotatorGatherTimeout'] = true;
+				}
+			} catch (Exception $ex) {
+				$messageFLog = 'Some error in RFWP_launch_without_content_function: '.$ex->getMessage().';';
+				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+			} catch (Error $er) {
+				$messageFLog = 'Some error in RFWP_launch_without_content_function: '.$er->getMessage().';';
+				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+			}
+//		    return false;
+		}
+	}
 }
 catch (Exception $ex)
 {

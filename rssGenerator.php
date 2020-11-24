@@ -3,6 +3,95 @@
 if (!defined("ABSPATH")) { exit;}
 
 try {
+	// rss init begin
+	if (!function_exists('RFWP_rssInit')) {
+		function RFWP_rssInit() {
+			global $rb_rssCheckLog;
+
+			$messageFLog = 'point_dop 1;';
+			error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_rssCheckLog);
+
+//			include_once (dirname(__FILE__).'/rssGenerator.php');
+			$posts = [];
+			$rb_rssFeedUrls = [];
+			$rssPartsCount = 1;
+			$rssOptions = RFWP_rssOptionsGet();
+			$postTypes = $rssOptions['typesPost'];
+			$feedTrashName = 'rb_turbo_trash_rss';
+			add_feed($feedTrashName, 'RFWP_rssCreate');
+			$feedName = 'rb_turbo_rss';
+			add_feed($feedName, 'RFWP_rssCreate');
+			array_push($rb_rssFeedUrls, $feedName);
+			if (!empty($postTypes)) {
+				$tax_query = RFWP_rss_taxonomy_get($rssOptions);
+				$postTypes = explode(';', $postTypes);
+				$posts = get_posts([
+					'numberposts' => $rssOptions['pagesCount'],
+					'post_type' => $postTypes,
+					'tax_query' => $tax_query,
+					'fields' => ['ID'],
+				]);
+			}
+
+			if (!empty($posts)) {
+				$GLOBALS['rb_rssTurboAds'] = RFWP_getTurboAds();
+				$messageFLog = 'point_dop 2;';
+				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_rssCheckLog);
+
+				$rssDividedPosts = RFWP_rssDivine($posts, $rssOptions);
+				$GLOBALS['rb_rssDivideOptions'] = [];
+				$GLOBALS['rb_rssDivideOptions']['posts'] = $rssDividedPosts;
+				$GLOBALS['rb_rssDivideOptions']['iteration'] = 0;
+				$rssOptions['rssPartsSeparated'] = intval($rssOptions['rssPartsSeparated']);
+				if ($rssOptions['rssPartsSeparated']  < 1) {
+					$rssOptions['rssPartsSeparated'] = 1;
+				}
+				if (!empty($rssOptions['divide'])&&!($rssOptions['rssPartsSeparated'] >= count($posts))) {
+					$rssPartsCount = count($posts)/$rssOptions['rssPartsSeparated'];
+					$rssPartsCount = ceil($rssPartsCount);
+					$feed = [];
+					for ($cou = 0; $cou < $rssPartsCount; $cou++) {
+						if ($cou > 0) {
+							$feedName = 'rb_turbo_rss';
+							if (get_option('permalink_structure')) {
+								$feedPage = '/?paged='.($cou+1);
+							} else {
+								$feedPage = '&paged='.($cou+1);
+							}
+							$feedName = $feedName.$feedPage;
+							add_feed($feedName, 'RFWP_rssCreate');
+							array_push($rb_rssFeedUrls, $feedName);
+						}
+					}
+				}
+			}
+			if (!empty($rb_rssFeedUrls)) {
+				$GLOBALS['rb_rssFeedUrls'] = $rb_rssFeedUrls;
+			}
+
+			$messageFLog = 'point_dop 3;';
+			error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_rssCheckLog);
+
+//			global $wp_rewrite;
+//			$wp_rewrite->flush_rules(false);
+		}
+	}
+	// rss init end
+	if (!function_exists('RFWP_getTurboAds')) {
+		function RFWP_getTurboAds() {
+			if (!isset($GLOBALS['rb_turboAds'])) {
+				global $rb_rssCheckLog;
+				global $wpdb;
+				global $wpPrefix;
+
+				$rb_turboAds = $wpdb->get_results("SELECT * FROM ".$wpPrefix."realbig_turbo_ads", ARRAY_A);
+				$GLOBALS['rb_turboAds'] = $rb_turboAds;
+			} else {
+				$rb_turboAds = $GLOBALS['rb_turboAds'];
+			}
+			return $rb_turboAds;
+		}
+	}
 	// search for hardcoded
     if (!function_exists('RFWP_rssContentFiltrate')) {
 	    function RFWP_rssContentFiltrate($content, $rssOptions, $postId) {
@@ -594,6 +683,9 @@ try {
 					$rssPosts[$k1]->post_author_name = 'No name';
 				}
 				$contentPost = $rssPosts[$k1]->post_content;
+//				if (!empty($contentPost)) {
+//					$contentPost = RFWP_rss_turbo_ads_insert($contentPost);
+//                }
 				$excerpt = '';
 				if (!empty($rssOptions['PostExcerpt'])&&!empty(!empty($rssPosts[$k1]->post_excerpt))) {
 					$excerpt = '<p>'.$rssPosts[$k1]->post_excerpt.'</p>';
@@ -602,6 +694,7 @@ try {
 				if (!empty($contentPost)) {
 					$contentPost = RFWP_rssContentFiltrate($contentPost, $rssOptions, $rssPosts[$k1]->ID);
 					if (!empty($contentPost)) {
+						$contentPost = RFWP_rss_turbo_ads_insert($contentPost);
 						$rssPosts[$k1]->post_content = $contentPost;
 					}
 				}
@@ -1206,7 +1299,93 @@ try {
 		<?php }
 	}
 	//функция вывода мусорной ленты end
+	if (!function_exists('RFWP_rss_turbo_ads_insert')) {
+	    function RFWP_rss_turbo_ads_insert($content) {
+	        global $rb_turboAds;
+	        if (!empty($rb_turboAds)) {
+		        foreach ($rb_turboAds AS $k => $item) {
+			        $editedContent = $content;
+			        $currentFigure = '<figure data-turbo-ad-id="rb_turbo_ad_'.$k.'"></figure>';
+		            switch ($item['settingType']) {
+//		                case 'single','begin','middle','end':
+		                case 'begin':
+			                $editedContent = $currentFigure.$editedContent;
+		                    break;
+                        case 'end':
+	                        $editedContent = $editedContent.$currentFigure;
+	                        break;
+                        case 'middle':
+                            $contentLength = strlen($editedContent);
+                            $contentHalfLength = floor($contentLength/2);
+                            if ($contentHalfLength > 1) {
+	                            $firstHalf = mb_substr($editedContent, 0, ($contentHalfLength-1));
+	                            $secondHalf = mb_substr($editedContent, $contentHalfLength);
+	                            $secondHalf = preg_replace('~(\<\/[^>]+\>)~', '$1'.$currentFigure, $secondHalf, 1, $replCou);
+	                            if ($replCou > 0) {
+		                            $editedContent = $firstHalf.$secondHalf;
+                                }
+	                            unset($replCou);
+                            }
+                            break;
+                        case 'single':
+	                        if ($item['element']!='img') {
+		                        if ($item['elementPosition'] < 1) {
+			                        $editedContent = preg_replace('~(\<'.$item['element'].'[^>]*\>)~', '<rb_turbo_ad_placeholder>$1', $editedContent, -1, $replCou);
+		                        } else {
+			                        $editedContent = preg_replace('~(\<\/'.$item['element'].'\>)~', '$1<rb_turbo_ad_placeholder>', $editedContent, -1, $replCou);
+		                        }
+	                        } else {
+		                        if ($item['elementPosition']<1) {
+			                        $editedContent = preg_replace('~(\<'.$item['element'].'[^>]*\>)~', '<rb_turbo_ad_placeholder>$1', $editedContent, -1, $replCou);
+		                        } else {
+			                        $editedContent = preg_replace('~(\<'.$item['element'].'[^>]*\>)~', '$1<rb_turbo_ad_placeholder>', $editedContent, -1, $replCou);
+		                        }
+	                        }
+	                        if ($replCou>0) {
+	                            if ($item['elementPlace'] > 0) {
+	                                $elementPlace = $item['elementPlace'];
+                                } else {
+		                            $elementPlace = (int)$replCou+(int)$item['elementPlace']+1;
+                                }
+		                        if ($elementPlace>0 && $elementPlace<=$replCou) {
+			                        $editedContent = preg_replace('~\<rb\_turbo\_ad\_placeholder\>~', '', $editedContent, ($elementPlace-1));
+			                        $editedContent = preg_replace('~\<rb\_turbo\_ad\_placeholder\>~', $currentFigure, $editedContent, 1);
+		                        }
+		                        $editedContent = preg_replace('~\<rb\_turbo\_ad\_placeholder\>~', '', $editedContent);
+                            }
+	                        unset($replCou);
+	                        break;
+                    }
+                    if (!empty($editedContent)) {
+	                    $content = $editedContent;
+                    } else {
+	                    $editedContent = $content;
+                    }
+                }
+		        unset($k,$item);
+            }
 
+	        return $content;
+        }
+    }
+	if (!function_exists('RFWP_rss_turbo_ads_construct')) {
+		function RFWP_rss_turbo_ads_construct() {
+		    global $rb_turboAds;
+		    $ads = '';
+			if (!empty($rb_turboAds)) {
+				foreach ($rb_turboAds AS $k => $item) {
+					if ($item['adNetwork']=='rsya') {
+						$ads .= '<turbo:adNetwork type="Yandex" id="'.$item['adNetworkYandex'].'" turbo-ad-id="rb_turbo_ad_'.$k.'"></turbo:adNetwork>'.PHP_EOL;
+					} elseif ($item['adNetwork']=='adfox') {
+						$ads .= '<turbo:adNetwork type="AdFox" turbo-ad-id="rb_turbo_ad_'.$k.'"><![CDATA['.$item['adNetworkAdfox'].']]></turbo:adNetwork>'.PHP_EOL;
+                    }
+                }
+				unset($k,$item);
+            }
+
+		    return $ads;
+        }
+    }
 	if (!function_exists('RFWP_rssCreate')) {
 		function RFWP_rssCreate() {
 			global $rb_rssCheckLog;
@@ -1251,6 +1430,7 @@ try {
 				]);
 				if (!empty($rssPosts)) {
 					$rssPosts = RFWP_rssPostsCleaning($rssPosts, $rssOptions);
+					$ads = RFWP_rss_turbo_ads_construct();
 					$rssDivided[0] = $rssPosts;
 				}
             }
@@ -1287,6 +1467,7 @@ try {
 							<?php if (!empty($rssOptions['analytics'])): ?>
 								<turbo:analytics></turbo:analytics>
 							<?php endif; ?>
+                            <?php if (!empty($ads)) {echo $ads;} ?>
 							<?php if (!empty($rssOptions['adNetwork'])): ?>
 								<turbo:adNetwork></turbo:adNetwork>
 							<?php endif; ?>
@@ -1301,8 +1482,7 @@ try {
                                         <?php if (!empty($rssOptions['PostDate'])): ?>
                                             <?php if ($rssOptions['PostDateType'] == 'create'&&!empty($item->post_date_gmt)) { ?>
                                                 <pubDate><?php echo $item->post_date_gmt ?> +0300</pubDate>
-                                            <?php } ?>
-                                            <?php if ($rssOptions['PostDateType'] == 'edit'&&!empty($item->post_modified_gmt)) { ?>
+                                            <?php } elseif ($rssOptions['PostDateType'] == 'edit'&&!empty($item->post_modified_gmt)) { ?>
                                                 <pubDate><?php echo $item->post_modified_gmt ?> +0300</pubDate>
                                             <?php } ?>
                                         <?php endif; ?>
@@ -1314,7 +1494,7 @@ try {
                                                 echo '<author>'.$item->post_author_name.'</author>'.PHP_EOL;
                                             }
                                         } ?>
-                                        <yandex:related></yandex:related>
+                                        <?php /* <yandex:related></yandex:related> /**/ ?>
                                         <turbo:content>
                                             <![CDATA[
                                             <header>
@@ -1579,6 +1759,8 @@ try {
                                             } else {
                                                 echo $rcontent;
                                             }
+                                        } else {
+                                            ?><yandex:related></yandex:related><?php
                                         } ?>
                                     </item>
                                 <?php endforeach; ?>
