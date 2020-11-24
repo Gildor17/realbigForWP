@@ -11,10 +11,11 @@ if (!defined("ABSPATH")) { exit;}
 
 try {
 	if (!function_exists('RFWP_dbTablesCreateFunction')) {
-		function RFWP_dbTablesCreateFunction($tableForCurrentPluginChecker, $tableForToken, $wpPrefix, $statusGatherer) {
+		function RFWP_dbTablesCreateFunction($tableForCurrentPluginChecker, $tableForToken, $tableForTurboRssAds, $wpPrefix, $statusGatherer) {
 			global $wpdb;
 			global $rb_logFile;
 			try {
+				require_once (ABSPATH."/wp-admin/includes/upgrade.php");
 				if (empty($tableForCurrentPluginChecker)) {
 					$sql = "
 CREATE TABLE `".$wpPrefix."realbig_plugin_settings` 
@@ -23,7 +24,7 @@ CREATE TABLE `".$wpPrefix."realbig_plugin_settings`
 	`block_number` INT(11) NOT NULL,
 	`text` TEXT NOT NULL,
 	`setting_type` INT(11) NOT NULL,
-	`element` ENUM('p','li','ul','ol','blockquote','img','video','h1','h2','h3','h4','h5','h6','h2-4','article') NOT NULL,
+	`element` ENUM('p','li','ul','ol','blockquote','img','video','iframe','h1','h2','h3','h4','h5','h6','h2-4','article') NOT NULL,
 	`directElement` TEXT NOT NULL,
 	`elementPosition` INT(11) NOT NULL,
 	`elementPlace` INT(11) NOT NULL,
@@ -41,7 +42,6 @@ CREATE TABLE `".$wpPrefix."realbig_plugin_settings`
 COLLATE='utf8_general_ci'
 ENGINE=InnoDB   
 ";
-					require_once (ABSPATH."/wp-admin/includes/upgrade.php");
 					$tableCreateResult = dbDelta($sql, true);
 					if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
 						RFWP_WorkProgressLog(false,'create realbig_plugin_settings tables');
@@ -73,11 +73,41 @@ ENGINE=InnoDB
 ";
 					dbDelta($sql, true);
 					if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
-						RFWP_WorkProgressLog(false,'create realbig_plugin_settings tables');
+						RFWP_WorkProgressLog(false,'create realbig_settings tables');
 					}
 				} else {
 					$statusGatherer['realbig_settings_table'] = true;
 					$messageFLog = 'realbig_settings exists;';
+                    error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL,3,$rb_logFile);
+				}
+
+				if (empty($tableForTurboRssAds)) {
+					$sql = "
+CREATE TABLE `".$wpPrefix."realbig_turbo_ads` (
+	`id` INT(11) NOT NULL AUTO_INCREMENT,
+	`blockId` INT(11) NOT NULL,
+	`adNetwork` ENUM('rsya','adfox') NOT NULL DEFAULT 'rsya' COLLATE 'utf8_bin',
+	`adNetworkYandex` TEXT NULL COLLATE 'utf8_bin',
+	`adNetworkAdfox` TEXT NULL COLLATE 'utf8_bin',
+	`settingType` ENUM('single','begin','middle','end') NOT NULL DEFAULT 'single' COLLATE 'utf8_bin',
+	`element` ENUM('p','li','ul','ol','blockquote','img','video','iframe','h1','h2','h3','h4','h5','h6','h2-4','article') NOT NULL DEFAULT 'p' COLLATE 'utf8_bin',
+	`elementPosition` TINYINT(4) NOT NULL DEFAULT '0',
+	`elementPlace` INT(11) NOT NULL DEFAULT '1',
+	`timeCreate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`timeUpdate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	PRIMARY KEY (`id`)
+)
+COMMENT='Ads for turbo RSS'
+COLLATE='utf8_bin'
+ENGINE=InnoDB
+";
+					dbDelta($sql, true);
+					if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
+						RFWP_WorkProgressLog(false,'create realbig_turbo_ads tables');
+					}
+				} else {
+					$statusGatherer['realbig_turbo_ads_table'] = true;
+					$messageFLog = 'realbig_turbo_ads exists;';
                     error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL,3,$rb_logFile);
 				}
 
@@ -96,7 +126,7 @@ ENGINE=InnoDB
 	if (!function_exists('RFWP_updateElementEnumValuesFunction')) {
 		function RFWP_updateElementEnumValuesFunction($wpPrefix, $statusGatherer) {
 			global $rb_logFile;
-			$requiredElementColumnValues = "enum('p','li','ul','ol','blockquote','img','video','h1','h2','h3','h4','h5','h6','h2-4','article')";
+			$requiredElementColumnValues = "enum('p','li','ul','ol','blockquote','img','video','iframe','h1','h2','h3','h4','h5','h6','h2-4','article')";
 			try {
 				function RFWP_checkElementColumnValues($wpPrefix, $requiredElementColumnValues) {
 					global $wpdb;
@@ -106,7 +136,7 @@ ENGINE=InnoDB
 					if (!empty($enumTypeQuery)) {
 						$enumTypeQuery = get_object_vars($enumTypeQuery[0]);
 						if ($enumTypeQuery['Type'] != $requiredElementColumnValues) {
-							$alterResult = $wpdb->query("ALTER TABLE ".$wpPrefix."realbig_plugin_settings MODIFY `element` ENUM('p','li','ul','ol','blockquote','img','video','h1','h2','h3','h4','h5','h6','h2-4','article') NULL DEFAULT NULL");
+							$alterResult = $wpdb->query("ALTER TABLE ".$wpPrefix."realbig_plugin_settings MODIFY `element` ENUM('p','li','ul','ol','blockquote','img','video','iframe','h1','h2','h3','h4','h5','h6','h2-4','article') NULL DEFAULT NULL");
 							if (!empty($alterResult)&&is_int($alterResult)&&$alterResult == 1) {
 								$localReturnValue = RFWP_checkElementColumnValues($wpPrefix, $requiredElementColumnValues);
 							}
