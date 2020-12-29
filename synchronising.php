@@ -17,6 +17,7 @@ try {
 			$shortcodesToSend = array_keys($shortcode_tags);
 			$menuItemList = RFWP_getMenuList();
 			$permalinkStatus = RFWP_checkPermalink();
+			$pluginVersion = RFWP_plugin_version();
 			$unsuccessfullAjaxSyncAttempt = 0;
 
 			if (!empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
@@ -819,6 +820,14 @@ try {
 		function RFWP_checkModules() {
 //			error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
 		}
+	}
+	if (!function_exists('RFWP_plugin_version')) {
+        function RFWP_plugin_version() {
+            $plugin_data = get_plugin_data(dirname(__FILE__).'/realbigForWP.php');
+            $plugin_version = $plugin_data['Version'];
+
+            return $plugin_version;
+        }
 	}
 	if (!function_exists('RFWP_createAndFillLocalRotator')) {
 		function RFWP_createAndFillLocalRotator($rotatorFileInfo) {
