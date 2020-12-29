@@ -155,7 +155,7 @@ function clearUnsuitableCache(cuc_cou) {
     let scAdId = -1;
     let ccRepeat = false;
 
-    let gatheredBlocks = document.querySelectorAll('.percentPointerClass .content_rb');
+    let gatheredBlocks = document.querySelectorAll('.percentPointerClass .content_rb, .percentPointerClass .cnt32_rl_bg_str');
 
     if (gatheredBlocks&&gatheredBlocks.length > 0) {
         for (let i = 0; i < gatheredBlocks.length; i++) {
@@ -235,7 +235,7 @@ function blocksRepositionUse(containerString, blType, searchType, contentElement
             if (blocksInContainer && blocksInContainer.length > 0 && usedBlockSettingArray && usedBlockSettingArray.length > 0) {
                 for (i = 0; i < blocksInContainer.length; i++) {
                     currentBlock = blocksInContainer[i];
-                    currentBlockId = currentBlock.querySelector('.content_rb').getAttribute('data-id');
+                    currentBlockId = currentBlock.querySelector('.content_rb, .cnt32_rl_bg_str').getAttribute('data-id');
                     currentContainer = null;
                     for (j = 0; j < usedBlockSettingArray.length; i++) {
                         if (usedBlockSettingArray[i]['id'] == currentBlockId) {
@@ -299,6 +299,9 @@ function createStyleElement(blockNumber, localElementCss) {
     }
     if (!emptyValues) {
         htmlToAdd = '#content_rb_'+blockNumber+' > * {\n' +
+            '    margin: '+marginString+';\n' +
+            '}\n' +
+            '#cnt_rb_'+blockNumber+' > * {\n' +
             '    margin: '+marginString+';\n' +
             '}\n';
     }
@@ -1227,9 +1230,9 @@ function setLongCache() {
 }
 
 function cachePlacing(alert_type, errorInfo=null) {
-    let adBlocks = document.querySelectorAll('.percentPointerClass .content_rb');
-    let curAdBlock;
-    let okStates = ['done','refresh-wait','no-block','fetched'];
+    let adBlocks = document.querySelectorAll('.percentPointerClass .content_rb, .percentPointerClass .cnt32_rl_bg_str'),
+        curAdBlock,
+        okStates = ['done','refresh-wait','no-block','fetched'];
     /* let adId = -1; */
     let blockStatus = null;
     let blockId;

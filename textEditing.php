@@ -1522,7 +1522,7 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 			if (!empty($excIdClass)) {
 				$excIdClass .= ';';
             }
-			$excIdClass .= ".percentPointerClass;.content_rb;.addedInserting;#toc_container;table;blockquote";
+			$excIdClass .= ".percentPointerClass;.content_rb;.cnt32_rl_bg_str;.addedInserting;#toc_container;table;blockquote";
 			if (!empty($excIdClass)) {
 				$excIdClass = explode(';', $excIdClass);
 				foreach ($excIdClass AS $k1 => $item1) {
