@@ -824,8 +824,11 @@ try {
 	}
 	if (!function_exists('RFWP_plugin_version')) {
         function RFWP_plugin_version() {
+            $plugin_version = null;
             $plugin_data = get_plugin_data(dirname(__FILE__).'/realbigForWP.php');
-            $plugin_version = $plugin_data['Version'];
+            if (!empty($plugin_data)&&!empty($plugin_data['Version'])) {
+                $plugin_version = $plugin_data['Version'];
+            }
 
             return $plugin_version;
         }
