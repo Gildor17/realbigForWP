@@ -56,6 +56,7 @@ try {
                         'getShortcodes' => json_encode($shortcodesToSend),
                         'getMenuList' => json_encode($menuItemList),
                         'otherInfo' => $otherInfo,
+                        'pluginVersion' => $pluginVersion
                     ]
 				];
 				try {
