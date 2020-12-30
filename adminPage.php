@@ -167,9 +167,9 @@ try {
 						<?php if (!empty($GLOBALS['tokenStatusMessage'])): ?>
 							<div name="rezultDiv" style="font-size: 16px"><?php echo $GLOBALS['tokenStatusMessage'] ?></div>
 						<?php endif; ?>
-						<?php if (!empty($checkDirName)&&strpos($checkDirName,'realbigForWP')!==false): ?>
+						<?php /* if (!empty($checkDirName)&&strpos($checkDirName,'realbigForWP')!==false): ?>
 							<?php submit_button('Rename', 'folderRename', 'folderRename') ?>
-						<?php endif; ?>
+						<?php endif; /**/ ?>
                         <?php if (!empty($devMode)): ?>
                             <?php if (!empty($rb_rssFeedUrls)): ?>
                                 <?php foreach ($rb_rssFeedUrls AS $k => $item): ?>
