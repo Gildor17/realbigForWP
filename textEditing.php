@@ -288,15 +288,24 @@ try {
     }
     function contentMonitoring() {
         if (typeof jsInputerLaunch===\'undefined\'||(typeof jsInputerLaunch!==\'undefined\'&&jsInputerLaunch==-1)) {
-            let possibleClasses = [\'.taxonomy-description\',\'.entry-content\',\'.post-wrap\',\'#blog-entries\',\'.content\',\'.archive-posts__item-text\',\'.single-company_wrapper\',\'.posts-container\',\'.content-area\',\'.post-listing\',\'.td-category-description\'];
+            let possibleClasses = [\'.taxonomy-description\',\'.entry-content\',\'.post-wrap\',\'#blog-entries\',\'.content\',\'.archive-posts__item-text\',\'.single-company_wrapper\',\'.posts-container\',\'.content-area\',\'.post-listing\',\'.td-category-description\',\'.jeg_posts_wrap\'];
+            let deniedClasses = [\'.percentPointerClass\',\'.content_rb\',\'.cnt32_rl_bg_str\',\'.addedInserting\',\'#toc_container\'];
+            let deniedString = "";
             let contentSelector = \''.$contentSelector.'\';
             let contentCheck = null;
             if (contentSelector) {
                 contentCheck = document.querySelector(contentSelector);
             }
+       
+            if (deniedClasses&&deniedClasses.length > 0) {
+                for (let i = 0; i < deniedClasses.length; i++) {
+                    deniedString += ":not("+deniedClasses[i]+")";
+                }
+            }
+            
             if (!contentCheck) {
                 for (let i = 0; i < possibleClasses.length; i++) {
-                    contentCheck = document.querySelector(possibleClasses[i]);
+                    contentCheck = document.querySelector(possibleClasses[i]+deniedString);
                     if (contentCheck) {
                         break;
                     }
@@ -325,12 +334,13 @@ try {
                         contentMonitoring();
                     }, 200);
                 } else {
-                    contentCheck = document.querySelector("body div");
+                    contentCheck = document.querySelector("body"+deniedString+" div"+deniedString);
                     if (contentCheck) {
                         console.log(\'content is here hard\');
                         let cpSpan = document.createElement(\'SPAN\');
                         cpSpan.setAttribute(\'id\', \'content_pointer_id\');
                         cpSpan.classList.add(\'no-content\');
+                        cpSpan.classList.add(\'hard-content\');
                         cpSpan.setAttribute(\'data-content-length\', \'0\');
                         cpSpan.setAttribute(\'data-accepted-blocks\', \''.$adBlocksIdsString.'\');
                         cpSpan.setAttribute(\'data-rejected-blocks\', \''.$rejectedIdsString.'\');
@@ -603,13 +613,20 @@ try {
 		if (!function_exists('RFWP_rotatorToHeaderAdd')) {
 			function RFWP_rotatorToHeaderAdd() {
 				RFWP_launch_cache_local($GLOBALS['rb_variables']['rotator'], $GLOBALS['rb_variables']['adDomain']);
-				wp_enqueue_script(
-					$GLOBALS['rb_variables']['rotator'],
-					plugins_url().'/'.basename(__DIR__).'/'.$GLOBALS['rb_variables']['rotator'].'.js',
-					array('jquery'),
-					$GLOBALS['realbigForWP_version'],
-					false
-				);
+				$pluginVersion = RFWP_plugin_version();
+				$src = $GLOBALS['rb_variables']['localRotatorUrl'];
+				if (!empty($pluginVersion)) {
+                    $src = $src.'?ver='.$pluginVersion;
+                }
+				/* ?><script>let penyok_stoparik = 0;</script><?php /**/
+				?><script type="text/javascript" src="<?php echo $src; ?>" id="<?php echo $GLOBALS['rb_variables']['rotator']; ?>-js"></script><?php /**/
+//				wp_enqueue_script(
+//					$GLOBALS['rb_variables']['rotator'],
+//					plugins_url().'/'.basename(__DIR__).'/'.$GLOBALS['rb_variables']['rotator'].'.js',
+//					array('jquery'),
+//					$GLOBALS['realbigForWP_version'],
+//					false
+//				);
 
 				if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
 					RFWP_WorkProgressLog(false,'rotatorToHeaderAdd rotator file added');
@@ -784,16 +801,20 @@ try {
 		function RFWP_headerADInsertor() {
 			global $rb_logFile;
 			try {
-				$wp_cur_theme      = wp_get_theme();
-				$wp_cur_theme_name = $wp_cur_theme->get_template();
-				$themeHeaderFileOpen = file_get_contents(ABSPATH.'wp-content/themes/'.$wp_cur_theme_name.'/header.php');
-
-				$checkedHeader = preg_match('~rbConfig=(\s|\r\n|\n|\r)*\{start\:performance\.now\(\)~iu', $themeHeaderFileOpen, $m);
-				if (count($m) == 0) {
-					$result = true;
-				} else {
-					$result = false;
-				}
+                $result = true;
+				$wp_cur_theme_name = get_stylesheet();
+				if (!empty($wp_cur_theme_name)) {
+                    $themeHeaderFileCheck = file_exists(ABSPATH.'wp-content/themes/'.$wp_cur_theme_name.'/header.php');
+                    if ($themeHeaderFileCheck) {
+                        $themeHeaderFileOpen = file_get_contents(ABSPATH.'wp-content/themes/'.$wp_cur_theme_name.'/header.php');
+                        $checkedHeader = preg_match('~rbConfig=(\s|\r\n|\n|\r)*\{start\:performance\.now\(\)~iu', $themeHeaderFileOpen, $m);
+                        if (count($m) == 0) {
+                            $result = true;
+                        } else {
+                            $result = false;
+                        }
+                    }
+                }
 
 				return $result;
 			} catch (Exception $ex) {
@@ -811,16 +832,22 @@ try {
 		function RFWP_headerPushInsertor() {
 			global $rb_logFile;
 			try {
-				$wp_cur_theme      = wp_get_theme();
-				$wp_cur_theme_name = $wp_cur_theme->get_template();
-				$themeHeaderFileOpen = file_get_contents(ABSPATH.'wp-content/themes/'.$wp_cur_theme_name.'/header.php');
-
-				$checkedHeader = preg_match('~realpush\.media\/pushJs|bigreal\.org\/pushJs~', $themeHeaderFileOpen, $m);
-				if (count($m) == 0) {
-					$result = true;
-				} else {
-					$result = false;
-				}
+                $result = true;
+				$wp_cur_theme_name = get_stylesheet();
+				if (!empty($wp_cur_theme_name)) {
+                    $themeHeaderFileCheck = file_exists(ABSPATH.'wp-content/themes/'.$wp_cur_theme_name.'/header.php');
+                    if ($themeHeaderFileCheck) {
+                        $themeHeaderFileOpen = file_get_contents(ABSPATH.'wp-content/themes/'.$wp_cur_theme_name.'/header.php');
+                        if (!empty($themeHeaderFileOpen)) {
+                            $checkedHeader = preg_match('~realpush\.media\/pushJs|bigreal\.org\/pushJs~', $themeHeaderFileOpen, $m);
+                            if (count($m) == 0) {
+                                $result = true;
+                            } else {
+                                $result = false;
+                            }
+                        }
+                    }
+                }
 
 				return $result;
 			} catch (Exception $ex) {
@@ -848,59 +875,64 @@ try {
 				} else {
 					return false;
 				}
+                $result = true;
 
-				$wp_cur_theme      = wp_get_theme();
 				$themeHeaderFileOpen = false;
-				$wp_cur_theme_root = $wp_cur_theme->get_theme_root();
-				$wp_cur_theme_name = $wp_cur_theme->get_template();
-				if (!empty($wp_cur_theme_root)) {
-					$themeHeaderFileOpen = file_get_contents($wp_cur_theme_root.'/'.$wp_cur_theme_name.'/header.php');
-				}
-				if (empty($themeHeaderFileOpen)) {
-					$themeHeaderFileOpen = file_get_contents(dirname(__FILE__).'/.../.../themes/'.$wp_cur_theme_name.'/header.php');
-				}
-				if (empty($themeHeaderFileOpen)) {
-					$themeHeaderFileOpen = file_get_contents(ABSPATH.'wp-content/themes/'.$wp_cur_theme_name.'/header.php');
-				}
+				$wp_cur_theme_root = get_theme_root();
+				$wp_cur_theme_name = get_stylesheet();
+				if (!empty($wp_cur_theme_name)) {
+                    if (!empty($wp_cur_theme_root)) {
+                        $themeHeaderFileCheck = file_exists($wp_cur_theme_root.'/'.$wp_cur_theme_name.'/header.php');
+                        if ($themeHeaderFileCheck) {
+                            $themeHeaderFileOpen = file_get_contents($wp_cur_theme_root.'/'.$wp_cur_theme_name.'/header.php');
+                        }
+                    }
+                    if (empty($themeHeaderFileOpen)) {
+                        $themeHeaderFileCheck = file_exists(dirname(__FILE__).'/.../.../themes/'.$wp_cur_theme_name.'/header.php');
+                        if ($themeHeaderFileCheck) {
+                            $themeHeaderFileOpen = file_get_contents(dirname(__FILE__).'/.../.../themes/'.$wp_cur_theme_name.'/header.php');
+                        }
+                    }
+                    if (empty($themeHeaderFileOpen)) {
+                        $themeHeaderFileCheck = file_exists(ABSPATH.'wp-content/themes/'.$wp_cur_theme_name.'/header.php');
+                        if ($themeHeaderFileCheck) {
+                            $themeHeaderFileOpen = file_get_contents(ABSPATH.'wp-content/themes/'.$wp_cur_theme_name.'/header.php');
+                        }
+                    }
 
-				$checkRebootInName = preg_match('~reboot~', $wp_cur_theme_name, $rm);
-				if (count($rm) > 0) {
-					$rebootHeaderGet = get_option('reboot_options');
-					if (!empty($rebootHeaderGet)&&!empty($rebootHeaderGet['code_head'])) {
-						$checkedHeader = preg_match($checkedHeaderPattern, $rebootHeaderGet['code_head'], $rm1);
-						if (count($rm1) == 0) {
-							?><script>console.log('reboot <?php echo $patternType ?>: nun')</script><?php
-							$result = true;
-						} else {
-							?><script>console.log('reboot <?php echo $patternType ?>: presents')</script><?php
-							$result = false;
-							$detectedHeader = true;
-						}
-					} else {
-						?><script>console.log('reboot <?php echo $patternType ?>: options error')</script><?php
-					}
-				}
+                    $checkRebootInName = preg_match('~reboot~', $wp_cur_theme_name, $rm);
+                    if (count($rm) > 0) {
+                        $rebootHeaderGet = get_option('reboot_options');
+                        if (!empty($rebootHeaderGet)&&!empty($rebootHeaderGet['code_head'])) {
+                            $checkedHeader = preg_match($checkedHeaderPattern, $rebootHeaderGet['code_head'], $rm1);
+                            if (count($rm1) == 0) {
+                                ?><script>console.log('reboot <?php echo $patternType ?>: nun')</script><?php
+                                $result = true;
+                            } else {
+                                ?><script>console.log('reboot <?php echo $patternType ?>: presents')</script><?php
+                                $result = false;
+                                $detectedHeader = true;
+                            }
+                        } else {
+                            ?><script>console.log('reboot <?php echo $patternType ?>: options error')</script><?php
+                        }
+                    }
 
-				if (empty($detectedHeader)) {
-					if (!empty($themeHeaderFileOpen)) {
-//				    if ($patternType=='ad') {
-//					    $checkedHeader = preg_match('~rbConfig=(\s|\n|\r\n)*?\{start\:performance\.now\(\)~iu', $themeHeaderFileOpen, $m);
-//				    } elseif ($patternType=='push') {
-////					    $checkedHeader = preg_match('~realpush\.media\/pushJs|bigreal\.org\/pushJs~iu', $themeHeaderFileOpen, $m);
-//					    $checkedHeader = preg_match('~\<script\s+?.*?src\s*?=\s*?["\']{1}[^"\']+?\/pushJs\/[^"\']+?["\']{1}[^>]*?\>\<\/script\>~iu', $themeHeaderFileOpen, $m);
-//				    }
-						$checkedHeader = preg_match($checkedHeaderPattern, $themeHeaderFileOpen, $m);
-						if (count($m) == 0) {
-							?><script>console.log('<?php echo $patternType ?>: nun')</script><?php
-							$result = true;
-						} else {
-							?><script>console.log('<?php echo $patternType ?>: presents')</script><?php
-							$result = false;
-						}
-					} else {
-						?><script>console.log('<?php echo $patternType ?>: header error')</script><?php
-						$result = true;
-					}
+                    if (empty($detectedHeader)) {
+                        if (!empty($themeHeaderFileOpen)) {
+                            $checkedHeader = preg_match($checkedHeaderPattern, $themeHeaderFileOpen, $m);
+                            if (count($m) == 0) {
+                                ?><script>console.log('<?php echo $patternType ?>: nun')</script><?php
+                                $result = true;
+                            } else {
+                                ?><script>console.log('<?php echo $patternType ?>: presents')</script><?php
+                                $result = false;
+                            }
+                        } else {
+                            ?><script>console.log('<?php echo $patternType ?>: header error')</script><?php
+                            $result = true;
+                        }
+                    }
                 }
 
 				return $result;
@@ -1542,8 +1574,8 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
     }
 	if (!function_exists('test_sc_oval_exec')) {
 		function test_sc_oval_exec() {
-//			return '<div style="width: 100px; height: 20px; border: 1px solid black; background-color: #0033cc; border-radius: 30%;"></div><script>console.log(\'oval narisoval\');</script>';
-			return '<div style="width: 400px; height: 80px; border: 1px solid black; background-color: #0033cc; border-radius: 30%;"></div><script>console.log(\'oval narisoval\');</script>';
+			return '<div style="width: 100px; height: 20px; border: 1px solid black; background-color: #0033cc; border-radius: 30%;"></div><script>console.log(\'oval narisoval\');</script>';
+//			return '<div style="width: 400px; height: 80px; border: 1px solid black; background-color: #0033cc; border-radius: 30%;"></div><script>console.log(\'oval narisoval\');</script>';
 		}
 	}
 	if (!function_exists('RFWP_checkPageType')) {

@@ -90,6 +90,13 @@ try {
 						}
 					}
 				}
+
+				$cache_clear = get_option('rb_cacheClearAllow');
+				if (!empty($cache_clear)&&$cache_clear=='enabled') {
+					$cache_clear = 'checked';
+                } else {
+					$cache_clear = '';
+                }
 			} catch (Exception $e) {
 				$usedDomain = "domain gathering error";
 				$deacError = "error gathering error";
@@ -156,6 +163,10 @@ try {
                                 <input type="checkbox" name="process_log" id="process_log_id" <?php echo $workProcess ?>>
                             </div>
 						<?php endif; ?>
+                        <div class="element-separator">
+                            <label for="cache_clear">clear cache</label>
+                            <input type="checkbox" name="cache_clear" id="cache_clear_id" <?php echo $cache_clear ?>>
+                        </div>
 						<br>
 						<?php submit_button( 'Синхронизировать', 'primary', 'saveTokenButton' ) ?>
                         <?php if (!empty($devMode)): ?>

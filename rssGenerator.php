@@ -8,8 +8,8 @@ try {
 		function RFWP_rssInit() {
 			global $rb_rssCheckLog;
 
-			$messageFLog = 'point_dop 1;';
-			error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_rssCheckLog);
+//			$messageFLog = 'point_dop 1;';
+//			error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_rssCheckLog);
 
 //			include_once (dirname(__FILE__).'/rssGenerator.php');
 			$posts = [];
@@ -35,8 +35,8 @@ try {
 
 			if (!empty($posts)) {
 				$GLOBALS['rb_rssTurboAds'] = RFWP_getTurboAds();
-				$messageFLog = 'point_dop 2;';
-				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_rssCheckLog);
+//				$messageFLog = 'point_dop 2;';
+//				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_rssCheckLog);
 
 				$rssDividedPosts = RFWP_rssDivine($posts, $rssOptions);
 				$GLOBALS['rb_rssDivideOptions'] = [];
@@ -69,8 +69,8 @@ try {
 				$GLOBALS['rb_rssFeedUrls'] = $rb_rssFeedUrls;
 			}
 
-			$messageFLog = 'point_dop 3;';
-			error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_rssCheckLog);
+//			$messageFLog = 'point_dop 3;';
+//			error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_rssCheckLog);
 
 //			global $wp_rewrite;
 //			$wp_rewrite->flush_rules(false);
@@ -195,6 +195,11 @@ try {
 		    $content = str_replace('<!--[if lt IE 9]><script>document.createElement(\'video\');</script><![endif]-->', '', $content);
 		    $pattern = "/<video class=\"wp-video-shortcode\"(.*?)><source(.*?)src=\"(.*?).mp4(.*?)\"(.*?)\/>(.*?)<\/video>/i";
 		    $replacement = '<figure><video><source src="$3.mp4" type="video/mp4" /></video><img src="'.$purl.'/img/video.png'.'" /></figure>';
+		    $content = preg_replace($pattern, $replacement, $content);
+
+		    //add "formaction" in buttons
+		    $pattern = "~\<button([^>]*?)\>~i";
+		    $replacement = '<button formaction="tel:+38(123)456-78-90" $1>';
 		    $content = preg_replace($pattern, $replacement, $content);
 
 		    //удаляем картинки из контента, если их больше 50 уникальных (ограничение яндекс.турбо)
@@ -623,7 +628,7 @@ try {
 		    ];
 
 		    $rssOptionsGet = get_option('rb_TurboRssOptions');
-		    if (!empty($rb_testCheckLog)) {
+		    if (!empty($rb_testCheckLog)&&!empty($GLOBALS['dev_mode'])) {
 			    $messageFTestLog = 'turbo options: '.$rssOptionsGet.';';
 			    error_log(PHP_EOL.current_time('mysql').': '.$messageFTestLog.PHP_EOL, 3, $rb_testCheckLog);
             }
@@ -790,6 +795,7 @@ try {
 
 				return $content;
 			}
+			return $content;
 		}
     }
 	if (!function_exists('RFWP_rss_block_feedback')) {
@@ -1486,7 +1492,6 @@ try {
                                                 <pubDate><?php echo $item->post_modified_gmt ?> +0300</pubDate>
                                             <?php } ?>
                                         <?php endif; ?>
-                                        <pubDate><?php echo $item->post_date_gmt ?> +0300</pubDate>
                                         <?php if ($rssOptions['PostAuthor'] != 'Отключить указание автора') { ?>
                                             <?php if (!empty($rssOptions['PostAuthorDirect'])&&$rssOptions['PostAuthor'] != 'Автор записи') {
                                                 echo '<author>'.$rssOptions['PostAuthorDirect'].'</author>'.PHP_EOL;
@@ -1615,7 +1620,7 @@ try {
     //											if ($ytad4 == 'enabled' && $ytad4meta != 'disabled') { echo PHP_EOL.'<figure data-turbo-ad-id="fourth_ad_place"></figure>'.PHP_EOL; }
                                                 do_action( 'yturbo_after_share' );
                                             } ?>
-                                            <?php echo $item->post_content ?>
+                                            <?php echo htmlspecialchars_decode($item->post_content) ?>
                                             <?php if (!empty($rssOptions['blockFeedback']) && $rssOptions['blockFeedbackPosition'] == 'false' && $rssOptions['blockFeedbackPositionPlace'] == 'end') {
                                                 echo RFWP_rss_block_feedback($rssOptions);
                                             } ?>

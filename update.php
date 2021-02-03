@@ -93,7 +93,6 @@ CREATE TABLE `".$wpPrefix."realbig_turbo_ads` (
 	`element` ENUM('p','li','ul','ol','blockquote','img','video','iframe','h1','h2','h3','h4','h5','h6','h2-4','article') NOT NULL DEFAULT 'p' COLLATE 'utf8_bin',
 	`elementPosition` TINYINT(4) NOT NULL DEFAULT '0',
 	`elementPlace` INT(11) NOT NULL DEFAULT '1',
-	`timeCreate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`timeUpdate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	PRIMARY KEY (`id`)
 )

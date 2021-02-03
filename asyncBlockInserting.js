@@ -9,6 +9,16 @@ if (typeof rb_tempElement_check==='undefined') {var rb_tempElement_check = false
 if (typeof rb_tempElement==='undefined') {var rb_tempElement = null;}
 if (typeof jsInputerLaunch==='undefined') {var jsInputerLaunch = -1;}
 
+function launchUpdateRbDisplays() {
+    if ((typeof updateRbDisplays !== 'undefined')&&(typeof updateRbDisplays === 'function')) {
+        updateRbDisplays();
+    } else {
+        setTimeout(function () {
+            launchUpdateRbDisplays();
+        }, 200);
+    }
+}
+
 /* "sc" in variables - mark for shortcode variable */
 function shortcodesInsert() {
     let gatheredBlocks = document.querySelectorAll('.percentPointerClass.scMark'),
@@ -28,10 +38,16 @@ function shortcodesInsert() {
         stickyStatus = false,
         stickyCheck = [],
         stickyFixedStatus = false,
-        stickyFixedCheck = [];
+        stickyFixedCheck = [],
+        overflowCheck = [],
+        overflowStatus = false,
+        repeatableIdentifier = "",
+        dataCidIdentifier = null,
+        divCidElement = '';
 
     if (typeof scArray !== 'undefined') {
-        if (scArray&&scArray.length > 0&&gatheredBlocks&&gatheredBlocks.length > 0) {
+        if (scArray&&scArray.length > 0&&gatheredBlocks&&gatheredBlocks.length > 0&&typeof window.rulvW5gntb !== 'undefined') {
+            dataCidIdentifier = window.rulvW5gntb;
             for (let i = 0; i < gatheredBlocks.length; i++) {
                 gatheredBlockChild = gatheredBlocks[i].children[0];
                 if (!gatheredBlockChild) {
@@ -48,6 +64,8 @@ function shortcodesInsert() {
                 stickyCheck = [];
                 stickyFixedStatus = false;
                 stickyFixedCheck = [];
+                repeatableIdentifier = "";
+                divCidElement = null;
 
                 scAdId = gatheredBlockChild.getAttribute('data-aid');
                 scBlockId = gatheredBlockChild.getAttribute('data-id');
@@ -64,58 +82,30 @@ function shortcodesInsert() {
 
                     if (sci > -1) {
                         if (blockStatus&&okStates.includes(blockStatus)) {
-                            skyscraperCheck = scArray[sci]['text'].match(/\<skyscraper\>/);
-                            if (skyscraperCheck&&skyscraperCheck.length > 0) {
-                                scArray[sci]['text'].replace(/\<skyscraper\>/, '');
-                                splitedSkyscraper = scArray[sci]['text'].split('<skyscraper_separotor>');
-                                if (splitedSkyscraper&&splitedSkyscraper.length > 0) {
-                                    skyscraperStatus = true;
-                                }
-                            }
-
-                            stickyCheck = scArray[sci]['text'].match(/\<sticky\>/);
-                            if (stickyCheck&&stickyCheck.length > 0) {
-                                scArray[sci]['text'].replace(/\<sticky\>/, '');
-                                stickyStatus = true;
-                            }
-
-                            stickyFixedCheck = scArray[sci]['text'].match(/\<stickyFixed\>/);
-                            if (stickyFixedCheck&&stickyFixedCheck.length > 0) {
-                                scArray[sci]['text'].replace(/\<stickyFixed\>/, '');
-                                stickyFixedStatus = true;
-                            }
-
                             if (blockStatus=='no-block') {
                                 gatheredBlockChild.innerHTML = '';
                             } else if ((blockStatus=='fetched'&&dataFull==1)||!['no-block','fetched'].includes(blockStatus)) {
-                                if (skyscraperStatus===true) {
-                                    gatheredBlockChildSkyParts = gatheredBlockChild.querySelectorAll('.rb_item div');
-                                    if (gatheredBlockChildSkyParts&&gatheredBlockChildSkyParts.length==splitedSkyscraper.length) {
-                                        for (let i2 = 0; i2 < splitedSkyscraper.length; i2++) {
-                                            jQuery(gatheredBlockChildSkyParts[i2]).html(splitedSkyscraper[i2]);
-                                        }
+                                for (let cl1 = 0; cl1 < gatheredBlocks[i].classList.length; cl1++) {
+                                    if (gatheredBlocks[i].classList[cl1].includes("repeatable-mark")) {
+                                        repeatableIdentifier = gatheredBlocks[i].classList[cl1];
                                     }
-                                } else if (stickyStatus===true) {
-                                    gatheredBlockChildSkyParts = gatheredBlockChild.querySelectorAll('.displayBlock.sticky div div:not(.display-close)');
-                                    if (gatheredBlockChildSkyParts&&gatheredBlockChildSkyParts.length > 0) {
-                                        for (let i2 = 0; i2 < gatheredBlockChildSkyParts.length; i2++) {
-                                            jQuery(gatheredBlockChildSkyParts[i2]).html(scArray[sci]['text']);
-                                        }
-                                    }
-                                } else if (stickyFixedStatus===true) {
-                                    gatheredBlockChildSkyParts = gatheredBlockChild.querySelectorAll('.displayBlock div[data-type=stickyFixed]');
-                                    if (gatheredBlockChildSkyParts&&gatheredBlockChildSkyParts.length > 0) {
-                                        for (let i2 = 0; i2 < gatheredBlockChildSkyParts.length; i2++) {
-                                            jQuery(gatheredBlockChildSkyParts[i2]).html(scArray[sci]['text']);
-                                        }
+                                }
+
+                                if (repeatableIdentifier) {
+                                    divCidElement = document.querySelectorAll(".percentPointerClass.scMark."+repeatableIdentifier+' div[data-cid="'+dataCidIdentifier+'"]');
+                                } else {
+                                    divCidElement = gatheredBlockChild.querySelectorAll('div[data-cid="'+dataCidIdentifier+'"]');
+                                }
+
+                                if (divCidElement&&divCidElement.length > 0) {
+                                    for (let i2 = 0; i2 < divCidElement.length; i2++) {
+                                        jQuery(divCidElement[i2]).html(scArray[sci]['text']);
                                     }
                                 } else {
                                     jQuery(gatheredBlockChild).html(scArray[sci]['text']);
                                 }
+                                launchUpdateRbDisplays();
                             }
-                            /* else {
-                                jQuery(gatheredBlockChild).html(scArray[sci]['text']);
-                            } */
                             if (blockStatus!='fetched'||(blockStatus=='fetched'&&dataFull==1)) {
                                 for (i1 = 0; i1 < scArray.length; i1++) {
                                     if (scBlockId == scArray[i1]['blockId']) {
@@ -524,6 +514,7 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
         let localSumResult;
 
         var removeClearing;
+        var repeatableBlockIdentifier = 0
 
         var i;
 
@@ -807,7 +798,8 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
                     ||(blockSettingArray[i]["text"]&&blockSettingArray[i]["text"].length < 1)
                     ||(rejectedBlocks&&rejectedBlocks.includes(blockSettingArray[i]["id"]))
                     ||((blockSettingArray[i]["maxHeaders"] > 0)&&(blockSettingArray[i]["maxHeaders"] < termorarity_parent_with_content_length))
-                    ||((blockSettingArray[i]["maxSymbols"] > 0)&&(blockSettingArray[i]["maxSymbols"] < contentLength))
+                    ||((blockSettingArray[i]["maxSymbols"] > 0)&&(blockSettingArray[i]["maxSymbols"] < contentLength)
+                    ||(content_pointer.classList.contains("hard-content")&&blockSettingArray[i]["setting_type"]!=3))
                 ) {
                     blockSettingArray.splice(i--, 1);
                     poolbackI = 1;
@@ -875,7 +867,8 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
                     } else {
                         repeat = true;
                     }
-                } else if (blockSettingArray[i]["setting_type"] == 2) {
+                }
+                else if (blockSettingArray[i]["setting_type"] == 2) {
                     if (blockDuplicate == 'no') {
                         blockSettingArray[i]["elementCount"] = 1;
                     }
@@ -898,6 +891,7 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
                             if (blockSettingArray[i]["sc"]==1) {
                                 repElementToAdd.classList.add("scMark");
                             }
+                            repElementToAdd.classList.add("repeatable-mark-"+repeatableBlockIdentifier);
                             repElementToAdd.innerHTML = blockSettingArray[i]["text"];
 
                             if (elementToAddStyle&&elementToAddStyle!='default') {
@@ -926,6 +920,7 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
                         usedBlockSettingArrayIds.push(block_number);
                         blockSettingArray.splice(i--, 1);
                         poolbackI = 1;
+                        repeatableBlockIdentifier++;
                     } else {
                         if (!blockSettingArray[i]["unsuccess"]) {
                             blockSettingArray[i]["unsuccess"] = 1;
@@ -943,7 +938,8 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
                             repeat = true;
                         }
                     }
-                } else if (blockSettingArray[i]["setting_type"] == 3) {
+                }
+                else if (blockSettingArray[i]["setting_type"] == 3) {
                     let elementTypeSymbol = '';
                     let elementSpaceSymbol = '';
                     let elementName = '';
@@ -1011,12 +1007,14 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
                     } else {
                         repeat = true;
                     }
-                } else if (blockSettingArray[i]["setting_type"] == 4) {
+                }
+                else if (blockSettingArray[i]["setting_type"] == 4) {
                     document.querySelector("#content_pointer_id").parentElement.append(elementToAdd);
                     usedBlockSettingArrayIds.push(block_number);
                     blockSettingArray.splice(i--, 1);
                     poolbackI = 1;
-                } else if (blockSettingArray[i]["setting_type"] == 5) {
+                }
+                else if (blockSettingArray[i]["setting_type"] == 5) {
                     let currentElementList = cureentElementsGather('p', 1, content_pointer.parentElement);
                     if (currentElementList&&currentElementList.length > 0) {
                         let pCount = currentElementList.length;
@@ -1040,7 +1038,8 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
                     } else {
                         repeat = true;
                     }
-                } else if (blockSettingArray[i]["setting_type"] == 6) {
+                }
+                else if (blockSettingArray[i]["setting_type"] == 6) {
                     if (containerFor6th.length > 0) {
                         for (let j = 0; j < containerFor6th.length; j++) {
                             if (containerFor6th[j]["elementPlace"]<blockSettingArray[i]["elementPlace"]) {
@@ -1072,7 +1071,8 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
                         poolbackI = 1;
                     }
                 /* vidpravutu v vidstiinuk dlya 6ho tipa */
-                } else if (blockSettingArray[i]["setting_type"] == 7) {
+                }
+                else if (blockSettingArray[i]["setting_type"] == 7) {
                     if (containerFor7th.length > 0) {
                         for (let j = 0; j < containerFor7th.length; j++) {
                             if (containerFor7th[j]["elementPlace"]<blockSettingArray[i]["elementPlace"]) {
@@ -1230,21 +1230,21 @@ function setLongCache() {
 }
 
 function cachePlacing(alert_type, errorInfo=null) {
-    let adBlocks = document.querySelectorAll('.percentPointerClass .content_rb, .percentPointerClass .cnt32_rl_bg_str'),
-        curAdBlock,
-        okStates = ['done','refresh-wait','no-block','fetched'];
+    let adBlocks = document.querySelectorAll('.percentPointerClass .content_rb, .percentPointerClass .cnt32_rl_bg_str');
+    let curAdBlock;
+    let okStates = ['done','refresh-wait','no-block','fetched'];
     /* let adId = -1; */
     let blockStatus = null;
     let blockId;
 
-    if (adBlocks&&adBlocks.length > 0) {
+    if (typeof cachedBlocksArray !== 'undefined'&&cachedBlocksArray&&cachedBlocksArray.length > 0&&adBlocks&&adBlocks.length > 0) {
         for (let i = 0; i < adBlocks.length; i++) {
             blockStatus = null;
             blockStatus = adBlocks[i]['dataset']['state'];
 
             if (!blockStatus) {
                 blockId = adBlocks[i]['dataset']['id'];
-                if (cachedBlocksArray&&cachedBlocksArray[blockId]) {
+                if (cachedBlocksArray[blockId]) {
                     /* adBlocks[i].innerHTML = cachedBlocksArray[blockId]; */
                     jQuery(adBlocks[i]).html(cachedBlocksArray[blockId]);
                 }
@@ -1629,4 +1629,4 @@ function gatherContentBlock() {
     gatherContentBlock();
 } else {
     setTimeout(gatherContentBlock,100);
-} */
+} /**/

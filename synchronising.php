@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: furio
- * Date: 2018-08-02
- * Time: 18:17
- */
 
 if (!defined("ABSPATH")) { exit;}
 
@@ -17,8 +11,8 @@ try {
 			$shortcodesToSend = array_keys($shortcode_tags);
 			$menuItemList = RFWP_getMenuList();
 			$permalinkStatus = RFWP_checkPermalink();
-			$pluginVersion = RFWP_plugin_version();
-			$unsuccessfullAjaxSyncAttempt = 0;
+            $pluginVersion = RFWP_plugin_version();
+            $unsuccessfullAjaxSyncAttempt = 0;
 
 			if (!empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
 				RFWP_cronCheckLog('cron in sync passed');
@@ -76,7 +70,17 @@ try {
 						$messageFLog = 'Synchronisation request error: '.$error.';';
                         error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
 					}
-				} catch (Exception $e) {
+				}
+				catch (Exception $e) {
+					$GLOBALS['tokenStatusMessage'] = $e['message'];
+					if ( $requestType == 'ajax' ) {
+						$ajaxResult = $e['message'];
+					}
+					$unsuccessfullAjaxSyncAttempt = 1;
+					$messageFLog = 'Synchronisation request system error: '.$e['message'].';';
+					error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+				}
+				catch (Error $e) {
 					$GLOBALS['tokenStatusMessage'] = $e['message'];
 					if ( $requestType == 'ajax' ) {
 						$ajaxResult = $e['message'];
@@ -310,8 +314,6 @@ try {
 
                                     foreach ($shortcodes AS $k=>$item) {
 								        if (!empty($item)) {
-//									        $content_for_post = 'begin_of_header_code'.$item['headerField'].'end_of_header_code&begin_of_body_code'.$item['bodyField'].'end_of_body_code';
-
 									        $postarr = [
 										        'post_content' => $item['code'],
 										        'post_title'   => $item['id'],
@@ -322,6 +324,8 @@ try {
 										        'post_author'  => 0,
 									        ];
 									        require_once(ABSPATH."/wp-includes/pluggable.php");
+//                                            remove_all_filters("pre_post_content");
+                                            remove_all_filters("content_save_pre");
 									        $saveInsertResult = wp_insert_post($postarr, true);
                                         }
                                     }
@@ -370,6 +374,9 @@ try {
 							    $GLOBALS['token'] = $tokenInput;
 
 							    wp_cache_flush();
+							    if (class_exists('RFWP_Caches')) {
+								    RFWP_Caches::cacheClear();
+                                }
 
 							    delete_transient('rb_mobile_cache_timeout' );
 							    delete_transient('rb_desktop_cache_timeout');
@@ -822,7 +829,7 @@ try {
 //			error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
 		}
 	}
-	if (!function_exists('RFWP_plugin_version')) {
+    if (!function_exists('RFWP_plugin_version')) {
         function RFWP_plugin_version() {
             $plugin_version = null;
             $plugin_data = get_plugin_data(dirname(__FILE__).'/realbigForWP.php');
@@ -832,31 +839,116 @@ try {
 
             return $plugin_version;
         }
-	}
+    }
+    if (!function_exists('RFWP_fillRotatorFileInfo')) {
+        function RFWP_fillRotatorFileInfo($rotatorFileInfo) {
+            $partsArray = [];
+            if (!empty(WP_CONTENT_DIR)&&!empty(WP_CONTENT_URL)) {
+                $parts = [
+                    'path' => WP_CONTENT_DIR,
+                    'pathAdditional' => '/',
+                    'url' => WP_CONTENT_URL,
+                    'urlAdditional' => '/',
+                ];
+                array_push($partsArray, $parts);
+            }
+            if (!empty(WP_PLUGIN_DIR)&&!empty(WP_PLUGIN_URL)) {
+                $parts = [
+                    'path' => WP_PLUGIN_DIR,
+                    'pathAdditional' => '/',
+                    'url' => WP_PLUGIN_URL,
+                    'urlAdditional' => '/',
+                ];
+                array_push($partsArray, $parts);
+            }
+            $parts = [
+                'path' => dirname(__FILE__),
+                'pathAdditional' => '/',
+                'url' => plugin_dir_url(__FILE__),
+                'urlAdditional' => '',
+            ];
+            array_push($partsArray, $parts);
+            $rotatorFileInfo['pathUrlToFolderParts'] = $partsArray;
+
+            return $rotatorFileInfo;
+        }
+    }
+    if (!function_exists('RFWP_checkRotatorFile')) {
+        function RFWP_checkRotatorFile($rotatorFileInfo) {
+            foreach ($rotatorFileInfo['pathUrlToFolderParts'] as $k => $item) {
+                $pathToFile = $item['path'].$item['pathAdditional'].$GLOBALS['rb_variables']['rotator'].'.js';
+                if (file_exists($pathToFile)) {
+                    $rotatorFileInfo['checkFileExists'] = true;
+                    $rotatorFileInfo['pathToFile'] = $item['path'].$item['pathAdditional'].$GLOBALS['rb_variables']['rotator'].'.js';
+                    $clearedUrl = preg_replace('~^http[s]?\:~ius', '', $item['url']);
+                    if (empty($clearedUrl)) {
+	                    $clearedUrl = $item['url'];
+                    }
+                    $rotatorFileInfo['urlToFile'] = $clearedUrl.$item['urlAdditional'].$GLOBALS['rb_variables']['rotator'].'.js';
+                    break;
+                }
+            }
+            unset($k,$item);
+
+            return $rotatorFileInfo;
+        }
+    }
 	if (!function_exists('RFWP_createAndFillLocalRotator')) {
 		function RFWP_createAndFillLocalRotator($rotatorFileInfo) {
 			global $rb_logFile;
 			try {
-				$rotatorFile = fopen($rotatorFileInfo['pathToFile'], 'w');
-				$rotatorFileInfo['fileRotatorContent'] = file_get_contents($rotatorFileInfo['urlToRotator']);
-				if (!empty($rotatorFileInfo['fileRotatorContent'])) {
-					file_put_contents($rotatorFileInfo['pathToFile'], $rotatorFileInfo['fileRotatorContent']);
-				}
-				fclose($rotatorFile);
-				unset($rotatorFile);
-				$rotatorFileInfo['checkFileExists'] = file_exists($rotatorFileInfo['pathToFile']);
-				if (!empty($rotatorFileInfo['checkFileExists'])) {
-					set_transient('localRotatorGatherTimeout', true, 15*60);
-					$GLOBALS['rb_variables']['localRotatorGatherTimeout'] = true;
-				}
+                $rotatorFileInfo['checkFileExists'] = false;
+                foreach ($rotatorFileInfo['pathUrlToFolderParts'] as $k => $item) {
+                    $pathToFile = $item['path'].$item['pathAdditional'].$GLOBALS['rb_variables']['rotator'].'.js';
+                    $urlToFile = $item['url'].$item['urlAdditional'].$GLOBALS['rb_variables']['rotator'].'.js';
+                    try {
+                        $rotatorFileInfo['fileRotatorContent'] = file_get_contents($rotatorFileInfo['urlToRotator']);
+                    } catch (Exception $ex) {
+                        $fileGetContentError = true;
+                    } catch (Error $er) {
+                        $fileGetContentError = true;
+                    }
+
+                    if (empty($rotatorFileInfo['fileRotatorContent'])) {
+                        if (!empty($fileGetContentError)&&function_exists('curl_init')) {
+                            $ch = curl_init();
+                            curl_setopt($ch, CURLOPT_URL, $rotatorFileInfo['urlToRotator']);
+                            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                            $rotatorFileInfo['fileRotatorContent'] = curl_exec($ch);
+                            curl_close($ch);
+                        }
+                    }
+
+                    if (!empty($rotatorFileInfo['fileRotatorContent'])) {
+                        $rotatorFile = fopen($pathToFile, 'w');
+                        if ($rotatorFile!==false) {
+                            file_put_contents($pathToFile, $rotatorFileInfo['fileRotatorContent']);
+                            fclose($rotatorFile);
+                        }
+                        unset($rotatorFile);
+                    }
+
+                    $rotatorFileInfo['checkFileExists'] = file_exists($pathToFile);
+                    if (!empty($rotatorFileInfo['checkFileExists'])) {
+                        $rotatorFileInfo['pathToFile'] = $pathToFile;
+                        $rotatorFileInfo['urlToFile'] = $urlToFile;
+                        set_transient('localRotatorGatherTimeout', true, 15*60);
+                        $GLOBALS['rb_variables']['localRotatorGatherTimeout'] = true;
+                        if (class_exists('RFWP_Caches')) {
+                            RFWP_Caches::cacheClear();
+                        }
+                    }
+                    break;
+                }
+                unset($k,$item);
 			} catch (Exception $ex) {
-				$messageFLog = 'Some error in RFWP_launch_without_content_function: '.$ex->getMessage().';';
+				$messageFLog = 'Some error in RFWP_createAndFillLocalRotator: '.$ex->getMessage().';';
 				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
 			} catch (Error $er) {
-				$messageFLog = 'Some error in RFWP_launch_without_content_function: '.$er->getMessage().';';
+				$messageFLog = 'Some error in RFWP_createAndFillLocalRotator: '.$er->getMessage().';';
 				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
 			}
-//		    return false;
+		    return $rotatorFileInfo;
 		}
 	}
 }

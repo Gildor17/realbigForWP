@@ -11,6 +11,7 @@ if (!defined("ABSPATH")) { exit;}
 try {
 	if(defined('WP_UNINSTALL_PLUGIN')) {
 		global $wpdb;
+        global $table_prefix;
 
 		if (!empty(wp_next_scheduled('bl_cron_hook'))) {
 			RFWP_cronAutoSyncDelete();
