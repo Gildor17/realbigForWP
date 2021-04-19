@@ -40,7 +40,7 @@ try {
             }
 
             /** Function for cache plugins */
-            private static function autoptimizeCacheClear() {
+            public static function autoptimizeCacheClearExecute() {
                 if (class_exists('autoptimizeCache')&&method_exists(autoptimizeCache::class, 'clearall')) {
                     autoptimizeCache::clearall();
                     if (empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))) {
@@ -49,24 +49,84 @@ try {
                 }
             }
 
-            private static function wpSuperCacheCacheClear() {
+            private static function autoptimizeCacheClear() {
+                add_action('plugins_loaded', array(get_called_class(), 'autoptimizeCacheClearExecute'));
+                return true;
+            }
+
+            public static function wpSuperCacheCacheClearExecute() {
                 if (function_exists('wp_cache_clean_cache')) {
                     wp_cache_clear_cache();
                 }
             }
 
-            private static function wpFastestCacheCacheClear() {
-                do_action('wpfc_delete_cache');
+            private static function wpSuperCacheCacheClear() {
+                add_action('plugins_loaded', array(get_called_class(), 'wpSuperCacheCacheClearExecute'));
+                return true;
             }
 
-            private static function w3TotalCacheCacheClear() {
+            public static function wpFastestCacheCacheClearExecute() {
+                if (class_exists('WpFastestCache')&&method_exists(WpFastestCache::class, 'deleteCache')) {
+                    $wpfc = new WpFastestCache();
+                    $wpfc->deleteCache();
+                }
+            }
+
+            private static function wpFastestCacheCacheClear() {
+                add_action('plugins_loaded', array(get_called_class(), 'wpFastestCacheCacheClearExecute'));
+                return true;
+            }
+
+            public static function w3TotalCacheCacheClearExecute() {
                 if (function_exists('w3tc_flush_all')) {
                     w3tc_flush_all();
                 }
             }
 
-            private static function liteSpeedCacheCacheClear() {
+            private static function w3TotalCacheCacheClear() {
+                add_action('plugins_loaded', array(get_called_class(), 'w3TotalCacheCacheClearExecute'));
+                return true;
+            }
+
+            public static function liteSpeedCacheCacheClearExecute() {
                 do_action('litespeed_purge_all');
+            }
+
+            private static function liteSpeedCacheCacheClear() {
+                add_action('plugins_loaded', array(get_called_class(), 'liteSpeedCacheCacheClearExecute'));
+                return true;
+            }
+
+            public static function checkCachePlugins() {
+                $result = [];
+
+                if (!empty(has_action('litespeed_purge_all'))) {
+                    $result['liteSpeed'] = '<span style="color: #2dcb47">True</span>';
+                } else {
+                    $result['liteSpeed'] = '<span style="color: #ff1c1c">False</span>';
+                }
+                if (class_exists('WpFastestCache')&&method_exists(WpFastestCache::class, 'deleteCache')) {
+                    $result['wpFastestCache'] = '<span style="color: #2dcb47">True</span>';
+                } else {
+                    $result['wpFastestCache'] = '<span style="color: #ff1c1c">False</span>';
+                }
+                if (class_exists('autoptimizeCache')&&method_exists(autoptimizeCache::class, 'clearall')) {
+                    $result['autoptimize'] = '<span style="color: #2dcb47">True</span>';
+                } else {
+                    $result['autoptimize'] = '<span style="color: #ff1c1c">False</span>';
+                }
+                if (!empty(function_exists('wp_cache_clean_cache'))) {
+                    $result['wpSuperCache'] = '<span style="color: #2dcb47">True</span>';
+                } else {
+                    $result['wpSuperCache'] = '<span style="color: #ff1c1c">False</span>';
+                }
+                if (!empty(function_exists('w3tc_flush_all'))) {
+                    $result['w3TotalCache'] = '<span style="color: #2dcb47">True</span>';
+                } else {
+                    $result['w3TotalCache'] = '<span style="color: #ff1c1c">False</span>';
+                }
+
+                return $result;
             }
             /** End of Function for cache plugins */
         }

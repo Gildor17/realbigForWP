@@ -81,8 +81,8 @@ try {
 				}
 			}
 		}
-		if (!function_exists('RFWP_addIcons_test')) {
-			function RFWP_addIcons_test($fromDb, $content) {
+		if (!function_exists('RFWP_addIcons')) {
+			function RFWP_addIcons($fromDb, $content) {
 				global $rb_logFile;
 				try {
 					if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
@@ -520,6 +520,10 @@ try {
 		}
 		if (!function_exists('RFWP_rbCacheGatheringLaunch')) {
 			function RFWP_rbCacheGatheringLaunch($content) {
+			    if (!empty($GLOBALS['rfwp_is_amp'])) {
+			        return $content;
+                }
+
 				global $wpdb;
 
 				$mobileCheck = $GLOBALS['rb_mobile_check'];
@@ -619,7 +623,7 @@ try {
                     $src = $src.'?ver='.$pluginVersion;
                 }
 				/* ?><script>let penyok_stoparik = 0;</script><?php /**/
-				?><script type="text/javascript" src="<?php echo $src; ?>" id="<?php echo $GLOBALS['rb_variables']['rotator']; ?>-js"></script><?php /**/
+				?><script type="text/javascript" src="<?php echo $src; ?>" id="<?php echo $GLOBALS['rb_variables']['rotator']; ?>-js" async=""></script><?php /**/
 //				wp_enqueue_script(
 //					$GLOBALS['rb_variables']['rotator'],
 //					plugins_url().'/'.basename(__DIR__).'/'.$GLOBALS['rb_variables']['rotator'].'.js',
@@ -797,70 +801,6 @@ try {
 		    }
 		}
 	}
-	if (!function_exists('RFWP_headerADInsertor')) {
-		function RFWP_headerADInsertor() {
-			global $rb_logFile;
-			try {
-                $result = true;
-				$wp_cur_theme_name = get_stylesheet();
-				if (!empty($wp_cur_theme_name)) {
-                    $themeHeaderFileCheck = file_exists(ABSPATH.'wp-content/themes/'.$wp_cur_theme_name.'/header.php');
-                    if ($themeHeaderFileCheck) {
-                        $themeHeaderFileOpen = file_get_contents(ABSPATH.'wp-content/themes/'.$wp_cur_theme_name.'/header.php');
-                        $checkedHeader = preg_match('~rbConfig=(\s|\r\n|\n|\r)*\{start\:performance\.now\(\)~iu', $themeHeaderFileOpen, $m);
-                        if (count($m) == 0) {
-                            $result = true;
-                        } else {
-                            $result = false;
-                        }
-                    }
-                }
-
-				return $result;
-			} catch (Exception $ex) {
-				$messageFLog = 'Some error in headerADInsertor: '.$ex->getMessage().';';
-				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
-				return false;
-			} catch (Error $er) {
-				$messageFLog = 'Some error in headerADInsertor: '.$er->getMessage().';';
-				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
-				return false;
-			}
-		}
-	}
-	if (!function_exists('RFWP_headerPushInsertor')) {
-		function RFWP_headerPushInsertor() {
-			global $rb_logFile;
-			try {
-                $result = true;
-				$wp_cur_theme_name = get_stylesheet();
-				if (!empty($wp_cur_theme_name)) {
-                    $themeHeaderFileCheck = file_exists(ABSPATH.'wp-content/themes/'.$wp_cur_theme_name.'/header.php');
-                    if ($themeHeaderFileCheck) {
-                        $themeHeaderFileOpen = file_get_contents(ABSPATH.'wp-content/themes/'.$wp_cur_theme_name.'/header.php');
-                        if (!empty($themeHeaderFileOpen)) {
-                            $checkedHeader = preg_match('~realpush\.media\/pushJs|bigreal\.org\/pushJs~', $themeHeaderFileOpen, $m);
-                            if (count($m) == 0) {
-                                $result = true;
-                            } else {
-                                $result = false;
-                            }
-                        }
-                    }
-                }
-
-				return $result;
-			} catch (Exception $ex) {
-				$messageFLog = 'Some error in headerPushInsertor: '.$ex->getMessage().';';
-				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
-				return false;
-			} catch (Error $er) {
-				$messageFLog = 'Some error in headerPushInsertor: '.$er->getMessage().';';
-				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
-				return false;
-			}
-		}
-	}
 	if (!function_exists('RFWP_headerInsertor')) {
 		function RFWP_headerInsertor($patternType) {
 			global $rb_logFile;
@@ -870,6 +810,8 @@ try {
 					$checkedHeaderPattern = '~rbConfig=(\s|\r\n|\n|\r)*?\{start\:performance\.now\(\)~iu';
 				} elseif ($patternType=='push') {
 					$checkedHeaderPattern = '~\<script\s+?.*?src\s*?=\s*?["\']{1}[^"\']+?\/pushJs\/[^"\']+?["\']{1}[^>]*?\>\<\/script\>~iu';
+				} elseif ($patternType=='pushUniversal') {
+					$checkedHeaderPattern = '~\<script\s+?.*?src\s*?=\s*?["\']{1}[^"\']+?\/pjs\/[^"\']+?["\']{1}[^>]*?\>\<\/script\>~iu';
 				} elseif ($patternType=='pushNative') {
 					$checkedHeaderPattern = '~\<script\s+?.*?src\s*?=\s*?["\']{1}[^"\']+?\/nat\/[^"\']+?["\']{1}[^>]*?\>\<\/script\>~iu';
 				} else {
@@ -1311,7 +1253,7 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 		}
 	}
 	if (!function_exists('RFWP_creatingJavascriptParserForContentFunction_test')) {
-		function RFWP_creatingJavascriptParserForContentFunction_test($fromDb, $excIdClass, $blockDuplicate) {
+		function RFWP_creatingJavascriptParserForContentFunction_test($fromDb, $excIdClass, $blockDuplicate, $obligatoryMargin, $tagsListForTextLength) {
 			global $rb_logFile;
 			try {
 				/*?><script>console.log('Header addings passed');</script><?php*/
@@ -1334,6 +1276,12 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
         display: block !important;
         width: 100% !important;
     }
+    .rfwp_removedMarginTop {
+        margin-top: 0 !important;
+    }
+    .rfwp_removedMarginBottom {
+        margin-bottom: 0 !important;
+    }
 </style>';
 				$scriptingCode = '
             <script>
@@ -1353,7 +1301,17 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
             if (typeof blockDuplicate==="undefined") {
                 var blockDuplicate = "'.$blockDuplicate.'";
             }                        
+            if (typeof obligatoryMargin==="undefined") {
+                var obligatoryMargin = '.intval($obligatoryMargin).';
+            }
             ';
+				if (!empty($tagsListForTextLength)) {
+					$scriptingCode .= '
+            if (typeof tagsListForTextLength==="undefined") {
+                var tagsListForTextLength = ["'.$tagsListForTextLength.'"];
+            }                        
+            ';
+                }
 
 				$k1 = 0;
 				foreach ($fromDb AS $k => $item) {
@@ -1533,24 +1491,43 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 			}
 
 //			$realbig_settings_info = $wpdb->get_results('SELECT optionName, optionValue FROM '.$GLOBALS['wpPrefix'].'realbig_settings WGPS WHERE optionName IN ("excludedIdAndClasses","blockDuplicate")');
-			$adBlocks = $wpdb->get_results('SELECT * FROM '.$wpPrefix.'realbig_plugin_settings WGPS');
 			$excIdClass = null;
 			$blockDuplicate = 'yes';
-			$realbig_settings_info = $wpdb->get_results('SELECT optionName, optionValue FROM '.$wpPrefix.'realbig_settings WGPS WHERE optionName IN ("excludedIdAndClasses","blockDuplicate")');
+			$adBlocks = [];
+			$statusFor404 = 'show';
+			$obligatoryMargin = 0;
+			$tagsListForTextLength = null;
+			$realbig_settings_info = $wpdb->get_results('SELECT optionName, optionValue FROM '.$wpPrefix.'realbig_settings WGPS WHERE optionName IN ("excludedIdAndClasses","blockDuplicate","obligatoryMargin","statusFor404","tagsListForTextLength")');
 			if (!empty($realbig_settings_info)) {
 				foreach ($realbig_settings_info AS $k => $item) {
 					if (isset($item->optionValue)) {
-						if ($item->optionName == 'excludedIdAndClasses') {
-							$excIdClass = $item->optionValue;
-						} elseif ($item->optionName == 'blockDuplicate') {
-							if ($item->optionValue==0) {
-								$blockDuplicate = 'no';
-							}
+						switch ($item->optionName) {
+							case 'excludedIdAndClasses':
+								$excIdClass = $item->optionValue;
+								break;
+							case 'obligatoryMargin':
+								$obligatoryMargin = $item->optionValue;
+								break;
+							case 'tagsListForTextLength':
+								$tagsListForTextLength = $item->optionValue;
+								break;
+							case 'blockDuplicate':
+								if ($item->optionValue==0) {
+									$blockDuplicate = 'no';
+								}
+								break;
+							case 'statusFor404':
+								$statusFor404 = $item->optionValue;
+								break;
 						}
 					}
 				}
 				unset($k,$item);
 			}
+			if ((!is_404())||$statusFor404!='disable') {
+				$adBlocks = $wpdb->get_results('SELECT * FROM '.$wpPrefix.'realbig_plugin_settings WGPS');
+            }
+
 			if (!empty($excIdClass)) {
 				$excIdClass .= ';';
             }
@@ -1563,12 +1540,27 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 					    unset($excIdClass[$k1]);
 					}
 				}
+				unset($k1, $item1);
 				$excIdClass = implode('","', $excIdClass);
+			}
+			
+			if (!empty($tagsListForTextLength)) {
+				$tagsListForTextLength = explode(';', $tagsListForTextLength);
+				foreach ($tagsListForTextLength AS $k1 => $item1) {
+					$tagsListForTextLength[$k1] = trim($tagsListForTextLength[$k1]);
+					if (empty($tagsListForTextLength[$k1])) {
+					    unset($tagsListForTextLength[$k1]);
+					}
+				}
+				unset($k1, $item1);
+				$tagsListForTextLength = implode('","', $tagsListForTextLength);
 			}
 
 			$result['adBlocks'] = $adBlocks;
 			$result['excIdClass'] = $excIdClass;
 			$result['blockDuplicate'] = $blockDuplicate;
+			$result['obligatoryMargin'] = $obligatoryMargin;
+			$result['tagsListForTextLength'] = $tagsListForTextLength;
 			return $result;
 		}
     }
@@ -1739,6 +1731,111 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 
 			$penyok_stoparik = 0;
 			return $result;
+		}
+	}
+    if (!function_exists('RFWP_getJsToHead')) {
+        function RFWP_getJsToHead() {
+            $jsToHead = null;
+            try {
+                global $wpdb;
+
+                $jsToHead = $wpdb->get_var('SELECT optionValue FROM '.$GLOBALS['wpPrefix'].'realbig_settings WHERE optionName = "jsToHead"');
+                if ($jsToHead!==null) {
+                    $jsToHead = intval($jsToHead);
+                }
+            }
+            catch (Exception $ex) {
+                $errorText = __FUNCTION__." error: ".$ex->getMessage();
+                RBAG_Logs::saveLogs('errorsLog', $errorText);
+            }
+            catch (Error $ex) {
+                $errorText = __FUNCTION__." error: ".$ex->getMessage();
+                RBAG_Logs::saveLogs('errorsLog', $errorText);
+            }
+
+            return $jsToHead;
+        }
+    }
+    if (!function_exists('RFWP_getPluginSetting')) {
+        function RFWP_getPluginSetting($settingName, $getFromGlobal = true, $addToGlobal = false) {
+            $result = null;
+            try {
+                if (!empty($getFromGlobal)&&isset($GLOBALS['rb_variables'][$settingName])) {
+	                $result = $GLOBALS['rb_variables'][$settingName];
+                } else {
+	                global $wpdb;
+	                $wpPrefix = RFWP_getTablePrefix();
+
+	                $result = $wpdb->prepare($wpdb->get_var('SELECT optionValue FROM '.$wpPrefix.'realbig_settings WHERE optionName = %s'), [$settingName]);
+	                if (!empty($addToGlobal)) {
+		                $GLOBALS['rb_variables'][$settingName] = $result;
+	                }
+                }
+            }
+            catch (Exception $ex) {
+                $errorText = __FUNCTION__." error: ".$ex->getMessage();
+                RBAG_Logs::saveLogs('errorsLog', $errorText);
+            }
+            catch (Error $ex) {
+                $errorText = __FUNCTION__." error: ".$ex->getMessage();
+                RBAG_Logs::saveLogs('errorsLog', $errorText);
+            }
+
+            return $result;
+        }
+    }
+	if (!function_exists('RFWP_launch_cache')) {
+		function RFWP_launch_cache($getRotator, $getDomain) {
+			?><script>
+                function onErrorPlacing() {
+                    if (typeof cachePlacing !== 'undefined' && typeof cachePlacing === 'function' && typeof jsInputerLaunch !== 'undefined' && [15, 10].includes(jsInputerLaunch)) {
+                        let errorInfo = [];
+                        cachePlacing('low',errorInfo);
+                    } else {
+                        setTimeout(function () {
+                            onErrorPlacing();
+                        }, 100)
+                    }
+                }
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET',"//<?php echo $getDomain ?>/<?php echo $getRotator ?>.min.js",true);
+                xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                xhr.onreadystatechange = function() {
+                    if (xhr.status != 200) {
+                        if (xhr.statusText != 'abort') {
+                            onErrorPlacing();
+                        }
+                    }
+                };
+                xhr.send();
+            </script><?php
+		}
+	}
+	if (!function_exists('RFWP_launch_cache_local')) {
+		function RFWP_launch_cache_local($getRotator, $getDomain) {
+			?><script>
+                function onErrorPlacing() {
+                    if (typeof cachePlacing !== 'undefined' && typeof cachePlacing === 'function' && typeof jsInputerLaunch !== 'undefined' && [15, 10].includes(jsInputerLaunch)) {
+                        let errorInfo = [];
+                        cachePlacing('low',errorInfo);
+                    } else {
+                        setTimeout(function () {
+                            onErrorPlacing();
+                        }, 100)
+                    }
+                }
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET',"//<?php echo $getDomain ?>/<?php echo $getRotator ?>.json",true);
+                xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                xhr.onreadystatechange = function() {
+                    if (xhr.status != 200) {
+                        if (xhr.statusText != 'abort') {
+                            onErrorPlacing();
+                        }
+                    }
+                };
+                xhr.send();
+            </script><?php
 		}
 	}
 }

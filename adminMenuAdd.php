@@ -58,6 +58,30 @@ try {
 					));
 				}
 			}
+
+            $admin_bar->add_menu(array(
+                'id'     => 'rb_sub_item_2',
+                'parent' => 'rb_item_1',
+                'title'  => 'Cache plugins status:',
+                'meta'   => array(
+                    'title' => __('My Sub Menu Item'),
+                    'target' => '_blank',
+                    'class' => 'my_menu_item_class'
+                ),
+            ));
+			$cachePluginsStatus = RFWP_Caches::checkCachePlugins();
+			if (!empty($cachePluginsStatus)) {
+			    $cpCou = 0;
+                foreach ($cachePluginsStatus AS $k => $item) {
+                    $cpCou++;
+                    $admin_bar->add_menu(array(
+                        'id'     => 'rb_sub_item_2_'.$cpCou,
+                        'parent' => 'rb_sub_item_2',
+                        'title'  => $k.': '.$item,
+                    ));
+                }
+                unset($k, $item, $cpCou);
+            }
 		}
 	}
 	add_action('admin_bar_menu', 'RFWP_add_toolbar_items', 20000);

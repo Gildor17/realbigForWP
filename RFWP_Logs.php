@@ -11,6 +11,7 @@ if (!class_exists('RFWP_Logs')) {
         private static $testCheckLog;
         private static $rssCheckLog;
         private static $modulesLog;
+        private static $ampTestLog;
 
 //	public function __construct() {
 //		$this->generateFilePaths();
@@ -38,6 +39,7 @@ if (!class_exists('RFWP_Logs')) {
                 $GLOBALS['rb_testCheckLog'] = plugin_dir_path(__FILE__).'testCheckLog.log';
                 $GLOBALS['rb_rssCheckLog'] = plugin_dir_path(__FILE__).'rssCheckLog.log';
                 $GLOBALS['rb_modulesLog'] = plugin_dir_path(__FILE__).'modulesLog.log';
+                $GLOBALS['rb_ampTestLog'] = plugin_dir_path(__FILE__).'ampTestLog.log';
 
                 return true;
             } catch (Exception $ex) {} catch (Error $er) {}
@@ -52,6 +54,7 @@ if (!class_exists('RFWP_Logs')) {
                 'testCheckLog' => 'testCheckLog.log',
                 'rssCheckLog' => 'rssCheckLog.log',
                 'modulesLog' => 'modulesLog.log',
+                'ampTestLog' => 'ampTestLog.log',
             ];
 
             return $list;
@@ -72,7 +75,7 @@ if (!class_exists('RFWP_Logs')) {
 
         public static function test1() {
             $testVal = self::$errorsLog;
-            throw new Exception('jk');
+//            throw new Exception('jk');
             $penyok_stoparik = 0;
         }
     }
