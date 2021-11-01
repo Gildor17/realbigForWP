@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: furio
- * Date: 2018-08-02
- * Time: 18:17
- */
 
 if (!defined("ABSPATH")) { exit;}
 
@@ -17,7 +11,9 @@ try {
 			$shortcodesToSend = array_keys($shortcode_tags);
 			$menuItemList = RFWP_getMenuList();
 			$permalinkStatus = RFWP_checkPermalink();
-			$unsuccessfullAjaxSyncAttempt = 0;
+            $pluginVersion = RFWP_plugin_version();
+            $turboRssUrls = RFWP_generateTurboRssUrls();
+            $unsuccessfullAjaxSyncAttempt = 0;
 
 			if (!empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
 				RFWP_cronCheckLog('cron in sync passed');
@@ -55,6 +51,8 @@ try {
                         'getShortcodes' => json_encode($shortcodesToSend),
                         'getMenuList' => json_encode($menuItemList),
                         'otherInfo' => $otherInfo,
+                        'pluginVersion' => $pluginVersion,
+                        'turboRssUrls' => $turboRssUrls
                     ]
 				];
 				try {
@@ -74,7 +72,17 @@ try {
 						$messageFLog = 'Synchronisation request error: '.$error.';';
                         error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
 					}
-				} catch (Exception $e) {
+				}
+				catch (Exception $e) {
+					$GLOBALS['tokenStatusMessage'] = $e['message'];
+					if ( $requestType == 'ajax' ) {
+						$ajaxResult = $e['message'];
+					}
+					$unsuccessfullAjaxSyncAttempt = 1;
+					$messageFLog = 'Synchronisation request system error: '.$e['message'].';';
+					error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+				}
+				catch (Error $e) {
 					$GLOBALS['tokenStatusMessage'] = $e['message'];
 					if ( $requestType == 'ajax' ) {
 						$ajaxResult = $e['message'];
@@ -150,108 +158,38 @@ try {
 								    $wpdb->update( $wpPrefix.'realbig_settings', ['optionName' => '_wpRealbigPluginToken', 'optionValue' => $tokenInput],
 									    ['optionName' => '_wpRealbigPluginToken']);
 							    }
-							    if (!empty($decodedToken['dataPush'])) {
-							        $sanitisedPushStatus = sanitize_text_field($decodedToken['dataPush']['pushStatus']);
-							        $sanitisedPushData = sanitize_text_field($decodedToken['dataPush']['pushCode']);
-							        $sanitisedPushDomain = sanitize_text_field($decodedToken['dataPush']['pushDomain']);
-								    $wpOptionsCheckerPushStatus = $wpdb->query($wpdb->prepare("SELECT id FROM ".$wpPrefix."realbig_settings WHERE optionName = %s",['pushStatus']));
-								    if (empty($wpOptionsCheckerPushStatus)) {
-									    $wpdb->insert($wpPrefix.'realbig_settings', ['optionName' => 'pushStatus', 'optionValue' => $sanitisedPushStatus]);
-								    } else {
-									    $wpdb->update($wpPrefix.'realbig_settings', ['optionName' => 'pushStatus', 'optionValue' => $sanitisedPushStatus],
-										    ['optionName' => 'pushStatus']);
-								    }
-								    $wpOptionsCheckerPushCode = $wpdb->query( $wpdb->prepare( "SELECT id FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s",['pushCode']));
-								    if (empty($wpOptionsCheckerPushCode)) {
-									    $wpdb->insert($wpPrefix.'realbig_settings', ['optionName'  => 'pushCode', 'optionValue' => $sanitisedPushData]);
-								    } else {
-									    $wpdb->update($wpPrefix.'realbig_settings', ['optionName'  => 'pushCode', 'optionValue' => $sanitisedPushData],
-										    ['optionName' => 'pushCode']);
-								    }
-								    $wpOptionsCheckerPushDomain = $wpdb->query($wpdb->prepare("SELECT id FROM ".$wpPrefix."realbig_settings WHERE optionName = %s",['pushDomain']));
-								    if (empty($wpOptionsCheckerPushDomain)) {
-									    $wpdb->insert($wpPrefix.'realbig_settings', ['optionName' => 'pushDomain', 'optionValue' => $sanitisedPushDomain]);
-								    } else {
-									    $wpdb->update($wpPrefix.'realbig_settings', ['optionName' => 'pushDomain', 'optionValue' => $sanitisedPushDomain],
-										    ['optionName' => 'pushDomain']);
-								    }
-							    }
-							    if (!empty($decodedToken['dataNativePush'])) {
-							        $sanitisedPushNativeStatus = sanitize_text_field($decodedToken['dataNativePush']['pushStatus']);
-							        $sanitisedPushNativeData = sanitize_text_field($decodedToken['dataNativePush']['pushCode']);
-							        $sanitisedPushNativeDomain = sanitize_text_field($decodedToken['dataNativePush']['pushDomain']);
-								    $wpOptionsCheckerPushNativeStatus = $wpdb->query($wpdb->prepare("SELECT id FROM ".$wpPrefix."realbig_settings WHERE optionName = %s",['pushNativeStatus']));
-								    if (empty($wpOptionsCheckerPushNativeStatus)) {
-									    $wpdb->insert($wpPrefix.'realbig_settings', ['optionName' => 'pushNativeStatus', 'optionValue' => $sanitisedPushNativeStatus]);
-								    } else {
-									    $wpdb->update($wpPrefix.'realbig_settings', ['optionValue' => $sanitisedPushNativeStatus], ['optionName' => 'pushNativeStatus']);
-								    }
-								    $wpOptionsCheckerPushNativeCode = $wpdb->query( $wpdb->prepare( "SELECT id FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s",['pushNativeCode']));
-								    if (empty($wpOptionsCheckerPushNativeCode)) {
-									    $wpdb->insert($wpPrefix.'realbig_settings', ['optionName'  => 'pushNativeCode', 'optionValue' => $sanitisedPushNativeData]);
-								    } else {
-									    $wpdb->update($wpPrefix.'realbig_settings', ['optionValue' => $sanitisedPushNativeData], ['optionName' => 'pushNativeCode']);
-								    }
-								    $wpOptionsCheckerPushNativeDomain = $wpdb->query($wpdb->prepare("SELECT id FROM ".$wpPrefix."realbig_settings WHERE optionName = %s",['pushNativeDomain']));
-								    if (empty($wpOptionsCheckerPushNativeDomain)) {
-									    $wpdb->insert($wpPrefix.'realbig_settings', ['optionName' => 'pushNativeDomain', 'optionValue' => $sanitisedPushNativeDomain]);
-								    } else {
-									    $wpdb->update($wpPrefix.'realbig_settings', ['optionValue' => $sanitisedPushNativeDomain], ['optionName' => 'pushNativeDomain']);
-								    }
+							    if (!empty($decodedToken['dataUniversalPush'])) {
+							        $sanitisedPushUniversalStatus = sanitize_text_field($decodedToken['dataUniversalPush']['pushStatus']);
+							        $sanitisedPushUniversalData = sanitize_text_field($decodedToken['dataUniversalPush']['pushCode']);
+							        $sanitisedPushUniversalDomain = sanitize_text_field($decodedToken['dataUniversalPush']['pushDomain']);
+								    RFWP_saveToRealbigSettings($sanitisedPushUniversalStatus, 'pushUniversalStatus');
+								    RFWP_saveToRealbigSettings($sanitisedPushUniversalData, 'pushUniversalCode');
+								    RFWP_saveToRealbigSettings($sanitisedPushUniversalDomain, 'pushUniversalDomain');
 							    }
 							    if (!empty($decodedToken['domain'])) {
 							        $sanitisedDomain = sanitize_text_field($decodedToken['domain']);
-								    $getDomain = $wpdb->get_var( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = "domain"' );
-								    if (!empty($getDomain)) {
-									    $wpdb->update( $wpPrefix . 'realbig_settings', ['optionName'  => 'domain', 'optionValue' => $sanitisedDomain],
-										    ['optionName' => 'domain']);
-								    } else {
-									    $wpdb->insert( $wpPrefix . 'realbig_settings', ['optionName'  => 'domain', 'optionValue' => $sanitisedDomain]);
-								    }
+								    RFWP_saveToRealbigSettings($sanitisedDomain, 'domain');
 							    }
 							    if (!empty($decodedToken['rotator'])) {
 							        $sanitisedRotator = sanitize_text_field($decodedToken['rotator']);
-								    $getRotator = $wpdb->get_var( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = "rotator"' );
-								    if (!empty($getRotator)) {
-									    $wpdb->update( $wpPrefix.'realbig_settings', ['optionName'  => 'rotator', 'optionValue' => $decodedToken['rotator']],
-										    ['optionName' => 'rotator']);
-								    } else {
-									    $wpdb->insert( $wpPrefix.'realbig_settings', ['optionName'  => 'rotator', 'optionValue' => $decodedToken['rotator']]);
-								    }
+								    RFWP_saveToRealbigSettings($sanitisedRotator, 'rotator');
 							    }
 							    /** Excluded page types */
 							    if (isset($decodedToken['excludedPageTypes'])) {
 							        $excludedPageTypes = sanitize_text_field($decodedToken['excludedPageTypes']);
-								    $getExcludedPageTypes = $wpdb->get_var('SELECT id FROM '.$wpPrefix.'realbig_settings WHERE optionName = "excludedPageTypes"');
-								    if (!empty($getExcludedPageTypes)) {
-									    $updateResult = $wpdb->update($wpPrefix.'realbig_settings', ['optionName'=>'excludedPageTypes', 'optionValue'=>$excludedPageTypes],
-										    ['optionName' => 'excludedPageTypes']);
-                                    } else {
-									    $wpdb->insert($wpPrefix.'realbig_settings', ['optionName'=>'excludedPageTypes', 'optionValue'=>$excludedPageTypes]);
-								    }
+								    RFWP_saveToRealbigSettings($excludedPageTypes, 'excludedPageTypes');
 							    }
 							    /** End of excluded page types */
 							    /** Excluded id and classes */
 							    if (isset($decodedToken['excludedIdAndClasses'])) {
 							        $excludedIdAndClasses = sanitize_text_field($decodedToken['excludedIdAndClasses']);
-								    $getExcludedIdAndClasses = $wpdb->get_var('SELECT id FROM '.$wpPrefix.'realbig_settings WHERE optionName = "excludedIdAndClasses"');
-								    if (!empty($getExcludedIdAndClasses)) {
-									    $updateResult = $wpdb->update($wpPrefix.'realbig_settings', ['optionName'=>'excludedIdAndClasses', 'optionValue'=>$excludedIdAndClasses],
-										    ['optionName' => 'excludedIdAndClasses']);
-                                    } else {
-									    $wpdb->insert($wpPrefix.'realbig_settings', ['optionName'=>'excludedIdAndClasses', 'optionValue'=>$excludedIdAndClasses]);
-								    }
+								    RFWP_saveToRealbigSettings($excludedIdAndClasses, 'excludedIdAndClasses');
 							    }
 							    /** End of excluded id and classes */
 							    /** Blocks duplicate denying option */
 							    if (isset($decodedToken['blockDuplicate'])) {
 								    $blockDuplicate = sanitize_text_field($decodedToken['blockDuplicate']);
-								    $getblockDuplicate = $wpdb->get_var( 'SELECT id FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = "blockDuplicate"' );
-								    if (!empty($getblockDuplicate)) {
-									    $wpdb->update( $wpPrefix . 'realbig_settings', ['optionValue' => $blockDuplicate], ['optionName' => 'blockDuplicate']);
-								    } else {
-									    $wpdb->insert( $wpPrefix . 'realbig_settings', ['optionName'  => 'blockDuplicate', 'optionValue' => $blockDuplicate]);
-								    }
+								    RFWP_saveToRealbigSettings($blockDuplicate, 'blockDuplicate');
 							    }
 							    /** End of blocks duplicate denying option */
 							    /** Create it for compatibility with some plugins */
@@ -308,8 +246,6 @@ try {
 
                                     foreach ($shortcodes AS $k=>$item) {
 								        if (!empty($item)) {
-//									        $content_for_post = 'begin_of_header_code'.$item['headerField'].'end_of_header_code&begin_of_body_code'.$item['bodyField'].'end_of_body_code';
-
 									        $postarr = [
 										        'post_content' => $item['code'],
 										        'post_title'   => $item['id'],
@@ -320,6 +256,8 @@ try {
 										        'post_author'  => 0,
 									        ];
 									        require_once(ABSPATH."/wp-includes/pluggable.php");
+//                                            remove_all_filters("pre_post_content");
+                                            remove_all_filters("content_save_pre");
 									        $saveInsertResult = wp_insert_post($postarr, true);
                                         }
                                     }
@@ -348,11 +286,49 @@ try {
 									    $counter ++;
 									    $sqlTokenSave .= ($counter != 1 ?", ":"")."(".(int) sanitize_text_field($item['blockId']).",'".sanitize_text_field($item['adNetwork'])."','".sanitize_text_field($item['adNetworkYandex'])."','".$item['adNetworkAdfox']."','".sanitize_text_field($item['settingType'])."','".sanitize_text_field($item['element'])."',".(int) sanitize_text_field($item['elementPosition']).",".(int) sanitize_text_field($item['elementPlace']).")";
 								    }
-								    unset($k, $item);
+								    unset($k, $item, $counter);
 								    $sqlTokenSave .= " ON DUPLICATE KEY UPDATE blockId = values(blockId), adNetwork = values(adNetwork), adNetworkYandex = values(adNetworkYandex), adNetworkAdfox = values(adNetworkAdfox), settingType = values(settingType), element = values(element), elementPosition = values(elementPosition), elementPlace = values(elementPlace) ";
 								    $wpdb->query($sqlTokenSave);
 							    }
 							    /** End of Turbo rss ads */
+							    /** Amp */
+                                if (!empty($decodedToken['ampSettings'])) {
+	                                $turboSettings = json_encode($decodedToken['ampSettings'], JSON_UNESCAPED_UNICODE);
+	                                update_option('rb_ampSettings', $turboSettings, false);
+                                }
+							    /** End of Amp */
+                                /** Amp ads */
+                                if (!empty($decodedToken['ampAdSettings'])) {
+                                    $listOfColums = ['blockId', 'adField', 'settingType', 'element', 'elementPosition', 'elementPlace'];
+                                    $counter = 0;
+                                    $wpdb->query('DELETE FROM '.$wpPrefix.'realbig_amp_ads');
+                                    $sqlTokenSave = "INSERT INTO ".$wpPrefix."realbig_amp_ads (";
+                                    foreach ($listOfColums AS $k => $item) {
+                                        if ($k != 0) {
+                                            $sqlTokenSave .= ", ";
+                                        }
+                                        $sqlTokenSave .= $item;
+                                    }
+                                    unset($k, $item);
+                                    $sqlTokenSave .= ") VALUES ";
+                                    foreach ($decodedToken['ampAdSettings'] AS $k => $item) {
+                                        $counter ++;
+                                        if ($counter != 1) {
+                                            $sqlTokenSave .= ", ";
+                                        }
+                                        $sqlTokenSave .= "(".(int) sanitize_text_field($item['blockId']).",'".sanitize_text_field($item['adField'])."','".sanitize_text_field($item['settingType'])."','".sanitize_text_field($item['element'])."',".(int) sanitize_text_field($item['elementPosition']).",".(int) sanitize_text_field($item['elementPlace']).")";
+                                    }
+                                    unset($k, $item, $counter);
+                                    $sqlTokenSave .= " ON DUPLICATE KEY UPDATE blockId = values(blockId), adField = values(adField), settingType = values(settingType), element = values(element), elementPosition = values(elementPosition), elementPlace = values(elementPlace) ";
+                                    $wpdb->query($sqlTokenSave);
+                                }
+                                /** End of Amp ads */
+                                /** 404 pages status */
+							    if (!empty($decodedToken['statusFor404'])) {
+								    $statusFor404 = sanitize_text_field($decodedToken['statusFor404']);
+								    RFWP_saveToRealbigSettings($statusFor404, 'statusFor404');
+                                }
+                                /** End of 404 pages status */
                                 /** Test Mode */
 							    if (isset($decodedToken['testMode'])) {
 								    $testMode = intval($decodedToken['testMode']);
@@ -364,10 +340,25 @@ try {
                                     }
 							    }
 							    /** End of Test Mode */
+                                if (isset($decodedToken['jsToHead'])) {
+                                    $jsToHead = sanitize_text_field($decodedToken['jsToHead']);
+	                                RFWP_saveToRealbigSettings($jsToHead, 'jsToHead');
+                                }
+                                if (isset($decodedToken['obligatoryMargin'])) {
+                                    $obligatoryMargin = sanitize_text_field($decodedToken['obligatoryMargin']);
+	                                RFWP_saveToRealbigSettings($obligatoryMargin, 'obligatoryMargin');
+                                }
+                                if (isset($decodedToken['tagsListForTextLength'])) {
+                                    $tagsListForTextLength = sanitize_text_field($decodedToken['tagsListForTextLength']);
+	                                RFWP_saveToRealbigSettings($tagsListForTextLength, 'tagsListForTextLength');
+                                }
 
 							    $GLOBALS['token'] = $tokenInput;
 
 							    wp_cache_flush();
+							    if (class_exists('RFWP_Caches')&&!empty($_POST)&&!empty($_POST['cache_clear'])&&$_POST['cache_clear']=='on') {
+								    RFWP_Caches::cacheClear();
+                                }
 
 							    delete_transient('rb_mobile_cache_timeout' );
 							    delete_transient('rb_desktop_cache_timeout');
@@ -426,8 +417,8 @@ try {
 					wp_cache_flush();
                 }
 				delete_transient('realbigPluginSyncProcess');
-			} catch (Exception $e) {
-//				echo $e->getMessage();
+			}
+			catch (Exception $e) {
 				$messageFLog = 'Some error in synchronize: '.$e->getMessage().';';
 				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
 
@@ -439,6 +430,19 @@ try {
 					}
 				}
 			}
+			catch (Error $e) {
+				$messageFLog = 'Some error in synchronize: '.$e->getMessage().';';
+				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+
+				if ($requestType == 'ajax') {
+					if (empty($ajaxResult)) {
+						return 'error';
+					} else {
+						return $ajaxResult;
+					}
+				}
+			}
+			return false;
 		}
 	}
 	if (empty(apply_filters('wp_doing_cron', defined('DOING_CRON') && DOING_CRON))) {
@@ -450,9 +454,9 @@ try {
 				$resultTypes = [];
 
 				try {
-//    			$url = 'https://realbig.web/api/wp-get-ads';     // orig web post
-//				$url = 'https://beta.realbig.media/api/wp-get-ads';     // beta post
-    			$url = 'https://realbig.media/api/wp-get-ads';     // orig post
+//                    $url = 'https://realbig.web/api/wp-get-ads';     // orig web post
+//                    $url = 'https://beta.realbig.media/api/wp-get-ads';     // beta post
+                    $url = 'https://realbig.media/api/wp-get-ads';     // orig post
 
 					$dataForSending = [
 						'body'  => [
@@ -820,32 +824,305 @@ try {
 //			error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
 		}
 	}
+    if (!function_exists('RFWP_plugin_version')) {
+        function RFWP_plugin_version() {
+            $plugin_version = null;
+            $plugin_data = get_plugin_data(dirname(__FILE__).'/realbigForWP.php');
+            if (!empty($plugin_data)&&!empty($plugin_data['Version'])) {
+                $plugin_version = $plugin_data['Version'];
+            }
+
+            return $plugin_version;
+        }
+    }
+    if (!function_exists('RFWP_fillRotatorFileInfo')) {
+        function RFWP_fillRotatorFileInfo($rotatorFileInfo) {
+            $partsArray = [];
+            if (!empty(WP_CONTENT_DIR)&&!empty(WP_CONTENT_URL)) {
+                $parts = [
+                    'path' => WP_CONTENT_DIR,
+                    'pathAdditional' => '/',
+                    'url' => WP_CONTENT_URL,
+                    'urlAdditional' => '/',
+                ];
+                array_push($partsArray, $parts);
+            }
+            if (!empty(WP_PLUGIN_DIR)&&!empty(WP_PLUGIN_URL)) {
+                $parts = [
+                    'path' => WP_PLUGIN_DIR,
+                    'pathAdditional' => '/',
+                    'url' => WP_PLUGIN_URL,
+                    'urlAdditional' => '/',
+                ];
+                array_push($partsArray, $parts);
+            }
+            $parts = [
+                'path' => dirname(__FILE__),
+                'pathAdditional' => '/',
+                'url' => plugin_dir_url(__FILE__),
+                'urlAdditional' => '',
+            ];
+            array_push($partsArray, $parts);
+            $rotatorFileInfo['pathUrlToFolderParts'] = $partsArray;
+
+            return $rotatorFileInfo;
+        }
+    }
+    if (!function_exists('RFWP_checkRotatorFile')) {
+        function RFWP_checkRotatorFile($rotatorFileInfo) {
+            foreach ($rotatorFileInfo['pathUrlToFolderParts'] as $k => $item) {
+                $pathToFile = $item['path'].$item['pathAdditional'].$GLOBALS['rb_variables']['rotator'].'.js';
+	            $urlToFile = $item['url'].$item['urlAdditional'].$GLOBALS['rb_variables']['rotator'].'.js';
+	            $checkCurrentRotator = RFWP_checkRotatorFileSingle($pathToFile, $urlToFile);
+	            if (!empty($checkCurrentRotator)) {
+		            $clearedUrl = RFWP_clearUrl($item['url']);
+		            $urlToFile = $clearedUrl.$item['urlAdditional'].$GLOBALS['rb_variables']['rotator'].'.js';
+		            $rotatorFileInfo['urlToFile'] = $urlToFile;
+		            break;
+                }
+            }
+            unset($k,$item);
+
+            return $rotatorFileInfo;
+        }
+    }
+    if (!function_exists('RFWP_checkRotatorFileSingle')) {
+        function RFWP_checkRotatorFileSingle($pathToFile, $urlToFile) {
+            if (file_exists($pathToFile)) {
+                $checkLocalRotatorAccessibility = RFWP_checkLocalRotatorAccessibility($urlToFile);
+                if (!empty($checkLocalRotatorAccessibility)) {
+                    return true;
+                }
+            }
+            unset($k,$item);
+
+            return false;
+        }
+    }
 	if (!function_exists('RFWP_createAndFillLocalRotator')) {
 		function RFWP_createAndFillLocalRotator($rotatorFileInfo) {
 			global $rb_logFile;
 			try {
-				$rotatorFile = fopen($rotatorFileInfo['pathToFile'], 'w');
-				$rotatorFileInfo['fileRotatorContent'] = file_get_contents($rotatorFileInfo['urlToRotator']);
-				if (!empty($rotatorFileInfo['fileRotatorContent'])) {
-					file_put_contents($rotatorFileInfo['pathToFile'], $rotatorFileInfo['fileRotatorContent']);
-				}
-				fclose($rotatorFile);
-				unset($rotatorFile);
-				$rotatorFileInfo['checkFileExists'] = file_exists($rotatorFileInfo['pathToFile']);
-				if (!empty($rotatorFileInfo['checkFileExists'])) {
-					set_transient('localRotatorGatherTimeout', true, 15*60);
-					$GLOBALS['rb_variables']['localRotatorGatherTimeout'] = true;
-				}
+                $rotatorFileInfo['checkFileExists'] = false;
+                foreach ($rotatorFileInfo['pathUrlToFolderParts'] as $k => $item) {
+                    $pathToFile = $item['path'].$item['pathAdditional'].$GLOBALS['rb_variables']['rotator'].'.js';
+                    $urlToFile = $item['url'].$item['urlAdditional'].$GLOBALS['rb_variables']['rotator'].'.js';
+                    try {
+                        $rotatorFileInfo['fileRotatorContent'] = file_get_contents($rotatorFileInfo['urlToRotator']);
+                    } catch (Exception $ex) {
+                        $fileGetContentError = true;
+                    } catch (Error $er) {
+                        $fileGetContentError = true;
+                    }
+
+                    if (empty($rotatorFileInfo['fileRotatorContent'])) {
+                        if (!empty($fileGetContentError)&&function_exists('curl_init')) {
+                            $ch = curl_init();
+                            curl_setopt($ch, CURLOPT_URL, $rotatorFileInfo['urlToRotator']);
+                            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                            $rotatorFileInfo['fileRotatorContent'] = curl_exec($ch);
+                            curl_close($ch);
+                        }
+                    }
+
+                    if (!empty($rotatorFileInfo['fileRotatorContent'])) {
+                        $rotatorFile = fopen($pathToFile, 'w');
+                        if ($rotatorFile!==false) {
+                            file_put_contents($pathToFile, $rotatorFileInfo['fileRotatorContent']);
+                            fclose($rotatorFile);
+                        }
+                        unset($rotatorFile);
+                    }
+
+	                $checkResult = RFWP_checkRotatorFileSingle($pathToFile,$urlToFile);
+                    if (!empty($checkResult)) {
+	                    $rotatorFileInfo['pathToFile'] = $pathToFile;
+	                    $urlToFile = RFWP_clearUrl($urlToFile);
+	                    $rotatorFileInfo['urlToFile'] = $urlToFile;
+	                    global $wpdb;
+	                    $wpPrefix = RFWP_getTablePrefix();
+	                    $getLocalRotatorUrl = $wpdb->get_var( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = "localRotatorUrl"' );
+	                    if (!empty($getLocalRotatorUrl)) {
+		                    $wpdb->update( $wpPrefix.'realbig_settings', ['optionValue' => $urlToFile], ['optionName' => 'localRotatorUrl']);
+	                    } else {
+		                    $wpdb->insert( $wpPrefix.'realbig_settings', ['optionName'  => 'localRotatorUrl', 'optionValue' => $urlToFile]);
+	                    }
+	                    $GLOBALS['rb_variables']['localRotatorUrl'] = $urlToFile;
+	                    set_transient('localRotatorGatherTimeout', true, 15*60);
+	                    $GLOBALS['rb_variables']['localRotatorGatherTimeout'] = true;
+	                    break;
+                    }
+                }
+                unset($k,$item);
 			} catch (Exception $ex) {
-				$messageFLog = 'Some error in RFWP_launch_without_content_function: '.$ex->getMessage().';';
+				$messageFLog = 'Some error in RFWP_createAndFillLocalRotator: '.$ex->getMessage().';';
 				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
 			} catch (Error $er) {
-				$messageFLog = 'Some error in RFWP_launch_without_content_function: '.$er->getMessage().';';
+				$messageFLog = 'Some error in RFWP_createAndFillLocalRotator: '.$er->getMessage().';';
 				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
 			}
-//		    return false;
+		    return $rotatorFileInfo;
 		}
 	}
+	if (!function_exists('RFWP_generateTurboRssUrls')) {
+		function RFWP_generateTurboRssUrls() {
+			$result = [];
+		    if (function_exists('RFWP_rssOptionsGet')) {
+			    $turboOptions = RFWP_rssOptionsGet();
+			    $turboUrl = $turboOptions['name'];
+			    if (get_option('permalink_structure')) {
+				    $url = home_url().'/feed/'.$turboUrl.'/';
+				    $trashUrl = $url.'?rb_rss_trash=1';
+			    } else {
+				    $url = home_url().'/?feed='.$turboUrl;
+				    $trashUrl = $url.'&rb_rss_trash=1';
+			    }
+			    $result['mainRss'] = $url;
+			    $result['trashRss'] = $trashUrl;
+            }
+
+			return $result;
+        }
+    }
+	if (!function_exists('RFWP_getDomain')) {
+		function RFWP_getDomain() {
+			$urlData = '';
+			if (!empty($_SERVER['HTTP_HOST'])) {
+				$urlData = $_SERVER['HTTP_HOST'];
+			} elseif (!empty($_SERVER['SERVER_NAME'])) {
+				$urlData = $_SERVER['SERVER_NAME'];
+			}
+
+			return $urlData;
+        }
+    }
+	if (!function_exists('RFWP_checkLocalRotatorAccessibility')) {
+	    function RFWP_checkLocalRotatorAccessibility($urlToCheck) {
+		    $checkResult = false;
+		    try {
+			    $checkResult = wp_get_http_headers($urlToCheck);
+		    }
+		    catch (Exception $ex) {
+			    $errorText = __FUNCTION__." error: ".$ex->getMessage();
+			    RFWP_Logs::saveLogs('errorsLog', $errorText);
+		    }
+		    catch (Error $ex) {
+			    $errorText = __FUNCTION__." error: ".$ex->getMessage();
+			    RFWP_Logs::saveLogs('errorsLog', $errorText);
+		    }
+
+	        return $checkResult;
+        }
+    }
+	if (!function_exists('RFWP_pluginActivation')) {
+	    function RFWP_pluginActivation() {
+	        //here
+        }
+    }
+	if (!function_exists('RFWP_createLocalRotator')) {
+	    function RFWP_createLocalRotator() {
+		    try {
+                $rotatorFileInfo = [];
+                $rotatorFileInfo['pathToFile'] = '';
+                $rotatorFileInfo['urlToFile'] = '';
+                $rotatorFileInfo = RFWP_fillRotatorFileInfo($rotatorFileInfo);
+                $rotatorFileInfo['urlToRotator'] = 'https://'.$GLOBALS['rb_variables']['adDomain'].'/'.$GLOBALS['rb_variables']['rotator'].'.min.js';
+                $rotatorFileInfo = RFWP_createAndFillLocalRotator($rotatorFileInfo);
+		    }
+		    catch (Exception $ex) {
+			    $errorText = __FUNCTION__." error: ".$ex->getMessage();
+			    RFWP_Logs::saveLogs('errorsLog', $errorText);
+		    }
+		    catch (Error $ex) {
+			    $errorText = __FUNCTION__." error: ".$ex->getMessage();
+			    RFWP_Logs::saveLogs('errorsLog', $errorText);
+		    }
+
+            return false;
+        }
+    }
+	if (!function_exists('RFWP_clearUrl')) {
+	    function RFWP_clearUrl($url) {
+		    $clearedUrl = $url;
+		    try {
+			    $clearedUrl = preg_replace('~^http[s]?\:~ius', '', $url);
+			    if (empty($clearedUrl)) {
+				    $clearedUrl = $url;
+			    }
+		    }
+		    catch (Exception $ex) {
+			    $errorText = __FUNCTION__." error: ".$ex->getMessage();
+			    RFWP_Logs::saveLogs('errorsLog', $errorText);
+		    }
+		    catch (Error $ex) {
+			    $errorText = __FUNCTION__." error: ".$ex->getMessage();
+			    RFWP_Logs::saveLogs('errorsLog', $errorText);
+		    }
+
+		    return $clearedUrl;
+        }
+    }
+	if (!function_exists('RFWP_saveToRealbigSettings')) {
+		function RFWP_saveToRealbigSettings($value, $optionName) {
+			try {
+				global $wpdb;
+				$wpPrefix = RFWP_getWpPrefix();
+
+				$getOption = $wpdb->query($wpdb->prepare("SELECT id FROM ".$wpPrefix."realbig_settings WHERE optionName = %s",[$optionName]));
+				if (empty($getOption)) {
+					$wpdb->insert($wpPrefix.'realbig_settings', ['optionName' => $optionName, 'optionValue' => $value]);
+				} else {
+					$wpdb->update($wpPrefix.'realbig_settings', ['optionValue' => $value], ['optionName' => $optionName]);
+				}
+			}
+			catch (Exception $ex) {
+				$errorText = __FUNCTION__." error: ".$ex->getMessage();
+				RFWP_Logs::saveLogs('errorsLog', $errorText);
+			}
+			catch (Error $ex) {
+				$errorText = __FUNCTION__." error: ".$ex->getMessage();
+				RFWP_Logs::saveLogs('errorsLog', $errorText);
+			}
+
+			return false;
+        }
+    }
+
+	if (!function_exists('RFWP_getWpPrefix')) {
+		function RFWP_getWpPrefix() {
+			$wpPrefix = '';
+			try {
+				if (!empty($GLOBALS['wpPrefix'])) {
+					$wpPrefix = $GLOBALS['wpPrefix'];
+				} else {
+					if (!empty($GLOBALS['table_prefix'])) {
+						$wpPrefix = $GLOBALS['table_prefix'];
+					} else {
+						global $wpdb;
+						$wpPrefix = $wpdb->base_prefix;
+					}
+					if (!empty($wpPrefix)) {
+						$GLOBALS['wpPrefix'] = $wpPrefix;
+                    }
+                }
+
+				if (empty($wpPrefix)) {
+					$errorText = "wpdb prefix missing";
+					RFWP_Logs::saveLogs('errorsLog', $errorText);
+				}
+			}
+			catch (Exception $ex) {
+				$errorText = __FUNCTION__." error: ".$ex->getMessage();
+				RFWP_Logs::saveLogs('errorsLog', $errorText);
+			}
+			catch (Error $ex) {
+				$errorText = __FUNCTION__." error: ".$ex->getMessage();
+				RFWP_Logs::saveLogs('errorsLog', $errorText);
+			}
+
+			return $wpPrefix;
+		}
+    }
 }
 catch (Exception $ex)
 {

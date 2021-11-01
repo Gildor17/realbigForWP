@@ -2,7 +2,7 @@
 Contributors: 101
 Tags: AD, content filling
 Requires at least: 4.5
-Tested up to: 5.1.1
+Tested up to: 5.7
 Stable tag: 0.1.26.56
 Requires PHP: 5.6
 License: GPLv2 or later

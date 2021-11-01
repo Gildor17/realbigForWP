@@ -17,7 +17,7 @@ function sendReadyBlocksNew(blocks) {
 function gatherReadyBlocks() {
     let blocks = {};
     let counter1 = 0;
-    let gatheredBlocks = document.getElementsByClassName('content_rb');
+    let gatheredBlocks = document.getElementsByClassName('content_rb cnt32_rl_bg_str');
     let checker = 0;
     let adContent = '';
     let curState = '';
@@ -49,7 +49,7 @@ function gatherReadyBlocks() {
 }
 
 function timeBeforeGathering() {
-    let gatheredBlocks = document.getElementsByClassName('content_rb');
+    let gatheredBlocks = document.getElementsByClassName('content_rb cnt32_rl_bg_str');
     let okStates = ['done','refresh-wait','no-block','fetched'];
     let curState = '';
 

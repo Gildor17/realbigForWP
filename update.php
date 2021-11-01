@@ -11,7 +11,7 @@ if (!defined("ABSPATH")) { exit;}
 
 try {
 	if (!function_exists('RFWP_dbTablesCreateFunction')) {
-		function RFWP_dbTablesCreateFunction($tableForCurrentPluginChecker, $tableForToken, $tableForTurboRssAds, $wpPrefix, $statusGatherer) {
+		function RFWP_dbTablesCreateFunction($tableForCurrentPluginChecker, $tableForToken, $tableForTurboRssAds, $tableForAmpAds, $wpPrefix, $statusGatherer) {
 			global $wpdb;
 			global $rb_logFile;
 			try {
@@ -93,7 +93,6 @@ CREATE TABLE `".$wpPrefix."realbig_turbo_ads` (
 	`element` ENUM('p','li','ul','ol','blockquote','img','video','iframe','h1','h2','h3','h4','h5','h6','h2-4','article') NOT NULL DEFAULT 'p' COLLATE 'utf8_bin',
 	`elementPosition` TINYINT(4) NOT NULL DEFAULT '0',
 	`elementPlace` INT(11) NOT NULL DEFAULT '1',
-	`timeCreate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`timeUpdate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	PRIMARY KEY (`id`)
 )
@@ -109,6 +108,33 @@ ENGINE=InnoDB
 					$statusGatherer['realbig_turbo_ads_table'] = true;
 					$messageFLog = 'realbig_turbo_ads exists;';
                     error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL,3,$rb_logFile);
+				}
+
+				if (empty($tableForAmpAds)) {
+				    $sql = "
+CREATE TABLE `wp_realbig_amp_ads` (
+	`id` INT(10) NOT NULL AUTO_INCREMENT,
+	`blockId` INT(10) NOT NULL,
+	`adField` TEXT NULL DEFAULT NULL COLLATE 'utf8_bin',
+	`settingType` ENUM('single','begin','middle','end') NOT NULL DEFAULT 'single' COLLATE 'utf8_bin',
+	`element` ENUM('p','li','ul','ol','blockquote','img','video','h1','h2','h3','h4','h5','h6','h2-4','article') NOT NULL DEFAULT 'p' COLLATE 'utf8_bin',
+	`elementPosition` TINYINT(3) NOT NULL DEFAULT '0',
+	`elementPlace` INT(10) NOT NULL DEFAULT '1',
+	`timeUpdate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	PRIMARY KEY (`id`) USING BTREE
+)
+COMMENT='Ads for AMP pages'
+COLLATE='utf8_bin'
+ENGINE=InnoDB
+";
+					dbDelta($sql, true);
+					if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
+						RFWP_WorkProgressLog(false,'create realbig_turbo_ads tables');
+					}
+                } else {
+					$statusGatherer['realbig_amp_ads_table'] = true;
+					$messageFLog = 'realbig_amp_ads exists;';
+					error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL,3,$rb_logFile);
 				}
 
 				return $statusGatherer;

@@ -9,6 +9,16 @@ if (typeof rb_tempElement_check==='undefined') {var rb_tempElement_check = false
 if (typeof rb_tempElement==='undefined') {var rb_tempElement = null;}
 if (typeof jsInputerLaunch==='undefined') {var jsInputerLaunch = -1;}
 
+function launchUpdateRbDisplays() {
+    if ((typeof updateRbDisplays !== 'undefined')&&(typeof updateRbDisplays === 'function')) {
+        updateRbDisplays();
+    } else {
+        setTimeout(function () {
+            launchUpdateRbDisplays();
+        }, 200);
+    }
+}
+
 /* "sc" in variables - mark for shortcode variable */
 function shortcodesInsert() {
     let gatheredBlocks = document.querySelectorAll('.percentPointerClass.scMark'),
@@ -28,10 +38,16 @@ function shortcodesInsert() {
         stickyStatus = false,
         stickyCheck = [],
         stickyFixedStatus = false,
-        stickyFixedCheck = [];
+        stickyFixedCheck = [],
+        overflowCheck = [],
+        overflowStatus = false,
+        repeatableIdentifier = "",
+        dataCidIdentifier = null,
+        divCidElement = '';
 
     if (typeof scArray !== 'undefined') {
-        if (scArray&&scArray.length > 0&&gatheredBlocks&&gatheredBlocks.length > 0) {
+        if (scArray&&scArray.length > 0&&gatheredBlocks&&gatheredBlocks.length > 0&&typeof window.rulvW5gntb !== 'undefined') {
+            dataCidIdentifier = window.rulvW5gntb;
             for (let i = 0; i < gatheredBlocks.length; i++) {
                 gatheredBlockChild = gatheredBlocks[i].children[0];
                 if (!gatheredBlockChild) {
@@ -48,6 +64,8 @@ function shortcodesInsert() {
                 stickyCheck = [];
                 stickyFixedStatus = false;
                 stickyFixedCheck = [];
+                repeatableIdentifier = "";
+                divCidElement = null;
 
                 scAdId = gatheredBlockChild.getAttribute('data-aid');
                 scBlockId = gatheredBlockChild.getAttribute('data-id');
@@ -64,58 +82,30 @@ function shortcodesInsert() {
 
                     if (sci > -1) {
                         if (blockStatus&&okStates.includes(blockStatus)) {
-                            skyscraperCheck = scArray[sci]['text'].match(/\<skyscraper\>/);
-                            if (skyscraperCheck&&skyscraperCheck.length > 0) {
-                                scArray[sci]['text'].replace(/\<skyscraper\>/, '');
-                                splitedSkyscraper = scArray[sci]['text'].split('<skyscraper_separotor>');
-                                if (splitedSkyscraper&&splitedSkyscraper.length > 0) {
-                                    skyscraperStatus = true;
-                                }
-                            }
-
-                            stickyCheck = scArray[sci]['text'].match(/\<sticky\>/);
-                            if (stickyCheck&&stickyCheck.length > 0) {
-                                scArray[sci]['text'].replace(/\<sticky\>/, '');
-                                stickyStatus = true;
-                            }
-
-                            stickyFixedCheck = scArray[sci]['text'].match(/\<stickyFixed\>/);
-                            if (stickyFixedCheck&&stickyFixedCheck.length > 0) {
-                                scArray[sci]['text'].replace(/\<stickyFixed\>/, '');
-                                stickyFixedStatus = true;
-                            }
-
                             if (blockStatus=='no-block') {
                                 gatheredBlockChild.innerHTML = '';
                             } else if ((blockStatus=='fetched'&&dataFull==1)||!['no-block','fetched'].includes(blockStatus)) {
-                                if (skyscraperStatus===true) {
-                                    gatheredBlockChildSkyParts = gatheredBlockChild.querySelectorAll('.rb_item div');
-                                    if (gatheredBlockChildSkyParts&&gatheredBlockChildSkyParts.length==splitedSkyscraper.length) {
-                                        for (let i2 = 0; i2 < splitedSkyscraper.length; i2++) {
-                                            jQuery(gatheredBlockChildSkyParts[i2]).html(splitedSkyscraper[i2]);
-                                        }
+                                for (let cl1 = 0; cl1 < gatheredBlocks[i].classList.length; cl1++) {
+                                    if (gatheredBlocks[i].classList[cl1].includes("repeatable-mark")) {
+                                        repeatableIdentifier = gatheredBlocks[i].classList[cl1];
                                     }
-                                } else if (stickyStatus===true) {
-                                    gatheredBlockChildSkyParts = gatheredBlockChild.querySelectorAll('.displayBlock.sticky div div:not(.display-close)');
-                                    if (gatheredBlockChildSkyParts&&gatheredBlockChildSkyParts.length > 0) {
-                                        for (let i2 = 0; i2 < gatheredBlockChildSkyParts.length; i2++) {
-                                            jQuery(gatheredBlockChildSkyParts[i2]).html(scArray[sci]['text']);
-                                        }
-                                    }
-                                } else if (stickyFixedStatus===true) {
-                                    gatheredBlockChildSkyParts = gatheredBlockChild.querySelectorAll('.displayBlock div[data-type=stickyFixed]');
-                                    if (gatheredBlockChildSkyParts&&gatheredBlockChildSkyParts.length > 0) {
-                                        for (let i2 = 0; i2 < gatheredBlockChildSkyParts.length; i2++) {
-                                            jQuery(gatheredBlockChildSkyParts[i2]).html(scArray[sci]['text']);
-                                        }
+                                }
+
+                                if (repeatableIdentifier) {
+                                    divCidElement = document.querySelectorAll(".percentPointerClass.scMark."+repeatableIdentifier+' div[data-cid="'+dataCidIdentifier+'"]');
+                                } else {
+                                    divCidElement = gatheredBlockChild.querySelectorAll('div[data-cid="'+dataCidIdentifier+'"]');
+                                }
+
+                                if (divCidElement&&divCidElement.length > 0) {
+                                    for (let i2 = 0; i2 < divCidElement.length; i2++) {
+                                        jQuery(divCidElement[i2]).html(scArray[sci]['text']);
                                     }
                                 } else {
                                     jQuery(gatheredBlockChild).html(scArray[sci]['text']);
                                 }
+                                launchUpdateRbDisplays();
                             }
-                            /* else {
-                                jQuery(gatheredBlockChild).html(scArray[sci]['text']);
-                            } */
                             if (blockStatus!='fetched'||(blockStatus=='fetched'&&dataFull==1)) {
                                 for (i1 = 0; i1 < scArray.length; i1++) {
                                     if (scBlockId == scArray[i1]['blockId']) {
@@ -155,7 +145,7 @@ function clearUnsuitableCache(cuc_cou) {
     let scAdId = -1;
     let ccRepeat = false;
 
-    let gatheredBlocks = document.querySelectorAll('.percentPointerClass .content_rb');
+    let gatheredBlocks = document.querySelectorAll('.percentPointerClass .content_rb, .percentPointerClass .cnt32_rl_bg_str');
 
     if (gatheredBlocks&&gatheredBlocks.length > 0) {
         for (let i = 0; i < gatheredBlocks.length; i++) {
@@ -235,7 +225,7 @@ function blocksRepositionUse(containerString, blType, searchType, contentElement
             if (blocksInContainer && blocksInContainer.length > 0 && usedBlockSettingArray && usedBlockSettingArray.length > 0) {
                 for (i = 0; i < blocksInContainer.length; i++) {
                     currentBlock = blocksInContainer[i];
-                    currentBlockId = currentBlock.querySelector('.content_rb').getAttribute('data-id');
+                    currentBlockId = currentBlock.querySelector('.content_rb, .cnt32_rl_bg_str').getAttribute('data-id');
                     currentContainer = null;
                     for (j = 0; j < usedBlockSettingArray.length; i++) {
                         if (usedBlockSettingArray[i]['id'] == currentBlockId) {
@@ -300,6 +290,9 @@ function createStyleElement(blockNumber, localElementCss) {
     if (!emptyValues) {
         htmlToAdd = '#content_rb_'+blockNumber+' > * {\n' +
             '    margin: '+marginString+';\n' +
+            '}\n' +
+            '#cnt_rb_'+blockNumber+' > * {\n' +
+            '    margin: '+marginString+';\n' +
             '}\n';
     }
 
@@ -313,10 +306,14 @@ function initTargetToInsert(position, type, currentElement) {
     if (type == 'element') {
         if (position == 0) {
             posCurrentElement = currentElement;
-            currentElement.style.marginTop = '0px';
+            if (!(typeof obligatoryMargin!=='undefined'&&obligatoryMargin===1)) {
+                currentElement.classList.add('rfwp_removedMarginTop');
+            }
         } else {
             posCurrentElement = currentElement.nextSibling;
-            currentElement.style.marginBottom = '0px';
+            if (!(typeof obligatoryMargin!=='undefined'&&obligatoryMargin===1)) {
+                currentElement.classList.add('rfwp_removedMarginBottom');
+            }
         }
         currentElement.style.clear = 'both';
     } else {
@@ -519,8 +516,10 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
         let usedElement;
         let tagList = [];
         let localSumResult;
+        let binderName;
 
         var removeClearing;
+        var repeatableBlockIdentifier = 0
 
         var i;
 
@@ -558,30 +557,6 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
             let findQuery = 0;
             let directClassElementResult = [];
 
-            /* if (blockSettingArray[i]['elementPlace'] > 1) {
-                currentElement = document.querySelectorAll(directElement);
-                if (currentElement.length > 0) {
-                    if (currentElement.length > blockSettingArray[i]['elementPlace']) {
-                        currentElement = currentElement[blockSettingArray[i]['elementPlace']-1];
-                    } else if (currentElement.length < blockSettingArray[i]['elementPlace']) {
-                        currentElement = currentElement[currentElement.length - 1];
-                    } else {
-                        findQuery = 1;
-                    }
-                }
-            } else if (blockSettingArray[i]['elementPlace'] < 0) {
-                currentElement = document.querySelectorAll(directElement);
-                if (currentElement.length > 0) {
-                    if ((currentElement.length + blockSettingArray[i]['elementPlace'] + 1) > 0) {
-                        currentElement = currentElement[currentElement.length + blockSettingArray[i]['elementPlace']];
-                    } else {
-                        findQuery = 1;
-                    }
-                }
-            } else {
-                findQuery = 1;
-            } */
-
             currentElement = document.querySelectorAll(directElement);
             if (currentElement.length > 0) {
                 if (blockSettingArray[i]['elementPlace'] > 1) {
@@ -604,30 +579,6 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
             } else {
                 findQuery = 1;
             }
-
-            /* if (blockSettingArray[i]['elementPlace'] > 1) {
-                currentElement = document.querySelectorAll(directElement);
-                if (currentElement.length > 0) {
-                    if (currentElement.length > blockSettingArray[i]['elementPlace']) {
-                        currentElement = currentElement[blockSettingArray[i]['elementPlace']-1];
-                    } else if (currentElement.length < blockSettingArray[i]['elementPlace']) {
-                        currentElement = currentElement[currentElement.length - 1];
-                    } else {
-                        findQuery = 1;
-                    }
-                }
-            } else if (blockSettingArray[i]['elementPlace'] < 0) {
-                currentElement = document.querySelectorAll(directElement);
-                if (currentElement.length > 0) {
-                    if ((currentElement.length + blockSettingArray[i]['elementPlace'] + 1) > 0) {
-                        currentElement = currentElement[currentElement.length + blockSettingArray[i]['elementPlace']];
-                    } else {
-                        findQuery = 1;
-                    }
-                }
-            } else {
-                findQuery = 1;
-            } */
 
             directClassElementResult['findQuery'] = findQuery;
             directClassElementResult['currentElement'] = currentElement;
@@ -798,13 +749,15 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
             tagListCou = 0;
             poolbackI = 0;
             detailedQueryString = '';
+            binderName = elementBinderNameGenerator();
 
             try {
                 if (!blockSettingArray[i]["text"]
                     ||(blockSettingArray[i]["text"]&&blockSettingArray[i]["text"].length < 1)
                     ||(rejectedBlocks&&rejectedBlocks.includes(blockSettingArray[i]["id"]))
                     ||((blockSettingArray[i]["maxHeaders"] > 0)&&(blockSettingArray[i]["maxHeaders"] < termorarity_parent_with_content_length))
-                    ||((blockSettingArray[i]["maxSymbols"] > 0)&&(blockSettingArray[i]["maxSymbols"] < contentLength))
+                    ||((blockSettingArray[i]["maxSymbols"] > 0)&&(blockSettingArray[i]["maxSymbols"] < contentLength)
+                    ||(content_pointer.classList.contains("hard-content")&&blockSettingArray[i]["setting_type"]!=3))
                 ) {
                     blockSettingArray.splice(i--, 1);
                     poolbackI = 1;
@@ -820,6 +773,7 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
                     elementToAdd.classList.add("scMark");
                 }
                 elementToAdd.innerHTML = blockSettingArray[i]["text"];
+                elementToAdd.dataset.rbinder = binderName;
                 block_number = elementToAdd.children[0].attributes['data-id'].value;
 
                 if (blockDuplicate == 'no') {
@@ -864,6 +818,7 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
                     if (currentElement != undefined && currentElement != null && currentElementChecker) {
                         posCurrentElement = initTargetToInsert(blockSettingArray[i]["elementPosition"], 'element', currentElement);
                         currentElement.parentNode.insertBefore(elementToAdd, posCurrentElement);
+                        currentElement.classList.add('rbinder-'+binderName);
                         elementToAdd.classList.remove('coveredAd');
                         usedBlockSettingArrayIds.push(block_number);
                         blockSettingArray.splice(i--, 1);
@@ -872,7 +827,8 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
                     } else {
                         repeat = true;
                     }
-                } else if (blockSettingArray[i]["setting_type"] == 2) {
+                }
+                else if (blockSettingArray[i]["setting_type"] == 2) {
                     if (blockDuplicate == 'no') {
                         blockSettingArray[i]["elementCount"] = 1;
                     }
@@ -895,6 +851,7 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
                             if (blockSettingArray[i]["sc"]==1) {
                                 repElementToAdd.classList.add("scMark");
                             }
+                            repElementToAdd.classList.add("repeatable-mark-"+repeatableBlockIdentifier);
                             repElementToAdd.innerHTML = blockSettingArray[i]["text"];
 
                             if (elementToAddStyle&&elementToAddStyle!='default') {
@@ -909,6 +866,7 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
                             if (currentElement != undefined && currentElement != null && currentElementChecker) {
                                 posCurrentElement = initTargetToInsert(blockSettingArray[i]["elementPosition"], 'element', currentElement);
                                 currentElement.parentNode.insertBefore(repElementToAdd, posCurrentElement);
+                                currentElement.classList.add('rbinder-'+binderName);
                                 repElementToAdd.classList.remove('coveredAd');
                                 curFirstPlace = sumResult + parseInt(blockSettingArray[i]["elementStep"]) + 1;
                                 curElementCount--;
@@ -923,6 +881,7 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
                         usedBlockSettingArrayIds.push(block_number);
                         blockSettingArray.splice(i--, 1);
                         poolbackI = 1;
+                        repeatableBlockIdentifier++;
                     } else {
                         if (!blockSettingArray[i]["unsuccess"]) {
                             blockSettingArray[i]["unsuccess"] = 1;
@@ -940,7 +899,8 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
                             repeat = true;
                         }
                     }
-                } else if (blockSettingArray[i]["setting_type"] == 3) {
+                }
+                else if (blockSettingArray[i]["setting_type"] == 3) {
                     let elementTypeSymbol = '';
                     let elementSpaceSymbol = '';
                     let elementName = '';
@@ -961,40 +921,6 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
                         currentElement = document.querySelector(directElement);
                     }
                     if (currentElement) {
-                    /*     findQuery = 0;
-                        elementTypeSymbol = directElement.search('#');
-                        if (elementTypeSymbol < 0) {
-                            elementTypeSymbol = directElement.indexOf('.');
-                            elementType = 'class';
-                            elementName = directElement.replace(/\s/, '.');
-                            if (elementTypeSymbol < 0) {
-                                elementName = '.' + elementName;
-                            }
-
-                            directClassResult = directClassElementDetecting(blockSettingArray, elementName);
-                            findQuery = directClassResult['findQuery'];
-                            currentElement = directClassResult['currentElement'];
-
-                            if (findQuery == 1) {
-                                currentElement = document.querySelector(elementName);
-                            }
-
-                            if (currentElement) {
-                                currentElementChecker = true;
-                            }
-                        } else {
-                            elementType = 'id';
-                            elementName = directElement.substring(elementTypeSymbol);
-                            elementSpaceSymbol = elementName.search('/( |\n|\r\n)/');
-                            if (elementSpaceSymbol > -1) {
-                                elementName = elementName.substring(0, elementSpaceSymbol - 1);
-                            }
-                            currentElement = document.querySelector(elementName);
-                            if (currentElement) {
-                                currentElementChecker = true;
-                            }
-                        }
-                    } else { */
                         currentElementChecker = true;
                     }
 
@@ -1002,18 +928,21 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
                         posCurrentElement = initTargetToInsert(blockSettingArray[i]["elementPosition"], 'element', currentElement);
                         currentElement.parentNode.insertBefore(elementToAdd, posCurrentElement);
                         elementToAdd.classList.remove('coveredAd');
+                        currentElement.classList.add('rbinder-'+binderName);
                         usedBlockSettingArrayIds.push(block_number);
                         blockSettingArray.splice(i--, 1);
                         poolbackI = 1;
                     } else {
                         repeat = true;
                     }
-                } else if (blockSettingArray[i]["setting_type"] == 4) {
+                }
+                else if (blockSettingArray[i]["setting_type"] == 4) {
                     document.querySelector("#content_pointer_id").parentElement.append(elementToAdd);
                     usedBlockSettingArrayIds.push(block_number);
                     blockSettingArray.splice(i--, 1);
                     poolbackI = 1;
-                } else if (blockSettingArray[i]["setting_type"] == 5) {
+                }
+                else if (blockSettingArray[i]["setting_type"] == 5) {
                     let currentElementList = cureentElementsGather('p', 1, content_pointer.parentElement);
                     if (currentElementList&&currentElementList.length > 0) {
                         let pCount = currentElementList.length;
@@ -1028,6 +957,7 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
                                 currentElement.parentNode.insertBefore(elementToAdd, currentElement.nextSibling);
                             }
                             elementToAdd.classList.remove('coveredAd');
+                            currentElement.classList.add('rbinder-'+binderName);
                             usedBlockSettingArrayIds.push(block_number);
                             blockSettingArray.splice(i--, 1);
                             poolbackI = 1;
@@ -1037,7 +967,8 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
                     } else {
                         repeat = true;
                     }
-                } else if (blockSettingArray[i]["setting_type"] == 6) {
+                }
+                else if (blockSettingArray[i]["setting_type"] == 6) {
                     if (containerFor6th.length > 0) {
                         for (let j = 0; j < containerFor6th.length; j++) {
                             if (containerFor6th[j]["elementPlace"]<blockSettingArray[i]["elementPlace"]) {
@@ -1069,7 +1000,8 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
                         poolbackI = 1;
                     }
                 /* vidpravutu v vidstiinuk dlya 6ho tipa */
-                } else if (blockSettingArray[i]["setting_type"] == 7) {
+                }
+                else if (blockSettingArray[i]["setting_type"] == 7) {
                     if (containerFor7th.length > 0) {
                         for (let j = 0; j < containerFor7th.length; j++) {
                             if (containerFor7th[j]["elementPlace"]<blockSettingArray[i]["elementPlace"]) {
@@ -1227,21 +1159,21 @@ function setLongCache() {
 }
 
 function cachePlacing(alert_type, errorInfo=null) {
-    let adBlocks = document.querySelectorAll('.percentPointerClass .content_rb');
+    let adBlocks = document.querySelectorAll('.percentPointerClass .content_rb, .percentPointerClass .cnt32_rl_bg_str');
     let curAdBlock;
     let okStates = ['done','refresh-wait','no-block','fetched'];
     /* let adId = -1; */
     let blockStatus = null;
     let blockId;
 
-    if (adBlocks&&adBlocks.length > 0) {
+    if (typeof cachedBlocksArray !== 'undefined'&&cachedBlocksArray&&cachedBlocksArray.length > 0&&adBlocks&&adBlocks.length > 0) {
         for (let i = 0; i < adBlocks.length; i++) {
             blockStatus = null;
             blockStatus = adBlocks[i]['dataset']['state'];
 
             if (!blockStatus) {
                 blockId = adBlocks[i]['dataset']['id'];
-                if (cachedBlocksArray&&cachedBlocksArray[blockId]) {
+                if (cachedBlocksArray[blockId]) {
                     /* adBlocks[i].innerHTML = cachedBlocksArray[blockId]; */
                     jQuery(adBlocks[i]).html(cachedBlocksArray[blockId]);
                 }
@@ -1261,7 +1193,12 @@ function symbolInserter(lordOfElements, containerFor7th) {
         let tlArrayCou = 0;
         var currentChildrenLength = 0;
         /* var possibleTagsArray = ["P", "H1", "H2", "H3", "H4", "H5", "H6", "DIV", "OL", "UL", "LI", "BLOCKQUOTE", "INDEX", "TABLE", "ARTICLE"]; */
-        var possibleTagsArray = ["P", "H1", "H2", "H3", "H4", "H5", "H6", "DIV", "BLOCKQUOTE", "INDEX", "ARTICLE"];
+        var possibleTagsArray;
+        if (typeof tagsListForTextLength!=="undefined") {
+            possibleTagsArray = tagsListForTextLength;
+        } else {
+            possibleTagsArray = ["P", "H1", "H2", "H3", "H4", "H5", "H6", "DIV", "BLOCKQUOTE", "INDEX", "ARTICLE"];
+        }
         let possibleTagsInCheck = ["DIV", "INDEX"];
         let previousBreak = 0;
         let needleLength;
@@ -1271,6 +1208,7 @@ function symbolInserter(lordOfElements, containerFor7th) {
         let elementToAddStyle;
         let block_number;
         let excArr = [];
+        let binderName;
 
         function textLengthGathererNew(lordOfElementsLoc, excArr) {
             let allowed;
@@ -1337,8 +1275,22 @@ function symbolInserter(lordOfElements, containerFor7th) {
             return true;
         }
 
+        function possibleTagsInCheckConfirmer(possibleTagsArray, possibleTagsInCheck) {
+            if (possibleTagsArray.includes("LI")) {
+                if (possibleTagsArray.includes("UL")) {
+                    possibleTagsInCheck.push("UL");
+                }
+                if (possibleTagsArray.includes("OL")) {
+                    possibleTagsInCheck.push("OL");
+                }
+            }
+
+            return false;
+        }
+        
         if (!document.getElementById("markedSpan1")) {
             textLength = 0;
+            possibleTagsInCheckConfirmer(possibleTagsArray, possibleTagsInCheck);
             excArr = excIdClUnpacker();
             textLengthGathererNew(lordOfElements, excArr);
 
@@ -1347,6 +1299,7 @@ function symbolInserter(lordOfElements, containerFor7th) {
                 currentChildrenLength = 0;
                 currentSumLength = 0;
                 needleLength = Math.abs(containerFor7th[i]['elementPlace']);
+                binderName = elementBinderNameGenerator();
 
                 elementToAdd = document.createElement("div");
                 elementToAdd.classList.add("percentPointerClass");
@@ -1354,6 +1307,7 @@ function symbolInserter(lordOfElements, containerFor7th) {
                 if (containerFor7th[i]["sc"]==1) {
                     elementToAdd.classList.add("scMark");
                 }
+                elementToAdd.dataset.rbinder = binderName;
                 elementToAdd.innerHTML = containerFor7th[i]["text"];
                 block_number = elementToAdd.children[0].attributes['data-id'].value;
                 if (!elementToAdd) {
@@ -1373,6 +1327,7 @@ function symbolInserter(lordOfElements, containerFor7th) {
                             elementToBind = tlArray[j]['element'];
                             elementToBind = currentElementReceiverSpec(true, j, tlArray, elementToBind);
                             elementToBind.parentNode.insertBefore(elementToAdd, elementToBind);
+                            elementToBind.classList.add('rbinder-'+binderName);
                             elementToAdd.classList.remove('coveredAd');
                             break;
                         }
@@ -1380,6 +1335,7 @@ function symbolInserter(lordOfElements, containerFor7th) {
                 } else if (containerFor7th[i]['elementPlace'] == 0) {
                     elementToBind = tlArray[0]['element'];
                     elementToBind.parentNode.insertBefore(elementToAdd, elementToBind);
+                    elementToBind.classList.add('rbinder-'+binderName);
                     elementToAdd.classList.remove('coveredAd');
                 } else {
                     for (let j = 0; j < tlArray.length; j++) {
@@ -1388,6 +1344,7 @@ function symbolInserter(lordOfElements, containerFor7th) {
                             elementToBind = tlArray[j]['element'];
                             elementToBind = currentElementReceiverSpec(false, j, tlArray, elementToBind);
                             elementToBind.parentNode.insertBefore(elementToAdd, elementToBind.nextSibling);
+                            elementToBind.classList.add('rbinder-'+binderName);
                             elementToAdd.classList.remove('coveredAd');
                             break;
                         }
@@ -1409,7 +1366,12 @@ function percentInserter(lordOfElements, containerFor6th) {
         var textLength;
         var textNeedyLength = 0;
         var arrCouLast = [];
-        var possibleTagsArray = ["P", "H1", "H2", "H3", "H4", "H5", "H6", "DIV", "OL", "UL", "LI", "BLOCKQUOTE", "INDEX", "TABLE", "ARTICLE"];
+        var possibleTagsArray;
+        if (typeof tagsListForTextLength!=="undefined") {
+            possibleTagsArray = tagsListForTextLength;
+        } else {
+            possibleTagsArray = ["P", "H1", "H2", "H3", "H4", "H5", "H6", "DIV", "OL", "UL", "LI", "BLOCKQUOTE", "INDEX", "TABLE", "ARTICLE"];
+        }
         var possibleTagsInCheck = ["DIV", "INDEX"];
         let elementToAdd;
         var elementToBind;
@@ -1418,6 +1380,7 @@ function percentInserter(lordOfElements, containerFor6th) {
         let tlArray = [];
         let tlArrayCou = 0;
         let excArr = [];
+        var binderName;
         /* var checkIfBlockUsed = 0; */
 
         function textLengthGathererNew(lordOfElementsLoc, excArr) {
@@ -1486,6 +1449,19 @@ function percentInserter(lordOfElements, containerFor6th) {
             return true;
         }
 
+        function possibleTagsInCheckConfirmer(possibleTagsArray, possibleTagsInCheck) {
+            if (possibleTagsArray.includes("LI")) {
+                if (possibleTagsArray.includes("UL")) {
+                    possibleTagsInCheck.push("UL");
+                }
+                if (possibleTagsArray.includes("OL")) {
+                    possibleTagsInCheck.push("OL");
+                }
+            }
+
+            return false;
+        }
+
         function insertByPercents() {
             let localMiddleValue = 0;
 
@@ -1493,12 +1469,15 @@ function percentInserter(lordOfElements, containerFor6th) {
                 textNeedyLength = Math.round(textLength * (containerFor6th[j]["elementPlace"]/100));
                 for (let i = 0; i < tlArray.length; i++) {
                     if (tlArray[i]['lengthSum'] >= textNeedyLength) {
+                        binderName = elementBinderNameGenerator();
+
                         elementToAdd = document.createElement("div");
                         elementToAdd.classList.add("percentPointerClass");
                         elementToAdd.classList.add("marked");
                         if (containerFor6th[j]["sc"]==1) {
                             elementToAdd.classList.add("scMark");
                         }
+                        elementToAdd.dataset.rbinder = binderName;
                         elementToAdd.innerHTML = containerFor6th[j]["text"];
                         if (!elementToAdd) {
                             break;
@@ -1522,6 +1501,7 @@ function percentInserter(lordOfElements, containerFor6th) {
                         } else {
                             elementToBind.parentNode.insertBefore(elementToAdd, elementToBind.nextSibling);
                         }
+                        elementToBind.classList.add('rbinder-'+binderName);
                         elementToAdd.classList.remove('coveredAd');
                         break;
                     }
@@ -1543,6 +1523,7 @@ function percentInserter(lordOfElements, containerFor6th) {
         if (!document.getElementById("markedSpan")) {
             textLength = 0;
             excArr = excIdClUnpacker();
+            possibleTagsInCheckConfirmer(possibleTagsArray, possibleTagsInCheck);
             textLengthGathererNew(lordOfElements, excArr);
             insertByPercents();
             clearTlMarks();
@@ -1622,8 +1603,69 @@ function gatherContentBlock() {
         }, 500);
     }
 }
+
+function removeMarginClass(blockObject) {
+    if (blockObject&&(typeof jsInputerLaunch==='object')) {
+        let binderName,
+            neededElement,
+            currentDirection,
+            seekerIterationCount,
+            currentSubling;
+
+        binderName = blockObject.dataset.rbinder;
+        if (binderName) {
+            seekerIterationCount = 0;
+            currentDirection = 'before';
+            do {
+                seekerIterationCount++;
+                currentSubling = blockObject.previousSibling;
+                if (currentSubling&&currentSubling.classList.contains('rbinder-'+binderName)) {
+                    neededElement = currentSubling;
+                }
+            } while (currentSubling&&!neededElement&&seekerIterationCount < 5);
+
+            if (!neededElement) {
+                seekerIterationCount = 0;
+                currentDirection = 'after';
+                do {
+                    seekerIterationCount++;
+                    currentSubling = blockObject.previousSibling;
+                    if (currentSubling&&currentSubling.classList.contains('rbinder-'+binderName)) {
+                        neededElement = currentSubling;
+                    }
+                } while (currentSubling&&!neededElement&&seekerIterationCount < 5);
+            }
+            // neededElement = document.querySelector('.rfwp_removedMarginTop.rbinder-'+binderName+', .rfwp_removedMarginBottom.rbinder-'+binderName);
+            if (neededElement) {
+                if (currentDirection === 'before') {
+                    neededElement.classList.remove('rfwp_removedMarginTop');
+                } else {
+                    neededElement.classList.remove('rfwp_removedMarginBottom');
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+function elementBinderNameGenerator() {
+    let binderName = '',
+        checkedElements,
+        passed = false;
+
+    while (passed===false) {
+        binderName = Math.floor(Math.random()*100000);
+        checkedElements = document.querySelectorAll('[data-rbinder="'+binderName+'"]');
+        if (checkedElements.length < 1) {
+            passed = true;
+        }
+    }
+
+    return binderName;
+}
 /* if ((typeof jsInputerLaunch!=='undefined'&&[10,15].includes(jsInputerLaunch))&&(document.readyState === "complete" || (document.readyState !== "loading" && !document.documentElement.doScroll))) {
     gatherContentBlock();
 } else {
     setTimeout(gatherContentBlock,100);
-} */
+} /**/

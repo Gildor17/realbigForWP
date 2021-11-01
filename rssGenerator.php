@@ -11,16 +11,15 @@ try {
 			$messageFLog = 'point_dop 1;';
 			error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_rssCheckLog);
 
-//			include_once (dirname(__FILE__).'/rssGenerator.php');
 			$posts = [];
 			$rb_rssFeedUrls = [];
 			$rssPartsCount = 1;
 			$rssOptions = RFWP_rssOptionsGet();
 			$postTypes = $rssOptions['typesPost'];
-			$feedTrashName = 'rb_turbo_trash_rss';
-			add_feed($feedTrashName, 'RFWP_rssCreate');
-			$feedName = 'rb_turbo_rss';
-			add_feed($feedName, 'RFWP_rssCreate');
+			$feedName = $rssOptions['name'];
+
+            add_feed($feedName, 'RFWP_rssCreate');
+
 			array_push($rb_rssFeedUrls, $feedName);
 			if (!empty($postTypes)) {
 				$tax_query = RFWP_rss_taxonomy_get($rssOptions);
@@ -52,7 +51,6 @@ try {
 					$feed = [];
 					for ($cou = 0; $cou < $rssPartsCount; $cou++) {
 						if ($cou > 0) {
-							$feedName = 'rb_turbo_rss';
 							if (get_option('permalink_structure')) {
 								$feedPage = '/?paged='.($cou+1);
 							} else {
@@ -72,8 +70,8 @@ try {
 			$messageFLog = 'point_dop 3;';
 			error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_rssCheckLog);
 
-//			global $wp_rewrite;
-//			$wp_rewrite->flush_rules(false);
+			global $wp_rewrite;
+			$wp_rewrite->flush_rules(false);
 		}
 	}
 	// rss init end
@@ -195,6 +193,11 @@ try {
 		    $content = str_replace('<!--[if lt IE 9]><script>document.createElement(\'video\');</script><![endif]-->', '', $content);
 		    $pattern = "/<video class=\"wp-video-shortcode\"(.*?)><source(.*?)src=\"(.*?).mp4(.*?)\"(.*?)\/>(.*?)<\/video>/i";
 		    $replacement = '<figure><video><source src="$3.mp4" type="video/mp4" /></video><img src="'.$purl.'/img/video.png'.'" /></figure>';
+		    $content = preg_replace($pattern, $replacement, $content);
+
+		    //add "formaction" in buttons
+		    $pattern = "~\<button([^>]*?)\>~i";
+		    $replacement = '<button formaction="tel:+38(123)456-78-90" $1>';
 		    $content = preg_replace($pattern, $replacement, $content);
 
 		    //удаляем картинки из контента, если их больше 50 уникальных (ограничение яндекс.турбо)
@@ -416,229 +419,235 @@ try {
 	if (!function_exists('RFWP_rssOptionsGet')) {
 	    function RFWP_rssOptionsGet() {
 	        global $rb_testCheckLog;
-		    $rssOptions = [];
-		    $rssOptions['contentType'] = 'application/rss+xml';
-		    $rssOptions['charset'] = 'UTF-8';
-		    $rssOptions['analytics'] = null;
-		    $rssOptions['adNetwork'] = null;
-		    $rssOptions['version'] = '0.5';
-		    // 1st part
-		    $rssOptions['name'] = 'test_name';
-		    $rssOptions['title'] = 'test_title';
-		    $rssOptions['url'] = 'http://dwfg.site';
-		    $rssOptions['description'] = 'test_desc';
-		    $rssOptions['lang'] = 'RU';
-		    $rssOptions['pagesCount'] = 5;
-		    $rssOptions['divide'] = false;
-		    $rssOptions['rssPartsSeparated'] = 5;
-		    $rssOptions['selectiveOff'] = false;
-		    $rssOptions['selectiveOffTracking'] = false;
-		    $rssOptions['selectiveOffField'] = '';
-		    $rssOptions['onTurbo'] = true;
-		    $rssOptions['onOffProtocol'] = 'default';
-		    // 2nd part
-		    $rssOptions['PostDate'] = false;
-		    $rssOptions['PostDateType'] = 'create';
-		    $rssOptions['PostExcerpt'] = false;
-		    $rssOptions['PostTitle'] = false;
-		    $rssOptions['SeoPlugin'] = 'yoast_seo';
-		    $rssOptions['Thumbnails'] = false;
-		    $rssOptions['ThumbnailsSize'] = 'thumbnail';
-		    $rssOptions['PostAuthor'] = 'disable';
-		    $rssOptions['PostAuthorDirect'] = 'local_test_author';
-		    $rssOptions['ImageDesc'] = 'disable';
-		    $rssOptions['toc'] = false;
-		    $rssOptions['tocPostTypes'] = false;
-		    $rssOptions['tocTitleText'] = 'default_toc_title';
-		    $rssOptions['tocPosition'] = 'postBegin';
-		    $rssOptions['tocTitlesMin'] = 2;
-		    $rssOptions['tocTitlesLevels'] = false;
-		    // 3rd part
-		    $rssOptions['menu']= 'not_use';
-            $rssOptions['blockShare']= false;
-            $rssOptions['blockShareSocials']= false;
-            $rssOptions['blockShareOrder']= false;
-            $rssOptions['blockFeedback']= false;
-            $rssOptions['blockFeedbackPosition']= 'left';
-            $rssOptions['blockFeedbackPositionPlace']= 'begin';
-            $rssOptions['blockFeedbackPositionTitle']= 'pos_title';
-            $rssOptions['blockFeedbackButton']= false;
-            $rssOptions['blockFeedbackButtonOrder']= false;
-            $rssOptions['blockFeedbackButtonContacts']= 'empty';
-            $rssOptions['blockFeedbackButtonContactsCall']= false;
-            $rssOptions['blockFeedbackButtonContactsCallbackEmail']= false;
-            $rssOptions['blockFeedbackButtonContactsCallbackOrganizationName']= false;
-            $rssOptions['blockFeedbackButtonContactsCallbackTermsOfUse']= false;
-            $rssOptions['blockFeedbackButtonContactsChat']= false;
-            $rssOptions['blockFeedbackButtonContactsMail']= false;
-            $rssOptions['blockFeedbackButtonContactsVkontakte']= false;
-            $rssOptions['blockFeedbackButtonContactsOdnoklassniki']= false;
-            $rssOptions['blockFeedbackButtonContactsTwitter']= false;
-            $rssOptions['blockFeedbackButtonContactsFacebook']= false;
-            $rssOptions['blockFeedbackButtonContactsViber']= false;
-            $rssOptions['blockFeedbackButtonContactsWhatsapp']= false;
-            $rssOptions['blockFeedbackButtonContactsTelegram']= false;
-            $rssOptions['blockComments']= false;
-            $rssOptions['blockCommentsAvatars']= false;
-            $rssOptions['blockCommentsCount']= false;
-            $rssOptions['blockCommentsSort']= 'new_in_begin';
-            $rssOptions['blockCommentsDate']= false;
-            $rssOptions['blockCommentsTree']= false;
-            $rssOptions['blockRelated']= false;
-            $rssOptions['blockRelatedCount']= false;
-            $rssOptions['blockRelatedDateLimitation']= false;
-            $rssOptions['blockRelatedThumb']= false;
-            $rssOptions['blockRelatedUnstopable']= false;
-            $rssOptions['blockRelatedCaching']= false;
-            $rssOptions['blockRelatedCachelifetime']= false;
-            $rssOptions['blockRating']= false;
-            $rssOptions['blockRatingFrom']= false;
-            $rssOptions['blockRatingTo']= false;
-            $rssOptions['blockSearch']= false;
-            $rssOptions['blockSearchDefaultText']= false;
-            $rssOptions['blockSearchPosition']= 'postBegin';
-		    // 4th part
-		    $rssOptions['couYandexMetrics']= '';
-            $rssOptions['couLiveInternet']= '';
-            $rssOptions['couGoogleAnalytics']= '';
-		    // 5th part
-		    $rssOptions['typesPost']= false;
-		    $rssOptions['typesIncludes']= false;
-		    $rssOptions['typesTaxExcludes']= false;
-		    $rssOptions['typesTaxIncludes']= false;
-		    $rssOptions['typesInAdminCol']= false;
-		    // 6th part
-		    $rssOptions['filterSc']= false;
-		    $rssOptions['filterScField']= '';
-		    $rssOptions['filterTagsWithoutContent']= false;
-		    $rssOptions['filterTagsWithoutContentField']= '';
-		    $rssOptions['filterTagsWithContent']= false;
-		    $rssOptions['filterTagsWithContentField']= '';
-		    $rssOptions['filterContent']= false;
-		    $rssOptions['filterContentField']= '';
-		    // 7th part
-		    $rssOptions['template-post']= '';
-		    $rssOptions['template-page']= '';
-		    $rssOptions['template-pro_tag']= '';
+	        if (!empty($GLOBALS['rssOptions'])) {
+	            $rssOptions = $GLOBALS['rssOptions'];
+            } else {
+		        $rssOptions = [];
+		        $rssOptions['contentType'] = 'application/rss+xml';
+		        $rssOptions['charset'] = 'UTF-8';
+		        $rssOptions['analytics'] = null;
+		        $rssOptions['adNetwork'] = null;
+		        $rssOptions['version'] = '0.5';
+		        // 1st part
+		        $rssOptions['name'] = 'rb_turbo_rss';
+		        $rssOptions['title'] = 'test_title';
+		        $rssOptions['url'] = RFWP_getDomain();
+		        $rssOptions['description'] = 'test_desc';
+		        $rssOptions['lang'] = 'RU';
+		        $rssOptions['pagesCount'] = 5;
+		        $rssOptions['divide'] = false;
+		        $rssOptions['rssPartsSeparated'] = 5;
+		        $rssOptions['selectiveOff'] = false;
+		        $rssOptions['selectiveOffTracking'] = false;
+		        $rssOptions['selectiveOffField'] = '';
+		        $rssOptions['onTurbo'] = true;
+		        $rssOptions['onOffProtocol'] = 'default';
+		        // 2nd part
+		        $rssOptions['PostDate'] = false;
+		        $rssOptions['PostDateType'] = 'create';
+		        $rssOptions['PostExcerpt'] = false;
+		        $rssOptions['PostTitle'] = false;
+		        $rssOptions['SeoPlugin'] = 'yoast_seo';
+		        $rssOptions['Thumbnails'] = false;
+		        $rssOptions['ThumbnailsSize'] = 'thumbnail';
+		        $rssOptions['PostAuthor'] = 'disable';
+		        $rssOptions['PostAuthorDirect'] = 'local_test_author';
+		        $rssOptions['ImageDesc'] = 'disable';
+		        $rssOptions['toc'] = false;
+		        $rssOptions['tocPostTypes'] = false;
+		        $rssOptions['tocTitleText'] = 'default_toc_title';
+		        $rssOptions['tocPosition'] = 'postBegin';
+		        $rssOptions['tocTitlesMin'] = 2;
+		        $rssOptions['tocTitlesLevels'] = false;
+		        // 3rd part
+		        $rssOptions['menu']= 'not_use';
+		        $rssOptions['blockShare']= false;
+		        $rssOptions['blockShareSocials']= false;
+		        $rssOptions['blockShareOrder']= false;
+		        $rssOptions['blockFeedback']= false;
+		        $rssOptions['blockFeedbackPosition']= 'left';
+		        $rssOptions['blockFeedbackPositionPlace']= 'begin';
+		        $rssOptions['blockFeedbackPositionTitle']= 'pos_title';
+		        $rssOptions['blockFeedbackButton']= false;
+		        $rssOptions['blockFeedbackButtonOrder']= false;
+		        $rssOptions['blockFeedbackButtonContacts']= 'empty';
+		        $rssOptions['blockFeedbackButtonContactsCall']= false;
+		        $rssOptions['blockFeedbackButtonContactsCallbackEmail']= false;
+		        $rssOptions['blockFeedbackButtonContactsCallbackOrganizationName']= false;
+		        $rssOptions['blockFeedbackButtonContactsCallbackTermsOfUse']= false;
+		        $rssOptions['blockFeedbackButtonContactsChat']= false;
+		        $rssOptions['blockFeedbackButtonContactsMail']= false;
+		        $rssOptions['blockFeedbackButtonContactsVkontakte']= false;
+		        $rssOptions['blockFeedbackButtonContactsOdnoklassniki']= false;
+		        $rssOptions['blockFeedbackButtonContactsTwitter']= false;
+		        $rssOptions['blockFeedbackButtonContactsFacebook']= false;
+		        $rssOptions['blockFeedbackButtonContactsViber']= false;
+		        $rssOptions['blockFeedbackButtonContactsWhatsapp']= false;
+		        $rssOptions['blockFeedbackButtonContactsTelegram']= false;
+		        $rssOptions['blockComments']= false;
+		        $rssOptions['blockCommentsAvatars']= false;
+		        $rssOptions['blockCommentsCount']= false;
+		        $rssOptions['blockCommentsSort']= 'new_in_begin';
+		        $rssOptions['blockCommentsDate']= false;
+		        $rssOptions['blockCommentsTree']= false;
+		        $rssOptions['blockRelated']= false;
+		        $rssOptions['blockRelatedCount']= false;
+		        $rssOptions['blockRelatedDateLimitation']= false;
+		        $rssOptions['blockRelatedThumb']= false;
+		        $rssOptions['blockRelatedUnstopable']= false;
+		        $rssOptions['blockRelatedCaching']= false;
+		        $rssOptions['blockRelatedCachelifetime']= false;
+		        $rssOptions['blockRating']= false;
+		        $rssOptions['blockRatingFrom']= false;
+		        $rssOptions['blockRatingTo']= false;
+		        $rssOptions['blockSearch']= false;
+		        $rssOptions['blockSearchDefaultText']= false;
+		        $rssOptions['blockSearchPosition']= 'postBegin';
+		        // 4th part
+		        $rssOptions['couYandexMetrics']= '';
+		        $rssOptions['couLiveInternet']= '';
+		        $rssOptions['couGoogleAnalytics']= '';
+		        // 5th part
+		        $rssOptions['typesPost']= false;
+		        $rssOptions['typesIncludes']= false;
+		        $rssOptions['typesTaxExcludes']= false;
+		        $rssOptions['typesTaxIncludes']= false;
+		        $rssOptions['typesInAdminCol']= false;
+		        // 6th part
+		        $rssOptions['filterSc']= false;
+		        $rssOptions['filterScField']= '';
+		        $rssOptions['filterTagsWithoutContent']= false;
+		        $rssOptions['filterTagsWithoutContentField']= '';
+		        $rssOptions['filterTagsWithContent']= false;
+		        $rssOptions['filterTagsWithContentField']= '';
+		        $rssOptions['filterContent']= false;
+		        $rssOptions['filterContentField']= '';
+		        // 7th part
+		        $rssOptions['template-post']= '';
+		        $rssOptions['template-page']= '';
+		        $rssOptions['template-pro_tag']= '';
 
-		    $namesMap = [
-                // 1st part
-			    'name' => 'feedName',
-			    'title' => 'feedTitle',
-			    'url' => 'feedUrl',
-			    'description' => 'feedDescription',
-			    'lang' => 'feedLanguage',
-			    'pagesCount' => 'feedPostCount',
-			    'divide' => 'feedSeparate',
-			    'rssPartsSeparated' => 'feedSeparateCount',
-			    'selectiveOff' => 'feedSelectiveOff',
-			    'selectiveOffTracking' => 'feedSelectiveOffTracking',
-			    'selectiveOffField' => 'feedSelectiveOffField',
-			    'onTurbo' => 'feedOnOff',
-                'onOffProtocol' => 'feedOnOffProtocol',
-			    // 2nd part
-                'PostDate' => 'feedPostDate',
-                'PostDateType' => 'feedPostDateType',
-                'PostExcerpt' => 'feedPostExcerpt',
-                'PostTitle' => 'feedPostTitle',
-			    'SeoPlugin' => 'feedSeoPlugin',
-                'Thumbnails' => 'feedThumbnails',
-                'ThumbnailsSize' => 'feedThumbnailsSize',
-                'PostAuthor' => 'feedPostAuthor',
-                'PostAuthorDirect' => 'feedPostAuthorDirect',
-                'ImageDesc' => 'feedImageDesc',
-			    'toc' => 'feedToc',
-			    'tocPostTypes' => 'feedTocPostTypes',
-                'tocTitleText' => 'feedTocTitleText',
-                'tocPosition' => 'feedTocPosition',
-                'tocTitlesMin' => 'feedTocTitlesMin',
-                'tocTitlesLevels' => 'feedTocTitlesLevels',
-			    // 3rd part
-			    'menu' => 'feedMenu',
-                'blockShare' => 'feedBlockShare',
-                'blockShareSocials' => 'feedBlockShareSocials',
-                'blockShareOrder' => 'feedBlockShareOrder',
-                'blockFeedback' => 'feedBlockFeedback',
-                'blockFeedbackPosition' => 'feedBlockFeedbackPosition',
-                'blockFeedbackPositionPlace' => 'feedBlockFeedbackPositionPlace',
-                'blockFeedbackPositionTitle' => 'feedBlockFeedbackPositionTitle',
-                'blockFeedbackButton' => 'feedBlockFeedbackButton',
-                'blockFeedbackButtonOrder' => 'feedBlockFeedbackButtonOrder',
-                'blockFeedbackButtonContacts' => 'feedBlockFeedbackButtonContacts',
-                'blockFeedbackButtonContactsCall' => 'feedBlockFeedbackButtonContactsCall',
-                'blockFeedbackButtonContactsCallbackEmail' => 'feedBlockFeedbackButtonContactsCallbackEmail',
-                'blockFeedbackButtonContactsCallbackOrganizationName' => 'feedBlockFeedbackButtonContactsCallbackOrganizationName',
-                'blockFeedbackButtonContactsCallbackTermsOfUse' => 'feedBlockFeedbackButtonContactsCallbackTermsOfUse',
-                'blockFeedbackButtonContactsChat' => 'feedBlockFeedbackButtonContactsChat',
-                'blockFeedbackButtonContactsMail' => 'feedBlockFeedbackButtonContactsMail',
-                'blockFeedbackButtonContactsVkontakte' => 'feedBlockFeedbackButtonContactsVkontakte',
-                'blockFeedbackButtonContactsOdnoklassniki' => 'feedBlockFeedbackButtonContactsOdnoklassniki',
-                'blockFeedbackButtonContactsTwitter' => 'feedBlockFeedbackButtonContactsTwitter',
-                'blockFeedbackButtonContactsFacebook' => 'feedBlockFeedbackButtonContactsFacebook',
-                'blockFeedbackButtonContactsViber' => 'feedBlockFeedbackButtonContactsViber',
-                'blockFeedbackButtonContactsWhatsapp' => 'feedBlockFeedbackButtonContactsWhatsapp',
-                'blockFeedbackButtonContactsTelegram' => 'feedBlockFeedbackButtonContactsTelegram',
-                'blockComments' => 'feedBlockComments',
-                'blockCommentsAvatars' => 'feedBlockCommentsAvatars',
-                'blockCommentsCount' => 'feedBlockCommentsCount',
-                'blockCommentsSort' => 'feedBlockCommentsSort',
-                'blockCommentsDate' => 'feedBlockCommentsDate',
-                'blockCommentsTree' => 'feedBlockCommentsTree',
-                'blockRelated' => 'feedBlockRelated',
-                'blockRelatedCount' => 'feedBlockRelatedCount',
-                'blockRelatedDateLimitation' => 'feedBlockRelatedDateLimitation',
-                'blockRelatedThumb' => 'feedBlockRelatedThumb',
-                'blockRelatedUnstopable' => 'feedBlockRelatedUnstopable',
-                'blockRelatedCaching' => 'feedBlockRelatedCaching',
-                'blockRelatedCachelifetime' => 'feedBlockRelatedCachelifetime',
-                'blockRating' => 'feedBlockRating',
-                'blockRatingFrom' => 'feedBlockRatingFrom',
-                'blockRatingTo' => 'feedBlockRatingTo',
-                'blockSearch' => 'feedBlockSearch',
-                'blockSearchDefaultText' => 'feedBlockSearchDefaultText',
-                'blockSearchPosition' => 'feedBlockSearchPosition',
-                // 4th part
-			    'couYandexMetrics' => 'feedCouYandexMetrics',
-			    'couLiveInternet' => 'feedCouLiveInternet',
-			    'couGoogleAnalytics' => 'feedCouGoogleAnalytics',
-                // 5th part
-			    'typesPost' => 'feedTypesPost',
-			    'typesIncludes' => 'feedTypesIncludes',
-			    'typesTaxExcludes' => 'feedTypesTaxExcludes',
-			    'typesTaxIncludes' => 'feedTypesTaxIncludes',
-			    'typesInAdminCol' => 'feedTypesInAdminCol',
-			    // 6th part
-			    'filterSc' => 'feedFilterSc',
-			    'filterScField' => 'feedFilterScField',
-			    'filterTagsWithoutContent' => 'feedFilterTagsWithoutContent',
-			    'filterTagsWithoutContentField' => 'feedFilterTagsWithoutContentField',
-			    'filterTagsWithContent' => 'feedFilterTagsWithContent',
-			    'filterTagsWithContentField' => 'feedFilterTagsWithContentField',
-			    'filterContent' => 'feedFilterContent',
-			    'filterContentField' => 'feedFilterContentField',
-			    // 7th par,
-			    'template-post'=> 'feedTemplatePost',
-			    'template-page'=> 'feedTemplatePage',
-			    'template-pro_tag'=> 'feedTemplateProTag',
-		    ];
+		        $namesMap = [
+			        // 1st part
+			        'name' => 'feedName',
+			        'title' => 'feedTitle',
+			        'url' => 'feedUrl',
+			        'description' => 'feedDescription',
+			        'lang' => 'feedLanguage',
+			        'pagesCount' => 'feedPostCount',
+			        'divide' => 'feedSeparate',
+			        'rssPartsSeparated' => 'feedSeparateCount',
+			        'selectiveOff' => 'feedSelectiveOff',
+			        'selectiveOffTracking' => 'feedSelectiveOffTracking',
+			        'selectiveOffField' => 'feedSelectiveOffField',
+			        'onTurbo' => 'feedOnOff',
+			        'onOffProtocol' => 'feedOnOffProtocol',
+			        // 2nd part
+			        'PostDate' => 'feedPostDate',
+			        'PostDateType' => 'feedPostDateType',
+			        'PostExcerpt' => 'feedPostExcerpt',
+			        'PostTitle' => 'feedPostTitle',
+			        'SeoPlugin' => 'feedSeoPlugin',
+			        'Thumbnails' => 'feedThumbnails',
+			        'ThumbnailsSize' => 'feedThumbnailsSize',
+			        'PostAuthor' => 'feedPostAuthor',
+			        'PostAuthorDirect' => 'feedPostAuthorDirect',
+			        'ImageDesc' => 'feedImageDesc',
+			        'toc' => 'feedToc',
+			        'tocPostTypes' => 'feedTocPostTypes',
+			        'tocTitleText' => 'feedTocTitleText',
+			        'tocPosition' => 'feedTocPosition',
+			        'tocTitlesMin' => 'feedTocTitlesMin',
+			        'tocTitlesLevels' => 'feedTocTitlesLevels',
+			        // 3rd part
+			        'menu' => 'feedMenu',
+			        'blockShare' => 'feedBlockShare',
+			        'blockShareSocials' => 'feedBlockShareSocials',
+			        'blockShareOrder' => 'feedBlockShareOrder',
+			        'blockFeedback' => 'feedBlockFeedback',
+			        'blockFeedbackPosition' => 'feedBlockFeedbackPosition',
+			        'blockFeedbackPositionPlace' => 'feedBlockFeedbackPositionPlace',
+			        'blockFeedbackPositionTitle' => 'feedBlockFeedbackPositionTitle',
+			        'blockFeedbackButton' => 'feedBlockFeedbackButton',
+			        'blockFeedbackButtonOrder' => 'feedBlockFeedbackButtonOrder',
+			        'blockFeedbackButtonContacts' => 'feedBlockFeedbackButtonContacts',
+			        'blockFeedbackButtonContactsCall' => 'feedBlockFeedbackButtonContactsCall',
+			        'blockFeedbackButtonContactsCallbackEmail' => 'feedBlockFeedbackButtonContactsCallbackEmail',
+			        'blockFeedbackButtonContactsCallbackOrganizationName' => 'feedBlockFeedbackButtonContactsCallbackOrganizationName',
+			        'blockFeedbackButtonContactsCallbackTermsOfUse' => 'feedBlockFeedbackButtonContactsCallbackTermsOfUse',
+			        'blockFeedbackButtonContactsChat' => 'feedBlockFeedbackButtonContactsChat',
+			        'blockFeedbackButtonContactsMail' => 'feedBlockFeedbackButtonContactsMail',
+			        'blockFeedbackButtonContactsVkontakte' => 'feedBlockFeedbackButtonContactsVkontakte',
+			        'blockFeedbackButtonContactsOdnoklassniki' => 'feedBlockFeedbackButtonContactsOdnoklassniki',
+			        'blockFeedbackButtonContactsTwitter' => 'feedBlockFeedbackButtonContactsTwitter',
+			        'blockFeedbackButtonContactsFacebook' => 'feedBlockFeedbackButtonContactsFacebook',
+			        'blockFeedbackButtonContactsViber' => 'feedBlockFeedbackButtonContactsViber',
+			        'blockFeedbackButtonContactsWhatsapp' => 'feedBlockFeedbackButtonContactsWhatsapp',
+			        'blockFeedbackButtonContactsTelegram' => 'feedBlockFeedbackButtonContactsTelegram',
+			        'blockComments' => 'feedBlockComments',
+			        'blockCommentsAvatars' => 'feedBlockCommentsAvatars',
+			        'blockCommentsCount' => 'feedBlockCommentsCount',
+			        'blockCommentsSort' => 'feedBlockCommentsSort',
+			        'blockCommentsDate' => 'feedBlockCommentsDate',
+			        'blockCommentsTree' => 'feedBlockCommentsTree',
+			        'blockRelated' => 'feedBlockRelated',
+			        'blockRelatedCount' => 'feedBlockRelatedCount',
+			        'blockRelatedDateLimitation' => 'feedBlockRelatedDateLimitation',
+			        'blockRelatedThumb' => 'feedBlockRelatedThumb',
+			        'blockRelatedUnstopable' => 'feedBlockRelatedUnstopable',
+			        'blockRelatedCaching' => 'feedBlockRelatedCaching',
+			        'blockRelatedCachelifetime' => 'feedBlockRelatedCachelifetime',
+			        'blockRating' => 'feedBlockRating',
+			        'blockRatingFrom' => 'feedBlockRatingFrom',
+			        'blockRatingTo' => 'feedBlockRatingTo',
+			        'blockSearch' => 'feedBlockSearch',
+			        'blockSearchDefaultText' => 'feedBlockSearchDefaultText',
+			        'blockSearchPosition' => 'feedBlockSearchPosition',
+			        // 4th part
+			        'couYandexMetrics' => 'feedCouYandexMetrics',
+			        'couLiveInternet' => 'feedCouLiveInternet',
+			        'couGoogleAnalytics' => 'feedCouGoogleAnalytics',
+			        // 5th part
+			        'typesPost' => 'feedTypesPost',
+			        'typesIncludes' => 'feedTypesIncludes',
+			        'typesTaxExcludes' => 'feedTypesTaxExcludes',
+			        'typesTaxIncludes' => 'feedTypesTaxIncludes',
+			        'typesInAdminCol' => 'feedTypesInAdminCol',
+			        // 6th part
+			        'filterSc' => 'feedFilterSc',
+			        'filterScField' => 'feedFilterScField',
+			        'filterTagsWithoutContent' => 'feedFilterTagsWithoutContent',
+			        'filterTagsWithoutContentField' => 'feedFilterTagsWithoutContentField',
+			        'filterTagsWithContent' => 'feedFilterTagsWithContent',
+			        'filterTagsWithContentField' => 'feedFilterTagsWithContentField',
+			        'filterContent' => 'feedFilterContent',
+			        'filterContentField' => 'feedFilterContentField',
+			        // 7th par,
+			        'template-post'=> 'feedTemplatePost',
+			        'template-page'=> 'feedTemplatePage',
+			        'template-pro_tag'=> 'feedTemplateProTag',
+		        ];
 
-		    $rssOptionsGet = get_option('rb_TurboRssOptions');
-		    if (!empty($rb_testCheckLog)) {
-			    $messageFTestLog = 'turbo options: '.$rssOptionsGet.';';
-			    error_log(PHP_EOL.current_time('mysql').': '.$messageFTestLog.PHP_EOL, 3, $rb_testCheckLog);
+		        $rssOptionsGet = get_option('rb_TurboRssOptions');
+		        if (!empty($rb_testCheckLog)&&!empty($GLOBALS['dev_mode'])) {
+			        $messageFTestLog = 'turbo options: '.$rssOptionsGet.';';
+			        error_log(PHP_EOL.current_time('mysql').': '.$messageFTestLog.PHP_EOL, 3, $rb_testCheckLog);
+		        }
+
+		        if (!empty($rssOptionsGet)) {
+			        $rssOptionsGet = json_decode($rssOptionsGet, true);
+			        if (!empty($rssOptionsGet)) {
+				        foreach ($namesMap AS $k => $item) {
+					        if (isset($rssOptionsGet[$item])) {
+						        $rssOptions[$k] = $rssOptionsGet[$item];
+					        }
+				        }
+				        unset($k,$item);
+			        }
+		        }
+
+		        $GLOBALS['rssOptions'] = $rssOptions;
             }
-
-		    if (!empty($rssOptionsGet)) {
-			    $rssOptionsGet = json_decode($rssOptionsGet, true);
-			    if (!empty($rssOptionsGet)) {
-				    foreach ($namesMap AS $k => $item) {
-				        if (isset($rssOptionsGet[$item])) {
-					        $rssOptions[$k] = $rssOptionsGet[$item];
-                        }
-				    }
-				    unset($k,$item);
-			    }
-		    }
 
 		    return $rssOptions;
 	    }
@@ -790,81 +799,85 @@ try {
 
 				return $content;
 			}
+			return $content;
 		}
     }
 	if (!function_exists('RFWP_rss_block_feedback')) {
 		function RFWP_rss_block_feedback($rssOptions) {
-			if (empty($rssOptions['blockFeedback'])) {
-				return;
+			$content = '';
+			if (empty($rssOptions['blockFeedback'])||empty($rssOptions['blockFeedbackButtonOrder'])) {
+				return $content;
 			}
 
-			$content = PHP_EOL.PHP_EOL.'<div data-block="widget-feedback" data-title="'.$rssOptions['blockFeedbackPositionTitle'].'" data-stick="'.$rssOptions['blockFeedbackPosition'].'">'.PHP_EOL;
+			$content .= PHP_EOL.PHP_EOL.'<div data-block="widget-feedback" data-title="'.$rssOptions['blockFeedbackPositionTitle'].'" data-stick="'.$rssOptions['blockFeedbackPosition'].'">'.PHP_EOL;
 
 			$ytfeedbacknetw = explode(";", $rssOptions['blockFeedbackButtonOrder']);
 			$ytfeedbacknetw = array_diff($ytfeedbacknetw, array(''));
 
-			foreach ($ytfeedbacknetw as $network) {
-				switch ($network) {
-					case 'call':
-						if ($rssOptions['blockFeedbackButtonContactsCall']) {
-							$content .= '<div data-type="call" data-url="'.$rssOptions['blockFeedbackButtonContactsCall'].'"></div>'.PHP_EOL;
-						}
-						break;
-					case 'callback':
-						if ($rssOptions['blockFeedbackButtonContactsCallbackEmail']) {
-							$content .= '<div data-type="callback" data-send-to="'.$rssOptions['blockFeedbackButtonContactsCallbackEmail'].'"';
-							if ($rssOptions['blockFeedbackButtonContactsCallbackOrganizationName'] && $rssOptions['blockFeedbackButtonContactsCallbackTermsOfUse']) {
-								$content .= ' data-agreement-company="'.stripslashes($rssOptions['blockFeedbackButtonContactsCallbackOrganizationName']).'" data-agreement-link="'.$rssOptions['blockFeedbackButtonContactsCallbackTermsOfUse'].'"';
+			if (!empty($ytfeedbacknetw)) {
+				foreach ($ytfeedbacknetw as $network) {
+					switch ($network) {
+						case 'call':
+							if ($rssOptions['blockFeedbackButtonContactsCall']) {
+								$content .= '<div data-type="call" data-url="'.$rssOptions['blockFeedbackButtonContactsCall'].'"></div>'.PHP_EOL;
 							}
-						}
-						$content .= '></div>'.PHP_EOL;
-						break;
-					case 'chat':
-						$content .= '<div data-type="chat"></div>'.PHP_EOL;
-						break;
-					case 'mail':
-						if ($rssOptions['blockFeedbackButtonContactsMail']) {
-							$content .= '<div data-type="mail" data-url="'.$rssOptions['blockFeedbackButtonContactsMail'].'"></div>'.PHP_EOL;
-						}
-						break;
-					case 'vkontakte':
-						if ($rssOptions['blockFeedbackButtonContactsVkontakte']) {
-							$content .= '<div data-type="vkontakte" data-url="'.$rssOptions['blockFeedbackButtonContactsVkontakte'].'"></div>'.PHP_EOL;
-						}
-						break;
-					case 'odnoklassniki':
-						if ($rssOptions['blockFeedbackButtonContactsOdnoklassniki']) {
-							$content .= '<div data-type="odnoklassniki" data-url="'.$rssOptions['blockFeedbackButtonContactsOdnoklassniki'].'"></div>'.PHP_EOL;
-						}
-						break;
-					case 'twitter':
-						if ($rssOptions['blockFeedbackButtonContactsTwitter']) {
-							$content .= '<div data-type="twitter" data-url="'.$rssOptions['blockFeedbackButtonContactsTwitter'].'"></div>'.PHP_EOL;
-						}
-						break;
-					case 'facebook':
-						if ($rssOptions['blockFeedbackButtonContactsFacebook']) {
-							$content .= '<div data-type="facebook" data-url="'.$rssOptions['blockFeedbackButtonContactsFacebook'].'"></div>'.PHP_EOL;
-						}
-						break;
-					case 'viber':
-						if ($rssOptions['blockFeedbackButtonContactsViber']) {
-							$content .= '<div data-type="viber" data-url="'.$rssOptions['blockFeedbackButtonContactsViber'].'"></div>'.PHP_EOL;
-						}
-						break;
-					case 'whatsapp':
-						if ($rssOptions['blockFeedbackButtonContactsWhatsapp']) {
-							$content .= '<div data-type="whatsapp" data-url="'.$rssOptions['blockFeedbackButtonContactsWhatsapp'].'"></div>'.PHP_EOL;
-						}
-						break;
-					case 'telegram':
-						if ($rssOptions['blockFeedbackButtonContactsTelegram']) {
-							$content .= '<div data-type="telegram" data-url="'.$rssOptions['blockFeedbackButtonContactsTelegram'].'"></div>'.PHP_EOL;
-						}
-						break;
+							break;
+						case 'callback':
+							if ($rssOptions['blockFeedbackButtonContactsCallbackEmail']) {
+								$content .= '<div data-type="callback" data-send-to="'.$rssOptions['blockFeedbackButtonContactsCallbackEmail'].'"';
+								if ($rssOptions['blockFeedbackButtonContactsCallbackOrganizationName'] && $rssOptions['blockFeedbackButtonContactsCallbackTermsOfUse']) {
+									$content .= ' data-agreement-company="'.stripslashes($rssOptions['blockFeedbackButtonContactsCallbackOrganizationName']).'" data-agreement-link="'.$rssOptions['blockFeedbackButtonContactsCallbackTermsOfUse'].'"';
+								}
+							}
+							$content .= '></div>'.PHP_EOL;
+							break;
+						case 'chat':
+							$content .= '<div data-type="chat"></div>'.PHP_EOL;
+							break;
+						case 'mail':
+							if ($rssOptions['blockFeedbackButtonContactsMail']) {
+								$content .= '<div data-type="mail" data-url="'.$rssOptions['blockFeedbackButtonContactsMail'].'"></div>'.PHP_EOL;
+							}
+							break;
+						case 'vkontakte':
+							if ($rssOptions['blockFeedbackButtonContactsVkontakte']) {
+								$content .= '<div data-type="vkontakte" data-url="'.$rssOptions['blockFeedbackButtonContactsVkontakte'].'"></div>'.PHP_EOL;
+							}
+							break;
+						case 'odnoklassniki':
+							if ($rssOptions['blockFeedbackButtonContactsOdnoklassniki']) {
+								$content .= '<div data-type="odnoklassniki" data-url="'.$rssOptions['blockFeedbackButtonContactsOdnoklassniki'].'"></div>'.PHP_EOL;
+							}
+							break;
+						case 'twitter':
+							if ($rssOptions['blockFeedbackButtonContactsTwitter']) {
+								$content .= '<div data-type="twitter" data-url="'.$rssOptions['blockFeedbackButtonContactsTwitter'].'"></div>'.PHP_EOL;
+							}
+							break;
+						case 'facebook':
+							if ($rssOptions['blockFeedbackButtonContactsFacebook']) {
+								$content .= '<div data-type="facebook" data-url="'.$rssOptions['blockFeedbackButtonContactsFacebook'].'"></div>'.PHP_EOL;
+							}
+							break;
+						case 'viber':
+							if ($rssOptions['blockFeedbackButtonContactsViber']) {
+								$content .= '<div data-type="viber" data-url="'.$rssOptions['blockFeedbackButtonContactsViber'].'"></div>'.PHP_EOL;
+							}
+							break;
+						case 'whatsapp':
+							if ($rssOptions['blockFeedbackButtonContactsWhatsapp']) {
+								$content .= '<div data-type="whatsapp" data-url="'.$rssOptions['blockFeedbackButtonContactsWhatsapp'].'"></div>'.PHP_EOL;
+							}
+							break;
+						case 'telegram':
+							if ($rssOptions['blockFeedbackButtonContactsTelegram']) {
+								$content .= '<div data-type="telegram" data-url="'.$rssOptions['blockFeedbackButtonContactsTelegram'].'"></div>'.PHP_EOL;
+							}
+							break;
+					}
 				}
-			}
-			unset($network);
+				unset($network);
+            }
 
 			$content .= '</div>'.PHP_EOL;
 			return $content;
@@ -1405,7 +1418,20 @@ try {
 				$paged = (intval($_GET['paged'])-1);
             }
 
-			if (isset($_GET['feed'])&&$_GET['feed']=='rb_turbo_trash_rss') {
+			$messageFLog = 'values: ';
+			if (isset($_GET)) {
+				$messageFLog .= 'get_string: '.implode(';', $_GET).';';
+				$messageFLog .= 'get_count: '.count($_GET).';';
+            }
+			if (isset($_POST)) {
+				$messageFLog .= 'post_string: '.implode(';', $_POST).';';
+				$messageFLog .= 'post_count: '.count($_POST).';';
+            }
+
+			error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_rssCheckLog);
+
+//			if (isset($_GET['feed'])&&$_GET['feed']=='rb_turbo_trash_rss') {
+			if ($_GET['rb_rss_trash']=='1') {
 //				if (!empty($rssOptions['selectiveOff'])) {
 					RFWP_rss_lenta_trash($rssOptions);
 //				}
@@ -1486,7 +1512,6 @@ try {
                                                 <pubDate><?php echo $item->post_modified_gmt ?> +0300</pubDate>
                                             <?php } ?>
                                         <?php endif; ?>
-                                        <pubDate><?php echo $item->post_date_gmt ?> +0300</pubDate>
                                         <?php if ($rssOptions['PostAuthor'] != 'Отключить указание автора') { ?>
                                             <?php if (!empty($rssOptions['PostAuthorDirect'])&&$rssOptions['PostAuthor'] != 'Автор записи') {
                                                 echo '<author>'.$rssOptions['PostAuthorDirect'].'</author>'.PHP_EOL;
@@ -1615,7 +1640,7 @@ try {
     //											if ($ytad4 == 'enabled' && $ytad4meta != 'disabled') { echo PHP_EOL.'<figure data-turbo-ad-id="fourth_ad_place"></figure>'.PHP_EOL; }
                                                 do_action( 'yturbo_after_share' );
                                             } ?>
-                                            <?php echo $item->post_content ?>
+                                            <?php echo htmlspecialchars_decode($item->post_content) ?>
                                             <?php if (!empty($rssOptions['blockFeedback']) && $rssOptions['blockFeedbackPosition'] == 'false' && $rssOptions['blockFeedbackPositionPlace'] == 'end') {
                                                 echo RFWP_rss_block_feedback($rssOptions);
                                             } ?>
@@ -1807,7 +1832,8 @@ catch (Exception $ex) {
 //	include_once ( dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
 	deactivate_plugins(plugin_basename( __FILE__ ));
 	?><div style="margin-left: 200px; border: 3px solid red"><?php echo $ex; ?></div><?php
-} catch (Error $er) {
+}
+catch (Error $er) {
 	try {
 		global $wpdb;
 		global $rb_logFile;

@@ -6,9 +6,9 @@ try {
 	if (!function_exists('RFWP_my_pl_settings_menu_create')) {
 		function RFWP_my_pl_settings_menu_create() {
 			if (strpos($_SERVER['REQUEST_URI'], 'page=realbigForWP')) {
-				$iconUrl = plugins_url().'/'.basename(__DIR__).'/assets/realbig_plugin_hover.png';
+				$iconUrl = plugins_url().'/'.basename(__DIR__).'/assets/realbig_plugin_hover.svg';
 			} else {
-				$iconUrl = plugins_url().'/'.basename(__DIR__).'/assets/realbig_plugin_standart.png';
+				$iconUrl = plugins_url().'/'.basename(__DIR__).'/assets/realbig_plugin_standart.svg';
 			}
 			add_menu_page( 'Your code sending configuration', 'realBIG', 'administrator', __FILE__, 'RFWP_TokenSync', $iconUrl);
 			add_action('admin_init', 'RFWP_register_mysettings');
@@ -28,7 +28,7 @@ try {
 			global $devMode;
 			RFWP_initTestMode();
 
-			$turboTrashUrl = 'rb_turbo_trash_rss';
+			$turboUrlTemplates = RFWP_generateTurboRssUrls();
 
 			$blocksCounter = 1;
 			$checkDirName = basename(dirname(__FILE__));
@@ -90,6 +90,13 @@ try {
 						}
 					}
 				}
+
+				$cache_clear = get_option('rb_cacheClearAllow');
+				if (!empty($cache_clear)&&$cache_clear=='enabled') {
+					$cache_clear = 'checked';
+                } else {
+					$cache_clear = '';
+                }
 			} catch (Exception $e) {
 				$usedDomain = "domain gathering error";
 				$deacError = "error gathering error";
@@ -156,6 +163,10 @@ try {
                                 <input type="checkbox" name="process_log" id="process_log_id" <?php echo $workProcess ?>>
                             </div>
 						<?php endif; ?>
+                        <div class="element-separator">
+                            <label for="cache_clear">Очистить кэш</label>
+                            <input type="checkbox" name="cache_clear" id="cache_clear_id" <?php echo $cache_clear ?>>
+                        </div>
 						<br>
 						<?php submit_button( 'Синхронизировать', 'primary', 'saveTokenButton' ) ?>
                         <?php if (!empty($devMode)): ?>
@@ -167,32 +178,30 @@ try {
 						<?php if (!empty($GLOBALS['tokenStatusMessage'])): ?>
 							<div name="rezultDiv" style="font-size: 16px"><?php echo $GLOBALS['tokenStatusMessage'] ?></div>
 						<?php endif; ?>
-						<?php if (!empty($checkDirName)&&strpos($checkDirName,'realbigForWP')!==false): ?>
+						<?php /* if (!empty($checkDirName)&&strpos($checkDirName,'realbigForWP')!==false): ?>
 							<?php submit_button('Rename', 'folderRename', 'folderRename') ?>
-						<?php endif; ?>
+						<?php endif; /**/ ?>
                         <?php if (!empty($devMode)): ?>
-                            <?php if (!empty($rb_rssFeedUrls)): ?>
-                                <?php foreach ($rb_rssFeedUrls AS $k => $item): ?>
-                                    <?php if(get_option('permalink_structure')): ?>
-                                        <a target="_blank" href="<?php echo home_url() ?>/feed/<?php echo $item; ?>"><?php echo home_url() ?>/feed/<?php echo $item; ?></a><br>
-                                    <?php else: ?>
-                                        <a target="_blank" href="<?php echo home_url() ?>/?feed=<?php echo $item; ?>"><?php echo home_url() ?>/?feed=<?php echo $item; ?></a><br>
-                                    <?php endif; ?>
-                                <?php endforeach; ?>
-                                <?php unset($k,$item); ?>
-                            <?php endif; ?>
-                        <?php endif; ?>
-                        <div>
-                            <?php if (!empty($devMode)): ?>
+                            <div>
+                                <?php if (!empty($rb_rssFeedUrls)): ?>
+                                    <?php foreach ($rb_rssFeedUrls AS $k => $item): ?>
+                                        <?php if(get_option('permalink_structure')): ?>
+                                            <a target="_blank" href="<?php echo home_url() ?>/feed/<?php echo $item; ?>"><?php echo home_url() ?>/feed/<?php echo $item; ?></a><br>
+                                        <?php else: ?>
+                                            <a target="_blank" href="<?php echo home_url() ?>/?feed=<?php echo $item; ?>"><?php echo home_url() ?>/?feed=<?php echo $item; ?></a><br>
+                                        <?php endif; ?>
+                                    <?php endforeach; ?>
+                                    <?php unset($k,$item); ?>
+                                <?php endif; ?>
                                 <?php // if (!empty($rssOptions['selectiveOff'])): ?>
-                                    <?php if(get_option('permalink_structure')): ?>
-                                        <a target="_blank" href="<?php echo home_url() ?>/feed/<?php echo $turboTrashUrl; ?>"><?php echo home_url() ?>/feed/<?php echo $turboTrashUrl; ?></a><br>
-                                    <?php else: ?>
-                                        <a target="_blank" href="<?php echo home_url() ?>/?feed=<?php echo $turboTrashUrl; ?>"><?php echo home_url() ?>/?feed=<?php echo $turboTrashUrl; ?></a><br>
-                                    <?php endif; ?>
+                                <?php if(get_option('permalink_structure')): ?>
+                                    <a target="_blank" href="<?php echo $turboUrlTemplates['trashRss']; ?>"><?php echo $turboUrlTemplates['trashRss']; ?></a><br>
+                                <?php else: ?>
+                                    <a target="_blank" href="<?php echo $turboUrlTemplates['trashRss']; ?>"><?php echo $turboUrlTemplates['trashRss']; ?></a><br>
+                                <?php endif; ?>
                                 <?php // endif; ?>
-                            <?php endif; ?>
-                        </div>
+                            </div>
+                        <?php endif; ?>
 					</form>
 				</div>
 				<div class="separated-blocks">
