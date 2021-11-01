@@ -50,19 +50,30 @@ try {
             }
 
             private static function autoptimizeCacheClear() {
-                add_action('plugins_loaded', array(get_called_class(), 'autoptimizeCacheClearExecute'));
+	            if (class_exists('autoptimizeCache')&&method_exists(autoptimizeCache::class, 'clearall')) {
+	                self::autoptimizeCacheClearExecute();
+                } else{
+		            add_action('plugins_loaded', array(get_called_class(), 'autoptimizeCacheClearExecute'));
+	            }
+
                 return true;
             }
 
             public static function wpSuperCacheCacheClearExecute() {
                 if (function_exists('wp_cache_clean_cache')) {
-                    wp_cache_clear_cache();
+                    global $file_prefix;
+                    wp_cache_clean_cache($file_prefix, true);
                 }
+                return true;
             }
 
             private static function wpSuperCacheCacheClear() {
-                add_action('plugins_loaded', array(get_called_class(), 'wpSuperCacheCacheClearExecute'));
-                return true;
+	            if (function_exists('wp_cache_clean_cache')) {
+	                self::wpSuperCacheCacheClearExecute();
+                } else {
+		            add_action('plugins_loaded', array(get_called_class(), 'wpSuperCacheCacheClearExecute'));
+                }
+	            return true;
             }
 
             public static function wpFastestCacheCacheClearExecute() {
@@ -73,8 +84,13 @@ try {
             }
 
             private static function wpFastestCacheCacheClear() {
-                add_action('plugins_loaded', array(get_called_class(), 'wpFastestCacheCacheClearExecute'));
-                return true;
+                if (class_exists('WpFastestCache')&&method_exists(WpFastestCache::class, 'deleteCache')) {
+                    self::wpFastestCacheCacheClearExecute();
+                } else {
+	                add_action('plugins_loaded', array(get_called_class(), 'wpFastestCacheCacheClearExecute'));
+                }
+
+	            return true;
             }
 
             public static function w3TotalCacheCacheClearExecute() {
@@ -84,7 +100,12 @@ try {
             }
 
             private static function w3TotalCacheCacheClear() {
-                add_action('plugins_loaded', array(get_called_class(), 'w3TotalCacheCacheClearExecute'));
+	            if (function_exists('w3tc_flush_all')) {
+	                self::w3TotalCacheCacheClearExecute();
+	            } else {
+		            add_action('plugins_loaded', array(get_called_class(), 'w3TotalCacheCacheClearExecute'));
+	            }
+
                 return true;
             }
 
@@ -93,6 +114,7 @@ try {
             }
 
             private static function liteSpeedCacheCacheClear() {
+	            do_action('litespeed_purge_all');
                 add_action('plugins_loaded', array(get_called_class(), 'liteSpeedCacheCacheClearExecute'));
                 return true;
             }

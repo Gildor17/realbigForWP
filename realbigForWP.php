@@ -5,7 +5,7 @@ if (!defined("ABSPATH")) { exit;}
 /*
 Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.3.9
+Version:      0.4.0
 Author:       Realbig Team
 Author URI:   https://realbig.media
 License:      GPLv2 or later
@@ -39,10 +39,15 @@ try {
     if (!isset($GLOBALS['rb_localRotator'])) {
         $GLOBALS['rb_localRotator'] = true;
     }
-    if (!empty($devMode)) {
-	    include_once (dirname(__FILE__).'/rssGenerator.php');
-    }
-    if (!isset($GLOBALS['rb_variables'])) {
+
+	include_once (dirname(__FILE__).'/rssGenerator.php');
+    global $rb_logFile;
+
+	if (function_exists('wp_cookie_constants')) {
+		wp_cookie_constants();
+	}
+
+	if (!isset($GLOBALS['rb_variables'])) {
 	    $GLOBALS['rb_variables'] = [];
     }
     if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
@@ -103,10 +108,10 @@ try {
 	/***************** Test zone ******************************************************************************************/
 	if (!empty($devMode)&&!is_admin()) {
 		include_once (dirname(__FILE__)."/testFunctions.php");
-		$ampCheckResult = RFWP_Amp::detectAmpPage();
 	}
+	$ampCheckResult = RFWP_Amp::detectAmpPage();
 	/** Rss init */
-	if (!empty($devMode)&&function_exists('RFWP_rssInit')) {
+	if (function_exists('RFWP_rssInit')) {
 		add_action('init', 'RFWP_rssInit');
     }
 	/** End of Rss init */
@@ -233,21 +238,40 @@ try {
 //					RFWP_launch_cache_local($getRotator, $getDomain);
 
 					if ($headerParsingResult == true) {
-						?><script type="text/javascript"> rbConfig = {start: performance.now(),rotator:'<?php echo $getRotator ?>'}; </script>
-                        <script type="text/javascript">
-                            let rotatorScript = document.createElement('script');
-                            rotatorScript.src = "//<?php echo $getDomain ?>/<?php echo $getRotator ?>.min.js";
-                            rotatorScript.type = "text/javascript";
-                            rotatorScript.async = true;
-
-                            document.head.append(rotatorScript);
-                        </script><?php
+						echo RFWP_get_rotator_code($getRotator, $getDomain);
 					}
 				}
 				if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
 					RFWP_WorkProgressLog(false,'AD_header_add end');
 				}
 			}
+		}
+		if (!function_exists('RFWP_get_rotator_code')){
+		    function RFWP_get_rotator_code($rotator, $domain) {
+			    global $wpdb;
+			    $getCode = '';
+
+			    $array = $wpdb->get_results('SELECT optionValue FROM '.$GLOBALS['wpPrefix'].'realbig_settings WHERE optionName IN ("rotatorCode")', ARRAY_A);
+
+			    if (!empty($array[0]['optionValue'])) {
+			        $getCode = html_entity_decode($array[0]['optionValue']);
+			    }
+
+			    if (empty($getCode))
+			    {
+			        $getCode = '<script type="text/javascript"> rbConfig = {start: performance.now(),rotator:\'' . $rotator . '\'}; </script>
+                    <script type="text/javascript">
+                        let rotatorScript = document.createElement(\'script\');
+                        rotatorScript.src = "//' .  $domain  . '/' . $rotator . '.min.js";
+                        rotatorScript.type = "text/javascript";
+                        rotatorScript.async = true;
+
+                        document.head.append(rotatorScript);
+                    </script>';
+			    }
+
+			    return $getCode;
+		    }
 		}
 		if (!function_exists('RFWP_push_universal_head_add')) {
 			function RFWP_push_universal_head_add() {
@@ -920,7 +944,15 @@ try {
 			    $sanitized_token = sanitize_text_field($_POST['tokenInput']);
 			    if (RFWP_tokenMDValidate($sanitized_token)==true) {
 				    $sameTokenResult = false;
-				    RFWP_synchronize($sanitized_token, (empty($wpOptionsCheckerSyncTime) ? null : $wpOptionsCheckerSyncTime), $sameTokenResult, $wpPrefix, 'manual');
+				    if (!isset($GLOBALS['RFWP_synchronize_vars'])) {
+					    $GLOBALS['RFWP_synchronize_vars'] = [];
+					    $GLOBALS['RFWP_synchronize_vars']['token'] = $sanitized_token;
+					    $GLOBALS['RFWP_synchronize_vars']['wpOptionsCheckerSyncTime'] = (empty($wpOptionsCheckerSyncTime) ? null : $wpOptionsCheckerSyncTime);
+					    $GLOBALS['RFWP_synchronize_vars']['sameTokenResult'] = $sameTokenResult;
+					    $GLOBALS['RFWP_synchronize_vars']['type'] = 'manual';
+				    }
+
+				    RFWP_synchronizeLaunchAdd();
 			    } else {
 				    $GLOBALS['tokenStatusMessage'] = 'Неверный формат токена';
 				    $messageFLog = 'wrong token format';
@@ -962,6 +994,7 @@ try {
 		add_action('admin_menu', 'RFWP_my_pl_settings_menu_create');
 	}
 	/************ end of token input area *********************************************************************************/
+	add_action( 'after_setup_theme', 'RFWP_saveThemeThumbnailSizes', 5000);
 }
 catch (Exception $ex)
 {

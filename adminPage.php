@@ -28,6 +28,8 @@ try {
 			global $devMode;
 			RFWP_initTestMode();
 
+			RFWP_saveThemeThumbnailSizes();
+
 			$turboUrlTemplates = RFWP_generateTurboRssUrls();
 
 			$blocksCounter = 1;
@@ -181,7 +183,6 @@ try {
 						<?php /* if (!empty($checkDirName)&&strpos($checkDirName,'realbigForWP')!==false): ?>
 							<?php submit_button('Rename', 'folderRename', 'folderRename') ?>
 						<?php endif; /**/ ?>
-                        <?php if (!empty($devMode)): ?>
                             <div>
                                 <?php if (!empty($rb_rssFeedUrls)): ?>
                                     <?php foreach ($rb_rssFeedUrls AS $k => $item): ?>
@@ -193,15 +194,14 @@ try {
                                     <?php endforeach; ?>
                                     <?php unset($k,$item); ?>
                                 <?php endif; ?>
-                                <?php // if (!empty($rssOptions['selectiveOff'])): ?>
-                                <?php if(get_option('permalink_structure')): ?>
-                                    <a target="_blank" href="<?php echo $turboUrlTemplates['trashRss']; ?>"><?php echo $turboUrlTemplates['trashRss']; ?></a><br>
-                                <?php else: ?>
-                                    <a target="_blank" href="<?php echo $turboUrlTemplates['trashRss']; ?>"><?php echo $turboUrlTemplates['trashRss']; ?></a><br>
+                                <?php if (!empty($turboUrlTemplates['trashRss'])): ?>
+                                    <?php if(get_option('permalink_structure')): ?>
+                                        <a target="_blank" href="<?php echo $turboUrlTemplates['trashRss']; ?>"><?php echo $turboUrlTemplates['trashRss']; ?></a><br>
+                                    <?php else: ?>
+                                        <a target="_blank" href="<?php echo $turboUrlTemplates['trashRss']; ?>"><?php echo $turboUrlTemplates['trashRss']; ?></a><br>
+                                    <?php endif; ?>
                                 <?php endif; ?>
-                                <?php // endif; ?>
                             </div>
-                        <?php endif; ?>
 					</form>
 				</div>
 				<div class="separated-blocks">

@@ -534,7 +534,6 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
         }
 
         function getFromConstructions(currentElement) {
-            let penyok_stoparik = 0;
             if (currentElement.parentElement.tagName.toLowerCase() == "blockquote") {
                 currentElement = currentElement.parentElement;
                 /* initTargetToInsert(blockSettingArray, 'element', currentElement); */
@@ -755,9 +754,9 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
                 if (!blockSettingArray[i]["text"]
                     ||(blockSettingArray[i]["text"]&&blockSettingArray[i]["text"].length < 1)
                     ||(rejectedBlocks&&rejectedBlocks.includes(blockSettingArray[i]["id"]))
-                    ||((blockSettingArray[i]["maxHeaders"] > 0)&&(blockSettingArray[i]["maxHeaders"] < termorarity_parent_with_content_length))
-                    ||((blockSettingArray[i]["maxSymbols"] > 0)&&(blockSettingArray[i]["maxSymbols"] < contentLength)
-                    ||(content_pointer.classList.contains("hard-content")&&blockSettingArray[i]["setting_type"]!=3))
+                    ||((blockSettingArray[i]["maxHeaders"] > 0)&&(blockSettingArray[i]["maxHeaders"] < parseInt(termorarity_parent_with_content_length)))
+                    ||((blockSettingArray[i]["maxSymbols"] > 0)&&(blockSettingArray[i]["maxSymbols"] < parseInt(contentLength)))
+                    ||(content_pointer.classList.contains("hard-content")&&blockSettingArray[i]["setting_type"]!=3)
                 ) {
                     blockSettingArray.splice(i--, 1);
                     poolbackI = 1;
@@ -1213,6 +1212,7 @@ function symbolInserter(lordOfElements, containerFor7th) {
         function textLengthGathererNew(lordOfElementsLoc, excArr) {
             let allowed;
             let cou1;
+            let classesArray;
             try {
                 for (let i = 0; i < lordOfElementsLoc.children.length; i++) {
                     if (possibleTagsArray.includes(lordOfElementsLoc.children[i].tagName)
@@ -1237,7 +1237,8 @@ function symbolInserter(lordOfElements, containerFor7th) {
                             if (lordOfElementsLoc.children[i].classList.length > 0&&excArr['class'].length > 0) {
                                 cou1 = 0;
                                 while (excArr['class'][cou1]) {
-                                    if (lordOfElementsLoc.children[i].classList.contains(excArr['class'][cou1])) {
+                                    classesArray = excArr['class'][cou1].split('.');
+                                    if (classesArray.every(className => lordOfElementsLoc.children[i].classList.contains(className))) {
                                         allowed = false;
                                         break;
                                     }
@@ -1386,6 +1387,7 @@ function percentInserter(lordOfElements, containerFor6th) {
         function textLengthGathererNew(lordOfElementsLoc, excArr) {
             let allowed;
             let cou1;
+            let classesArray;
             try {
                 for (let i = 0; i < lordOfElementsLoc.children.length; i++) {
                     if (possibleTagsArray.includes(lordOfElementsLoc.children[i].tagName)
@@ -1410,7 +1412,8 @@ function percentInserter(lordOfElements, containerFor6th) {
                             if (lordOfElementsLoc.children[i].classList.length > 0&&excArr['class'].length > 0) {
                                 cou1 = 0;
                                 while (excArr['class'][cou1]) {
-                                    if (lordOfElementsLoc.children[i].classList.contains(excArr['class'][cou1])) {
+                                    classesArray = excArr['class'][cou1].split('.');
+                                    if (classesArray.every(className => lordOfElementsLoc.children[i].classList.contains(className))) {
                                         allowed = false;
                                         break;
                                     }
@@ -1618,7 +1621,7 @@ function removeMarginClass(blockObject) {
             currentDirection = 'before';
             do {
                 seekerIterationCount++;
-                currentSubling = blockObject.previousSibling;
+                currentSubling = blockObject.nextSibling;
                 if (currentSubling&&currentSubling.classList.contains('rbinder-'+binderName)) {
                     neededElement = currentSubling;
                 }

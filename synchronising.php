@@ -4,15 +4,17 @@ if (!defined("ABSPATH")) { exit;}
 
 try {
 	if (!function_exists('RFWP_synchronize')) {
-		function RFWP_synchronize($tokenInput, $wpOptionsCheckerSyncTime, $sameTokenResult, $wpPrefix, $requestType) {
+		function RFWP_synchronize($tokenInput, $wpOptionsCheckerSyncTime, $sameTokenResult, $requestType) {
 			global $wpdb;
 			global $rb_logFile;
+			apply_filters('the_content', '1');
 			global $shortcode_tags;
+			$wpPrefix = RFWP_getWpPrefix();
 			$shortcodesToSend = array_keys($shortcode_tags);
 			$menuItemList = RFWP_getMenuList();
 			$permalinkStatus = RFWP_checkPermalink();
             $pluginVersion = RFWP_plugin_version();
-            $turboRssUrls = RFWP_generateTurboRssUrls();
+			$rssSelectiveOffField = RFWP_rssSelectiveOffFieldGet();
             $unsuccessfullAjaxSyncAttempt = 0;
 
 			if (!empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
@@ -39,7 +41,7 @@ try {
 			try {
 //    			$url = 'https://realbig.web/api/wp-get-settings';     // orig web post
 //    			$url = 'https://beta.realbig.media/api/wp-get-settings';     // beta post
-                $url = 'https://realbig.media/api/wp-get-settings';     // orig post
+                $url = 'https://wp.realbig.media/api/wp-get-settings';     // orig post
 
                 /** for WP request **/
 				$dataForSending = [
@@ -52,7 +54,7 @@ try {
                         'getMenuList' => json_encode($menuItemList),
                         'otherInfo' => $otherInfo,
                         'pluginVersion' => $pluginVersion,
-                        'turboRssUrls' => $turboRssUrls
+                        'rssSelectiveOffField' => $rssSelectiveOffField
                     ]
 				];
 				try {
@@ -174,6 +176,10 @@ try {
 							        $sanitisedRotator = sanitize_text_field($decodedToken['rotator']);
 								    RFWP_saveToRealbigSettings($sanitisedRotator, 'rotator');
 							    }
+							    if (!empty($decodedToken['rotatorCode'])) {
+							        $sanitisedRotatorCode = sanitize_text_field($decodedToken['rotatorCode']);
+								    RFWP_saveToRealbigSettings($sanitisedRotatorCode, 'rotatorCode');
+							    }
 							    /** Excluded page types */
 							    if (isset($decodedToken['excludedPageTypes'])) {
 							        $excludedPageTypes = sanitize_text_field($decodedToken['excludedPageTypes']);
@@ -266,15 +272,50 @@ try {
 							    /** End of shortcodes */
                                 /** Turbo rss */
                                 if (!empty($decodedToken['turboSettings'])) {
+                                    if (!empty($rssSelectiveOffField['delete'])||!empty($rssSelectiveOffField['restore'])) {
+	                                    $rssSelectiveOffField = RFWP_rssSelectiveOffFieldToArray($rssSelectiveOffField);
+                                        $rbTurboSettings = $decodedToken['turboSettings'];
+                                        if (is_string($rbTurboSettings)) {
+	                                        $rbTurboSettings = json_decode($rbTurboSettings, true);
+                                        }
+                                        if (!empty($rbTurboSettings)&&is_array($rbTurboSettings)&&!empty($rbTurboSettings['feedSelectiveOffField'])) {
+                                            $feedSelectiveOffField = $rbTurboSettings['feedSelectiveOffField'];
+                                            if (is_string($feedSelectiveOffField)) {
+	                                            $feedSelectiveOffField = explode("\n", str_replace(array("\r\n", "\r"), "\n", $feedSelectiveOffField));
+                                            }
+	                                        $newRssSelectiveOffField = $rssSelectiveOffField;
+	                                        foreach ($rssSelectiveOffField as $k3 => $item3) {
+		                                        foreach ($item3 as $k2 => $item2) {
+			                                        if (in_array($item2, $feedSelectiveOffField)) {
+			                                            if ($k3=='delete') {
+				                                            unset($newRssSelectiveOffField[$k3][$k2]);
+                                                        }
+			                                        } else {
+				                                        if ($k3=='restore') {
+					                                        unset($newRssSelectiveOffField[$k3][$k2]);
+                                                        }
+                                                    }
+		                                        }
+		                                        unset($k2, $item2);
+
+		                                        RFWP_rssSelectiveOffFieldOptionSave($newRssSelectiveOffField[$k3], $k3);
+                                            }
+	                                        unset($k3, $item3);
+                                        } else {
+	                                        update_option('rfwp_selectiveOffFieldRestore', '');
+                                        }
+                                    }
                                     $turboSettings = json_encode($decodedToken['turboSettings'], JSON_UNESCAPED_UNICODE);
                                     update_option('rb_TurboRssOptions', $turboSettings, false);
+                                } elseif (isset($decodedToken['turboSettings'])) {
+	                                update_option('rb_TurboRssOptions', '[]', false);
                                 }
                                 /** End of Turbo rss */
 							    /** Turbo rss ads */
+							    $wpdb->query('DELETE FROM '.$wpPrefix.'realbig_turbo_ads');
 							    if (!empty($decodedToken['turboAdSettings'])) {
 							    	$listOfColums = ['blockId', 'adNetwork', 'adNetworkYandex', 'adNetworkAdfox', 'settingType', 'element', 'elementPosition', 'elementPlace'];
 								    $counter = 0;
-								    $wpdb->query('DELETE FROM '.$wpPrefix.'realbig_turbo_ads');
 //								    $sqlTokenSave = "INSERT INTO ".$wpPrefix."realbig_turbo_ads (blockId, adNetwork, adNetworkYandex, adNetworkAdfox, settingType, element, elementPosition, elementPlace) VALUES ";
 								    $sqlTokenSave = "INSERT INTO ".$wpPrefix."realbig_turbo_ads (";
 								    foreach ($listOfColums AS $k => $item) {
@@ -456,7 +497,7 @@ try {
 				try {
 //                    $url = 'https://realbig.web/api/wp-get-ads';     // orig web post
 //                    $url = 'https://beta.realbig.media/api/wp-get-ads';     // beta post
-                    $url = 'https://realbig.media/api/wp-get-ads';     // orig post
+                    $url = 'https://wp.realbig.media/api/wp-get-ads';     // orig post
 
 					$dataForSending = [
 						'body'  => [
@@ -756,7 +797,16 @@ try {
 			}
 			$token      = RFWP_tokenChecking($GLOBALS['table_prefix']);
 			RFWP_cronCheckLog('cron going to sync 2');
-			$ajaxResult = RFWP_synchronize($token, $wpOptionsCheckerSyncTime, true, $GLOBALS['table_prefix'], 'ajax');
+
+			if (!isset($GLOBALS['RFWP_synchronize_vars'])) {
+				$GLOBALS['RFWP_synchronize_vars'] = [];
+				$GLOBALS['RFWP_synchronize_vars']['token'] = $token;
+				$GLOBALS['RFWP_synchronize_vars']['wpOptionsCheckerSyncTime'] = $wpOptionsCheckerSyncTime;
+				$GLOBALS['RFWP_synchronize_vars']['sameTokenResult'] = true;
+				$GLOBALS['RFWP_synchronize_vars']['type'] = 'ajax';
+			}
+
+			RFWP_synchronizeLaunchAdd();
 		}
 	}
 	/** End of auto Sync */
@@ -806,6 +856,18 @@ try {
 		function RFWP_otherInfoGather() {
 			$result = [];
 			$result['permalinkStatus'] = RFWP_checkPermalink();
+//			$result['thumbnailSizes'] = RFWP_getThumbnailsSizes();
+			$result['thumbnailSizes'] = RFWP_getSavedThemeThumbnailSizes();
+			$result['home_url'] = home_url();
+			$turboRssUrls = RFWP_generateTurboRssUrls();
+			if (!empty($turboRssUrls)) {
+			    if (!empty($turboRssUrls['mainRss'])) {
+				    $result['mainRss'] = $turboRssUrls['mainRss'];
+                }
+			    if (!empty($turboRssUrls['trashRss'])) {
+				    $result['trashRss'] = $turboRssUrls['trashRss'];
+                }
+            }
 
 			return $result;
 		}
@@ -969,16 +1031,19 @@ try {
 			$result = [];
 		    if (function_exists('RFWP_rssOptionsGet')) {
 			    $turboOptions = RFWP_rssOptionsGet();
-			    $turboUrl = $turboOptions['name'];
-			    if (get_option('permalink_structure')) {
-				    $url = home_url().'/feed/'.$turboUrl.'/';
-				    $trashUrl = $url.'?rb_rss_trash=1';
-			    } else {
-				    $url = home_url().'/?feed='.$turboUrl;
-				    $trashUrl = $url.'&rb_rss_trash=1';
+			    if (!empty($turboOptions))
+			    {
+				    $turboUrl = $turboOptions['name'];
+				    if (get_option('permalink_structure')) {
+					    $url = home_url().'/feed/'.$turboUrl.'/';
+					    $trashUrl = $url.'?rb_rss_trash=1';
+				    } else {
+					    $url = home_url().'/?feed='.$turboUrl;
+					    $trashUrl = $url.'&rb_rss_trash=1';
+				    }
+				    $result['mainRss'] = $url;
+				    $result['trashRss'] = $trashUrl;
 			    }
-			    $result['mainRss'] = $url;
-			    $result['trashRss'] = $trashUrl;
             }
 
 			return $result;
@@ -1087,6 +1152,16 @@ try {
 			return false;
         }
     }
+	if (!function_exists('RFWP_getFromRealbigSettings')) {
+		function RFWP_getFromRealbigSettings($optionName) {
+			global $wpdb;
+			$wpPrefix = RFWP_getWpPrefix();
+
+			$getOption = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM ".$wpPrefix."realbig_settings WHERE optionName = %s",[$optionName]));
+
+			return $getOption;
+        }
+    }
 
 	if (!function_exists('RFWP_getWpPrefix')) {
 		function RFWP_getWpPrefix() {
@@ -1122,6 +1197,49 @@ try {
 
 			return $wpPrefix;
 		}
+    }
+	if (!function_exists('RFWP_getThumbnailsSizes')) {
+	    function RFWP_getThumbnailsSizes() {
+		    $thumbnailsSizes = get_intermediate_image_sizes();
+
+		    return $thumbnailsSizes;
+        }
+    }
+	if (!function_exists('RFWP_synchronizelLaunch')) {
+	    function RFWP_synchronizeLaunch() {
+		    RFWP_synchronize($GLOBALS['RFWP_synchronize_vars']['token'], $GLOBALS['RFWP_synchronize_vars']['wpOptionsCheckerSyncTime'], $GLOBALS['RFWP_synchronize_vars']['sameTokenResult'], $GLOBALS['RFWP_synchronize_vars']['type']);
+        }
+    }
+	if (!function_exists('RFWP_synchronizeManualLaunchAdd')) {
+	    function RFWP_synchronizeLaunchAdd() {
+		    add_action('plugins_loaded', 'RFWP_synchronizeLaunch');
+//		    add_action('init', 'RFWP_synchronizeLaunch', 9999);
+        }
+    }
+	if (!function_exists('RFWP_saveThemeThumbnailSizes')) {
+	    function RFWP_saveThemeThumbnailSizes() {
+	        global $wpdb;
+
+		    $thumbnailsSizes = RFWP_getThumbnailsSizes();
+		    $thumbnailsSizes = json_encode($thumbnailsSizes);
+		    RFWP_saveToRealbigSettings($thumbnailsSizes,'thumbnailsSizes');
+
+	        return true;
+        }
+    }
+	if (!function_exists('RFWP_getSavedThemeThumbnailSizes')) {
+	    function RFWP_getSavedThemeThumbnailSizes() {
+		    $thumbnailsSizes = RFWP_getFromRealbigSettings('thumbnailsSizes');
+		    if (!empty($thumbnailsSizes)) {
+		        if (is_string($thumbnailsSizes)) {
+			        $thumbnailsSizes = json_decode($thumbnailsSizes, true);
+                } else {
+		            $thumbnailsSizes = [];
+                }
+            }
+
+		    return $thumbnailsSizes;
+        }
     }
 }
 catch (Exception $ex)

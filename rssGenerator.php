@@ -15,12 +15,15 @@ try {
 			$rb_rssFeedUrls = [];
 			$rssPartsCount = 1;
 			$rssOptions = RFWP_rssOptionsGet();
-			$postTypes = $rssOptions['typesPost'];
-			$feedName = $rssOptions['name'];
 
-            add_feed($feedName, 'RFWP_rssCreate');
+			if (!empty($rssOptions))
+			{
+				$postTypes = $rssOptions['typesPost'];
+				$feedName = $rssOptions['name'];
+				add_feed($feedName, 'RFWP_rssCreate');
+				array_push($rb_rssFeedUrls, $feedName);
+			}
 
-			array_push($rb_rssFeedUrls, $feedName);
 			if (!empty($postTypes)) {
 				$tax_query = RFWP_rss_taxonomy_get($rssOptions);
 				$postTypes = explode(';', $postTypes);
@@ -50,15 +53,16 @@ try {
 					$rssPartsCount = ceil($rssPartsCount);
 					$feed = [];
 					for ($cou = 0; $cou < $rssPartsCount; $cou++) {
+						$newFeedName = '';
 						if ($cou > 0) {
 							if (get_option('permalink_structure')) {
 								$feedPage = '/?paged='.($cou+1);
 							} else {
 								$feedPage = '&paged='.($cou+1);
 							}
-							$feedName = $feedName.$feedPage;
-							add_feed($feedName, 'RFWP_rssCreate');
-							array_push($rb_rssFeedUrls, $feedName);
+							$newFeedName = $feedName.$feedPage;
+							add_feed($newFeedName, 'RFWP_rssCreate');
+							array_push($rb_rssFeedUrls, $newFeedName);
 						}
 					}
 				}
@@ -629,21 +633,38 @@ try {
 		        ];
 
 		        $rssOptionsGet = get_option('rb_TurboRssOptions');
-		        if (!empty($rb_testCheckLog)&&!empty($GLOBALS['dev_mode'])) {
-			        $messageFTestLog = 'turbo options: '.$rssOptionsGet.';';
-			        error_log(PHP_EOL.current_time('mysql').': '.$messageFTestLog.PHP_EOL, 3, $rb_testCheckLog);
-		        }
 
 		        if (!empty($rssOptionsGet)) {
-			        $rssOptionsGet = json_decode($rssOptionsGet, true);
+		            if (is_string($rssOptionsGet)) {
+			            $rssOptionsGet = json_decode($rssOptionsGet, true);
+                    }
+
 			        if (!empty($rssOptionsGet)) {
 				        foreach ($namesMap AS $k => $item) {
 					        if (isset($rssOptionsGet[$item])) {
-						        $rssOptions[$k] = $rssOptionsGet[$item];
+					            switch ($item) {
+                                    case 'feedOnOff':
+                                        $localValue = $rssOptionsGet[$item];
+	                                    $localValue = intval($rssOptionsGet[$item]);
+	                                    if (!empty($localValue)) {
+		                                    $localValue = 'false';
+                                        } else {
+		                                    $localValue = 'true';
+                                        }
+
+	                                    $rssOptions[$k] = $localValue;
+                                        break;
+                                    default:
+	                                    $rssOptions[$k] = $rssOptionsGet[$item];
+                                        break;
+                                }
 					        }
 				        }
 				        unset($k,$item);
-			        }
+			        } else
+			        {
+			            $rssOptions = [];
+                    }
 		        }
 
 		        $GLOBALS['rssOptions'] = $rssOptions;
@@ -669,7 +690,7 @@ try {
 						$rssDivided[$divideCurrent] = [];
 						$divideMax = $divideMax+intval($rssOptions['rssPartsSeparated']);
 					}
-					array_push($rssDivided[$divideCurrent], $item->ID);
+					array_push($rssDivided[$divideCurrent], $item);
 					$divideCounter++;
 				}
 				unset($k,$item);
@@ -707,6 +728,9 @@ try {
 						$rssPosts[$k1]->post_content = $contentPost;
 					}
 				}
+				if (!empty($item1->guid)) {
+					$rssPosts[$k1]->guid = RFWP_filter_permalink_rss($item1->guid);
+                }
 			}
 			unset($k1,$item1);
 
@@ -1241,16 +1265,84 @@ try {
 
 			if (!in_array(get_post_type($post_id), $yttype)) {return;}
 
-			$delpermalink                    = PHP_EOL . esc_url(apply_filters('the_permalink_rss', get_permalink($post_id)));
-			$rssOptions['selectiveOffField'] .= $delpermalink;
-			$lines                           = array_filter(explode("\n", trim($rssOptions['selectiveOffField'])));
-			$rssOptions['selectiveOffField'] = implode("\n", $lines);
+			$rfwp_selectiveOffFieldGet = RFWP_rssSelectiveOffFieldGet();
+			$rfwp_selectiveOffField = RFWP_rssSelectiveOffFieldToArray($rfwp_selectiveOffFieldGet);
 
-			update_option('rb_TurboRssOptions', $rssOptions);
+			$delpermalink = PHP_EOL . esc_url(apply_filters('the_permalink_rss', get_permalink($post_id)));
+			$delpermalink = trim($delpermalink);
+			foreach ($rfwp_selectiveOffField as $k => $item) {
+				if (in_array($delpermalink, $rfwp_selectiveOffField[$k])) {
+					$neededKey = array_search($delpermalink, $rfwp_selectiveOffField[$k]);
+					if ($neededKey!==false&&$k=='restore') {
+						unset($rfwp_selectiveOffField[$k][$neededKey]);
+					}
+				} else {
+					if ($k=='delete') {
+						array_push($rfwp_selectiveOffField[$k], $delpermalink);
+					}
+				}
+				RFWP_rssSelectiveOffFieldOptionSave($rfwp_selectiveOffField[$k], $k);
+			}
+			unset($k, $item);
 		}
 	}
 	add_action('wp_trash_post', 'RFWP_rss_trash_tracking');
 	//функция отслеживания урлов удаляемых записей end
+	if (!function_exists('RFWP_rssSelectiveOffFieldGet')) {
+		function RFWP_rssSelectiveOffFieldGet() {
+			$result = [];
+			$result['delete'] = get_option('rfwp_selectiveOffField');
+			if ($result['delete']===false) {
+				$result['delete'] = '';
+            }
+			$result['restore'] = get_option('rfwp_selectiveOffFieldRestore');
+			if ($result['restore']===false) {
+				$result['restore'] = '';
+            }
+
+			return $result;
+        }
+    }
+	if (!function_exists('RFWP_rssSelectiveOffFieldToArray')) {
+	    function RFWP_rssSelectiveOffFieldToArray($selectiveOffField) {
+		    $result = [];
+		    $result['delete'] = [];
+		    $result['restore'] = [];
+		    foreach ($selectiveOffField as $k => $item) {
+			    if (!empty($selectiveOffField[$k])) {
+				    if (is_string($selectiveOffField[$k])) {
+//					    $selectiveOffField[$k] = explode("\n", str_replace(array("\r\n", "\r"), "\n", $selectiveOffField[$k]));
+					    $selectiveOffField[$k] = explode(";", $selectiveOffField[$k]);
+				    }
+				    $result[$k] = $selectiveOffField[$k];
+			    }
+		    }
+		    unset($k, $item);
+
+		    return $result;
+        }
+    }
+	if (!function_exists('RFWP_rssSelectiveOffFieldToString')) {
+	    function RFWP_rssSelectiveOffFieldToString($selectiveOffField) {
+		    $result = '';
+		    if (!empty($selectiveOffField)&&is_array($selectiveOffField)) {
+//			    $result = implode('\n', $selectiveOffField);
+			    $result = implode(';', $selectiveOffField);
+            }
+
+		    return $result;
+        }
+    }
+	if (!function_exists('RFWP_rssSelectiveOffFieldOptionSave')) {
+	    function RFWP_rssSelectiveOffFieldOptionSave($value, $type) {
+		    $value = RFWP_rssSelectiveOffFieldToString($value);
+		    if ($type=='delete') {
+			    update_option('rfwp_selectiveOffField', $value);
+		    } elseif ($type=='restore') {
+			    update_option('rfwp_selectiveOffFieldRestore', $value);
+		    }
+        }
+    }
 	//функция отслеживания урлов восстанавливаемых записей begin
 	if (!function_exists('RFWP_rss_untrash_tracking')) {
 		function RFWP_rss_untrash_tracking($post_id) {
@@ -1264,12 +1356,25 @@ try {
 
 			if (!in_array(get_post_type($post_id), $yttype)) {return;}
 
-			$restorepermalink                = esc_url(apply_filters('the_permalink_rss', get_permalink($post_id)));
-			$rssOptions['selectiveOffField'] = str_replace($restorepermalink, '', $rssOptions['selectiveOffField']);
-			$lines                           = array_filter(explode("\n", trim($rssOptions['selectiveOffField'])));
-			$rssOptions['selectiveOffField'] = implode("\n", $lines);
+			$rfwp_selectiveOffFieldGet = RFWP_rssSelectiveOffFieldGet();
+			$rfwp_selectiveOffField = RFWP_rssSelectiveOffFieldToArray($rfwp_selectiveOffFieldGet);
 
-			update_option('rb_TurboRssOptions', $rssOptions);
+			$restorepermalink = esc_url(apply_filters('the_permalink_rss', get_permalink($post_id)));
+			$restorepermalink = trim($restorepermalink);
+			foreach ($rfwp_selectiveOffField as $k => $item) {
+				if (in_array($restorepermalink, $rfwp_selectiveOffField[$k])) {
+					$neededKey = array_search($restorepermalink, $rfwp_selectiveOffField[$k]);
+					if ($neededKey!==false&&$k=='delete') {
+                        unset($rfwp_selectiveOffField[$k][$neededKey]);
+					}
+				} else {
+					if ($k=='restore') {
+						array_push($rfwp_selectiveOffField[$k], $restorepermalink);
+					}
+                }
+				RFWP_rssSelectiveOffFieldOptionSave($rfwp_selectiveOffField[$k], $k);
+            }
+			unset($k, $item);
 		}
 	}
 	add_action('untrashed_post', 'RFWP_rss_untrash_tracking');
@@ -1292,8 +1397,30 @@ try {
 					<description><?php echo stripslashes($rssOptions['description']); ?></description>
 					<language><?php echo $rssOptions['lang']; ?></language>
 					<generator>RSS for Yandex Turbo v<?php echo $rssOptions['version']; ?> (https://wordpress.org/plugins/rss-for-yandex-turbo/)</generator>
-					<?php if ( $rssOptions['selectiveOffField'] ) {
-						$textAr = explode("\n", str_replace(array("\r\n", "\r"), "\n", $rssOptions['selectiveOffField']));
+					<?php
+					$rfwp_selectiveOffFieldGet = get_option('rfwp_selectiveOffField');
+					$textAr = [];
+					$selectiveOffField = [];
+					if (!empty($rssOptions['selectiveOffField'])) {
+						$selectiveOffField = $rssOptions['selectiveOffField'];
+						if (is_string($selectiveOffField)) {
+							$selectiveOffField = explode("\n", str_replace(array("\r\n", "\r"), "\n", $rssOptions['selectiveOffField']));
+						}
+						$textAr = $selectiveOffField;
+					}
+                    if (!empty($rfwp_selectiveOffFieldGet)) {
+                        if (is_string($rfwp_selectiveOffFieldGet)) {
+	                        $rfwp_selectiveOffFieldGet = json_decode($rfwp_selectiveOffFieldGet);
+                        }
+                    }
+					foreach ($rfwp_selectiveOffFieldGet AS $k1 => $item1) {
+						if (!in_array($item1, $textAr)) {
+							array_push($textAr, $item1);
+						}
+					}
+					unset($k1, $item1);
+
+                    if (!empty($textAr)) {
 						$i = 0;
 						foreach ($textAr as $line) {
 							$line = stripcslashes($line);
@@ -1390,7 +1517,7 @@ try {
 					if ($item['adNetwork']=='rsya') {
 						$ads .= '<turbo:adNetwork type="Yandex" id="'.$item['adNetworkYandex'].'" turbo-ad-id="rb_turbo_ad_'.$k.'"></turbo:adNetwork>'.PHP_EOL;
 					} elseif ($item['adNetwork']=='adfox') {
-						$ads .= '<turbo:adNetwork type="AdFox" turbo-ad-id="rb_turbo_ad_'.$k.'"><![CDATA['.$item['adNetworkAdfox'].']]></turbo:adNetwork>'.PHP_EOL;
+						$ads .= '<turbo:adNetwork type="AdFox" turbo-ad-id="rb_turbo_ad_'.$k.'"><![CDATA['.htmlspecialchars_decode($item['adNetworkAdfox'], ENT_QUOTES).']]></turbo:adNetwork>'.PHP_EOL;
                     }
                 }
 				unset($k,$item);
@@ -1399,6 +1526,30 @@ try {
 		    return $ads;
         }
     }
+	if (!function_exists('RFWP_filter_permalink_rss')) {
+		function RFWP_filter_permalink_rss($url) {
+			$turboOptions = RFWP_rssOptionsGet();
+
+			if (!is_feed($turboOptions['name'])) {
+				return $url;
+            }
+			if (!empty($turboOptions['onTurbo'])) {
+				return $url;
+            }
+			if ($turboOptions['onOffProtocol'] == 'default') {
+				return $url;
+            }
+			if ($turboOptions['onOffProtocol'] == 'http') {
+				$url = str_replace('https://', 'http://', $url);
+			}
+			if ($turboOptions['onOffProtocol'] == 'https') {
+				$url = str_replace('http://', 'https://', $url);
+			}
+
+			return $url;
+		}
+    }
+//	add_filter( 'the_permalink_rss', 'RFWP_filter_permalink_rss' );
 	if (!function_exists('RFWP_rssCreate')) {
 		function RFWP_rssCreate() {
 			global $rb_rssCheckLog;
@@ -1430,8 +1581,7 @@ try {
 
 			error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_rssCheckLog);
 
-//			if (isset($_GET['feed'])&&$_GET['feed']=='rb_turbo_trash_rss') {
-			if ($_GET['rb_rss_trash']=='1') {
+			if (isset($_GET['rb_rss_trash']) && $_GET['rb_rss_trash']=='1') {
 //				if (!empty($rssOptions['selectiveOff'])) {
 					RFWP_rss_lenta_trash($rssOptions);
 //				}
@@ -1498,6 +1648,7 @@ try {
 								<turbo:adNetwork></turbo:adNetwork>
 							<?php endif; ?>
                             <?php if (!empty($item1)): ?>
+                                <?php $imageSizes = RFWP_getThumbnailsSizes(); ?>
 							    <?php foreach ($item1 AS $k => $item): ?>
                                     <item turbo="<?php echo $rssOptions['onTurbo'] ?>">
                                         <!-- Информация о странице -->
@@ -1512,8 +1663,8 @@ try {
                                                 <pubDate><?php echo $item->post_modified_gmt ?> +0300</pubDate>
                                             <?php } ?>
                                         <?php endif; ?>
-                                        <?php if ($rssOptions['PostAuthor'] != 'Отключить указание автора') { ?>
-                                            <?php if (!empty($rssOptions['PostAuthorDirect'])&&$rssOptions['PostAuthor'] != 'Автор записи') {
+                                        <?php if ($rssOptions['PostAuthor'] != 'disable') { ?>
+                                            <?php if (!empty($rssOptions['PostAuthorDirect'])&&$rssOptions['PostAuthor'] != 'enable') {
                                                 echo '<author>'.$rssOptions['PostAuthorDirect'].'</author>'.PHP_EOL;
                                             } else {
                                                 echo '<author>'.$item->post_author_name.'</author>'.PHP_EOL;
@@ -1523,8 +1674,9 @@ try {
                                         <turbo:content>
                                             <![CDATA[
                                             <header>
-                                                <?php if (!empty($rssOptions['Thumbnails'])&&!empty($rssOptions['ThumbnailsSize'])&&has_post_thumbnail($item->ID)) {
-                                                    echo '<figure><img src="'. strtok(get_the_post_thumbnail_url($item->ID,$rssOptions['ThumbnailsSize']), '?').'" /></figure>'.PHP_EOL;
+                                                <?php if (!empty($rssOptions['Thumbnails'])&&isset($rssOptions['ThumbnailsSize'])&&has_post_thumbnail($item->ID)) {
+                                                    $size = !empty($imageSizes[$rssOptions['ThumbnailsSize']]) ? $imageSizes[$rssOptions['ThumbnailsSize']] : '';
+                                                    echo '<figure><img src="'. strtok(get_the_post_thumbnail_url($item->ID, $size), '?').'" /></figure>'.PHP_EOL;
                                                 } ?>
                                                 <?php if ($rssOptions['PostTitle']) {
                                                     include_once(ABSPATH . 'wp-admin/includes/plugin.php');
