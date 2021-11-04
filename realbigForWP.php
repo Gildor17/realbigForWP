@@ -5,7 +5,7 @@ if (!defined("ABSPATH")) { exit;}
 /*
 Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.4.0
+Version:      0.4.0.1
 Author:       Realbig Team
 Author URI:   https://realbig.media
 License:      GPLv2 or later
@@ -84,7 +84,8 @@ try {
 		$GLOBALS['rb_variables']['adDomain'] = 'newrrb.bid';
 		$GLOBALS['rb_variables']['rotator'] = null;
 		$GLOBALS['rb_variables']['localRotatorUrl'] = null;
-		$getOV = $wpdb->get_results('SELECT optionName, optionValue FROM '.$GLOBALS['wpPrefix'].'realbig_settings WHERE optionName IN ("domain","rotator","localRotatorUrl")');
+		$GLOBALS['rb_variables']['adWithStatic'] = null;
+		$getOV = $wpdb->get_results('SELECT optionName, optionValue FROM '.$GLOBALS['wpPrefix'].'realbig_settings WHERE optionName IN ("domain","rotator","localRotatorUrl","adWithStatic")');
 		if (!empty($getOV)) {
 			foreach ($getOV AS $k => $item) {
 				if (!empty($item->optionValue)) {
@@ -97,6 +98,9 @@ try {
                             break;
                         case 'localRotatorUrl':
 	                        $GLOBALS['rb_variables']['localRotatorUrl'] = $item->optionValue;
+                            break;
+                        case 'adWithStatic':
+	                        $GLOBALS['rb_variables']['adWithStatic'] = $item->optionValue;
                             break;
                     }
 				}
@@ -885,7 +889,7 @@ try {
 	/********** adding AD code in head area *******************************************************************************/
 	// new
 	if (!is_admin()&&empty(apply_filters('wp_doing_cron', defined('DOING_CRON')&&DOING_CRON))) {
-	    if (!empty($GLOBALS['rb_variables']['localRotatorUrl'])&&!empty($GLOBALS['rb_variables']['rotator'])&&empty($GLOBALS['rb_variables']['localRotatorToHead'])) {
+	    if (!empty($GLOBALS['rb_variables']['localRotatorUrl'])&&!empty($GLOBALS['rb_variables']['rotator'])&&empty($GLOBALS['rb_variables']['localRotatorToHead'])&&empty($GLOBALS['rb_variables']['adWithStatic'])) {
             $GLOBALS['rb_variables']['localRotatorToHead'] = true;
             add_action('wp_head', 'RFWP_rotatorToHeaderAdd', 0);
         }

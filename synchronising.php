@@ -7,7 +7,6 @@ try {
 		function RFWP_synchronize($tokenInput, $wpOptionsCheckerSyncTime, $sameTokenResult, $requestType) {
 			global $wpdb;
 			global $rb_logFile;
-			apply_filters('the_content', '1');
 			global $shortcode_tags;
 			$wpPrefix = RFWP_getWpPrefix();
 			$shortcodesToSend = array_keys($shortcode_tags);
@@ -179,6 +178,10 @@ try {
 							    if (!empty($decodedToken['rotatorCode'])) {
 							        $sanitisedRotatorCode = sanitize_text_field($decodedToken['rotatorCode']);
 								    RFWP_saveToRealbigSettings($sanitisedRotatorCode, 'rotatorCode');
+							    }
+							    if (isset($decodedToken['adWithStatic'])) {
+							        $sanitisedRotatorCode = sanitize_text_field($decodedToken['adWithStatic']);
+								    RFWP_saveToRealbigSettings($sanitisedRotatorCode, 'adWithStatic');
 							    }
 							    /** Excluded page types */
 							    if (isset($decodedToken['excludedPageTypes'])) {
