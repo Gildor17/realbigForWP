@@ -54,11 +54,11 @@ try {
                         'otherInfo' => $otherInfo,
                         'pluginVersion' => $pluginVersion,
                         'rssSelectiveOffField' => $rssSelectiveOffField
-                    ]
+                    ],
+				    'sslverify' => false,
 				];
 				try {
-					$jsonToken = wp_safe_remote_post($url, $dataForSending);
-//					$jsonToken = wp_remote_post($url, $dataForSending);
+					$jsonToken = wp_remote_post($url, $dataForSending);
 					if (!is_wp_error($jsonToken)) {
 						$jsonToken = $jsonToken['body'];
 						if (!empty($jsonToken)) {
@@ -505,11 +505,11 @@ try {
 					$dataForSending = [
 						'body'  => [
 							'blocksAd' => $blocksAd
-						]
+						],
+						'sslverify' => false,
 					];
 
-					$jsonResult = wp_safe_remote_post($url, $dataForSending);
-//	            $jsonResult = wp_remote_post($url, $dataForSending);
+	            $jsonResult = wp_remote_post($url, $dataForSending);
 
 					if (!empty($jsonResult)&&!is_wp_error($jsonResult)) {
 						$decodedResult = json_decode($jsonResult['body'], true);

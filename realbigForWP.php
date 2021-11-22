@@ -5,7 +5,7 @@ if (!defined("ABSPATH")) { exit;}
 /*
 Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.4.0.1
+Version:      0.4.0.2
 Author:       Realbig Team
 Author URI:   https://realbig.media
 License:      GPLv2 or later
