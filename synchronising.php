@@ -30,12 +30,12 @@ try {
 				$urlData = 'empty';
             }
 
+			$otherInfo = RFWP_otherInfoGather();
+
 			$getCategoriesTags = RFWP_getTagsCategories();
 			if (!empty($getCategoriesTags)) {
 				$getCategoriesTags = json_encode($getCategoriesTags);
 			}
-
-			$otherInfo = RFWP_otherInfoGather();
 
 			try {
 //    			$url = 'https://realbig.web/api/wp-get-settings';     // orig web post
@@ -183,6 +183,12 @@ try {
 							        $sanitisedRotatorCode = sanitize_text_field($decodedToken['adWithStatic']);
 								    RFWP_saveToRealbigSettings($sanitisedRotatorCode, 'adWithStatic');
 							    }
+							    /** Selected taxonomies */
+							    if (isset($decodedToken['taxonomies'])) {
+							        $taxonomies = sanitize_text_field(json_encode($decodedToken['taxonomies'], JSON_UNESCAPED_UNICODE));
+								    RFWP_saveToRealbigSettings($taxonomies, 'usedTaxonomies');
+							    }
+							    /** End of selected taxonomies */
 							    /** Excluded page types */
 							    if (isset($decodedToken['excludedPageTypes'])) {
 							        $excludedPageTypes = sanitize_text_field($decodedToken['excludedPageTypes']);
@@ -861,6 +867,7 @@ try {
 			$result['permalinkStatus'] = RFWP_checkPermalink();
 //			$result['thumbnailSizes'] = RFWP_getThumbnailsSizes();
 			$result['thumbnailSizes'] = RFWP_getSavedThemeThumbnailSizes();
+			$result['taxonomies'] = RFWP_getTaxonomies();
 			$result['home_url'] = home_url();
 			$turboRssUrls = RFWP_generateTurboRssUrls();
 			if (!empty($turboRssUrls)) {
@@ -1215,7 +1222,7 @@ try {
     }
 	if (!function_exists('RFWP_synchronizeManualLaunchAdd')) {
 	    function RFWP_synchronizeLaunchAdd() {
-		    add_action('plugins_loaded', 'RFWP_synchronizeLaunch');
+		    add_action('wp_loaded', 'RFWP_synchronizeLaunch');
 //		    add_action('init', 'RFWP_synchronizeLaunch', 9999);
         }
     }

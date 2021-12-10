@@ -15,60 +15,67 @@ function sendReadyBlocksNew(blocks) {
 }
 
 function gatherReadyBlocks() {
-    let blocks = {};
-    let counter1 = 0;
-    let gatheredBlocks = document.getElementsByClassName('content_rb cnt32_rl_bg_str');
-    let checker = 0;
-    let adContent = '';
-    let curState = '';
-    let thisData = [];
-    let sumData = [];
-    let newBlocks = '';
-    let thisDataString = '';
+    if (block_classes && block_classes.length) {
+        let blocks = {};
+        let counter1 = 0;
+        let gatheredBlocks = document.querySelectorAll('.' + block_classes.join(', .'));
+        let checker = 0;
+        let adContent = '';
+        let curState = '';
+        let thisData = [];
+        let sumData = [];
+        let newBlocks = '';
+        let thisDataString = '';
 
-    if (gatheredBlocks.length > 0) {
-        blocks.data = {};
+        if (gatheredBlocks.length > 0) {
+            blocks.data = {};
 
-        for (let i = 0; i < gatheredBlocks.length; i++) {
-            curState = gatheredBlocks[i]['dataset']["state"].toLowerCase();
-            checker = 0;
-            if (curState&&gatheredBlocks[i]['innerHTML'].length > 0&&gatheredBlocks[i]['dataset']['aid'] > 0&&curState!='no-block') {
-                if (gatheredBlocks[i]['innerHTML'].length > 0) {
-                    checker = 1;
-                }
-                if (checker==1) {
-                    blocks.data[counter1] = {id:gatheredBlocks[i]['dataset']['id'],code:gatheredBlocks[i]['dataset']['aid']};
-                    counter1++;
+            for (let i = 0; i < gatheredBlocks.length; i++) {
+                curState = gatheredBlocks[i]['dataset']["state"].toLowerCase();
+                checker = 0;
+                if (curState&&gatheredBlocks[i]['innerHTML'].length > 0&&gatheredBlocks[i]['dataset']['aid'] > 0&&curState!='no-block') {
+                    if (gatheredBlocks[i]['innerHTML'].length > 0) {
+                        checker = 1;
+                    }
+                    if (checker==1) {
+                        blocks.data[counter1] = {id:gatheredBlocks[i]['dataset']['id'],code:gatheredBlocks[i]['dataset']['aid']};
+                        counter1++;
+                    }
                 }
             }
-        }
 
-        blocks = JSON.stringify(blocks);
-        sendReadyBlocksNew(blocks);
-    }
+            blocks = JSON.stringify(blocks);
+            sendReadyBlocksNew(blocks);
+        }
+    } else nReadyBlock = true;
 }
 
 function timeBeforeGathering() {
-    let gatheredBlocks = document.getElementsByClassName('content_rb cnt32_rl_bg_str');
-    let okStates = ['done','refresh-wait','no-block','fetched'];
-    let curState = '';
+    if (block_classes && block_classes.length > 0)
+    {
+        let gatheredBlocks = document.querySelectorAll('.' + block_classes.join(', .'));
+        let okStates = ['done','refresh-wait','no-block','fetched'];
+        let curState = '';
 
-    for (let i = 0; i < gatheredBlocks.length; i++) {
-        if (!gatheredBlocks[i]['dataset']["state"]) {
-            nReadyBlock = true;
-            break;
-        } else {
-            curState = gatheredBlocks[i]['dataset']["state"].toLowerCase();
-            if (!okStates.includes(curState)) {
+        for (let i = 0; i < gatheredBlocks.length; i++) {
+            if (!gatheredBlocks[i]['dataset']["state"]) {
                 nReadyBlock = true;
                 break;
-            } else if (curState=='fetched'&&fetchedCounter < 3) {
-                fetchedCounter++;
-                nReadyBlock = true;
-                break;
+            } else {
+                curState = gatheredBlocks[i]['dataset']["state"].toLowerCase();
+                if (!okStates.includes(curState)) {
+                    nReadyBlock = true;
+                    break;
+                } else if (curState=='fetched'&&fetchedCounter < 3) {
+                    fetchedCounter++;
+                    nReadyBlock = true;
+                    break;
+                }
             }
         }
     }
+    else nReadyBlock = true;
+
     if (nReadyBlock == true) {
         nReadyBlock = false;
         setTimeout(timeBeforeGathering,2000);

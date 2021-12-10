@@ -5,7 +5,7 @@ if (!defined("ABSPATH")) { exit;}
 /*
 Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.4.0.2
+Version:      0.4.1
 Author:       Realbig Team
 Author URI:   https://realbig.media
 License:      GPLv2 or later
@@ -14,13 +14,20 @@ License URI:  https://www.gnu.org/licenses/gpl-2.0.html
 
 require_once (ABSPATH."/wp-admin/includes/plugin.php");
 
-include_once (dirname(__FILE__)."/RFWP_Logs.php");
-include_once (dirname(__FILE__)."/RFWP_Caches.php");
-include_once (dirname(__FILE__)."/update.php");
-include_once (dirname(__FILE__)."/synchronising.php");
-include_once (dirname(__FILE__)."/textEditing.php");
-include_once (dirname(__FILE__)."/syncApi.php");
-include_once (dirname(__FILE__)."/RFWP_Amp.php");
+
+$res = true;
+
+$res = $res && include_once(dirname(__FILE__) . "/RFWP_Logs.php");
+$res = $res && include_once(dirname(__FILE__) . "/RFWP_Caches.php");
+$res = $res && include_once(dirname(__FILE__) . "/update.php");
+$res = $res && include_once(dirname(__FILE__) . "/synchronising.php");
+$res = $res && include_once(dirname(__FILE__) . "/textEditing.php");
+$res = $res && include_once(dirname(__FILE__) . "/syncApi.php");
+$res = $res && include_once(dirname(__FILE__) . "/RFWP_Amp.php");
+
+if (empty($res)) {
+    return false;
+}
 
 try {
 	/** **************************************************************************************************************** **/
@@ -208,6 +215,21 @@ try {
 			}
 		}
 		/********** End of New working system ********************************************************************************/
+		/********** Add classes from block div *******************************************************************************/
+        if (!function_exists('RFWP_block_classes_add')) {
+            function RFWP_block_classes_add() {
+                echo '<script>
+    var block_classes = ["content_rb", "cnt32_rl_bg_str", "rl_cnt_bg"];
+
+    function addAttrItem(className) {
+        if (document.querySelector("." + className) && !block_classes.includes(className)) {
+            block_classes.push(className);
+        }
+    }
+</script>';
+            }
+        }
+		/********** End of Add classes from block div ************************************************************************/
 		/********** Adding AD code in head area ******************************************************************************/
 		if (!function_exists('RFWP_AD_header_add')) {
 			function RFWP_AD_header_add() {
@@ -895,6 +917,7 @@ try {
         }
 
         add_action('wp_head', 'RFWP_AD_header_add', 0);
+        add_action('wp_head', 'RFWP_block_classes_add', 0);
 		$separatedStatuses = [];
 		$statuses = $wpdb->get_results($wpdb->prepare('SELECT optionName, optionValue FROM '.$wpPrefix.'realbig_settings WHERE optionName IN (%s,%s,%s)', [
 			"pushUniversalCode",

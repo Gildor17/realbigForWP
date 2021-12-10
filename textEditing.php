@@ -289,14 +289,22 @@ try {
     function contentMonitoring() {
         if (typeof jsInputerLaunch===\'undefined\'||(typeof jsInputerLaunch!==\'undefined\'&&jsInputerLaunch==-1)) {
             let possibleClasses = [\'.taxonomy-description\',\'.entry-content\',\'.post-wrap\',\'#blog-entries\',\'.content\',\'.archive-posts__item-text\',\'.single-company_wrapper\',\'.posts-container\',\'.content-area\',\'.post-listing\',\'.td-category-description\',\'.jeg_posts_wrap\'];
-            let deniedClasses = [\'.percentPointerClass\',\'.content_rb\',\'.cnt32_rl_bg_str\',\'.addedInserting\',\'#toc_container\'];
+            let deniedClasses = [\'.percentPointerClass\',\'.addedInserting\',\'#toc_container\'];
             let deniedString = "";
             let contentSelector = \''.$contentSelector.'\';
             let contentCheck = null;
             if (contentSelector) {
                 contentCheck = document.querySelector(contentSelector);
             }
-       
+
+            if (block_classes && block_classes.length > 0) {
+                for (var i = 0; i < block_classes.length; i++) {
+                    if (block_classes[i]) {
+                        deniedClasses.push(\'.\' + block_classes[i]);
+                    }
+                }
+            }
+
             if (deniedClasses&&deniedClasses.length > 0) {
                 for (let i = 0; i < deniedClasses.length; i++) {
                     deniedString += ":not("+deniedClasses[i]+")";
@@ -470,7 +478,25 @@ try {
 				if (!empty($GLOBALS['pageCategories'])) {
 					$pageCategories = $GLOBALS['pageCategories'];
 				} else {
-					$getPageCategories = get_the_category(get_the_ID());
+				    $taxonomies = RFWP_getUsedTaxonomiesFromDB();
+					$getPageCategories = [];
+				    $term = get_queried_object();
+
+				    if (is_a($term, 'WP_Term')) {
+					    $getPageCategories = [$term];
+                    } elseif (is_a($term, 'WP_Post')) {
+					    $getPageCategories = get_the_category(get_the_ID());
+				        if (!empty($taxonomies['categories'])) {
+				            foreach ($taxonomies['categories'] as $category) {
+				                $terms = get_the_terms(get_the_ID(), $category);
+				                if (!empty($terms)) {
+					                foreach ($terms as $item) {
+						                array_push($getPageCategories, $item);
+					                }
+				                }
+                            }
+                        }
+				    }
 					if (!empty($getPageCategories)) {
 						$ctCounter = 0;
 						$pageCategories['names'] = [];
@@ -497,7 +523,25 @@ try {
 				if (!empty($GLOBALS['pageTags'])) {
 					$pageTags = $GLOBALS['pageTags'];
 				} else {
-					$getPageTags = get_the_tags(get_the_ID());
+					$taxonomies = RFWP_getUsedTaxonomiesFromDB();
+					$getPageTags = [];
+					$term = get_queried_object();
+
+					if (is_a($term, 'WP_Term')) {
+						$getPageTags = [$term];
+					} elseif (is_a($term, 'WP_Post')) {
+						$getPageTags = get_the_tags(get_the_ID());
+						if (!empty($taxonomies['tags'])) {
+							foreach ($taxonomies['tags'] as $tag) {
+								$terms = get_the_terms(get_the_ID(), $tag);
+								if (!empty($terms)) {
+									foreach ($terms as $item) {
+										array_push($getPageTags, $item);
+									}
+								}
+							}
+						}
+					}
 					if (!empty($getPageTags)) {
 						$ctCounter = 0;
 						$pageTags['names'] = [];
@@ -1531,7 +1575,7 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 			if (!empty($excIdClass)) {
 				$excIdClass .= ';';
             }
-			$excIdClass .= ".percentPointerClass;.content_rb;.cnt32_rl_bg_str;.addedInserting;#toc_container;table;blockquote";
+			$excIdClass .= ".percentPointerClass;.content_rb;.cnt32_rl_bg_str;.rl_cnt_bg;.addedInserting;#toc_container;table;blockquote";
 			if (!empty($excIdClass)) {
 				$excIdClass = explode(';', $excIdClass);
 				foreach ($excIdClass AS $k1 => $item1) {
@@ -1632,11 +1676,30 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 	        $args = ['hide_empty'=>false];
 	        $rb_tagsCategoriesFinal = [];
 
+	        $taxonomies = RFWP_getTaxonomies(true);
+	        $usedTaxonomies = RFWP_getUsedTaxonomiesFromDB();
+
+	        foreach ($taxonomies as $type => $items) {
+	            if (!empty($items)) {
+		            if (!isset($usedTaxonomies[$type])) {
+			            $usedTaxonomies[$type] = [];
+		            }
+
+		            $taxonomy = array_keys($items)[0];
+		            array_unshift($usedTaxonomies[$type], $taxonomy);
+	            }
+	        }
+	        unset($taxonomies);
+
 		    if (empty($rb_tagsCategories)) {
 			    $rb_tagsCategories = [];
             }
 
-	        if (empty($rb_tagsCategories['categories'])) {
+		    if (empty($rb_tagsCategories['categories'])) {
+		        if (!empty($usedTaxonomies['categories'])) {
+			        $args['taxonomy'] = $usedTaxonomies['categories'];
+		        }
+
 		        $rb_tagsCategories['categories'] = get_categories($args);
 		        $rb_tagsCategoriesFinal['categories'] = [];
 		        if (!empty($rb_tagsCategories['categories'])) {
@@ -1651,6 +1714,10 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
             }
 
 	        if (empty($rb_tagsCategories['tags'])) {
+		        if (!empty($usedTaxonomies['tags'])) {
+			        $args['taxonomy'] = $usedTaxonomies['tags'];
+		        }
+
 		        $rb_tagsCategories['tags'] = get_tags($args);
 		        $rb_tagsCategoriesFinal['tags'] = [];
 		        if (!empty($rb_tagsCategories['tags'])) {
@@ -1670,6 +1737,68 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 	        return $rb_tagsCategories;
         }
     }
+	if (!function_exists('RFWP_getTaxonomies')) {
+	    function RFWP_getTaxonomies($all = false) {
+	        global $rb_taxonomies;
+
+	        if (empty($rb_taxonomies))
+	        {
+		        $args = [
+			        'show_ui' => true,
+		        ];
+
+		        $types = [
+			        'categories' => 'post_categories_meta_box',
+			        'tags' => 'post_tags_meta_box'
+		        ];
+
+		        foreach ($types as $type => $metaBox)
+		        {
+			        $args['meta_box_cb'] = $metaBox;
+
+			        if (empty($rb_taxonomies[$type])) {
+				        $rb_taxonomies[$type] = [];
+			        }
+
+			        $taxonomies = get_taxonomies($args, 'objects');
+
+			        foreach ($taxonomies as $taxonomy) {
+				        $rb_taxonomies[$type][$taxonomy->name] = __($taxonomy->label);
+			        }
+		        }
+	        }
+
+	        $taxonomies = $rb_taxonomies;
+
+		    if (!$all) {
+		        foreach ($taxonomies as &$taxonomy) {
+			        array_shift($taxonomy);
+		        }
+		    }
+
+	        return $taxonomies;
+        }
+    }
+	if (!function_exists('RFWP_getUsedTaxonomiesFromDB')) {
+	    function RFWP_getUsedTaxonomiesFromDB() {
+	        global $usedTaxonomies;
+
+	        if (empty($usedTaxonomies)) {
+		        global $wpdb;
+		        global $wpPrefix;
+
+		        $usedTaxonomies = [];
+		        $array = $wpdb->get_results('SELECT optionValue FROM '.$wpPrefix.'realbig_settings WGPS WHERE optionName = "usedTaxonomies"');
+
+		        if (!empty($array[0]->optionValue)) {
+			        $usedTaxonomies = json_decode($array[0]->optionValue, true);
+		        }
+
+	        }
+
+		    return $usedTaxonomies;
+	    }
+	}
 	if (!function_exists('RFWP_addWebnavozJs')) {
 		function RFWP_addWebnavozJs() {
 		    $plugin1 = 'webnavoz-likes/webnavoz-likes.php';
@@ -1677,7 +1806,6 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 				$penyok_stoparik = 0;
 				?><script><?php include_once (dirname(__FILE__).'/webnawozComp.js'); ?></script><?php
 			}
-            $penyok_stoparik = 0;
 		}
 	}
 	if (!function_exists('RFWP_addContentContainer')) {

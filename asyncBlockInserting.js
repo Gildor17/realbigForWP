@@ -145,7 +145,7 @@ function clearUnsuitableCache(cuc_cou) {
     let scAdId = -1;
     let ccRepeat = false;
 
-    let gatheredBlocks = document.querySelectorAll('.percentPointerClass .content_rb, .percentPointerClass .cnt32_rl_bg_str');
+    let gatheredBlocks = document.querySelectorAll('.percentPointerClass .' + block_classes.join(', .percentPointerClass .'));
 
     if (gatheredBlocks&&gatheredBlocks.length > 0) {
         for (let i = 0; i < gatheredBlocks.length; i++) {
@@ -225,7 +225,7 @@ function blocksRepositionUse(containerString, blType, searchType, contentElement
             if (blocksInContainer && blocksInContainer.length > 0 && usedBlockSettingArray && usedBlockSettingArray.length > 0) {
                 for (i = 0; i < blocksInContainer.length; i++) {
                     currentBlock = blocksInContainer[i];
-                    currentBlockId = currentBlock.querySelector('.content_rb, .cnt32_rl_bg_str').getAttribute('data-id');
+                    currentBlockId = currentBlock.querySelector('.' + block_classes.join(', .')).getAttribute('data-id');
                     currentContainer = null;
                     for (j = 0; j < usedBlockSettingArray.length; i++) {
                         if (usedBlockSettingArray[i]['id'] == currentBlockId) {
@@ -288,10 +288,7 @@ function createStyleElement(blockNumber, localElementCss) {
             break;
     }
     if (!emptyValues) {
-        htmlToAdd = '#content_rb_'+blockNumber+' > * {\n' +
-            '    margin: '+marginString+';\n' +
-            '}\n' +
-            '#cnt_rb_'+blockNumber+' > * {\n' +
+        htmlToAdd = '.percentPointerClass  > *[data-id="'+blockNumber+'"] {\n' +
             '    margin: '+marginString+';\n' +
             '}\n';
     }
@@ -1158,7 +1155,7 @@ function setLongCache() {
 }
 
 function cachePlacing(alert_type, errorInfo=null) {
-    let adBlocks = document.querySelectorAll('.percentPointerClass .content_rb, .percentPointerClass .cnt32_rl_bg_str');
+    let adBlocks = document.querySelectorAll('.percentPointerClass .' + block_classes.join(', .percentPointerClass .'));
     let curAdBlock;
     let okStates = ['done','refresh-wait','no-block','fetched'];
     /* let adId = -1; */
@@ -1608,7 +1605,7 @@ function gatherContentBlock() {
 }
 
 function removeMarginClass(blockObject) {
-    if (blockObject&&(typeof jsInputerLaunch==='object')) {
+    if (blockObject && typeof jsInputerLaunch !== 'undefined' && [15, 10].includes(jsInputerLaunch)) {
         let binderName,
             neededElement,
             currentDirection,
@@ -1621,7 +1618,7 @@ function removeMarginClass(blockObject) {
             currentDirection = 'before';
             do {
                 seekerIterationCount++;
-                currentSubling = blockObject.nextSibling;
+                currentSubling = blockObject.nextElementSibling;
                 if (currentSubling&&currentSubling.classList.contains('rbinder-'+binderName)) {
                     neededElement = currentSubling;
                 }
@@ -1632,7 +1629,7 @@ function removeMarginClass(blockObject) {
                 currentDirection = 'after';
                 do {
                     seekerIterationCount++;
-                    currentSubling = blockObject.previousSibling;
+                    currentSubling = blockObject.previousElementSibling;
                     if (currentSubling&&currentSubling.classList.contains('rbinder-'+binderName)) {
                         neededElement = currentSubling;
                     }

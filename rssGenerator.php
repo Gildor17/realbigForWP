@@ -447,6 +447,7 @@ try {
 		        $rssOptions['onTurbo'] = true;
 		        $rssOptions['onOffProtocol'] = 'default';
 		        // 2nd part
+		        $rssOptions['PostHtml'] = false;
 		        $rssOptions['PostDate'] = false;
 		        $rssOptions['PostDateType'] = 'create';
 		        $rssOptions['PostExcerpt'] = false;
@@ -547,6 +548,7 @@ try {
 			        'onTurbo' => 'feedOnOff',
 			        'onOffProtocol' => 'feedOnOffProtocol',
 			        // 2nd part
+			        'PostHtml' => 'feedPostHtml',
 			        'PostDate' => 'feedPostDate',
 			        'PostDateType' => 'feedPostDateType',
 			        'PostExcerpt' => 'feedPostExcerpt',
@@ -1656,6 +1658,9 @@ try {
                                         <link><?php echo $item->guid ?></link>
                                         <turbo:source><?php echo $item->guid ?></turbo:source>
                                         <turbo:topic><?php echo $item->post_title ?></turbo:topic>
+                                        <?php if (!empty($rssOptions['PostHtml'])): ?>
+                                            <turbo:extendedHtml>true</turbo:extendedHtml>
+                                        <?php endif; ?>
                                         <?php if (!empty($rssOptions['PostDate'])): ?>
                                             <?php if ($rssOptions['PostDateType'] == 'create'&&!empty($item->post_date_gmt)) { ?>
                                                 <pubDate><?php echo $item->post_date_gmt ?> +0300</pubDate>
