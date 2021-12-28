@@ -40,6 +40,7 @@ try {
 				$killRbAvailable = false;
 			}
 			$postsGatherDesktop = $wpdb->get_results('SELECT post_title FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_desktop_new")');
+			$postsGatherTablet = $wpdb->get_results('SELECT post_title FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_tablet_new")');
 			$postsGatherMobile  = $wpdb->get_results('SELECT post_title FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_mobile_new" )');
 			$getWorkProcess = $wpdb->get_var($wpdb->prepare('SELECT optionValue FROM '.$wpPrefix.'realbig_settings WHERE optionName = %s', ["work_process_status"]));
 			$getBlocks = $wpdb->get_results('SELECT block_number FROM '.$wpPrefix.'realbig_plugin_settings', ARRAY_A);
@@ -230,12 +231,21 @@ try {
 								</div>
 							</div>
 						<?php endif; ?>
-						<?php if (!empty($postsGatherDesktop)||!empty($postsGatherMobile)):?>
+						<?php if (!empty($postsGatherDesktop)||!empty($postsGatherTablet)||!empty($postsGatherMobile)):?>
 							<div class="squads-blocks">
-								Количество закешированных блоков: <?php echo count($postsGatherDesktop)+count($postsGatherMobile) ?>.<br>
+								Количество закешированных блоков: <?php echo count($postsGatherDesktop)+count($postsGatherMobile)+count($postsGatherTablet) ?>.<br>
 								<div class="separated-blocks">
 									ИД десктопных:
 									<?php foreach ($postsGatherDesktop AS $item): ?>
+										<div>
+											<?php echo $blocksCounter++; ?>: <?php echo $item->post_title ?>;
+										</div>
+									<?php endforeach; ?>
+								</div>
+								<?php $blocksCounter = 1; ?>
+								<div class="separated-blocks">
+									ИД планшетных:
+									<?php foreach ($postsGatherTablet AS $item): ?>
 										<div>
 											<?php echo $blocksCounter++; ?>: <?php echo $item->post_title ?>;
 										</div>

@@ -1415,11 +1415,14 @@ try {
 	                        $rfwp_selectiveOffFieldGet = json_decode($rfwp_selectiveOffFieldGet);
                         }
                     }
-					foreach ($rfwp_selectiveOffFieldGet AS $k1 => $item1) {
-						if (!in_array($item1, $textAr)) {
-							array_push($textAr, $item1);
-						}
-					}
+
+                    if (!empty($rfwp_selectiveOffFieldGet)) {
+	                    foreach ($rfwp_selectiveOffFieldGet AS $k1 => $item1) {
+		                    if (!in_array($item1, $textAr)) {
+			                    array_push($textAr, $item1);
+		                    }
+	                    }
+                    }
 					unset($k1, $item1);
 
                     if (!empty($textAr)) {

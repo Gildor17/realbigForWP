@@ -12,9 +12,10 @@ try {
     $errorsGather = '';
 
     $checkCacheTimeoutMobile = get_transient('rb_mobile_cache_timeout');
+    $checkCacheTimeoutTablet = get_transient('rb_tablet_cache_timeout');
     $checkCacheTimeoutDesktop = get_transient('rb_desktop_cache_timeout');
 
-    if (!empty($checkCacheTimeoutMobile)&&!empty($checkCacheTimeoutDesktop)) {
+    if (!empty($checkCacheTimeoutMobile)&&!empty($checkCacheTimeoutTablet)&&!empty($checkCacheTimeoutDesktop)) {
         return true;
     }
 

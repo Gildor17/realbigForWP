@@ -19,6 +19,7 @@ try {
                 'syncProcess' =>get_transient('realbigPluginSyncProcess'),
                 'cache'       =>get_transient('rb_cache_timeout'),
                 'mobileCache' =>get_transient('rb_mobile_cache_timeout'),
+                'tabletCache' =>get_transient('rb_tablet_cache_timeout'),
                 'desktopCache'=>get_transient('rb_desktop_cache_timeout'),
             ];
 			$cachesArray = [];

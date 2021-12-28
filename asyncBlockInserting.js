@@ -7,7 +7,7 @@ if (typeof sameElementAfterExcClassId==='undefined') {var sameElementAfterExcCla
 if (typeof sameElementAfterFromConstruction==='undefined') {var sameElementAfterFromConstruction = false;}
 if (typeof rb_tempElement_check==='undefined') {var rb_tempElement_check = false;}
 if (typeof rb_tempElement==='undefined') {var rb_tempElement = null;}
-if (typeof jsInputerLaunch==='undefined') {var jsInputerLaunch = -1;}
+if (typeof window.jsInputerLaunch==='undefined') {window.jsInputerLaunch = -1;}
 
 function launchUpdateRbDisplays() {
     if ((typeof updateRbDisplays !== 'undefined')&&(typeof updateRbDisplays === 'function')) {
@@ -1055,9 +1055,9 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
     }
 }
 
-function asyncFunctionLauncher() {
+window.asyncFunctionLauncher = function() {
     if (window.jsInputerLaunch !== undefined
-        &&[15, 10].includes(jsInputerLaunch)
+        &&[15, 10].includes(window.jsInputerLaunch)
         &&(typeof asyncBlocksInsertingFunction !== 'undefined' )
         &&(typeof asyncBlocksInsertingFunction === 'function')
         &&typeof endedSc!=='undefined'&&
@@ -1069,7 +1069,7 @@ function asyncFunctionLauncher() {
         typeof sameElementAfterFromConstruction!=='undefined'&&
         typeof rb_tempElement_check!=='undefined'&&
         typeof rb_tempElement!=='undefined'&&
-        typeof jsInputerLaunch!=='undefined') {
+        typeof window.jsInputerLaunch!=='undefined') {
         /* asyncBlocksInsertingFunction(blockSettingArray, contentLength); */
         asyncBlocksInsertingFunction(blockSettingArray);
         if (!endedSc) {
@@ -1159,18 +1159,16 @@ function cachePlacing(alert_type, errorInfo=null) {
     let curAdBlock;
     let okStates = ['done','refresh-wait','no-block','fetched'];
     /* let adId = -1; */
-    let blockStatus = null;
+    let blockAid = null;
     let blockId;
 
     if (typeof cachedBlocksArray !== 'undefined'&&cachedBlocksArray&&cachedBlocksArray.length > 0&&adBlocks&&adBlocks.length > 0) {
         for (let i = 0; i < adBlocks.length; i++) {
-            blockStatus = null;
-            blockStatus = adBlocks[i]['dataset']['state'];
+            blockAid = adBlocks[i]['dataset']['aid'];
 
-            if (!blockStatus) {
+            if (!blockAid) {
                 blockId = adBlocks[i]['dataset']['id'];
                 if (cachedBlocksArray[blockId]) {
-                    /* adBlocks[i].innerHTML = cachedBlocksArray[blockId]; */
                     jQuery(adBlocks[i]).html(cachedBlocksArray[blockId]);
                 }
             }
@@ -1557,7 +1555,7 @@ function saveContentBlock(contentContainer) {
     }
 }
 
-function gatherContentBlock() {
+window.gatherContentBlock = function() {
     let cPointer = null,
         cPointerParent = null,
         cPointerParentString = null,
@@ -1566,7 +1564,7 @@ function gatherContentBlock() {
 
     cPointer =  document.querySelector('#content_pointer_id');
     if (cPointer) {
-        if (jsInputerLaunch!==15) {
+        if (window.jsInputerLaunch!==15) {
             return false;
         }
         cPointerParent = cPointer.parentElement;
@@ -1604,8 +1602,8 @@ function gatherContentBlock() {
     }
 }
 
-function removeMarginClass(blockObject) {
-    if (blockObject && typeof jsInputerLaunch !== 'undefined' && [15, 10].includes(jsInputerLaunch)) {
+window.removeMarginClass = function(blockObject) {
+    if (blockObject && typeof window.jsInputerLaunch !== 'undefined' && [15, 10].includes(window.jsInputerLaunch)) {
         let binderName,
             neededElement,
             currentDirection,
@@ -1664,7 +1662,7 @@ function elementBinderNameGenerator() {
 
     return binderName;
 }
-/* if ((typeof jsInputerLaunch!=='undefined'&&[10,15].includes(jsInputerLaunch))&&(document.readyState === "complete" || (document.readyState !== "loading" && !document.documentElement.doScroll))) {
+/* if ((typeof window.jsInputerLaunch!=='undefined'&&[10,15].includes(window.jsInputerLaunch))&&(document.readyState === "complete" || (document.readyState !== "loading" && !document.documentElement.doScroll))) {
     gatherContentBlock();
 } else {
     setTimeout(gatherContentBlock,100);

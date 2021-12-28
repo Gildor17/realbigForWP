@@ -60,11 +60,11 @@ try {
             }
 
             public static function wpSuperCacheCacheClearExecute() {
-                if (function_exists('wp_cache_clean_cache')) {
-                    global $file_prefix;
-                    wp_cache_clean_cache($file_prefix, true);
-                }
-                return true;
+	            if (function_exists('wp_cache_clean_cache')) {
+		            global $file_prefix;
+		            wp_cache_clean_cache($file_prefix, true);
+	            }
+	            return true;
             }
 
             private static function wpSuperCacheCacheClear() {

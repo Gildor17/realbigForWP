@@ -5,7 +5,7 @@ if (!defined("ABSPATH")) { exit;}
 /*
 Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.4.1
+Version:      0.4.2
 Author:       Realbig Team
 Author URI:   https://realbig.media
 License:      GPLv2 or later
@@ -446,8 +446,8 @@ try {
 						}
 
 						$cachedBlocks = '';
-						if (!isset($GLOBALS['rb_mobile_check'])) {
-							$GLOBALS['rb_mobile_check'] = RFWP_wp_is_mobile();
+						if (!isset($GLOBALS['rb_type_device'])) {
+							$GLOBALS['rb_type_device'] = RFWP_wp_get_type_device();
 						}
 
 						$shortcodesGathered = get_posts(['post_type'=>'rb_shortcodes','numberposts'=>-1]);
@@ -576,13 +576,15 @@ try {
 				add_action($insertPlace, 'RFWP_syncFunctionAdd11', 10);
 
 				$cacheTimeoutMobile = get_transient('rb_mobile_cache_timeout');
+				$cacheTimeoutTablet = get_transient('rb_tablet_cache_timeout');
 				$cacheTimeoutDesktop = get_transient('rb_desktop_cache_timeout');
 				if (!empty($GLOBALS['dev_mode'])) {
 					$cacheTimeoutMobile = 0;
+					$cacheTimeoutTablet = 0;
 					$cacheTimeoutDesktop = 0;
 				}
 
-				if (empty($cacheTimeoutDesktop)||empty($cacheTimeoutMobile)) {
+				if (empty($cacheTimeoutDesktop)||empty($cacheTimeoutTablet)||empty($cacheTimeoutMobile)) {
 					$cacheTimeout = get_transient('rb_cache_timeout');
 
 					if (!empty($GLOBALS['dev_mode'])) {
@@ -619,10 +621,11 @@ try {
 
 	if (empty(apply_filters('wp_doing_cron', defined('DOING_CRON') && DOING_CRON))) {
 	    if ((!empty($curUserCan)&&!empty($_POST['statusRefresher']))||empty($tableForToken)||empty($tableForCurrentPluginChecker)) {
-	        $wpdb->query('DELETE FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_mobile","rb_block_desktop","rb_block_mobile_new","rb_block_desktop_new") AND post_author = 0');
+	        $wpdb->query('DELETE FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_mobile","rb_block_desktop","rb_block_mobile_new","rb_block_tablet_new","rb_block_desktop_new") AND post_author = 0');
 	        delete_transient('rb_cache_timeout');
 	        delete_transient('rb_longCacheDeploy');
 	        delete_transient('rb_mobile_cache_timeout');
+	        delete_transient('rb_tablet_cache_timeout');
 	        delete_transient('rb_desktop_cache_timeout');
 		    delete_option('realbig_status_gatherer_version');
 
@@ -666,10 +669,11 @@ try {
 	/****************** end of updater code *******************************************************************************/
 	/********** checking and creating tables ******************************************************************************/
 	if ((!empty($lastSuccessVersionGatherer)&&$lastSuccessVersionGatherer != $GLOBALS['realbigForWP_version'])||empty($lastSuccessVersionGatherer)) {
-		$wpdb->query('DELETE FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_mobile","rb_block_desktop","rb_block_mobile_new","rb_block_desktop_new") AND post_author = 0');
+		$wpdb->query('DELETE FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_mobile","rb_block_desktop","rb_block_mobile_new","rb_block_tablet_new","rb_block_desktop_new") AND post_author = 0');
 		delete_transient('rb_cache_timeout');
 		delete_transient('rb_longCacheDeploy');
 		delete_transient('rb_mobile_cache_timeout');
+		delete_transient('rb_tablet_cache_timeout');
 		delete_transient('rb_desktop_cache_timeout');
 
 		$messageFLog = 'clear cached ads';

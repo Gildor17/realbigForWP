@@ -410,7 +410,8 @@ try {
 								    RFWP_Caches::cacheClear();
                                 }
 
-							    delete_transient('rb_mobile_cache_timeout' );
+							    delete_transient('rb_mobile_cache_timeout');
+							    delete_transient('rb_tablet_cache_timeout');
 							    delete_transient('rb_desktop_cache_timeout');
 						    } catch ( Exception $e ) {
 							    $GLOBALS['tokenStatusMessage'] = $e->getMessage();
@@ -525,29 +526,33 @@ try {
 								$resultData = $decodedResult['data'];
 
 								$resultTypes['mobile'] = false;
+								$resultTypes['tablet'] = false;
 								$resultTypes['desktop'] = false;
-								$resultTypes['universal'] = false;
 
 								require_once(ABSPATH."/wp-includes/pluggable.php");
 								foreach ($resultData AS $rk => $ritem) {
 									$postCheckMobile = null;
+									$postCheckTablet = null;
 									$postCheckDesktop = null;
 
-									switch ($ritem['type']) {
-										case 'mobile':
-											$postCheckMobile  = $wpdb->get_var($wpdb->prepare('SELECT id FROM '.$wpPrefix.'posts WHERE post_type = %s AND post_title = %s',['rb_block_mobile_new',$ritem['blockId']]));
-											$resultTypes['mobile'] = true;
-											break;
-										case 'desktop':
-											$postCheckDesktop = $wpdb->get_var($wpdb->prepare('SELECT id FROM '.$wpPrefix.'posts WHERE post_type = %s AND post_title = %s',['rb_block_desktop_new',$ritem['blockId']]));
-											$resultTypes['desktop'] = true;
-											break;
-										case 'universal':
-											$postCheckMobile  = $wpdb->get_var($wpdb->prepare('SELECT id FROM '.$wpPrefix.'posts WHERE post_type = %s AND post_title = %s',['rb_block_mobile_new',$ritem['blockId']]));
-											$postCheckDesktop = $wpdb->get_var($wpdb->prepare('SELECT id FROM '.$wpPrefix.'posts WHERE post_type = %s AND post_title = %s',['rb_block_desktop_new',$ritem['blockId']]));
-											$resultTypes['universal'] = true;
-											break;
-									}
+									if (!empty($ritem['types'])) {
+									    foreach ($ritem['types'] as $type) {
+										    switch ($type) {
+											    case 'mobile':
+												    $postCheckMobile  = $wpdb->get_var($wpdb->prepare('SELECT id FROM '.$wpPrefix.'posts WHERE post_type = %s AND post_title = %s',['rb_block_mobile_new',$ritem['blockId']]));
+												    $resultTypes['mobile'] = true;
+												    break;
+											    case 'tablet':
+												    $postCheckTablet = $wpdb->get_var($wpdb->prepare('SELECT id FROM '.$wpPrefix.'posts WHERE post_type = %s AND post_title = %s',['rb_block_tablet_new',$ritem['blockId']]));
+												    $resultTypes['tablet'] = true;
+												    break;
+											    case 'desktop':
+												    $postCheckDesktop = $wpdb->get_var($wpdb->prepare('SELECT id FROM '.$wpPrefix.'posts WHERE post_type = %s AND post_title = %s',['rb_block_desktop_new',$ritem['blockId']]));
+												    $resultTypes['desktop'] = true;
+												    break;
+										    }
+                                        }
+                                    }
 
 									$postContent = $ritem['code'];
 									$postContent = htmlspecialchars_decode($postContent);
@@ -557,10 +562,10 @@ try {
 									$postContent = preg_replace('~\<~', 'corner_open;', $postContent);
 									$postContent = preg_replace('~\>~', 'corner_close;', $postContent);
 
-									if (in_array($ritem['type'], ['mobile','universal'])) {
+									if (in_array('mobile', $ritem['types'])) {
 										if (!empty($postCheckMobile)) {
 											$postarr = ['ID' => $postCheckMobile, 'post_content' => $postContent];
-											$updateBlockResultMobile = wp_update_post($postarr, true);
+											wp_update_post($postarr, true);
 										} else {
 											$postarr = [
 												'post_content' => $postContent,
@@ -569,13 +574,28 @@ try {
 												'post_type'    => 'rb_block_mobile_new',
 												'post_author'  => 0
 											];
-											$saveBlockResultMobile = wp_insert_post($postarr, true);
+											wp_insert_post($postarr, true);
 										}
 									}
-									if (in_array($ritem['type'], ['desktop','universal'])) {
+									if (in_array('tablet', $ritem['types'])) {
+										if (!empty($postCheckTablet)) {
+											$postarr = ['ID' => $postCheckTablet, 'post_content' => $postContent];
+											wp_update_post($postarr, true);
+										} else {
+											$postarr = [
+												'post_content' => $postContent,
+												'post_title'   => $ritem['blockId'],
+												'post_status'  => "publish",
+												'post_type'    => 'rb_block_tablet_new',
+												'post_author'  => 0
+											];
+											wp_insert_post($postarr, true);
+										}
+									}
+									if (in_array('desktop', $ritem['types'])) {
 										if (!empty($postCheckDesktop)) {
 											$postarr = ['ID' => $postCheckDesktop, 'post_content' => $postContent];
-											$updateBlockResultDesktop = wp_update_post($postarr, true);
+											wp_update_post($postarr, true);
 										} else {
 											$postarr = [
 												'post_content' => $postContent,
@@ -584,19 +604,20 @@ try {
 												'post_type'    => 'rb_block_desktop_new',
 												'post_author'  => 0
 											];
-											$saveBlockResultDesktop = wp_insert_post($postarr, true);
+											wp_insert_post($postarr, true);
 										}
 									}
 								}
 								unset($rk,$ritem);
 
 								set_transient('rb_cache_timeout', time()+60, 60);
-								if (!empty($resultTypes['mobile'])&&empty($resultTypes['desktop'])) {
+								if (!empty($resultTypes['mobile'])) {
 									set_transient('rb_mobile_cache_timeout', time()+(60*60), 60*60);
-								} elseif (empty($resultTypes['mobile'])&&!empty($resultTypes['desktop'])) {
-									set_transient('rb_desktop_cache_timeout', time()+(60*60), 60*60);
-								} elseif (empty($resultTypes['mobile'])&&empty($resultTypes['desktop'])&&!empty($resultTypes['universal'])) {
-									set_transient('rb_mobile_cache_timeout', time()+(60*60), 60*60);
+								}
+								if (!empty($resultTypes['tablet'])) {
+									set_transient('rb_tablet_cache_timeout', time()+(60*60), 60*60);
+								}
+								if (!empty($resultTypes['desktop'])) {
 									set_transient('rb_desktop_cache_timeout', time()+(60*60), 60*60);
 								}
 								delete_transient('rb_active_cache');
