@@ -1001,7 +1001,15 @@ try {
                     $pathToFile = $item['path'].$item['pathAdditional'].$GLOBALS['rb_variables']['rotator'].'.js';
                     $urlToFile = $item['url'].$item['urlAdditional'].$GLOBALS['rb_variables']['rotator'].'.js';
                     try {
-                        $rotatorFileInfo['fileRotatorContent'] = file_get_contents($rotatorFileInfo['urlToRotator']);
+	                    $arrContextOptions=array(
+		                    "ssl"=>array(
+			                    "verify_peer"=>false,
+			                    "verify_peer_name"=>false,
+		                    ),
+	                    );
+
+	                    $rotatorFileInfo['fileRotatorContent'] = file_get_contents($rotatorFileInfo['urlToRotator'],
+                            false, stream_context_create($arrContextOptions));
                     } catch (Exception $ex) {
                         $fileGetContentError = true;
                     } catch (Error $er) {

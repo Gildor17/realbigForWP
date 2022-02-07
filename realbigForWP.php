@@ -5,7 +5,7 @@ if (!defined("ABSPATH")) { exit;}
 /*
 Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.4.2
+Version:      0.4.3
 Author:       Realbig Team
 Author URI:   https://realbig.media
 License:      GPLv2 or later
@@ -915,13 +915,14 @@ try {
 	/********** adding AD code in head area *******************************************************************************/
 	// new
 	if (!is_admin()&&empty(apply_filters('wp_doing_cron', defined('DOING_CRON')&&DOING_CRON))) {
-	    if (!empty($GLOBALS['rb_variables']['localRotatorUrl'])&&!empty($GLOBALS['rb_variables']['rotator'])&&empty($GLOBALS['rb_variables']['localRotatorToHead'])&&empty($GLOBALS['rb_variables']['adWithStatic'])) {
+		add_action('wp_head', 'RFWP_block_classes_add', 0);
+
+		if (!empty($GLOBALS['rb_variables']['localRotatorUrl'])&&!empty($GLOBALS['rb_variables']['rotator'])&&empty($GLOBALS['rb_variables']['localRotatorToHead'])&&empty($GLOBALS['rb_variables']['adWithStatic'])) {
             $GLOBALS['rb_variables']['localRotatorToHead'] = true;
             add_action('wp_head', 'RFWP_rotatorToHeaderAdd', 0);
         }
 
         add_action('wp_head', 'RFWP_AD_header_add', 0);
-        add_action('wp_head', 'RFWP_block_classes_add', 0);
 		$separatedStatuses = [];
 		$statuses = $wpdb->get_results($wpdb->prepare('SELECT optionName, optionValue FROM '.$wpPrefix.'realbig_settings WHERE optionName IN (%s,%s,%s)', [
 			"pushUniversalCode",

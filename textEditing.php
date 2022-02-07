@@ -486,10 +486,16 @@ try {
 					    $getPageCategories = [$term];
                     } elseif (is_a($term, 'WP_Post')) {
 					    $getPageCategories = get_the_category(get_the_ID());
+
+					    if (empty($getPageCategories))
+					    {
+						    $getPageCategories = [];
+					    }
+
 				        if (!empty($taxonomies['categories'])) {
 				            foreach ($taxonomies['categories'] as $category) {
 				                $terms = get_the_terms(get_the_ID(), $category);
-				                if (!empty($terms)) {
+				                if (!empty($terms) && !is_wp_error($terms)) {
 					                foreach ($terms as $item) {
 						                array_push($getPageCategories, $item);
 					                }
@@ -531,10 +537,16 @@ try {
 						$getPageTags = [$term];
 					} elseif (is_a($term, 'WP_Post')) {
 						$getPageTags = get_the_tags(get_the_ID());
+
+						if (empty($getPageTags))
+						{
+						    $getPageTags = [];
+                        }
+
 						if (!empty($taxonomies['tags'])) {
 							foreach ($taxonomies['tags'] as $tag) {
 								$terms = get_the_terms(get_the_ID(), $tag);
-								if (!empty($terms)) {
+								if (!empty($terms) && !is_wp_error($terms)) {
 									foreach ($terms as $item) {
 										array_push($getPageTags, $item);
 									}

@@ -15,6 +15,7 @@ try {
 			$rb_rssFeedUrls = [];
 			$rssPartsCount = 1;
 			$rssOptions = RFWP_rssOptionsGet();
+			$GLOBALS['rb_rssDivideOptions'] = [];
 
 			if (!empty($rssOptions))
 			{
@@ -41,7 +42,6 @@ try {
 				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_rssCheckLog);
 
 				$rssDividedPosts = RFWP_rssDivine($posts, $rssOptions);
-				$GLOBALS['rb_rssDivideOptions'] = [];
 				$GLOBALS['rb_rssDivideOptions']['posts'] = $rssDividedPosts;
 				$GLOBALS['rb_rssDivideOptions']['iteration'] = 0;
 				$rssOptions['rssPartsSeparated'] = intval($rssOptions['rssPartsSeparated']);
@@ -663,11 +663,12 @@ try {
 					        }
 				        }
 				        unset($k,$item);
-			        } else
-			        {
-			            $rssOptions = [];
-                    }
+			        }
 		        }
+
+		        if (empty($rssOptionsGet)) {
+			        $rssOptions = [];
+                }
 
 		        $GLOBALS['rssOptions'] = $rssOptions;
             }
@@ -835,8 +836,6 @@ try {
 				return $content;
 			}
 
-			$content .= PHP_EOL.PHP_EOL.'<div data-block="widget-feedback" data-title="'.$rssOptions['blockFeedbackPositionTitle'].'" data-stick="'.$rssOptions['blockFeedbackPosition'].'">'.PHP_EOL;
-
 			$ytfeedbacknetw = explode(";", $rssOptions['blockFeedbackButtonOrder']);
 			$ytfeedbacknetw = array_diff($ytfeedbacknetw, array(''));
 
@@ -905,7 +904,11 @@ try {
 				unset($network);
             }
 
-			$content .= '</div>'.PHP_EOL;
+			if (!empty($content))
+			{
+				$content = PHP_EOL . PHP_EOL . '<div data-block="widget-feedback" data-title="' . $rssOptions['blockFeedbackPositionTitle'] . '" data-stick="' . $rssOptions['blockFeedbackPosition'] . '">' . PHP_EOL . $content . '</div>' . PHP_EOL;
+			}
+
 			return $content;
 		}
 	}
@@ -1786,7 +1789,7 @@ try {
                                                 $temprating = mt_rand ($rssOptions['blockRatingFrom']*100, $rssOptions['blockRatingTo']*100) / 100;
                                                 echo '<div itemscope itemtype="http://schema.org/Rating">
                                                         <meta itemprop="ratingValue" content="'.$temprating.'">
-                                                        <meta itemprop="bestRating" content="5">
+                                                        <meta itemprop="bestRating" content="' . max($rssOptions['blockRatingTo'], 5) . '">
                                                     </div>';
                                             } ?>
                                             <?php if (!empty($rssOptions['blockSearch'])&&$rssOptions['blockSearchPosition'] == 'postBegin') {
@@ -1795,12 +1798,12 @@ try {
                                             <?php if (!empty($rssOptions['blockFeedback']) && $rssOptions['blockFeedbackPosition'] == 'false' && $rssOptions['blockFeedbackPositionPlace'] == 'begin') {
                                                 echo RFWP_rss_block_feedback($rssOptions);
                                             } ?>
+	                                        <?php echo htmlspecialchars_decode($item->post_content) ?>
                                             <?php if (!empty($rssOptions['blockShare'])) {
                                                 echo PHP_EOL.'<div data-block="share" data-network="'.$rssOptions['blockShareOrder'].'"></div>';
     //											if ($ytad4 == 'enabled' && $ytad4meta != 'disabled') { echo PHP_EOL.'<figure data-turbo-ad-id="fourth_ad_place"></figure>'.PHP_EOL; }
                                                 do_action( 'yturbo_after_share' );
                                             } ?>
-                                            <?php echo htmlspecialchars_decode($item->post_content) ?>
                                             <?php if (!empty($rssOptions['blockFeedback']) && $rssOptions['blockFeedbackPosition'] == 'false' && $rssOptions['blockFeedbackPositionPlace'] == 'end') {
                                                 echo RFWP_rss_block_feedback($rssOptions);
                                             } ?>

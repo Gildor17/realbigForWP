@@ -516,7 +516,7 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
         let binderName;
 
         var removeClearing;
-        var repeatableBlockIdentifier = 0
+        var repeatableBlockIdentifier = 0;
 
         var i;
 
@@ -1086,7 +1086,7 @@ window.asyncFunctionLauncher = function() {
             asyncFunctionLauncher();
         }, 50);
     }
-}
+};
 /* asyncFunctionLauncher(); */
 
 function asyncInsertingsInsertingFunction(insertingsArray) {
@@ -1600,7 +1600,7 @@ window.gatherContentBlock = function() {
             gatherContentBlock();
         }, 500);
     }
-}
+};
 
 window.removeMarginClass = function(blockObject) {
     if (blockObject && typeof window.jsInputerLaunch !== 'undefined' && [15, 10].includes(window.jsInputerLaunch)) {
@@ -1633,7 +1633,6 @@ window.removeMarginClass = function(blockObject) {
                     }
                 } while (currentSubling&&!neededElement&&seekerIterationCount < 5);
             }
-            // neededElement = document.querySelector('.rfwp_removedMarginTop.rbinder-'+binderName+', .rfwp_removedMarginBottom.rbinder-'+binderName);
             if (neededElement) {
                 if (currentDirection === 'before') {
                     neededElement.classList.remove('rfwp_removedMarginTop');
@@ -1645,7 +1644,7 @@ window.removeMarginClass = function(blockObject) {
     }
 
     return false;
-}
+};
 
 function elementBinderNameGenerator() {
     let binderName = '',
@@ -1662,8 +1661,3 @@ function elementBinderNameGenerator() {
 
     return binderName;
 }
-/* if ((typeof window.jsInputerLaunch!=='undefined'&&[10,15].includes(window.jsInputerLaunch))&&(document.readyState === "complete" || (document.readyState !== "loading" && !document.documentElement.doScroll))) {
-    gatherContentBlock();
-} else {
-    setTimeout(gatherContentBlock,100);
-} /**/
