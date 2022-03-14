@@ -2,16 +2,18 @@ var nReadyBlock = false;
 var fetchedCounter = 0;
 
 function sendReadyBlocksNew(blocks) {
-    let xhttp = new XMLHttpRequest();
-    let sendData = 'action=saveAdBlocks&type=blocksGethering&data='+blocks;
-    xhttp.onreadystatechange = function(redata) {
-        if (this.readyState == 4 && this.status == 200) {
-            console.log('cache succeed');
-        }
-    };
-    xhttp.open("POST", rb_ajaxurl, true);
-    xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-    xhttp.send(sendData);
+    if (!cache_devices) {
+        let xhttp = new XMLHttpRequest();
+        let sendData = 'action=saveAdBlocks&type=blocksGethering&data='+blocks;
+        xhttp.onreadystatechange = function(redata) {
+            if (this.readyState == 4 && this.status == 200) {
+                console.log('cache succeed');
+            }
+        };
+        xhttp.open("POST", rb_ajaxurl, true);
+        xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        xhttp.send(sendData);
+    }
 }
 
 function gatherReadyBlocks() {

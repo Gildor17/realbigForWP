@@ -11,9 +11,9 @@ try {
     $returnData['errors'] = [];
     $errorsGather = '';
 
-    $checkCacheTimeoutMobile = get_transient('rb_mobile_cache_timeout');
-    $checkCacheTimeoutTablet = get_transient('rb_tablet_cache_timeout');
-    $checkCacheTimeoutDesktop = get_transient('rb_desktop_cache_timeout');
+    $checkCacheTimeoutMobile = get_transient(RFWP_Variables::MOBILE_CACHE);
+    $checkCacheTimeoutTablet = get_transient(RFWP_Variables::TABLET_CACHE);
+    $checkCacheTimeoutDesktop = get_transient(RFWP_Variables::DESKTOP_CACHE);
 
     if (!empty($checkCacheTimeoutMobile)&&!empty($checkCacheTimeoutTablet)&&!empty($checkCacheTimeoutDesktop)) {
         return true;
@@ -21,15 +21,15 @@ try {
 
 	$stopIt = false;
     while (empty($stopIt)) {
-	    $checkCacheTimeout = get_transient('rb_cache_timeout');
+	    $checkCacheTimeout = get_transient(RFWP_Variables::CACHE);
 	    if (!empty($checkCacheTimeout)) {
 		    return true;
 	    }
-	    $checkActiveCaching = get_transient('rb_active_cache');
+	    $checkActiveCaching = get_transient(RFWP_Variables::ACTIVE_CACHE);
 	    if (!empty($checkActiveCaching)) {
 		    sleep(6);
 	    } else {
-		    set_transient('rb_active_cache', time()+5, 5);
+		    set_transient(RFWP_Variables::ACTIVE_CACHE, time()+5, 5);
 	        $stopIt = true;
         }
     }

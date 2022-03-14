@@ -38,9 +38,7 @@ try {
 			}
 
 			try {
-//    			$url = 'https://realbig.web/api/wp-get-settings';     // orig web post
-//    			$url = 'https://beta.realbig.media/api/wp-get-settings';     // beta post
-                $url = 'https://wp.realbig.media/api/wp-get-settings';     // orig post
+    			$url = 'https://' . RFWP_getSyncDomain() . '/api/wp-get-settings';
 
                 /** for WP request **/
 				$dataForSending = [
@@ -505,9 +503,7 @@ try {
 				$resultTypes = [];
 
 				try {
-//                    $url = 'https://realbig.web/api/wp-get-ads';     // orig web post
-//                    $url = 'https://beta.realbig.media/api/wp-get-ads';     // beta post
-                    $url = 'https://wp.realbig.media/api/wp-get-ads';     // orig post
+                    $url = 'https://' . RFWP_getSyncDomain() . '/api/wp-get-ads';
 
 					$dataForSending = [
 						'body'  => [
@@ -1280,6 +1276,27 @@ try {
 		    return $thumbnailsSizes;
         }
     }
+	if (!function_exists('RFWP_getSyncDomain')) {
+		function RFWP_getSyncDomain() {
+			global $syncDomain;
+
+			if (empty($syncDomain)) {
+				global $wpdb;
+				global $wpPrefix;
+
+				$array = $wpdb->get_results('SELECT optionValue FROM '.$wpPrefix.'realbig_settings WGPS WHERE optionName = "sync_domain"');
+
+				if (!empty($array[0]->optionValue)) {
+					$syncDomain = json_decode($array[0]->optionValue, true);
+				} else {
+				    $syncDomain = 'wp.realbig.media';
+                }
+
+			}
+
+			return $syncDomain;
+		}
+	}
 }
 catch (Exception $ex)
 {

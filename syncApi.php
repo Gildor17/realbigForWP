@@ -16,7 +16,7 @@ if (!function_exists('RFWP_syncNow')) {
 
 if (!function_exists('RFWP_syncNowPermission')) {
 	function RFWP_syncNowPermission($request) {
-		$justUsed = get_transient('rb_customSyncUsed');
+		$justUsed = get_transient(RFWP_Variables::CUSTOM_SYNC);
 		$expiration = 5;
 		if (empty($justUsed)) {
 			set_transient('rb_customSyncUsed', true, $expiration);

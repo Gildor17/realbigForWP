@@ -13,14 +13,14 @@ try {
 		function RFWP_add_toolbar_items($admin_bar) {
 //		$ppCurrentStatus = ['text' => 'idle', 'color' => 'green'];
             $arrayForArray = [
-                'longCacheUse'=>get_transient('rb_longCacheDeploy'),
-                'activeCache' =>get_transient('rb_active_cache'),
-                'syncAttempt' =>get_transient('realbigPluginSyncAttempt'),
-                'syncProcess' =>get_transient('realbigPluginSyncProcess'),
-                'cache'       =>get_transient('rb_cache_timeout'),
-                'mobileCache' =>get_transient('rb_mobile_cache_timeout'),
-                'tabletCache' =>get_transient('rb_tablet_cache_timeout'),
-                'desktopCache'=>get_transient('rb_desktop_cache_timeout'),
+                'longCacheUse'=>get_transient(RFWP_Variables::LONG_CACHE),
+                'activeCache' =>get_transient(RFWP_Variables::ACTIVE_CACHE),
+                'syncAttempt' =>get_transient(RFWP_Variables::SYNC_ATTEMPT),
+                'syncProcess' =>get_transient(RFWP_Variables::SYNC_PROCESS),
+                'cache'       =>get_transient(RFWP_Variables::CACHE),
+                'mobileCache' =>get_transient(RFWP_Variables::MOBILE_CACHE),
+                'tabletCache' =>get_transient(RFWP_Variables::TABLET_CACHE),
+                'desktopCache'=>get_transient(RFWP_Variables::DESKTOP_CACHE),
             ];
 			$cachesArray = [];
 			$cou = 0;

@@ -381,7 +381,7 @@ function checkAdsWidth(content_pointer, posCurrentElement, currentElement) {
             }
         }
         console.log('cp_w:'+parseInt(content_pointerStyle.width)+'; wc_w:'+parseInt(widthCheckerStyle.width)+';'); */
-        if (parseInt(widthCheckerStyle.width) > (parseInt(content_pointerStyle.width) - 20)) {
+        if (parseInt(widthCheckerStyle.width) >= (parseInt(content_pointerStyle.width) - 50)) {
             return true;
         }
     }
@@ -1033,11 +1033,15 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
             }
         }
 
+        var array = textLengthGatherer(lordOfElements),
+            tlArray = array.array,
+            length = array.length;
+
         if (containerFor6th.length > 0) {
-            percentInserter(lordOfElements, containerFor6th);
+            percentInserter(lordOfElements, containerFor6th, tlArray, length);
         }
         if (containerFor7th.length > 0) {
-            symbolInserter(lordOfElements, containerFor7th);
+            symbolInserter(lordOfElements, containerFor7th, tlArray);
         }
         shortcodesInsert();
         let stopper = 0;
@@ -1053,6 +1057,110 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
     } catch (e) {
         console.log(e.message);
     }
+}
+
+function possibleTagsInCheckConfirmer(possibleTagsArray, possibleTagsInCheck) {
+    if (possibleTagsArray.includes("LI")) {
+        if (possibleTagsArray.includes("UL")) {
+            possibleTagsInCheck.push("UL");
+        }
+        if (possibleTagsArray.includes("OL")) {
+            possibleTagsInCheck.push("OL");
+        }
+    }
+
+    return false;
+}
+
+function textLengthGatherer(lordOfElementsLoc) {
+    var possibleTagsArray;
+    if (typeof tagsListForTextLength!=="undefined") {
+        possibleTagsArray = tagsListForTextLength;
+    } else {
+        possibleTagsArray = ["P", "H1", "H2", "H3", "H4", "H5", "H6", "DIV", "BLOCKQUOTE", "INDEX", "ARTICLE", "SECTION"];
+    }
+    let possibleTagsInCheck = ["DIV", "INDEX", "SECTION"];
+
+    possibleTagsInCheckConfirmer(possibleTagsArray, possibleTagsInCheck);
+    let excArr = excIdClUnpacker(),
+        textLength = 0,
+        tlArray = [];
+
+    function textLengthGathererRec(lordOfElementsLoc) {
+        let allowed;
+        let cou1;
+        let classesArray;
+        let countSuccess = 0;
+        try {
+            for (let i = 0; i < lordOfElementsLoc.children.length; i++) {
+                if (possibleTagsArray.includes(lordOfElementsLoc.children[i].tagName)
+                    &&!lordOfElementsLoc.children[i].classList.contains("percentPointerClass")
+                    &&lordOfElementsLoc.children[i].id!="toc_container"
+                ) {
+                    if (possibleTagsInCheck.includes(lordOfElementsLoc.children[i].tagName)
+                        &&(lordOfElementsLoc.children[i].children.length > 0)
+                    ) {
+                        allowed = true;
+                        if (lordOfElementsLoc.children[i].id&&excArr['id'].length > 0) {
+                            cou1 = 0;
+                            while (excArr['id'][cou1]) {
+                                if (lordOfElementsLoc.children[i].id.toLowerCase()==excArr['id'][cou1].toLowerCase()) {
+                                    allowed = false;
+                                    break;
+                                }
+                                cou1++;
+                            }
+                        }
+
+                        if (lordOfElementsLoc.children[i].classList.length > 0&&excArr['class'].length > 0) {
+                            cou1 = 0;
+                            while (excArr['class'][cou1]) {
+                                classesArray = excArr['class'][cou1].split('.');
+                                if (classesArray.every(className => lordOfElementsLoc.children[i].classList.contains(className))) {
+                                    allowed = false;
+                                    break;
+                                }
+                                cou1++;
+                            }
+                        }
+
+                        if (excArr['tag'].length > 0) {
+                            cou1 = 0;
+                            while (excArr['tag'][cou1]) {
+                                if (lordOfElementsLoc.children[i].tagName.toLowerCase()==excArr['tag'][cou1].toLowerCase()) {
+                                    allowed = false;
+                                    break;
+                                }
+                                cou1++;
+                            }
+                        }
+
+                        if (allowed) {
+                            if (textLengthGathererRec(lordOfElementsLoc.children[i], excArr, possibleTagsArray, possibleTagsInCheck)) {
+                                countSuccess++;
+                                continue;
+                            }
+                        }
+                    }
+                    textLength = textLength + lordOfElementsLoc.children[i].innerText.length;
+                    tlArray.push({
+                        tag: lordOfElementsLoc.children[i].tagName,
+                        length: lordOfElementsLoc.children[i].innerText.length,
+                        lengthSum: textLength,
+                        element: lordOfElementsLoc.children[i]
+                    });
+                    countSuccess++;
+                }
+            }
+        } catch (er) {
+            console.log(er.message);
+        }
+        return countSuccess > 0;
+    }
+
+    textLengthGathererRec(lordOfElementsLoc);
+
+    return {array: tlArray, length: textLength};
 }
 
 window.asyncFunctionLauncher = function() {
@@ -1180,20 +1288,9 @@ function cachePlacing(alert_type, errorInfo=null) {
     }
 }
 
-function symbolInserter(lordOfElements, containerFor7th) {
+function symbolInserter(lordOfElements, containerFor7th, tlArray) {
     try {
-        var textLength;
-        let tlArray = [];
-        let tlArrayCou = 0;
         var currentChildrenLength = 0;
-        /* var possibleTagsArray = ["P", "H1", "H2", "H3", "H4", "H5", "H6", "DIV", "OL", "UL", "LI", "BLOCKQUOTE", "INDEX", "TABLE", "ARTICLE"]; */
-        var possibleTagsArray;
-        if (typeof tagsListForTextLength!=="undefined") {
-            possibleTagsArray = tagsListForTextLength;
-        } else {
-            possibleTagsArray = ["P", "H1", "H2", "H3", "H4", "H5", "H6", "DIV", "BLOCKQUOTE", "INDEX", "ARTICLE"];
-        }
-        let possibleTagsInCheck = ["DIV", "INDEX"];
         let previousBreak = 0;
         let needleLength;
         let currentSumLength;
@@ -1201,95 +1298,9 @@ function symbolInserter(lordOfElements, containerFor7th) {
         let elementToBind;
         let elementToAddStyle;
         let block_number;
-        let excArr = [];
         let binderName;
 
-        function textLengthGathererNew(lordOfElementsLoc, excArr) {
-            let allowed;
-            let cou1;
-            let classesArray;
-            try {
-                for (let i = 0; i < lordOfElementsLoc.children.length; i++) {
-                    if (possibleTagsArray.includes(lordOfElementsLoc.children[i].tagName)
-                        &&!lordOfElementsLoc.children[i].classList.contains("percentPointerClass")
-                        &&lordOfElementsLoc.children[i].id!="toc_container"
-                    ) {
-                        if (possibleTagsInCheck.includes(lordOfElementsLoc.children[i].tagName)
-                            &&(lordOfElementsLoc.children[i].children.length > 1)
-                        ) {
-                            allowed = true;
-                            if (lordOfElementsLoc.children[i].id&&excArr['id'].length > 0) {
-                                cou1 = 0;
-                                while (excArr['id'][cou1]) {
-                                    if (lordOfElementsLoc.children[i].id.toLowerCase()==excArr['id'][cou1].toLowerCase()) {
-                                        allowed = false;
-                                        break;
-                                    }
-                                    cou1++;
-                                }
-                            }
-
-                            if (lordOfElementsLoc.children[i].classList.length > 0&&excArr['class'].length > 0) {
-                                cou1 = 0;
-                                while (excArr['class'][cou1]) {
-                                    classesArray = excArr['class'][cou1].split('.');
-                                    if (classesArray.every(className => lordOfElementsLoc.children[i].classList.contains(className))) {
-                                        allowed = false;
-                                        break;
-                                    }
-                                    cou1++;
-                                }
-                            }
-
-                            if (excArr['tag'].length > 0) {
-                                cou1 = 0;
-                                while (excArr['tag'][cou1]) {
-                                    if (lordOfElementsLoc.children[i].tagName.toLowerCase()==excArr['tag'][cou1].toLowerCase()) {
-                                        allowed = false;
-                                        break;
-                                    }
-                                    cou1++;
-                                }
-                            }
-
-                            if (allowed==true) {
-                                textLengthGathererNew(lordOfElementsLoc.children[i], excArr);
-                                continue;
-                            }
-                        }
-                        textLength = textLength + lordOfElementsLoc.children[i].innerText.length;
-                        tlArray[tlArrayCou] = [];
-                        tlArray[tlArrayCou]['tag'] = lordOfElementsLoc.children[i].tagName;
-                        tlArray[tlArrayCou]['length'] = lordOfElementsLoc.children[i].innerText.length;
-                        tlArray[tlArrayCou]['element'] = lordOfElementsLoc.children[i];
-                        tlArrayCou++;
-                    }
-                }
-            } catch (er) {
-                console.log(er.message);
-            }
-            return true;
-        }
-
-        function possibleTagsInCheckConfirmer(possibleTagsArray, possibleTagsInCheck) {
-            if (possibleTagsArray.includes("LI")) {
-                if (possibleTagsArray.includes("UL")) {
-                    possibleTagsInCheck.push("UL");
-                }
-                if (possibleTagsArray.includes("OL")) {
-                    possibleTagsInCheck.push("OL");
-                }
-            }
-
-            return false;
-        }
-        
         if (!document.getElementById("markedSpan1")) {
-            textLength = 0;
-            possibleTagsInCheckConfirmer(possibleTagsArray, possibleTagsInCheck);
-            excArr = excIdClUnpacker();
-            textLengthGathererNew(lordOfElements, excArr);
-
             for (let i = 0; i < containerFor7th.length; i++) {
                 previousBreak = 0;
                 currentChildrenLength = 0;
@@ -1357,110 +1368,17 @@ function symbolInserter(lordOfElements, containerFor7th) {
     }
 }
 
-function percentInserter(lordOfElements, containerFor6th) {
+function percentInserter(lordOfElements, containerFor6th, tlArray, textLength) {
     try {
-        var textLength;
         var textNeedyLength = 0;
-        var arrCouLast = [];
-        var possibleTagsArray;
-        if (typeof tagsListForTextLength!=="undefined") {
-            possibleTagsArray = tagsListForTextLength;
-        } else {
-            possibleTagsArray = ["P", "H1", "H2", "H3", "H4", "H5", "H6", "DIV", "OL", "UL", "LI", "BLOCKQUOTE", "INDEX", "TABLE", "ARTICLE"];
-        }
-        var possibleTagsInCheck = ["DIV", "INDEX"];
         let elementToAdd;
         var elementToBind;
         let elementToAddStyle;
         let block_number;
-        let tlArray = [];
-        let tlArrayCou = 0;
-        let excArr = [];
         var binderName;
         /* var checkIfBlockUsed = 0; */
 
-        function textLengthGathererNew(lordOfElementsLoc, excArr) {
-            let allowed;
-            let cou1;
-            let classesArray;
-            try {
-                for (let i = 0; i < lordOfElementsLoc.children.length; i++) {
-                    if (possibleTagsArray.includes(lordOfElementsLoc.children[i].tagName)
-                        &&!lordOfElementsLoc.children[i].classList.contains("percentPointerClass")
-                        &&lordOfElementsLoc.children[i].id!="toc_container"
-                    ) {
-                        if (possibleTagsInCheck.includes(lordOfElementsLoc.children[i].tagName)
-                            &&(lordOfElementsLoc.children[i].children.length > 1)
-                        ) {
-                            allowed = true;
-                            if (lordOfElementsLoc.children[i].id&&excArr['id'].length > 0) {
-                                cou1 = 0;
-                                while (excArr['id'][cou1]) {
-                                    if (lordOfElementsLoc.children[i].id.toLowerCase()==excArr['id'][cou1].toLowerCase()) {
-                                        allowed = false;
-                                        break;
-                                    }
-                                    cou1++;
-                                }
-                            }
-
-                            if (lordOfElementsLoc.children[i].classList.length > 0&&excArr['class'].length > 0) {
-                                cou1 = 0;
-                                while (excArr['class'][cou1]) {
-                                    classesArray = excArr['class'][cou1].split('.');
-                                    if (classesArray.every(className => lordOfElementsLoc.children[i].classList.contains(className))) {
-                                        allowed = false;
-                                        break;
-                                    }
-                                    cou1++;
-                                }
-                            }
-
-                            if (excArr['tag'].length > 0) {
-                                cou1 = 0;
-                                while (excArr['tag'][cou1]) {
-                                    if (lordOfElementsLoc.children[i].tagName.toLowerCase()==excArr['tag'][cou1].toLowerCase()) {
-                                        allowed = false;
-                                        break;
-                                    }
-                                    cou1++;
-                                }
-                            }
-
-                            if (allowed==true) {
-                                textLengthGathererNew(lordOfElementsLoc.children[i], excArr);
-                                continue;
-                            }
-                        }
-                        textLength = textLength + lordOfElementsLoc.children[i].innerText.length;
-                        tlArray[tlArrayCou] = [];
-                        tlArray[tlArrayCou]['tag'] = lordOfElementsLoc.children[i].tagName;
-                        tlArray[tlArrayCou]['tlength'] = lordOfElementsLoc.children[i].innerText.length;
-                        tlArray[tlArrayCou]['lengthSum'] = textLength;
-                        tlArray[tlArrayCou]['element'] = lordOfElementsLoc.children[i];
-                        tlArrayCou++;
-                    }
-                }
-            } catch (er) {
-                console.log(er.message);
-            }
-            return true;
-        }
-
-        function possibleTagsInCheckConfirmer(possibleTagsArray, possibleTagsInCheck) {
-            if (possibleTagsArray.includes("LI")) {
-                if (possibleTagsArray.includes("UL")) {
-                    possibleTagsInCheck.push("UL");
-                }
-                if (possibleTagsArray.includes("OL")) {
-                    possibleTagsInCheck.push("OL");
-                }
-            }
-
-            return false;
-        }
-
-        function insertByPercents() {
+        function insertByPercents(textLength) {
             let localMiddleValue = 0;
 
             for (let j = 0; j < containerFor6th.length; j++) {
@@ -1486,12 +1404,7 @@ function percentInserter(lordOfElements, containerFor6th) {
                             elementToAdd.style.textAlign = elementToAddStyle;
                         }
 
-                        if (i > 0) {
-                            localMiddleValue = tlArray[i]['lengthSum'] - Math.round(tlArray[i]['tlength']/2);
-                        } else {
-                            localMiddleValue = Math.round(tlArray[i]['tlength']/2);
-                        }
-
+                        localMiddleValue = tlArray[i]['lengthSum'] - Math.round(tlArray[i]['length']/2);
                         elementToBind = tlArray[i]['element'];
                         currentElementReceiverSpec(false, i, tlArray, elementToBind);
                         if (textNeedyLength < localMiddleValue) {
@@ -1519,11 +1432,7 @@ function percentInserter(lordOfElements, containerFor6th) {
         }
 
         if (!document.getElementById("markedSpan")) {
-            textLength = 0;
-            excArr = excIdClUnpacker();
-            possibleTagsInCheckConfirmer(possibleTagsArray, possibleTagsInCheck);
-            textLengthGathererNew(lordOfElements, excArr);
-            insertByPercents();
+            insertByPercents(textLength);
             clearTlMarks();
             var spanMarker = document.createElement("span");
             spanMarker.setAttribute("id", "markedSpan");
@@ -1536,20 +1445,21 @@ function percentInserter(lordOfElements, containerFor6th) {
 
 function saveContentBlock(contentContainer) {
     try {
-        console.log('content gather save function entered');
-        let xhttp = new XMLHttpRequest();
-        let sendData = 'action=RFWP_saveContentContainer&type=gatherContentBlock&data='+contentContainer;
-        /* let sendData = 'action=test123&type=gatherContentBlock'; */
-        xhttp.onreadystatechange = function(redata) {
-            if (this.readyState == 4 && this.status == 200) {
-                console.log('content gather succeed');
-            } else {
-                console.log('content gather gone wrong');
-            }
-        };
-        xhttp.open("POST", rb_ajaxurl, true);
-        xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-        xhttp.send(sendData);
+        if (!gather_content) {
+            console.log('content gather save function entered');
+            let xhttp = new XMLHttpRequest();
+            let sendData = 'action=RFWP_saveContentContainer&type=gatherContentBlock&data='+contentContainer;
+            xhttp.onreadystatechange = function(redata) {
+                if (this.readyState == 4 && this.status == 200) {
+                    console.log('content gather succeed');
+                } else {
+                    console.log('content gather gone wrong');
+                }
+            };
+            xhttp.open("POST", rb_ajaxurl, true);
+            xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+            xhttp.send(sendData);
+        }
     } catch (er) {
         console.log('content gather error: '+er+';');
     }

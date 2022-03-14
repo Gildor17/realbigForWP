@@ -2,7 +2,7 @@
 Contributors: 101
 Tags: AD, content filling
 Requires at least: 4.5
-Tested up to: 5.8.2
+Tested up to: 5.9.2
 Stable tag: 0.1.26.56
 Requires PHP: 5.6
 License: GPLv2 or later
@@ -106,6 +106,14 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 * is_archive() — любая из архивных страниц (категории, метки, автора, даты).
 
 == Changelog ==
+
+= 0.4.4 =
+
+Изменения версии:
+
+* исправили проблему с добавлением рекламных блоков в статье по символам и процентам при использовании плагина Elementor;
+* сократили количество запросов к файлу admin-ajax.php;
+* другие мелкие улучшения и правки.
 
 = 0.4.3 =
 

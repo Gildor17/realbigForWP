@@ -5,7 +5,7 @@ if (!defined("ABSPATH")) { exit;}
 /*
 Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.4.3
+Version:      0.4.4
 Author:       Realbig Team
 Author URI:   https://realbig.media
 License:      GPLv2 or later
@@ -17,6 +17,7 @@ require_once (ABSPATH."/wp-admin/includes/plugin.php");
 
 $res = true;
 
+$res = $res && include_once(dirname(__FILE__) . "/RFWP_Variables.php");
 $res = $res && include_once(dirname(__FILE__) . "/RFWP_Logs.php");
 $res = $res && include_once(dirname(__FILE__) . "/RFWP_Caches.php");
 $res = $res && include_once(dirname(__FILE__) . "/update.php");
@@ -36,7 +37,6 @@ try {
 
 	RFWP_Logs::generateFilePaths();
 	if (!isset($GLOBALS['dev_mode'])) {
-//        $devMode = true;
 		$devMode = false;
 		$GLOBALS['dev_mode'] = $devMode;
     }
@@ -138,7 +138,7 @@ try {
         &&!empty($GLOBALS['rb_variables']['adDomain'])
     ) {
 	    if (((!empty($_POST['action'])&&$_POST['action']=='heartbeat')||!empty(apply_filters('wp_doing_cron', defined('DOING_CRON') && DOING_CRON)))&&!isset($GLOBALS['rb_variables']['localRotatorGatherTimeout'])) {
-		    $GLOBALS['rb_variables']['localRotatorGatherTimeout'] = get_transient('localRotatorGatherTimeout');
+		    $GLOBALS['rb_variables']['localRotatorGatherTimeout'] = get_transient(RFWP_Variables::LOCAL_ROTATOR_GATHER);
 	    }
 	    if ((!empty($_POST['saveTokenButton']))
 	        ||(isset($GLOBALS['rb_variables']['localRotatorGatherTimeout'])&&empty($GLOBALS['rb_variables']['localRotatorGatherTimeout']))
@@ -542,8 +542,20 @@ try {
 			function RFWP_syncFunctionAdd11() {
 				RFWP_addWebnavozJs();
 				if (empty($GLOBALS['rfwp_addedAlready']['asyncBlockInserting'])) {
-					$ajaxurl = admin_url('admin-ajax.php');
-					?><script>if (typeof rb_ajaxurl==='undefined') {var rb_ajaxurl = '<?php echo $ajaxurl ?>';}<?php include_once (dirname(__FILE__).'/asyncBlockInserting.js'); ?></script><?php
+					echo "<script>" . PHP_EOL;
+					echo "if (typeof rb_ajaxurl==='undefined') {var rb_ajaxurl = '" . admin_url('admin-ajax.php') . "';}" . PHP_EOL;
+
+					if (empty(get_transient(RFWP_Variables::GATHER_CONTENT_LONG)) &&
+                        empty(get_transient(RFWP_Variables::GATHER_CONTENT_SHORT))) {
+
+                        echo "if (typeof gather_content==='undefined') {var gather_content = true;}" . PHP_EOL;
+                    } else {
+                        echo "if (typeof gather_content==='undefined') {var gather_content = false;}" . PHP_EOL;
+                    }
+
+                    include_once(dirname(__FILE__) . '/asyncBlockInserting.js');
+                    echo  PHP_EOL . "</script>" . PHP_EOL;
+
 					$GLOBALS['rfwp_addedAlready']['asyncBlockInserting'] = true;
 					if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
 						RFWP_WorkProgressLog(false,'asyncBlockInserting file add');
@@ -554,8 +566,20 @@ try {
 		if (!function_exists('RFWP_syncFunctionAdd21')) {
 			function RFWP_syncFunctionAdd21() {
 				if (empty($GLOBALS['rfwp_addedAlready']['readyAdGather'])) {
-					$ajaxurl = admin_url('admin-ajax.php');
-					?><script>if (typeof rb_ajaxurl==='undefined') {var rb_ajaxurl = '<?php echo $ajaxurl ?>';}<?php include_once (dirname(__FILE__).'/readyAdGather.js'); ?></script><?php
+                    echo "<script>" . PHP_EOL;
+                    echo "if (typeof rb_ajaxurl==='undefined') {var rb_ajaxurl = '" . admin_url('admin-ajax.php') . "';}" . PHP_EOL;
+
+                    if ((empty(get_transient(RFWP_Variables::MOBILE_CACHE)) || empty(get_transient(RFWP_Variables::TABLET_CACHE)) ||
+                        empty(get_transient(RFWP_Variables::DESKTOP_CACHE))) && empty(get_transient(RFWP_Variables::CACHE))) {
+
+                        echo "if (typeof cache_devices==='undefined') {var cache_devices = true;}" . PHP_EOL;
+                    } else {
+                        echo "if (typeof cache_devices==='undefined') {var cache_devices = false;}" . PHP_EOL;
+                    }
+
+                    include_once(dirname(__FILE__) . '/readyAdGather.js');
+                    echo  PHP_EOL . "</script>" . PHP_EOL;
+
 					$GLOBALS['rfwp_addedAlready']['readyAdGather'] = true;
 					if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
 						RFWP_WorkProgressLog(false,'readyAdGather file add');
@@ -575,9 +599,9 @@ try {
                 
 				add_action($insertPlace, 'RFWP_syncFunctionAdd11', 10);
 
-				$cacheTimeoutMobile = get_transient('rb_mobile_cache_timeout');
-				$cacheTimeoutTablet = get_transient('rb_tablet_cache_timeout');
-				$cacheTimeoutDesktop = get_transient('rb_desktop_cache_timeout');
+				$cacheTimeoutMobile = get_transient(RFWP_Variables::MOBILE_CACHE);
+				$cacheTimeoutTablet = get_transient(RFWP_Variables::TABLET_CACHE);
+				$cacheTimeoutDesktop = get_transient(RFWP_Variables::DESKTOP_CACHE);
 				if (!empty($GLOBALS['dev_mode'])) {
 					$cacheTimeoutMobile = 0;
 					$cacheTimeoutTablet = 0;
@@ -585,7 +609,7 @@ try {
 				}
 
 				if (empty($cacheTimeoutDesktop)||empty($cacheTimeoutTablet)||empty($cacheTimeoutMobile)) {
-					$cacheTimeout = get_transient('rb_cache_timeout');
+					$cacheTimeout = get_transient(RFWP_Variables::CACHE);
 
 					if (!empty($GLOBALS['dev_mode'])) {
 						$cacheTimeout = 0;
@@ -873,16 +897,16 @@ try {
 		add_action('wp_ajax_setLongCache', 'setLongCache');
 		add_action('wp_ajax_nopriv_setLongCache', 'setLongCache');
 
-		$gatherContentTimeoutLong = get_transient('gatherContentContainerLong');
-		$gatherContentTimeoutShort = get_transient('gatherContentContainerShort');
+		$gatherContentTimeoutLong = get_transient(RFWP_Variables::GATHER_CONTENT_LONG);
+		$gatherContentTimeoutShort = get_transient(RFWP_Variables::GATHER_CONTENT_SHORT);
 		if (empty($gatherContentTimeoutLong)&&empty($gatherContentTimeoutShort)) {
 //		        set_transient('gatherContentContainerShort', true, 60);
 			add_action('wp_ajax_RFWP_saveContentContainer', 'RFWP_saveContentContainer');
 			add_action('wp_ajax_nopriv_RFWP_saveContentContainer', 'RFWP_saveContentContainer');
 		}
     }
-	$lastSyncTimeTransient = get_transient('realbigPluginSyncAttempt');
-	$activeSyncTransient   = get_transient('realbigPluginSyncProcess');
+	$lastSyncTimeTransient = get_transient(RFWP_Variables::SYNC_ATTEMPT);
+	$activeSyncTransient   = get_transient(RFWP_Variables::SYNC_PROCESS);
 	if (!empty($GLOBALS['token'])&&$GLOBALS['token']!='no token'&&empty($activeSyncTransient)&&empty($lastSyncTimeTransient)) {
 		$nextSchedulerCheck = wp_next_scheduled('rb_cron_hook');
 		if (empty($nextSchedulerCheck)) {

@@ -596,7 +596,7 @@ try {
 					$GLOBALS['rb_longCache'] = $longCache;
 				} else {
 					if (!isset($GLOBALS['rb_longCache'])) {
-						$longCache = get_transient('rb_longCacheDeploy');
+						$longCache = get_transient(RFWP_Variables::LONG_CACHE);
 						$GLOBALS['rb_longCache'] = $longCache;
 					} else {
 						$longCache = $GLOBALS['rb_longCache'];
@@ -1626,6 +1626,14 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 			
 			if (!empty($tagsListForTextLength)) {
 				$tagsListForTextLength = explode(';', $tagsListForTextLength);
+
+				$array = ["DIV" => ["SECTION"]];
+				foreach ($array as $item => $value) {
+					if (in_array($item, $tagsListForTextLength)) {
+						$tagsListForTextLength = array_merge($tagsListForTextLength, $value);
+					}
+				}
+
 				foreach ($tagsListForTextLength AS $k1 => $item1) {
 					$tagsListForTextLength[$k1] = trim($tagsListForTextLength[$k1]);
 					if (empty($tagsListForTextLength[$k1])) {
@@ -1846,8 +1854,8 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 	}
 	if (!function_exists('RFWP_addContentContainer')) {
 		function RFWP_addContentContainer() {
-		    $gatherContentTimeoutLong = get_transient('gatherContentContainerLong');
-		    $gatherContentTimeoutShort = get_transient('gatherContentContainerShort');
+		    $gatherContentTimeoutLong = get_transient(RFWP_Variables::GATHER_CONTENT_LONG);
+		    $gatherContentTimeoutShort = get_transient(RFWP_Variables::GATHER_CONTENT_SHORT);
 		    if (empty($gatherContentTimeoutLong)&&empty($gatherContentTimeoutShort)) {
 //		        require_once (ABSPATH."/wp-admin/includes/plugin.php");
 //		        set_transient('gatherContentContainerShort', true, 60);
@@ -1864,8 +1872,8 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 			$result['error'] = '';
 			$result['status'] = 'error';
 
-			$gatherContentTimeoutLong = get_transient('gatherContentContainerLong');
-			$gatherContentTimeoutShort = get_transient('gatherContentContainerShort');
+			$gatherContentTimeoutLong = get_transient(RFWP_Variables::GATHER_CONTENT_LONG);
+			$gatherContentTimeoutShort = get_transient(RFWP_Variables::GATHER_CONTENT_SHORT);
 
 			if (empty($gatherContentTimeoutLong)&&empty($gatherContentTimeoutShort)) {
 				$data = $_POST['data'];
