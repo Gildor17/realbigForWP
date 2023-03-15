@@ -1513,7 +1513,7 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 	}
 	if (!function_exists('RFWP_cronCheckLog')) {
 	    function RFWP_cronCheckLog($message='placeholder') {
-            if (!empty($rb_cronCheckFile)&&!empty($GLOBALS['dev_mode'])) {
+            if (!empty($GLOBALS['dev_mode'])) {
                 RFWP_Logs::saveLogs(RFWP_Logs::CRON_LOG, PHP_EOL . $message);
             }
         }
