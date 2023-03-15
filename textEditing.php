@@ -13,7 +13,6 @@ try {
 	if (empty(apply_filters('wp_doing_cron', defined('DOING_CRON') && DOING_CRON))) {
 		if (!function_exists('RFWP_gatheringContentLength')) {
 			function RFWP_gatheringContentLength($content, $isRepeated=null) {
-				global $rb_logFile;
 				try {
 					$contentForLength = '';
 					$contentLength = 0;
@@ -25,9 +24,8 @@ try {
 //				$listOfSymbolsForEcranising = '[a--z]|(\/|\$|\^|\.|\,|\&|\||\(|\)|\+|\-|\*|\?|\!|\[|\]|\{|\}|\<|\>|\\\|\~){1}';
 					if (!function_exists('RFWP_preg_length_warning_handler')) {
 						function RFWP_preg_length_warning_handler($errno, $errstr) {
-							global $rb_logFile;
 							$messageFLog = 'Test error in content length: errStr - '.$errstr.'; errNum - '.$errno.';';
-							error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                            RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 						}
 					}
 					if (empty($isRepeated)) {
@@ -64,26 +62,25 @@ try {
 					}
 				} catch (Exception $ex1) {
 					$messageFLog = 'Some error in content length: '.$ex1->getMessage().';';
-					error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                    RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 					return 0;
 				} catch (Error $er1) {
 					$messageFLog = 'Some error in content length: '.$er1->getMessage().';';
-					error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                    RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 					return 0;
 				} catch (E_WARNING $ew) {
 					$messageFLog = 'Some error in content length: '.$ew->getMessage().';';
-					error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                    RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 					return 0;
 				} catch (E_DEPRECATED $ed) {
 					$messageFLog = 'Some error in content length: '.$ed->getMessage().';';
-					error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                    RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 					return 0;
 				}
 			}
 		}
 		if (!function_exists('RFWP_addIcons')) {
 			function RFWP_addIcons($fromDb, $content) {
-				global $rb_logFile;
 				try {
 					if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
 						RFWP_WorkProgressLog(false,'addIcons_test begin');
@@ -117,7 +114,7 @@ try {
 						/** End of new system for content length checking **/
 						if ($contentLength < 1) {
 							$messageFLog = 'Error content length from function;';
-							error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                            RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 
 							$contentLength = mb_strlen(strip_tags($content), 'utf-8');
 						}
@@ -176,7 +173,7 @@ try {
 								$previousEditedContent = $editedContent;
 							} else {
 								$messageFLog = 'Emptied edited content;';
-								error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 
 								$editedContent = $previousEditedContent;
 							}
@@ -204,12 +201,12 @@ try {
 					}
 				} catch (Exception $ex) {
 					$messageFLog = 'Some error in addIcons: '.$ex->getMessage().';';
-					error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                    RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 
 					return $content;
 				} catch (Error $er) {
 					$messageFLog = 'Some error in addIcons: '.$er->getMessage().';';
-					error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                    RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 
 					return $content;
 				}
@@ -217,7 +214,6 @@ try {
 		}
 		if (!function_exists('RFWP_launch_without_content_function')) {
 			function RFWP_launch_without_content_function($content) {
-				global $rb_logFile;
 				global $fromDb;
 				global $wpdb;
 				$wpPrefix = RFWP_getTablePrefix();
@@ -288,7 +284,7 @@ try {
     }
     function contentMonitoring() {
         if (typeof window.jsInputerLaunch===\'undefined\'||(typeof window.jsInputerLaunch!==\'undefined\'&&window.jsInputerLaunch==-1)) {
-            let possibleClasses = [\'.taxonomy-description\',\'.entry-content\',\'.post-wrap\',\'#blog-entries\',\'.content\',\'.archive-posts__item-text\',\'.single-company_wrapper\',\'.posts-container\',\'.content-area\',\'.post-listing\',\'.td-category-description\',\'.jeg_posts_wrap\'];
+            let possibleClasses = [\'.taxonomy-description\',\'.entry-content\',\'.post-wrap\',\'.post-body\',\'#blog-entries\',\'.content\',\'.archive-posts__item-text\',\'.single-company_wrapper\',\'.posts-container\',\'.content-area\',\'.post-listing\',\'.td-category-description\',\'.jeg_posts_wrap\'];
             let deniedClasses = [\'.percentPointerClass\',\'.addedInserting\',\'#toc_container\'];
             let deniedString = "";
             let contentSelector = \''.$contentSelector.'\';
@@ -319,10 +315,21 @@ try {
                     }
                 }
             }
-            let contentPointerCheck = document.querySelector(\'#content_pointer_id\');
-            if (contentCheck&&!contentPointerCheck) {                
+            if (!contentCheck) {
+                contentCheck = document.querySelector(\'[itemprop=articleBody]\');
+            }
+            if (contentCheck) {
                 console.log(\'content is here\');
-                let cpSpan = document.createElement(\'SPAN\');
+                let contentPointerCheck = document.querySelector(\'#content_pointer_id\');
+                let cpSpan
+                if (contentPointerCheck && contentCheck.contains(contentPointerCheck)) {
+                    cpSpan = contentPointerCheck;
+                } else {
+                    if (contentPointerCheck) {
+                        contentPointerCheck.parentNode.removeChild(contentPointerCheck);
+                    }
+                    cpSpan = document.createElement(\'SPAN\');                    
+                }
                 cpSpan.setAttribute(\'id\', \'content_pointer_id\');
                 cpSpan.classList.add(\'no-content\');
                 cpSpan.setAttribute(\'data-content-length\', \'0\');
@@ -330,13 +337,13 @@ try {
                 cpSpan.setAttribute(\'data-rejected-blocks\', \''.$rejectedIdsString.'\');
                 window.jsInputerLaunch = 10;
                 
-                contentCheck.prepend(cpSpan);
+                if (!cpSpan.parentNode) contentCheck.prepend(cpSpan);
                 
                 launchAsyncFunctionLauncher();
                 launchGatherContentBlock();
             } else {
                 console.log(\'contentMonitoring try\');
-                contentSearchCount++;
+                if (document.readyState === "complete") contentSearchCount++;
                 if (contentSearchCount < 20) {
                     setTimeout(function () {
                         contentMonitoring();
@@ -371,11 +378,11 @@ try {
 					return $newContent;
 				} catch (Exception $ex) {
 					$messageFLog = 'Some error in RFWP_launch_without_content_function: '.$ex->getMessage().';';
-					error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                    RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 					return $content;
 				} catch (Error $er) {
 					$messageFLog = 'Some error in RFWP_launch_without_content_function: '.$er->getMessage().';';
-					error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                    RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 					return $content;
 				}
 			}
@@ -583,26 +590,10 @@ try {
 				global $wpdb;
 
 			    $cachedBlocks = get_posts(['post_type' => 'rb_block_' . $GLOBALS['rb_type_device'] . '_new','numberposts' => 100]);
-			    $longCache = RFWP_getLongCache();
+			    $longCache = RFWP_Cache::getLongCache();
 			    $content = RFWP_rb_cache_gathering($content, $cachedBlocks, $longCache);
 
 				return $content;
-			}
-		}
-		if (!function_exists('RFWP_getLongCache')) {
-			function RFWP_getLongCache() {
-				if (!empty($GLOBALS['dev_mode'])) {
-					$longCache = false;
-					$GLOBALS['rb_longCache'] = $longCache;
-				} else {
-					if (!isset($GLOBALS['rb_longCache'])) {
-						$longCache = get_transient(RFWP_Variables::LONG_CACHE);
-						$GLOBALS['rb_longCache'] = $longCache;
-					} else {
-						$longCache = $GLOBALS['rb_longCache'];
-					}
-				}
-				return $longCache;
 			}
 		}
 		if (!function_exists('RFWP_shortCodesAdd')) {
@@ -618,7 +609,6 @@ try {
 		}
 		if (!function_exists('RFWP_shortcodesToContent')) {
 			function RFWP_shortcodesToContent($content) {
-				global $rb_logFile;
 				try {
 					if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
 						RFWP_WorkProgressLog(false,'shortcodesToContent begin');
@@ -638,6 +628,7 @@ try {
 								$scContent .= 'scArray['.$cou.']["fetched"] = 0;'.PHP_EOL;
 								$scText = $item2;
 								$scText = preg_replace('~(\'|\")~','\\\$1',$scText);
+								$scText = preg_replace('~(\\\u|\\\n|\\\r)~','\\\$1',$scText);
 								$scText = preg_replace('~(\r\n|\n|\r)~',' ',$scText);
 								$scText = preg_replace('~\<script~', '<scr"+"ipt', $scText);
 								$scText = preg_replace('~\/script~', '/scr"+"ipt', $scText);
@@ -654,11 +645,11 @@ try {
 					return $content;
 				} catch (Exception $ex) {
 					$messageFLog = 'Some error in shortcodesToContent: '.$ex->getMessage().';';
-					error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                    RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 					return $content;
 				} catch (Error $er) {
 					$messageFLog = 'Some error in shortcodesToContent: '.$er->getMessage().';';
-					error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                    RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 					return $content;
 				}
 			}
@@ -667,7 +658,7 @@ try {
 		if (!function_exists('RFWP_rotatorToHeaderAdd')) {
 			function RFWP_rotatorToHeaderAdd() {
 				RFWP_launch_cache_local($GLOBALS['rb_variables']['rotator'], $GLOBALS['rb_variables']['adDomain']);
-				$pluginVersion = RFWP_plugin_version();
+				$pluginVersion = RFWP_Utils::getVersion();
 				$src = $GLOBALS['rb_variables']['localRotatorUrl'];
 				if (!empty($pluginVersion)) {
                     $src = $src.'?ver='.$pluginVersion;
@@ -716,7 +707,6 @@ try {
 	}
 	if (!function_exists('RFWP_shortcodesInGlobal')) {
 	    function RFWP_shortcodesInGlobal() {
-	        global $rb_logFile;
 		    try {
 			    $shortcodesGathered = get_posts(['post_type' => 'rb_shortcodes','numberposts' => -1]);
 			    if (empty($shortcodesGathered)) {
@@ -739,18 +729,17 @@ try {
 		        return true;
             } catch (Exception $ex) {
 		        $messageFLog = 'Some error in shortcodesInGlobal: '.$ex->getMessage().';';
-		        error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 		        return false;
 	        } catch (Error $er) {
 		        $messageFLog = 'Some error in shortcodesInGlobal: '.$er->getMessage().';';
-		        error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 		        return false;
 	        }
 	    }
     }
     if (!function_exists('RFWP_rb_cache_gathering')) {
         function RFWP_rb_cache_gathering($content, $cachedBlocks, $longCache) {
-	        global $rb_logFile;
 	        try {
 		        $usedBlockIds = [];
 		        $scriptString = '';
@@ -763,27 +752,8 @@ try {
 			        }
 			        array_push($usedBlockIds, $item->post_title);
 
-			        $elementTextCache = $item->post_content;
-			        $elementTextCache = do_shortcode($elementTextCache);
-			        $elementTextCache = preg_replace('~\"~', '\'',$elementTextCache);
-			        $elementTextCache = preg_replace('~corner_open;~', '<',$elementTextCache);
-			        $elementTextCache = preg_replace('~corner_close;~', '>',$elementTextCache);
-			        $elementTextCache = preg_replace('~\<scr_pt_open;~', '<scr"+"ipt',$elementTextCache);
-			        $elementTextCache = preg_replace('~\/scr_pt_close;~', '/scr"+"ipt',$elementTextCache);
-			        $elementTextCache = preg_replace('~\<script~', '<scr"+"ipt',$elementTextCache);
-			        $elementTextCache = preg_replace('~\/script~', '/scr"+"ipt',$elementTextCache);
-			        $elementTextCache = preg_replace('~(\r\n|\n|\r)~',' ',$elementTextCache);
-
-			        $checkQuotesBegin = substr($elementTextCache, 0, 1);
-			        $checkQuotesEnd = substr($elementTextCache, -1);
-			        if ($checkQuotesBegin=="'"&&$checkQuotesEnd=="'") {
-				        $elementTextCache = substr_replace($elementTextCache, '"', 0, 1);
-				        $elementTextCache = substr_replace($elementTextCache, '"', -1);
-                    } elseif (!($checkQuotesBegin=='"'&&$checkQuotesEnd=='"')) {
-				        $elementTextCache = '"'.$elementTextCache.'"';
-                    }
-
-			        $scriptString .= 'cachedBlocksArray['.$item->post_title.'] = '.$elementTextCache.';'.PHP_EOL;
+			        $scriptString .= 'cachedBlocksArray[' . $item->post_title . '] = ' .
+                        RFWP_rb_cache_gathering_content($item->post_content, true) . $elementTextCache . ';' . PHP_EOL;
 		        }
 		        if (!empty($longCache)) {
 			        $scriptString .=
@@ -804,18 +774,36 @@ try {
 		        return $content;
             } catch (Exception $ex) {
 	            $messageFLog = 'Some error in rb_cache_gathering: '.$ex->getMessage().';';
-	            error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 	            return $content;
             } catch (Error $er) {
 	            $messageFLog = 'Some error in rb_cache_gathering: '.$er->getMessage().';';
-	            error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 	            return $content;
             }
 		}
 	}
+    if (!function_exists('RFWP_rb_cache_gathering_content')) {
+        function RFWP_rb_cache_gathering_content($content, $encode = false) {
+            $content = do_shortcode($content);
+
+            $content = preg_replace('~corner_open;~ius', '<',$content);
+            $content = preg_replace('~corner_close;~ius', '>',$content);
+            $content = preg_replace('~<scr_pt_open;~ius', '<script',$content);
+            $content = preg_replace('~/scr_pt_close;~ius', '/script',$content);
+
+            if ($encode) {
+                $content = json_encode($content, JSON_UNESCAPED_UNICODE);
+                $content = preg_replace('~<script~ius', '<scr"+"ipt',$content);
+                $content = preg_replace('~/script~ius', '/scr"+"ipt',$content);
+                $content = preg_replace('~(\r\n|\n|\r)~ius',' ',$content);
+            }
+
+            return $content;
+        }
+    }
 	if (!function_exists('RFWP_wp_get_type_device')) {
 		function RFWP_wp_get_type_device() {
-			global $rb_logFile;
 			try {
 				if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
 					RFWP_WorkProgressLog(false,'wp_is_mobile begin');
@@ -872,18 +860,17 @@ try {
 			    return $type;
             } catch (Exception $ex) {
 			    $messageFLog = 'Some error in wp_is_mobile: '.$ex->getMessage().';';
-			    error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 			    return false;
 		    } catch (Error $er) {
 			    $messageFLog = 'Some error in wp_is_mobile: '.$er->getMessage().';';
-			    error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 			    return false;
 		    }
 		}
 	}
 	if (!function_exists('RFWP_headerInsertor')) {
 		function RFWP_headerInsertor($patternType) {
-			global $rb_logFile;
 			try {
 			    $detectedHeader = false;
 				if ($patternType=='ad') {
@@ -910,9 +897,9 @@ try {
                         }
                     }
                     if (empty($themeHeaderFileOpen)) {
-                        $themeHeaderFileCheck = file_exists(dirname(__FILE__).'/.../.../themes/'.$wp_cur_theme_name.'/header.php');
+                        $themeHeaderFileCheck = file_exists(plugin_dir_path(__FILE__).'.../.../themes/'.$wp_cur_theme_name.'/header.php');
                         if ($themeHeaderFileCheck) {
-                            $themeHeaderFileOpen = file_get_contents(dirname(__FILE__).'/.../.../themes/'.$wp_cur_theme_name.'/header.php');
+                            $themeHeaderFileOpen = file_get_contents(plugin_dir_path(__FILE__).'.../.../themes/'.$wp_cur_theme_name.'/header.php');
                         }
                     }
                     if (empty($themeHeaderFileOpen)) {
@@ -960,11 +947,11 @@ try {
 				return $result;
 			} catch (Exception $ex) {
 				$messageFLog = 'Some error in headerInsertor: '.$ex->getMessage().';';
-				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 				return true;
 			} catch (Error $er) {
 				$messageFLog = 'Some error in headerInsertor: '.$er->getMessage().';';
-				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 				return true;
 			}
 		}
@@ -972,7 +959,6 @@ try {
 	/** Insertings to end of content adding **********/
 	if (!function_exists('RFWP_insertingsToContent')) {
 		function RFWP_insertingsToContent($content) {
-			global $rb_logFile;
 			try {
 			    if (empty($GLOBALS['addInsertings']['body']['data'])) {
 				    return $content;
@@ -1032,11 +1018,11 @@ launchInsertingsFunctionLaunch();'.PHP_EOL;
 			    return $content;
             } catch (Exception $ex) {
 			    $messageFLog = 'Some error in insertingsToContent: '.$ex->getMessage().';';
-			    error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 			    return $content;
 		    } catch (Error $er) {
 			    $messageFLog = 'Some error in insertingsToContent: '.$er->getMessage().';';
-			    error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 			    return $content;
 		    }
 		}
@@ -1045,7 +1031,6 @@ launchInsertingsFunctionLaunch();'.PHP_EOL;
 	if (!function_exists('RFWP_insertsToString')) {
 		function RFWP_insertsToString($type, $filter=null) {
 		    global $wpdb;
-			global $rb_logFile;
 			$result = [];
 //			$result['header'] = [];
 //			$result['body'] = [];
@@ -1112,17 +1097,16 @@ launchInsertingsFunctionLaunch();'.PHP_EOL;
 				}
 			} catch (Exception $ex) {
 				$messageFLog = 'Some error in insertsToString: '.$ex->getMessage().';';
-				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 			} catch (Error $er) {
 				$messageFLog = 'Some error in insertsToString: '.$er->getMessage().';';
-				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 			}
 			return $result;
 		}
 	}
 	if (!function_exists('RFWP_creatingJavascriptParserForContentFunction')) {
 		function RFWP_creatingJavascriptParserForContentFunction($fromDb, $usedBlocks, $contentLength, $excIdClass, $shortcodes, $rejectedBlocks, $blockDuplicate) {
-			global $rb_logFile;
 			try {
 				$cou1 = 0;
 				global $rfwp_shortcodes;
@@ -1285,18 +1269,17 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 				return $scriptingCodeResult;
 			} catch (Exception $ex) {
 				$messageFLog = 'Some error in creatingJavascriptParserForContent: '.$ex->getMessage().';';
-				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 				return '';
 			} catch (Error $er) {
 				$messageFLog = 'Some error in creatingJavascriptParserForContent: '.$er->getMessage().';';
-				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 				return '';
 			}
 		}
 	}
 	if (!function_exists('RFWP_creatingJavascriptParserForContentFunction_content')) {
 		function RFWP_creatingJavascriptParserForContentFunction_content() {
-			global $rb_logFile;
 			try {
 				if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
 					RFWP_WorkProgressLog(false,'creatingJavascriptParserForContentFunction_content begin');
@@ -1323,18 +1306,17 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 				return $scriptingCode;
 			} catch (Exception $ex) {
 				$messageFLog = 'Some error in creatingJavascriptParserForContent: '.$ex->getMessage().';';
-				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 				return '';
 			} catch (Error $er) {
 				$messageFLog = 'Some error in creatingJavascriptParserForContent: '.$er->getMessage().';';
-				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 				return '';
 			}
 		}
 	}
 	if (!function_exists('RFWP_creatingJavascriptParserForContentFunction_test')) {
 		function RFWP_creatingJavascriptParserForContentFunction_test($fromDb, $excIdClass, $blockDuplicate, $obligatoryMargin, $tagsListForTextLength) {
-			global $rb_logFile;
 			try {
 				/*?><script>console.log('Header addings passed');</script><?php*/
 				if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
@@ -1474,25 +1456,18 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 				return $scriptingCodeResult;
 			} catch (Exception $ex) {
 				$messageFLog = 'Some error in creatingJavascriptParserForContent: '.$ex->getMessage().';';
-				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 				return '';
 			} catch (Error $er) {
 				$messageFLog = 'Some error in creatingJavascriptParserForContent: '.$er->getMessage().';';
-				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 				return '';
 			}
 		}
 	}
 	if (!function_exists('RFWP_WorkProgressLog')) {
 	    function RFWP_WorkProgressLog($begin=false, $message='placeholder') {
-	        if (!empty($GLOBALS['rb_testMode'])&&!empty($GLOBALS['workProgressLogs'])&&$GLOBALS['workProgressLogs']=='enabled') {
-		        if (!isset($GLOBALS['rb_processlogFile'])) {
-			        $rb_processlogFile = plugin_dir_path(__FILE__).'workProcess.log';
-			        $GLOBALS['rb_processlogFile'] = $rb_processlogFile;
-		        } else {
-			        global $rb_processlogFile;
-		        }
-
+	        if (!empty($GLOBALS['rb_enableLogs'])) {
 		        $currentMtime = [];
 		        $currentMtime['time'] = microtime(true);
 		        if (!isset($GLOBALS['fWorkProgress'])) {
@@ -1508,56 +1483,38 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 		        }
 
                 $messageFWorkProgress = 'work process started;';
-                error_log(PHP_EOL.current_time('mysql').': '
-                          .PHP_EOL.$message
-                          .PHP_EOL.$currentMtime['diffVsFirst']
-                          .PHP_EOL.$currentMtime['diffVsLast'].PHP_EOL, 3, $rb_processlogFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::WORK_PROCESS_LOG,
+                    PHP_EOL.$message
+                    .PHP_EOL.$currentMtime['diffVsFirst']
+                    .PHP_EOL.$currentMtime['diffVsLast']);
             }
         }
     }
 	if (!function_exists('RFWP_initTestMode')) {
 		function RFWP_initTestMode($forced = false) {
-			if (!isset($GLOBALS['rb_testMode'])||!empty($forced)) {
-				$rb_testMode = get_option('rb_testMode');
-				if (!empty($rb_testMode)) {
-					$GLOBALS['rb_testMode'] = true;
-				} else {
-					$GLOBALS['rb_testMode'] = false;
-				}
+            global $rb_testMode;
+			if (!isset($rb_testMode) || !empty($forced)) {
+                $rb_testMode = !empty(get_option('rb_testMode'));
 			}
 		}
 	}
 	if (!function_exists('RFWP_cleanWorkProcessFile')) {
 		function RFWP_cleanWorkProcessFile() {
-			global $rb_logFile;
 			try {
-				$rb_processlogFile = plugin_dir_path(__FILE__).'workProcess.log';
-//                $myfile = fopen($rb_processlogFile, "w") or die("Unable to open file!");
-                $myfile = fopen($rb_processlogFile, "w");
-                $txt = "1\n\n";
-                fwrite($myfile, $txt);
-                fclose($myfile);
+                RFWP_Logs::clearLog(RFWP_Logs::WORK_PROCESS_LOG);
 			}  catch (Exception $ex1) {
 				$messageFLog = 'Error in work process log file cleaning: '.$ex1->getMessage().';';
-				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 			} catch (Error $er1) {
 				$messageFLog = 'Error in work process log file cleaning: '.$er1->getMessage().';';
-				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 			}
 		}
 	}
 	if (!function_exists('RFWP_cronCheckLog')) {
 	    function RFWP_cronCheckLog($message='placeholder') {
-            if (!isset($GLOBALS['rb_cronCheckFile'])) {
-                $rb_cronCheckFile = plugin_dir_path(__FILE__).'cronCheck.log';
-                $GLOBALS['rb_cronCheckFile'] = $rb_cronCheckFile;
-            } else {
-                global $rb_cronCheckFile;
-            }
-
             if (!empty($rb_cronCheckFile)&&!empty($GLOBALS['dev_mode'])) {
-	            error_log(PHP_EOL.current_time('mysql').': '
-	                      .PHP_EOL.$message.PHP_EOL, 3, $rb_cronCheckFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::CRON_LOG, PHP_EOL . $message);
             }
         }
     }
@@ -1660,7 +1617,6 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 	}
 	if (!function_exists('RFWP_checkPageType')) {
 		function RFWP_checkPageType() {
-			global $rb_logFile;
 			$pasingAllowed = true;
 			$arrayOfCheckedTypes = [
 				'is_home' => is_home(),
@@ -1694,10 +1650,10 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 				}
 			} catch (Exception $ex) {
 				$messageFLog = 'Some error in RFWP_launch_without_content_function: '.$ex->getMessage().';';
-				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 			} catch (Error $er) {
 				$messageFLog = 'Some error in RFWP_launch_without_content_function: '.$er->getMessage().';';
-				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 			}
 			return $pasingAllowed;
 		}
@@ -1847,8 +1803,7 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 		function RFWP_addWebnavozJs() {
 		    $plugin1 = 'webnavoz-likes/webnavoz-likes.php';
 			if (is_plugin_active($plugin1)) {
-				$penyok_stoparik = 0;
-				?><script><?php include_once (dirname(__FILE__).'/webnawozComp.js'); ?></script><?php
+				?><script><?php include_once (plugin_dir_path(__FILE__).'webnawozComp.js'); ?></script><?php
 			}
 		}
 	}
@@ -1879,18 +1834,7 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 				$data = $_POST['data'];
 
 				if (!empty($data)) {
-				    global $wpdb;
-					$wpPrefix = RFWP_getTablePrefix();
-
-					$getContentSelectorId = $wpdb->query("SELECT id FROM ".$wpPrefix."realbig_settings WHERE optionName = 'contentSelector'");
-					if (empty($getContentSelectorId)) {
-						$saveResult = $wpdb->insert($wpPrefix.'realbig_settings', [
-							'optionName'  => 'contentSelector',
-							'optionValue' => sanitize_text_field($data)
-						]);
-					} else {
-						$saveResult = $wpdb->update( $wpPrefix.'realbig_settings', ['optionValue' => sanitize_text_field($data)], ['optionName'  => 'contentSelector']);
-					}
+                    $saveResult = RFWP_Utils::saveToRbSettings(sanitize_text_field($data), 'contentSelector');
 					if (!empty($saveResult)) {
 						$result['status'] = 'success';
 					} else {
@@ -1901,7 +1845,6 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 				$result['status'] = 'already saved';
 			}
 
-			$penyok_stoparik = 0;
 			return $result;
 		}
 	}
@@ -2015,10 +1958,9 @@ catch (Exception $ex)
 {
 	try {
 		global $wpdb;
-		global $rb_logFile;
 
 		$messageFLog = 'Deactivation error: '.$ex->getMessage().';';
-		error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+        RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 
 		if (!empty($GLOBALS['wpPrefix'])) {
 			$wpPrefix = $GLOBALS['wpPrefix'];
@@ -2027,18 +1969,7 @@ catch (Exception $ex)
 			$wpPrefix = $table_prefix;
 		}
 
-		$errorInDB = $wpdb->query("SELECT * FROM ".$wpPrefix."realbig_settings WHERE optionName = 'deactError'");
-		if (empty($errorInDB)) {
-			$wpdb->insert($wpPrefix.'realbig_settings', [
-				'optionName'  => 'deactError',
-				'optionValue' => 'textEdit: '.$ex->getMessage()
-			]);
-		} else {
-			$wpdb->update( $wpPrefix.'realbig_settings', [
-				'optionName'  => 'deactError',
-				'optionValue' => 'textEdit: '.$ex->getMessage()
-			], ['optionName'  => 'deactError']);
-		}
+        RFWP_Utils::saveToRbSettings('textEdit: ' . $ex->getMessage(), 'deactError');
 	} catch (Exception $exIex) {
 	} catch (Error $erIex) { }
 
@@ -2049,10 +1980,9 @@ catch (Error $er)
 {
 	try {
 		global $wpdb;
-		global $rb_logFile;
 
 		$messageFLog = 'Deactivation error: '.$er->getMessage().';';
-		error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+        RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 
 		if (!empty($GLOBALS['wpPrefix'])) {
 			$wpPrefix = $GLOBALS['wpPrefix'];
@@ -2061,18 +1991,7 @@ catch (Error $er)
 			$wpPrefix = $table_prefix;
 		}
 
-		$errorInDB = $wpdb->query("SELECT * FROM ".$wpPrefix."realbig_settings WHERE optionName = 'deactError'");
-		if (empty($errorInDB)) {
-			$wpdb->insert($wpPrefix.'realbig_settings', [
-				'optionName'  => 'deactError',
-				'optionValue' => 'textEdit: '.$er->getMessage()
-			]);
-		} else {
-			$wpdb->update( $wpPrefix.'realbig_settings', [
-				'optionName'  => 'deactError',
-				'optionValue' => 'textEdit: '.$er->getMessage()
-			], ['optionName'  => 'deactError']);
-		}
+        RFWP_Utils::saveToRbSettings('textEdit: ' . $er->getMessage(), 'deactError');
 	} catch (Exception $exIex) {
 	} catch (Error $erIex) { }
 

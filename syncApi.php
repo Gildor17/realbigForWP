@@ -3,11 +3,10 @@
 if (!function_exists('RFWP_syncNow')) {
 	function RFWP_syncNow(WP_REST_Request $request) {
 		$result = [];
-		$refreshSync = delete_transient('realbigPluginSyncAttempt');
-		$nextSchedulerCheck = wp_next_scheduled('rb_cron_hook');
-		if (empty($nextSchedulerCheck)) {
-			RFWP_cronAutoGatheringLaunch();
-		}
+        global $rb_periodSync;
+        $rb_periodSync = 0.2;
+
+		RFWP_cronAutoGatheringLaunch();
 		$result['result'] = 'timeout cleared';
 
 		return $result;
@@ -19,7 +18,7 @@ if (!function_exists('RFWP_syncNowPermission')) {
 		$justUsed = get_transient(RFWP_Variables::CUSTOM_SYNC);
 		$expiration = 5;
 		if (empty($justUsed)) {
-			set_transient('rb_customSyncUsed', true, $expiration);
+			set_transient(RFWP_Variables::CUSTOM_SYNC, true, $expiration);
 			return true;
 		} else {
 			return false;

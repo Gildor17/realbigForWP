@@ -97,12 +97,13 @@ function shortcodesInsert() {
                                     divCidElement = gatheredBlockChild.querySelectorAll('div[data-cid="'+dataCidIdentifier+'"]');
                                 }
 
+                                var text = scArray[sci]['text'];
                                 if (divCidElement&&divCidElement.length > 0) {
                                     for (let i2 = 0; i2 < divCidElement.length; i2++) {
-                                        jQuery(divCidElement[i2]).html(scArray[sci]['text']);
+                                        jQuery(divCidElement[i2]).html(text);
                                     }
                                 } else {
-                                    jQuery(gatheredBlockChild).html(scArray[sci]['text']);
+                                    jQuery(gatheredBlockChild).html(text);
                                 }
                                 launchUpdateRbDisplays();
                             }

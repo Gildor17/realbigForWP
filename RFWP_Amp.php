@@ -38,9 +38,9 @@ if (!class_exists('RFWP_Amp')) {
 //        add_filter('pre_amp_render_post', ['RFWP_Amp', 'checkContent'], 100);
 //		add_action('pre_amp_render_post', ['RFWP_Amp', 'checkContent'], 100);
 			        }
-                    RFWP_Logs::saveLogs('ampTestLog', 'is amp');
+                    RFWP_Logs::saveLogs(RFWP_Logs::AMP_LOG, 'is amp');
                 } else {
-                    RFWP_Logs::saveLogs('ampTestLog', 'not amp');
+                    RFWP_Logs::saveLogs(RFWP_Logs::AMP_LOG, 'not amp');
                 }
 			}
 
@@ -48,8 +48,6 @@ if (!class_exists('RFWP_Amp')) {
 		}
 
 		public static function checkContent ($content, $var1 = 'nUn', $var2 = 'nUn') {
-		    $penyok_stoparik = 0;
-
 		    return $content;
         }
 

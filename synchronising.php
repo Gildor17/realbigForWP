@@ -4,15 +4,14 @@ if (!defined("ABSPATH")) { exit;}
 
 try {
 	if (!function_exists('RFWP_synchronize')) {
-		function RFWP_synchronize($tokenInput, $wpOptionsCheckerSyncTime, $sameTokenResult, $requestType) {
+		function RFWP_synchronize($tokenInput, $sameTokenResult, $requestType, $updateLogs) {
 			global $wpdb;
-			global $rb_logFile;
 			global $shortcode_tags;
 			$wpPrefix = RFWP_getWpPrefix();
 			$shortcodesToSend = array_keys($shortcode_tags);
 			$menuItemList = RFWP_getMenuList();
 			$permalinkStatus = RFWP_checkPermalink();
-            $pluginVersion = RFWP_plugin_version();
+            $pluginVersion = RFWP_Utils::getVersion();
 			$rssSelectiveOffField = RFWP_rssSelectiveOffFieldGet();
             $unsuccessfullAjaxSyncAttempt = 0;
 
@@ -51,9 +50,11 @@ try {
                         'getMenuList' => json_encode($menuItemList),
                         'otherInfo' => $otherInfo,
                         'pluginVersion' => $pluginVersion,
-                        'rssSelectiveOffField' => $rssSelectiveOffField
+                        'rssSelectiveOffField' => $rssSelectiveOffField,
+                        'enableLogs' => !empty($updateLogs) ? RFWP_Utils::getFromRbSettings('enableLogs') : null,
                     ],
 				    'sslverify' => false,
+                    'timeout' => 30
 				];
 				try {
 					$jsonToken = wp_remote_post($url, $dataForSending);
@@ -69,7 +70,7 @@ try {
 						$GLOBALS['connection_request_rezult_1'] = 'Connection error: ' . $error;
 						$unsuccessfullAjaxSyncAttempt           = 1;
 						$messageFLog = 'Synchronisation request error: '.$error.';';
-                        error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                        RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 					}
 				}
 				catch (Exception $e) {
@@ -79,7 +80,7 @@ try {
 					}
 					$unsuccessfullAjaxSyncAttempt = 1;
 					$messageFLog = 'Synchronisation request system error: '.$e['message'].';';
-					error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                    RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 				}
 				catch (Error $e) {
 					$GLOBALS['tokenStatusMessage'] = $e['message'];
@@ -88,7 +89,7 @@ try {
 					}
 					$unsuccessfullAjaxSyncAttempt = 1;
 					$messageFLog = 'Synchronisation request system error: '.$e['message'].';';
-					error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                    RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 				}
 				if (!empty($jsonToken)&&!is_wp_error($jsonToken)) {
 					$decodedToken                  = json_decode($jsonToken, true);
@@ -106,34 +107,24 @@ try {
                                     } else {
 									    $sanitisedExcludedPages = '';
                                     }
-								    $excludedPagesCheck = $wpdb->query( $wpdb->prepare( "SELECT optionValue FROM " . $wpPrefix . "realbig_settings WHERE optionName = %s", [ 'excludedPages' ]));
-								    if (empty($excludedPagesCheck)) {
-									    $wpdb->insert($wpPrefix.'realbig_settings', ['optionName'  => 'excludedPages', 'optionValue' => $sanitisedExcludedPages]);
-								    } else {
-									    $wpdb->update( $wpPrefix.'realbig_settings', ['optionName'  => 'excludedPages', 'optionValue' => $sanitisedExcludedPages],
-										    ['optionName'  => 'excludedPages']);
-								    }
-								    if (!empty($decodedToken['excludedMainPage'])) {
-									    $sanitisedExcludedMainPages = sanitize_text_field($decodedToken['excludedMainPage']);
-									    if (intval($sanitisedExcludedMainPages)) {
-									        if (strlen($sanitisedExcludedMainPages) > 1) {
-										        $sanitisedExcludedMainPages = '';
-									        }
+                                    RFWP_Utils::saveToRbSettings($sanitisedExcludedPages, 'excludedPages');
+
+                                    if (isset($decodedToken['excludedMainPage'])) {
+                                        if (!empty($decodedToken['excludedMainPage'])) {
+                                            $sanitisedExcludedMainPages = sanitize_text_field($decodedToken['excludedMainPage']);
+                                            if (intval($sanitisedExcludedMainPages)) {
+                                                if (strlen($sanitisedExcludedMainPages) > 1) {
+                                                    $sanitisedExcludedMainPages = '';
+                                                }
+                                            } else {
+                                                $sanitisedExcludedMainPages = '';
+                                            }
                                         } else {
-										    $sanitisedExcludedMainPages = '';
+                                            $sanitisedExcludedMainPages = '';
                                         }
-								    } else {
-									    $sanitisedExcludedMainPages = '';
-								    }
-								    $excludedMainPageCheck = $wpdb->query($wpdb->prepare("SELECT optionValue FROM ".$wpPrefix."realbig_settings WHERE optionName = %s", ['excludedMainPage']));
-								    if (isset($decodedToken['excludedMainPage'])) {
-									    if (empty($excludedMainPageCheck)) {
-										    $wpdb->insert($wpPrefix.'realbig_settings', ['optionName'  => 'excludedMainPage', 'optionValue' => $sanitisedExcludedMainPages]);
-									    } else {
-										    $wpdb->update($wpPrefix.'realbig_settings', ['optionName'  => 'excludedMainPage', 'optionValue' => $sanitisedExcludedMainPages],
-											    ['optionName'  => 'excludedMainPage']);
-									    }
-								    }
+
+                                        RFWP_Utils::saveToRbSettings($sanitisedExcludedMainPages, 'excludedMainPage');
+                                    }
 
 								    $counter = 0;
 								    $wpdb->query('DELETE FROM '.$wpPrefix.'realbig_plugin_settings');
@@ -150,59 +141,58 @@ try {
 							    }
 
 							    // if no needly note, then create
-							    $wpOptionsCheckerTokenValue = $wpdb->query($wpdb->prepare("SELECT optionValue FROM ".$wpPrefix."realbig_settings WHERE optionName = %s",['_wpRealbigPluginToken']));
-							    if (empty($wpOptionsCheckerTokenValue)) {
-								    $wpdb->insert( $wpPrefix.'realbig_settings', ['optionName' => '_wpRealbigPluginToken', 'optionValue' => $tokenInput]);
-							    } else {
-								    $wpdb->update( $wpPrefix.'realbig_settings', ['optionName' => '_wpRealbigPluginToken', 'optionValue' => $tokenInput],
-									    ['optionName' => '_wpRealbigPluginToken']);
-							    }
+                                RFWP_Utils::saveToRbSettings($tokenInput, '_wpRealbigPluginToken');
+
 							    if (!empty($decodedToken['dataUniversalPush'])) {
 							        $sanitisedPushUniversalStatus = sanitize_text_field($decodedToken['dataUniversalPush']['pushStatus']);
 							        $sanitisedPushUniversalData = sanitize_text_field($decodedToken['dataUniversalPush']['pushCode']);
 							        $sanitisedPushUniversalDomain = sanitize_text_field($decodedToken['dataUniversalPush']['pushDomain']);
-								    RFWP_saveToRealbigSettings($sanitisedPushUniversalStatus, 'pushUniversalStatus');
-								    RFWP_saveToRealbigSettings($sanitisedPushUniversalData, 'pushUniversalCode');
-								    RFWP_saveToRealbigSettings($sanitisedPushUniversalDomain, 'pushUniversalDomain');
+								    RFWP_Utils::saveToRbSettings($sanitisedPushUniversalStatus, 'pushUniversalStatus');
+                                    RFWP_Utils::saveToRbSettings($sanitisedPushUniversalData, 'pushUniversalCode');
+                                    RFWP_Utils::saveToRbSettings($sanitisedPushUniversalDomain, 'pushUniversalDomain');
+							    }
+							    if (!empty($decodedToken['periodSync'])) {
+							        $sanitised = sanitize_text_field($decodedToken['periodSync']);
+                                    RFWP_Utils::saveToRbSettings($sanitised, 'periodSync');
 							    }
 							    if (!empty($decodedToken['domain'])) {
-							        $sanitisedDomain = sanitize_text_field($decodedToken['domain']);
-								    RFWP_saveToRealbigSettings($sanitisedDomain, 'domain');
+							        $sanitised = sanitize_text_field($decodedToken['domain']);
+                                    RFWP_Utils::saveToRbSettings($sanitised, 'domain');
 							    }
 							    if (!empty($decodedToken['rotator'])) {
-							        $sanitisedRotator = sanitize_text_field($decodedToken['rotator']);
-								    RFWP_saveToRealbigSettings($sanitisedRotator, 'rotator');
+							        $sanitised = sanitize_text_field($decodedToken['rotator']);
+                                    RFWP_Utils::saveToRbSettings($sanitised, 'rotator');
 							    }
 							    if (!empty($decodedToken['rotatorCode'])) {
-							        $sanitisedRotatorCode = sanitize_text_field($decodedToken['rotatorCode']);
-								    RFWP_saveToRealbigSettings($sanitisedRotatorCode, 'rotatorCode');
+                                    $sanitised = sanitize_text_field($decodedToken['rotatorCode']);
+                                    RFWP_Utils::saveToRbSettings($sanitised, 'rotatorCode');
 							    }
 							    if (isset($decodedToken['adWithStatic'])) {
-							        $sanitisedRotatorCode = sanitize_text_field($decodedToken['adWithStatic']);
-								    RFWP_saveToRealbigSettings($sanitisedRotatorCode, 'adWithStatic');
+                                    $sanitised = sanitize_text_field($decodedToken['adWithStatic']);
+                                    RFWP_Utils::saveToRbSettings($sanitised, 'adWithStatic');
 							    }
 							    /** Selected taxonomies */
 							    if (isset($decodedToken['taxonomies'])) {
-							        $taxonomies = sanitize_text_field(json_encode($decodedToken['taxonomies'], JSON_UNESCAPED_UNICODE));
-								    RFWP_saveToRealbigSettings($taxonomies, 'usedTaxonomies');
+                                    $sanitised = sanitize_text_field(json_encode($decodedToken['taxonomies'], JSON_UNESCAPED_UNICODE));
+                                    RFWP_Utils::saveToRbSettings($sanitised, 'usedTaxonomies');
 							    }
 							    /** End of selected taxonomies */
 							    /** Excluded page types */
 							    if (isset($decodedToken['excludedPageTypes'])) {
-							        $excludedPageTypes = sanitize_text_field($decodedToken['excludedPageTypes']);
-								    RFWP_saveToRealbigSettings($excludedPageTypes, 'excludedPageTypes');
+                                    $sanitised = sanitize_text_field($decodedToken['excludedPageTypes']);
+                                    RFWP_Utils::saveToRbSettings($sanitised, 'excludedPageTypes');
 							    }
 							    /** End of excluded page types */
 							    /** Excluded id and classes */
 							    if (isset($decodedToken['excludedIdAndClasses'])) {
-							        $excludedIdAndClasses = sanitize_text_field($decodedToken['excludedIdAndClasses']);
-								    RFWP_saveToRealbigSettings($excludedIdAndClasses, 'excludedIdAndClasses');
+                                    $sanitised = sanitize_text_field($decodedToken['excludedIdAndClasses']);
+                                    RFWP_Utils::saveToRbSettings($sanitised, 'excludedIdAndClasses');
 							    }
 							    /** End of excluded id and classes */
 							    /** Blocks duplicate denying option */
 							    if (isset($decodedToken['blockDuplicate'])) {
-								    $blockDuplicate = sanitize_text_field($decodedToken['blockDuplicate']);
-								    RFWP_saveToRealbigSettings($blockDuplicate, 'blockDuplicate');
+                                    $sanitised = sanitize_text_field($decodedToken['blockDuplicate']);
+                                    RFWP_Utils::saveToRbSettings($sanitised, 'blockDuplicate');
 							    }
 							    /** End of blocks duplicate denying option */
 							    /** Create it for compatibility with some plugins */
@@ -374,7 +364,7 @@ try {
                                 /** 404 pages status */
 							    if (!empty($decodedToken['statusFor404'])) {
 								    $statusFor404 = sanitize_text_field($decodedToken['statusFor404']);
-								    RFWP_saveToRealbigSettings($statusFor404, 'statusFor404');
+                                    RFWP_Utils::saveToRbSettings($statusFor404, 'statusFor404');
                                 }
                                 /** End of 404 pages status */
                                 /** Test Mode */
@@ -390,32 +380,34 @@ try {
 							    /** End of Test Mode */
                                 if (isset($decodedToken['jsToHead'])) {
                                     $jsToHead = sanitize_text_field($decodedToken['jsToHead']);
-	                                RFWP_saveToRealbigSettings($jsToHead, 'jsToHead');
+                                    RFWP_Utils::saveToRbSettings($jsToHead, 'jsToHead');
                                 }
                                 if (isset($decodedToken['obligatoryMargin'])) {
                                     $obligatoryMargin = sanitize_text_field($decodedToken['obligatoryMargin']);
-	                                RFWP_saveToRealbigSettings($obligatoryMargin, 'obligatoryMargin');
+                                    RFWP_Utils::saveToRbSettings($obligatoryMargin, 'obligatoryMargin');
+                                }
+                                if (isset($decodedToken['enableLogs'])) {
+                                    $obligatoryMargin = sanitize_text_field($decodedToken['enableLogs']);
+                                    RFWP_Utils::saveToRbSettings($obligatoryMargin, 'enableLogs');
                                 }
                                 if (isset($decodedToken['tagsListForTextLength'])) {
                                     $tagsListForTextLength = sanitize_text_field($decodedToken['tagsListForTextLength']);
-	                                RFWP_saveToRealbigSettings($tagsListForTextLength, 'tagsListForTextLength');
+                                    RFWP_Utils::saveToRbSettings($tagsListForTextLength, 'tagsListForTextLength');
                                 }
 
 							    $GLOBALS['token'] = $tokenInput;
 
 							    wp_cache_flush();
-							    if (class_exists('RFWP_Caches')&&!empty($_POST)&&!empty($_POST['cache_clear'])&&$_POST['cache_clear']=='on') {
-								    RFWP_Caches::cacheClear();
+							    if (class_exists('RFWP_CachePlugins')&&!empty($_POST)&&!empty($_POST['cache_clear'])&&$_POST['cache_clear']=='on') {
+                                    RFWP_CachePlugins::cacheClear();
                                 }
 
-							    delete_transient('rb_mobile_cache_timeout');
-							    delete_transient('rb_tablet_cache_timeout');
-							    delete_transient('rb_desktop_cache_timeout');
+							    RFWP_Cache::deleteDeviceCaches();
 						    } catch ( Exception $e ) {
 							    $GLOBALS['tokenStatusMessage'] = $e->getMessage();
 							    $unsuccessfullAjaxSyncAttempt  = 1;
 							    $messageFLog = 'Some error in synchronize: '.$e->getMessage().';';
-							    error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 						    }
                         }
 					}
@@ -428,36 +420,34 @@ try {
 					}
 					$unsuccessfullAjaxSyncAttempt = 1;
 					$messageFLog = 'Connection error;';
-					error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                    RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 				}
 
-				$unmarkSuccessfulUpdate = $wpdb->get_var( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = "successUpdateMark"' );
-				if (!empty($unmarkSuccessfulUpdate)) {
-					$wpdb->update( $wpPrefix . 'realbig_settings', ['optionValue' => 'success'], ['optionName' => 'successUpdateMark']);
-				} else {
-					$wpdb->insert( $wpPrefix . 'realbig_settings', ['optionName'  => 'successUpdateMark', 'optionValue' => 'success']);
-				}
+                RFWP_Utils::saveToRbSettings('success', 'successUpdateMark');
 
 				try {
-					delete_transient('realbigPluginSyncAttempt');
-					set_transient('realbigPluginSyncAttempt', time()+300, 300);
 					if ($decodedToken['status'] == 'success') {
-						if (empty($wpOptionsCheckerSyncTime)) {
-							$wpdb->insert($wpPrefix.'realbig_settings', ['optionName'  => 'token_sync_time', 'optionValue' => time()]);
-						} else {
-							$wpdb->update($wpPrefix.'realbig_settings', ['optionName'  => 'token_sync_time', 'optionValue' => time()],
-                            ['optionName' => 'token_sync_time']);
-						}
+                        $time = time();
+                        RFWP_Utils::saveToRbSettings($time, 'token_sync_time');
+                        $GLOBALS['tokenTimeUpdate'] = $time;
+                        $GLOBALS['statusColor']     = 'green';
 					}
+
+                    $schedule = wp_get_scheduled_event('rb_cron_hook');
+                    $interval = RFWP_getPeriodSync();
+
+                    if (!empty($schedule) && !empty($schedule->interval) && $schedule->interval != $interval) {
+                        RFWP_cronAutoGatheringLaunch();
+                    }
 				} catch (Exception $e) {
 //					echo $e->getMessage();
 					$messageFLog = 'Some error in synchronize: '.$e->getMessage().';';
-					error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                    RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 				}
 				if ($requestType == 'ajax') {
 					if (empty($ajaxResult)) {
 						$messageFLog = 'Ajax result error;';
-						error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                        RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 						return 'error';
 					} else {
 						return $ajaxResult;
@@ -465,11 +455,11 @@ try {
 				} else {
 					wp_cache_flush();
                 }
-				delete_transient('realbigPluginSyncProcess');
+                RFWP_Cache::deleteProcessCache();
 			}
 			catch (Exception $e) {
 				$messageFLog = 'Some error in synchronize: '.$e->getMessage().';';
-				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 
 				if ($requestType == 'ajax') {
 					if (empty($ajaxResult)) {
@@ -481,7 +471,7 @@ try {
 			}
 			catch (Error $e) {
 				$messageFLog = 'Some error in synchronize: '.$e->getMessage().';';
-				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 
 				if ($requestType == 'ajax') {
 					if (empty($ajaxResult)) {
@@ -499,7 +489,6 @@ try {
 			function RFWP_savingCodeForCache($blocksAd=null) {
 				global $wpdb;
 				global $wpPrefix;
-				global $rb_logFile;
 				$resultTypes = [];
 
 				try {
@@ -552,11 +541,10 @@ try {
 
 									$postContent = $ritem['code'];
 									$postContent = htmlspecialchars_decode($postContent);
-									$postContent = json_encode($postContent, JSON_UNESCAPED_UNICODE);
-									$postContent = preg_replace('~\<script~', '<scr_pt_open;', $postContent);
-									$postContent = preg_replace('~\/script~', '/scr_pt_close;', $postContent);
-									$postContent = preg_replace('~\<~', 'corner_open;', $postContent);
-									$postContent = preg_replace('~\>~', 'corner_close;', $postContent);
+									$postContent = preg_replace('~<script~', '<scr_pt_open;', $postContent);
+									$postContent = preg_replace('~/script~', '/scr_pt_close;', $postContent);
+									$postContent = preg_replace('~<~', 'corner_open;', $postContent);
+									$postContent = preg_replace('~>~', 'corner_close;', $postContent);
 
 									if (in_array('mobile', $ritem['types'])) {
 										if (!empty($postCheckMobile)) {
@@ -606,30 +594,30 @@ try {
 								}
 								unset($rk,$ritem);
 
-								set_transient('rb_cache_timeout', time()+60, 60);
+								RFWP_Cache::setCache();
 								if (!empty($resultTypes['mobile'])) {
-									set_transient('rb_mobile_cache_timeout', time()+(60*60), 60*60);
+									RFWP_Cache::setMobileCache();
 								}
 								if (!empty($resultTypes['tablet'])) {
-									set_transient('rb_tablet_cache_timeout', time()+(60*60), 60*60);
+									RFWP_Cache::setTabletCache();
 								}
 								if (!empty($resultTypes['desktop'])) {
-									set_transient('rb_desktop_cache_timeout', time()+(60*60), 60*60);
+									RFWP_Cache::setDesktopCache();
 								}
-								delete_transient('rb_active_cache');
+								RFWP_Cache::deleteActiveCache();
 							}
 						}
 					} elseif(is_wp_error($jsonResult)) {
 						$error                                  = $jsonResult->get_error_message();
 						$messageFLog                            = 'Saving code for cache error: '.$error.';';
-						error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL,3,$rb_logFile);
+                        RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 					}
 
 					return true;
 				} catch (Exception $e) {
 					$messageFLog = 'Some error in saving code for cache: '.$e->getMessage().';';
-					error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
-					delete_transient('rb_active_cache');
+                    RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
+					RFWP_Cache::deleteActiveCache();
 					return false;
 				}
 			}
@@ -650,40 +638,39 @@ try {
 		if (!function_exists('RFWP_tokenTimeUpdateChecking')) {
 			function RFWP_tokenTimeUpdateChecking($token, $wpPrefix) {
 				global $wpdb;
-				global $rb_logFile;
 				try {
-					$timeUpdate = $wpdb->get_results("SELECT timeUpdate FROM ".$wpPrefix."realbig_settings WHERE optionName = 'token_sync_time'");
-					if (empty($timeUpdate)) {
-						$updateResult = RFWP_wpRealbigSettingsTableUpdateFunction($wpPrefix);
-						if ($updateResult == true) {
-							$timeUpdate = $wpdb->get_results("SELECT timeUpdate FROM ".$wpPrefix."realbig_settings WHERE optionName = 'token_sync_time'");
-						}
-					}
-					if (!empty($token)&&$token != 'no token'&&((!empty($GLOBALS['tokenStatusMessage'])&&($GLOBALS['tokenStatusMessage'] == 'Синхронизация прошла успешно' || $GLOBALS['tokenStatusMessage'] == 'Не нашло позиций для блоков на указанном сайте, добавьте позиции для сайтов на странице настроек плагина')) || empty($GLOBALS['tokenStatusMessage'])) && !empty($timeUpdate)) {
-						if (!empty($timeUpdate)) {
-							$timeUpdate                 = get_object_vars($timeUpdate[0]);
-							$GLOBALS['tokenTimeUpdate'] = $timeUpdate['timeUpdate'];
-							$GLOBALS['statusColor']     = 'green';
-						} else {
-							$GLOBALS['tokenTimeUpdate'] = '';
-							$GLOBALS['statusColor']     = 'red';
-						}
-					} else {
-						$GLOBALS['tokenTimeUpdate'] = 'never';
-						$GLOBALS['statusColor']     = 'red';
-					}
+                    if (empty($GLOBALS['tokenTimeUpdate'])) {
+                        $timeUpdate = $wpdb->get_results("SELECT optionValue FROM ".$wpPrefix."realbig_settings WHERE optionName = 'token_sync_time'");
+                        if (empty($timeUpdate)) {
+                            $updateResult = RFWP_wpRealbigSettingsTableUpdateFunction($wpPrefix);
+                            if ($updateResult == true) {
+                                $timeUpdate = $wpdb->get_results("SELECT optionValue FROM ".$wpPrefix."realbig_settings WHERE optionName = 'token_sync_time'");
+                            }
+                        }
+                        if (!empty($token)&&$token != 'no token'&&((!empty($GLOBALS['tokenStatusMessage'])&&($GLOBALS['tokenStatusMessage'] == 'Синхронизация прошла успешно' || $GLOBALS['tokenStatusMessage'] == 'Не нашло позиций для блоков на указанном сайте, добавьте позиции для сайтов на странице настроек плагина')) || empty($GLOBALS['tokenStatusMessage'])) && !empty($timeUpdate)) {
+                            if (!empty($timeUpdate)) {
+                                $timeUpdate                 = get_object_vars($timeUpdate[0]);
+                                $GLOBALS['tokenTimeUpdate'] = $timeUpdate['optionValue'];
+                                $GLOBALS['statusColor']     = 'green';
+                            } else {
+                                $GLOBALS['tokenTimeUpdate'] = '';
+                                $GLOBALS['statusColor']     = 'red';
+                            }
+                        } else {
+                            $GLOBALS['tokenTimeUpdate'] = 'never';
+                            $GLOBALS['statusColor']     = 'red';
+                        }
+                    }
 				} catch (Exception $e) {
 //				echo $e;
 					$messageFLog = 'Some error in token time update check: '.$e->getMessage().';';
-					error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                    RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 				}
 			}
 		}
 	}
 	if (!function_exists('RFWP_tokenChecking')) {
 		function RFWP_tokenChecking($wpPrefix) {
-			global $rb_logFile;
-
 			try {
 			    if (!empty($GLOBALS['token'])&&$GLOBALS['token']!='no token') {
 				    $token = $GLOBALS['token'];
@@ -700,14 +687,14 @@ try {
 					    $GLOBALS['token'] = 'no token';
 					    $token            = 'no token';
 					    $messageFLog = 'Token check: '.$token.';';
-					    error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                        RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 				    }
                 }
 
 				return $token;
 			} catch (Exception $e) {
 				$messageFLog = 'Some error in token check: '.$e->getMessage().';';
-				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 				return 'no token';
 			}
 		}
@@ -715,7 +702,6 @@ try {
 	if (!function_exists('RFWP_statusGathererConstructorOld')) {
 		function RFWP_statusGathererConstructorOld($pointer) {
 			global $wpdb;
-			global $rb_logFile;
 
 			try {
 				$statusGatherer        = [];
@@ -755,11 +741,11 @@ try {
 				}
 			} catch (Exception $exception) {
 				$messageFLog = 'Some error in token time update check: '.$exception->getMessage().';';
-				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 				return $statusGatherer = [];
 			} catch (Error $error) {
 				$messageFLog = 'Some error in token time update check: '.$error->getMessage().';';
-				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 				return $statusGatherer = [];
 			}
 		}
@@ -767,7 +753,6 @@ try {
 	if (!function_exists('RFWP_statusGathererConstructor')) {
 		function RFWP_statusGathererConstructor($pointer) {
 			global $wpdb;
-			global $rb_logFile;
 
 			try {
 				$statusGatherer        = [];
@@ -790,11 +775,11 @@ try {
 				return $statusGatherer;
 			} catch (Exception $exception) {
 				$messageFLog = 'Some error in token time update check: '.$exception->getMessage().';';
-				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 				return $statusGatherer = [];
 			} catch (Error $error) {
 				$messageFLog = 'Some error in token time update check: '.$error->getMessage().';';
-				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 				return $statusGatherer = [];
 			}
 		}
@@ -815,19 +800,14 @@ try {
     /** Auto Sync */
 	if (!function_exists('RFWP_autoSync')) {
 		function RFWP_autoSync() {
-			set_transient('realbigPluginSyncProcess', time()+30, 30);
+            RFWP_Cache::setProcessCache();
 			global $wpdb;
-			$wpOptionsCheckerSyncTime = $wpdb->get_row($wpdb->prepare('SELECT optionValue FROM '.$GLOBALS['table_prefix'].'realbig_settings WHERE optionName = %s',[ "token_sync_time" ]));
-			if (!empty($wpOptionsCheckerSyncTime)) {
-				$wpOptionsCheckerSyncTime = get_object_vars($wpOptionsCheckerSyncTime);
-			}
 			$token      = RFWP_tokenChecking($GLOBALS['table_prefix']);
 			RFWP_cronCheckLog('cron going to sync 2');
 
 			if (!isset($GLOBALS['RFWP_synchronize_vars'])) {
 				$GLOBALS['RFWP_synchronize_vars'] = [];
 				$GLOBALS['RFWP_synchronize_vars']['token'] = $token;
-				$GLOBALS['RFWP_synchronize_vars']['wpOptionsCheckerSyncTime'] = $wpOptionsCheckerSyncTime;
 				$GLOBALS['RFWP_synchronize_vars']['sameTokenResult'] = true;
 				$GLOBALS['RFWP_synchronize_vars']['type'] = 'ajax';
 			}
@@ -839,18 +819,24 @@ try {
 	/** Creating Cron RB auto sync */
 	if (!function_exists('RFWP_cronAutoGatheringLaunch')) {
 		function RFWP_cronAutoGatheringLaunch() {
+            RFWP_cronAutoSyncDelete();
+
 			add_filter('cron_schedules', 'rb_addCronAutosync');
-//			add_action('rb_cron_hook', 'rb_cron_exec');
-			if (!($checkIt = wp_next_scheduled('rb_cron_hook'))) {
-				wp_schedule_event(time(), 'autoSync', 'rb_cron_hook');
-//				$spawnResult = spawn_cron();
+			if (!wp_next_scheduled('rb_cron_hook')) {
+                wp_schedule_event(time() + RFWP_getPeriodSync(), 'autoSync', 'rb_cron_hook');
 			}
+
+            if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
+                RFWP_WorkProgressLog(false,'auto sync cron create');
+            }
 		}
 	}
 	if (!function_exists('rb_addCronAutosync')) {
 		function rb_addCronAutosync($schedules) {
-			$schedules['autoSync'] = array(
-				'interval' => 20,
+		    $interval = RFWP_getPeriodSync();
+
+            $schedules['autoSync'] = array(
+				'interval' => intval($interval),
 				'display'  => esc_html__( 'autoSync' ),
 			);
 			return $schedules;
@@ -859,10 +845,52 @@ try {
 	if (!function_exists('RFWP_cronAutoSyncDelete')) {
 		function RFWP_cronAutoSyncDelete() {
 			$checkIt = wp_next_scheduled('rb_cron_hook');
-			wp_unschedule_event( $checkIt, 'rb_cron_hook' );
+
+			if ($checkIt) {
+                wp_unschedule_event( $checkIt, 'rb_cron_hook' );
+            }
 		}
 	}
-	/** End of Creating Cron RB auto sync */
+    if (!function_exists('RFWP_getPeriodSync')) {
+        function RFWP_getPeriodSync($default=5) {
+            global $rb_periodSync;
+
+            if (!$rb_periodSync) {
+                $rb_periodSync = RFWP_Utils::getFromRbSettings('periodSync');
+            }
+
+            if (!$rb_periodSync) {
+                $rb_periodSync = $default;
+            }
+
+            return $rb_periodSync * 60;
+        }
+    }
+
+    if (!function_exists('RFWP_isRbCron')) {
+        function RFWP_isRbCron() {
+            global $rb_isCron;
+
+            if (!isset($rb_isCron)) {
+                $isCron = false;
+                $activeSyncTransient   = RFWP_Cache::getProcessCache();
+                if (!empty(apply_filters('wp_doing_cron', defined('DOING_CRON')&&DOING_CRON))&&empty($activeSyncTransient)) {
+                    $activeCrons = wp_get_ready_cron_jobs();
+                    foreach ($activeCrons as $activeCron) {
+                        if (!empty($activeCron['rb_cron_hook'])) {
+                            $isCron = true;
+                            break;
+                        }
+                    }
+                }
+
+                $rb_isCron = $isCron;
+            }
+
+            return $rb_isCron;
+        }
+    }
+    /** End of Creating Cron RB auto sync */
 	if (!function_exists('RFWP_getMenuList')) {
 		function RFWP_getMenuList() {
 			$menuMap = [];
@@ -913,17 +941,6 @@ try {
 //			error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
 		}
 	}
-    if (!function_exists('RFWP_plugin_version')) {
-        function RFWP_plugin_version() {
-            $plugin_version = null;
-            $plugin_data = get_plugin_data(dirname(__FILE__).'/realbigForWP.php');
-            if (!empty($plugin_data)&&!empty($plugin_data['Version'])) {
-                $plugin_version = $plugin_data['Version'];
-            }
-
-            return $plugin_version;
-        }
-    }
     if (!function_exists('RFWP_fillRotatorFileInfo')) {
         function RFWP_fillRotatorFileInfo($rotatorFileInfo) {
             $partsArray = [];
@@ -990,7 +1007,6 @@ try {
     }
 	if (!function_exists('RFWP_createAndFillLocalRotator')) {
 		function RFWP_createAndFillLocalRotator($rotatorFileInfo) {
-			global $rb_logFile;
 			try {
                 $rotatorFileInfo['checkFileExists'] = false;
                 foreach ($rotatorFileInfo['pathUrlToFolderParts'] as $k => $item) {
@@ -1038,14 +1054,9 @@ try {
 	                    $rotatorFileInfo['urlToFile'] = $urlToFile;
 	                    global $wpdb;
 	                    $wpPrefix = RFWP_getTablePrefix();
-	                    $getLocalRotatorUrl = $wpdb->get_var( 'SELECT optionValue FROM ' . $wpPrefix . 'realbig_settings WHERE optionName = "localRotatorUrl"' );
-	                    if (!empty($getLocalRotatorUrl)) {
-		                    $wpdb->update( $wpPrefix.'realbig_settings', ['optionValue' => $urlToFile], ['optionName' => 'localRotatorUrl']);
-	                    } else {
-		                    $wpdb->insert( $wpPrefix.'realbig_settings', ['optionName'  => 'localRotatorUrl', 'optionValue' => $urlToFile]);
-	                    }
+                        RFWP_Utils::saveToRbSettings($urlToFile, 'localRotatorUrl');
 	                    $GLOBALS['rb_variables']['localRotatorUrl'] = $urlToFile;
-	                    set_transient('localRotatorGatherTimeout', true, 15*60);
+	                    set_transient(RFWP_Variables::LOCAL_ROTATOR_GATHER, true, 15*60);
 	                    $GLOBALS['rb_variables']['localRotatorGatherTimeout'] = true;
 	                    break;
                     }
@@ -1053,17 +1064,17 @@ try {
                 unset($k,$item);
 			} catch (Exception $ex) {
 				$messageFLog = 'Some error in RFWP_createAndFillLocalRotator: '.$ex->getMessage().';';
-				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 			} catch (Error $er) {
 				$messageFLog = 'Some error in RFWP_createAndFillLocalRotator: '.$er->getMessage().';';
-				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 			}
 		    return $rotatorFileInfo;
 		}
 	}
 	if (!function_exists('RFWP_generateTurboRssUrls')) {
 		function RFWP_generateTurboRssUrls() {
-			$result = [];
+            $turboOptions = [];
 		    if (function_exists('RFWP_rssOptionsGet')) {
 			    $turboOptions = RFWP_rssOptionsGet();
 			    if (!empty($turboOptions))
@@ -1076,12 +1087,12 @@ try {
 					    $url = home_url().'/?feed='.$turboUrl;
 					    $trashUrl = $url.'&rb_rss_trash=1';
 				    }
-				    $result['mainRss'] = $url;
-				    $result['trashRss'] = $trashUrl;
+                    $turboOptions['mainRss'] = $url;
+                    $turboOptions['trashRss'] = $trashUrl;
 			    }
             }
 
-			return $result;
+			return $turboOptions;
         }
     }
 	if (!function_exists('RFWP_getDomain')) {
@@ -1104,11 +1115,11 @@ try {
 		    }
 		    catch (Exception $ex) {
 			    $errorText = __FUNCTION__." error: ".$ex->getMessage();
-			    RFWP_Logs::saveLogs('errorsLog', $errorText);
+			    RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $errorText);
 		    }
 		    catch (Error $ex) {
 			    $errorText = __FUNCTION__." error: ".$ex->getMessage();
-			    RFWP_Logs::saveLogs('errorsLog', $errorText);
+			    RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $errorText);
 		    }
 
 	        return $checkResult;
@@ -1131,11 +1142,11 @@ try {
 		    }
 		    catch (Exception $ex) {
 			    $errorText = __FUNCTION__." error: ".$ex->getMessage();
-			    RFWP_Logs::saveLogs('errorsLog', $errorText);
+			    RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $errorText);
 		    }
 		    catch (Error $ex) {
 			    $errorText = __FUNCTION__." error: ".$ex->getMessage();
-			    RFWP_Logs::saveLogs('errorsLog', $errorText);
+			    RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $errorText);
 		    }
 
             return false;
@@ -1152,49 +1163,14 @@ try {
 		    }
 		    catch (Exception $ex) {
 			    $errorText = __FUNCTION__." error: ".$ex->getMessage();
-			    RFWP_Logs::saveLogs('errorsLog', $errorText);
+			    RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $errorText);
 		    }
 		    catch (Error $ex) {
 			    $errorText = __FUNCTION__." error: ".$ex->getMessage();
-			    RFWP_Logs::saveLogs('errorsLog', $errorText);
+			    RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $errorText);
 		    }
 
 		    return $clearedUrl;
-        }
-    }
-	if (!function_exists('RFWP_saveToRealbigSettings')) {
-		function RFWP_saveToRealbigSettings($value, $optionName) {
-			try {
-				global $wpdb;
-				$wpPrefix = RFWP_getWpPrefix();
-
-				$getOption = $wpdb->query($wpdb->prepare("SELECT id FROM ".$wpPrefix."realbig_settings WHERE optionName = %s",[$optionName]));
-				if (empty($getOption)) {
-					$wpdb->insert($wpPrefix.'realbig_settings', ['optionName' => $optionName, 'optionValue' => $value]);
-				} else {
-					$wpdb->update($wpPrefix.'realbig_settings', ['optionValue' => $value], ['optionName' => $optionName]);
-				}
-			}
-			catch (Exception $ex) {
-				$errorText = __FUNCTION__." error: ".$ex->getMessage();
-				RFWP_Logs::saveLogs('errorsLog', $errorText);
-			}
-			catch (Error $ex) {
-				$errorText = __FUNCTION__." error: ".$ex->getMessage();
-				RFWP_Logs::saveLogs('errorsLog', $errorText);
-			}
-
-			return false;
-        }
-    }
-	if (!function_exists('RFWP_getFromRealbigSettings')) {
-		function RFWP_getFromRealbigSettings($optionName) {
-			global $wpdb;
-			$wpPrefix = RFWP_getWpPrefix();
-
-			$getOption = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM ".$wpPrefix."realbig_settings WHERE optionName = %s",[$optionName]));
-
-			return $getOption;
         }
     }
 
@@ -1218,16 +1194,16 @@ try {
 
 				if (empty($wpPrefix)) {
 					$errorText = "wpdb prefix missing";
-					RFWP_Logs::saveLogs('errorsLog', $errorText);
+					RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $errorText);
 				}
 			}
 			catch (Exception $ex) {
 				$errorText = __FUNCTION__." error: ".$ex->getMessage();
-				RFWP_Logs::saveLogs('errorsLog', $errorText);
+				RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $errorText);
 			}
 			catch (Error $ex) {
 				$errorText = __FUNCTION__." error: ".$ex->getMessage();
-				RFWP_Logs::saveLogs('errorsLog', $errorText);
+				RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $errorText);
 			}
 
 			return $wpPrefix;
@@ -1240,9 +1216,11 @@ try {
 		    return $thumbnailsSizes;
         }
     }
-	if (!function_exists('RFWP_synchronizelLaunch')) {
+	if (!function_exists('RFWP_synchronizeLaunch')) {
 	    function RFWP_synchronizeLaunch() {
-		    RFWP_synchronize($GLOBALS['RFWP_synchronize_vars']['token'], $GLOBALS['RFWP_synchronize_vars']['wpOptionsCheckerSyncTime'], $GLOBALS['RFWP_synchronize_vars']['sameTokenResult'], $GLOBALS['RFWP_synchronize_vars']['type']);
+		    RFWP_synchronize($GLOBALS['RFWP_synchronize_vars']['token'],
+                $GLOBALS['RFWP_synchronize_vars']['sameTokenResult'], $GLOBALS['RFWP_synchronize_vars']['type'],
+                isset($GLOBALS['RFWP_synchronize_vars']['updateLogs']) ? $GLOBALS['RFWP_synchronize_vars']['updateLogs'] : null);
         }
     }
 	if (!function_exists('RFWP_synchronizeManualLaunchAdd')) {
@@ -1257,14 +1235,14 @@ try {
 
 		    $thumbnailsSizes = RFWP_getThumbnailsSizes();
 		    $thumbnailsSizes = json_encode($thumbnailsSizes);
-		    RFWP_saveToRealbigSettings($thumbnailsSizes,'thumbnailsSizes');
+            RFWP_Utils::saveToRbSettings($thumbnailsSizes,'thumbnailsSizes');
 
 	        return true;
         }
     }
 	if (!function_exists('RFWP_getSavedThemeThumbnailSizes')) {
 	    function RFWP_getSavedThemeThumbnailSizes() {
-		    $thumbnailsSizes = RFWP_getFromRealbigSettings('thumbnailsSizes');
+		    $thumbnailsSizes = RFWP_Utils::getFromRbSettings('thumbnailsSizes');
 		    if (!empty($thumbnailsSizes)) {
 		        if (is_string($thumbnailsSizes)) {
 			        $thumbnailsSizes = json_decode($thumbnailsSizes, true);
@@ -1284,15 +1262,12 @@ try {
 				global $wpdb;
 				global $wpPrefix;
 
-				$array = $wpdb->get_results('SELECT optionValue FROM '.$wpPrefix.'realbig_settings WGPS WHERE optionName = "sync_domain"');
-
-				if (!empty($array[0]->optionValue)) {
-					$syncDomain = json_decode($array[0]->optionValue, true);
-				} else {
-				    $syncDomain = 'wp.realbig.media';
-                }
-
+				$syncDomain = $wpdb->get_var('SELECT optionValue FROM '.$wpPrefix.'realbig_settings WGPS WHERE optionName = "sync_domain"');
 			}
+
+            if (empty($syncDomain)) {
+                $syncDomain = 'wp.realbig.media';
+            }
 
 			return $syncDomain;
 		}
@@ -1302,10 +1277,9 @@ catch (Exception $ex)
 {
 	try {
 		global $wpdb;
-		global $rb_logFile;
 
 		$messageFLog = 'Deactivation error: '.$ex->getMessage().';';
-		error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+        RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 
 		if (!empty($GLOBALS['wpPrefix'])) {
 			$wpPrefix = $GLOBALS['wpPrefix'];
@@ -1314,18 +1288,7 @@ catch (Exception $ex)
 			$wpPrefix = $table_prefix;
 		}
 
-		$errorInDB = $wpdb->query("SELECT * FROM ".$wpPrefix."realbig_settings WHERE optionName = 'deactError'");
-		if (empty($errorInDB)) {
-			$wpdb->insert($wpPrefix.'realbig_settings', [
-				'optionName'  => 'deactError',
-				'optionValue' => 'synchro: '.$ex->getMessage()
-			]);
-		} else {
-			$wpdb->update( $wpPrefix.'realbig_settings', [
-				'optionName'  => 'deactError',
-				'optionValue' => 'synchro: '.$ex->getMessage()
-			], ['optionName'  => 'deactError']);
-		}
+        RFWP_Utils::saveToRbSettings('synchro: ' . $ex->getMessage(), 'deactError');
 	} catch (Exception $exIex) {
 	} catch (Error $erIex) { }
 
@@ -1336,10 +1299,9 @@ catch (Error $er)
 {
 	try {
 		global $wpdb;
-		global $rb_logFile;
 
 		$messageFLog = 'Deactivation error: '.$er->getMessage().';';
-		error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+        RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 
 		if (!empty($GLOBALS['wpPrefix'])) {
 			$wpPrefix = $GLOBALS['wpPrefix'];
@@ -1348,18 +1310,7 @@ catch (Error $er)
 			$wpPrefix = $table_prefix;
 		}
 
-		$errorInDB = $wpdb->query("SELECT * FROM ".$wpPrefix."realbig_settings WHERE optionName = 'deactError'");
-		if (empty($errorInDB)) {
-			$wpdb->insert($wpPrefix.'realbig_settings', [
-				'optionName'  => 'deactError',
-				'optionValue' => 'synchro: '.$er->getMessage()
-			]);
-		} else {
-			$wpdb->update( $wpPrefix.'realbig_settings', [
-				'optionName'  => 'deactError',
-				'optionValue' => 'synchro: '.$er->getMessage()
-			], ['optionName'  => 'deactError']);
-		}
+        RFWP_Utils::saveToRbSettings('synchro: ' . $er->getMessage(), 'deactError');
 	} catch (Exception $exIex) {
 	} catch (Error $erIex) { }
 

@@ -13,7 +13,7 @@ try {
 		global $wpdb;
         global $table_prefix;
 
-		if (!empty(wp_next_scheduled('bl_cron_hook'))) {
+		if (!empty(wp_next_scheduled('rb_cron_hook'))) {
 			RFWP_cronAutoSyncDelete();
 		}
 
@@ -36,10 +36,9 @@ try {
 } catch (Exception $ex) {
 	try {
 		global $wpdb;
-		global $rb_logFile;
 
 		$messageFLog = 'Deactivation error: '.$ex->getMessage().';';
-		error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+        RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 
 		if (!empty($GLOBALS['wpPrefix'])) {
 			$wpPrefix = $GLOBALS['wpPrefix'];
@@ -48,18 +47,7 @@ try {
 			$wpPrefix = $table_prefix;
 		}
 
-		$errorInDB = $wpdb->query("SELECT * FROM ".$wpPrefix."realbig_settings WHERE optionName = 'deactError'");
-		if (empty($errorInDB)) {
-			$wpdb->insert($wpPrefix.'realbig_settings', [
-				'optionName'  => 'deactError',
-				'optionValue' => 'textEdit: '.$ex->getMessage()
-			]);
-		} else {
-			$wpdb->update( $wpPrefix.'realbig_settings', [
-				'optionName'  => 'deactError',
-				'optionValue' => 'textEdit: '.$ex->getMessage()
-			], ['optionName'  => 'deactError']);
-		}
+        RFWP_Utils::saveToRbSettings('uninstall: ' . $ex->getMessage(), 'deactError');
 	} catch (Exception $exIex) { } catch (Error $erIex) { }
 
 	deactivate_plugins(plugin_basename( __FILE__ ));
@@ -67,10 +55,9 @@ try {
 } catch (Error $er) {
 	try {
 		global $wpdb;
-		global $rb_logFile;
 
 		$messageFLog = 'Deactivation error: '.$er->getMessage().';';
-		error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+        RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 
 		if (!empty($GLOBALS['wpPrefix'])) {
 			$wpPrefix = $GLOBALS['wpPrefix'];
@@ -79,18 +66,7 @@ try {
 			$wpPrefix = $table_prefix;
 		}
 
-		$errorInDB = $wpdb->query("SELECT * FROM ".$wpPrefix."realbig_settings WHERE optionName = 'deactError'");
-		if (empty($errorInDB)) {
-			$wpdb->insert($wpPrefix.'realbig_settings', [
-				'optionName'  => 'deactError',
-				'optionValue' => 'textEdit: '.$er->getMessage()
-			]);
-		} else {
-			$wpdb->update( $wpPrefix.'realbig_settings', [
-				'optionName'  => 'deactError',
-				'optionValue' => 'textEdit: '.$er->getMessage()
-			], ['optionName'  => 'deactError']);
-		}
+        RFWP_Utils::saveToRbSettings('uninstall: ' . $er->getMessage(), 'deactError');
 	} catch (Exception $exIex) { } catch (Error $erIex) { }
 
 	deactivate_plugins(plugin_basename( __FILE__ ));

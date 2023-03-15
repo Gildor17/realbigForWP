@@ -5,7 +5,7 @@ if (!defined("ABSPATH")) { exit;}
 /*
 Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
-Version:      0.4.4
+Version:      1.0
 Author:       Realbig Team
 Author URI:   https://realbig.media
 License:      GPLv2 or later
@@ -17,14 +17,16 @@ require_once (ABSPATH."/wp-admin/includes/plugin.php");
 
 $res = true;
 
-$res = $res && include_once(dirname(__FILE__) . "/RFWP_Variables.php");
-$res = $res && include_once(dirname(__FILE__) . "/RFWP_Logs.php");
-$res = $res && include_once(dirname(__FILE__) . "/RFWP_Caches.php");
-$res = $res && include_once(dirname(__FILE__) . "/update.php");
-$res = $res && include_once(dirname(__FILE__) . "/synchronising.php");
-$res = $res && include_once(dirname(__FILE__) . "/textEditing.php");
-$res = $res && include_once(dirname(__FILE__) . "/syncApi.php");
-$res = $res && include_once(dirname(__FILE__) . "/RFWP_Amp.php");
+$res = $res && include_once(plugin_dir_path(__FILE__) . "RFWP_Variables.php");
+$res = $res && include_once(plugin_dir_path(__FILE__) . "RFWP_Logs.php");
+$res = $res && include_once(plugin_dir_path(__FILE__) . "RFWP_CachePlugins.php");
+$res = $res && include_once(plugin_dir_path(__FILE__) . "RFWP_Cache.php");
+$res = $res && include_once(plugin_dir_path(__FILE__) . "update.php");
+$res = $res && include_once(plugin_dir_path(__FILE__) . "synchronising.php");
+$res = $res && include_once(plugin_dir_path(__FILE__) . "textEditing.php");
+$res = $res && include_once(plugin_dir_path(__FILE__) . "syncApi.php");
+$res = $res && include_once(plugin_dir_path(__FILE__) . "RFWP_Amp.php");
+$res = $res && include_once(plugin_dir_path(__FILE__) . "RFWP_Utils.php");
 
 if (empty($res)) {
     return false;
@@ -35,7 +37,6 @@ try {
 	global $wpdb;
 	global $table_prefix;
 
-	RFWP_Logs::generateFilePaths();
 	if (!isset($GLOBALS['dev_mode'])) {
 		$devMode = false;
 		$GLOBALS['dev_mode'] = $devMode;
@@ -43,12 +44,14 @@ try {
 	if (!isset($GLOBALS['rb_testMode'])) {
 		RFWP_initTestMode();
     }
+	if (!isset($GLOBALS['rb_enableLogs'])) {
+		RFWP_Logs::initEnableLogs();
+    }
     if (!isset($GLOBALS['rb_localRotator'])) {
         $GLOBALS['rb_localRotator'] = true;
     }
 
-	include_once (dirname(__FILE__).'/rssGenerator.php');
-    global $rb_logFile;
+	include_once (plugin_dir_path(__FILE__).'rssGenerator.php');
 
 	if (function_exists('wp_cookie_constants')) {
 		wp_cookie_constants();
@@ -68,7 +71,7 @@ try {
 
 	if (!empty($GLOBALS['dev_mode'])) {
 		if (empty($GLOBALS['rb_admin_menu_loaded'])) {
-			require_once(dirname(__FILE__)."/adminMenuAdd.php");
+			require_once(plugin_dir_path(__FILE__)."adminMenuAdd.php");
 			$GLOBALS['rb_admin_menu_loaded'] = true;
 		}
 	}
@@ -77,14 +80,6 @@ try {
 	}
     if (!isset($GLOBALS['excludedPagesChecked'])) {
 	    $GLOBALS['excludedPagesChecked'] = false;
-    }
-    if (empty($GLOBALS['workProgressLogs'])) {
-	    $workProgressLogs = $wpdb->get_var($wpdb->prepare('SELECT optionValue FROM '.$wpPrefix.'realbig_settings WHERE optionName = %s', ["work_process_status"]));
-	    if (!empty($workProgressLogs)&&$workProgressLogs=='enabled') {
-		    $GLOBALS['workProgressLogs'] = 'enabled';
-        } else {
-		    $GLOBALS['workProgressLogs'] = 'disabled';
-	    }
     }
 
 	if (!isset($GLOBALS['rb_variables']['rotator'])||!isset($GLOBALS['rb_variables']['adDomain'])||!isset($GLOBALS['rb_variables']['localRotatorUrl'])) {
@@ -118,7 +113,7 @@ try {
 //	if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {}
 	/***************** Test zone ******************************************************************************************/
 	if (!empty($devMode)&&!is_admin()) {
-		include_once (dirname(__FILE__)."/testFunctions.php");
+		include_once (plugin_dir_path(__FILE__)."testFunctions.php");
 	}
 	$ampCheckResult = RFWP_Amp::detectAmpPage();
 	/** Rss init */
@@ -153,7 +148,7 @@ try {
         if (!function_exists('saveAdBlocks')) {
             function saveAdBlocks($tunnelData) {
                 if (!empty($_POST['type'])&&$_POST['type']=='blocksGethering') {
-                    include_once (dirname(__FILE__).'/connectTestFile.php');
+                    include_once (plugin_dir_path(__FILE__).'connectTestFile.php');
                 }
                 return $tunnelData;
             }
@@ -161,7 +156,7 @@ try {
         if (!function_exists('setLongCache')) {
             function setLongCache($tunnelData) {
                 if (!empty($_POST['type'])&&$_POST['type']=='longCatching') {
-                    set_transient('rb_longCacheDeploy', time()+300, 300);
+                    RFWP_Cache::setLongCache();
                 }
                 return $tunnelData;
             }
@@ -170,7 +165,6 @@ try {
 		/********** New working system ***************************************************************************************/
 		if (!function_exists('RFWP_blocks_in_head_add')) {
 			function RFWP_blocks_in_head_add() {
-				global $rb_logFile;
 				try {
 					if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
 						RFWP_WorkProgressLog(false,'blocks_in_head_add begin');
@@ -187,16 +181,15 @@ try {
 					?><?php echo $content ?><?php
 				} catch (Exception $ex) {
 					$messageFLog = 'RFWP_blocks_in_head_add errors: '.$ex->getMessage().';';
-					error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                    RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 				} catch (Error $er) {
 					$messageFLog = 'RFWP_blocks_in_head_add errors: '.$er->getMessage().';';
-					error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                    RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 				}
 			}
 		}
 		if (!function_exists('RFWP_launch_without_content')) {
 			function RFWP_launch_without_content() {
-				global $rb_logFile;
 				try {
 					if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
 						RFWP_WorkProgressLog(false,'launch_without_content begin');
@@ -207,10 +200,10 @@ try {
 					?><?php echo $content ?><?php
 				} catch (Exception $ex) {
 					$messageFLog = 'RFWP_launch_without_content errors: '.$ex->getMessage().';';
-					error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                    RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 				} catch (Error $er) {
 					$messageFLog = 'RFWP_launch_without_content errors: '.$er->getMessage().';';
-					error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                    RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 				}
 			}
 		}
@@ -255,9 +248,9 @@ try {
 				$rotatorUrl = "https://".$getDomain."/".$getRotator.".min.js";
 				$GLOBALS['rotatorUrl'] = $rotatorUrl;
 
-				require_once (dirname(__FILE__)."/textEditing.php");
+				require_once (plugin_dir_path(__FILE__)."textEditing.php");
 				$headerParsingResult = RFWP_headerInsertor('ad');
-				$longCache = RFWP_getLongCache();
+				$longCache = RFWP_Cache::getLongCache();
 
 				if (empty($longCache)) {
 					RFWP_launch_cache($getRotator, $getDomain);
@@ -301,7 +294,7 @@ try {
 		}
 		if (!function_exists('RFWP_push_universal_head_add')) {
 			function RFWP_push_universal_head_add() {
-				require_once (dirname(__FILE__)."/textEditing.php");
+				require_once (plugin_dir_path(__FILE__)."textEditing.php");
 //				$headerParsingResult = RFWP_headerInsertor('push');
 //				if ($headerParsingResult == true) {
 //					$headerParsingResult = RFWP_headerInsertor('pushNative');
@@ -467,7 +460,7 @@ try {
 							}
                         }
 
-						require_once (dirname(__FILE__)."/textEditing.php");
+						require_once (plugin_dir_path(__FILE__)."textEditing.php");
 						$content = RFWP_addIcons($fromDb, $content);
 
 						if (empty($GLOBALS['used_ins'])||(!empty($GLOBALS['used_ins'])&&empty($GLOBALS['used_ins']['body_1']))) {
@@ -553,7 +546,7 @@ try {
                         echo "if (typeof gather_content==='undefined') {var gather_content = false;}" . PHP_EOL;
                     }
 
-                    include_once(dirname(__FILE__) . '/asyncBlockInserting.js');
+                    include_once(plugin_dir_path(__FILE__) . 'asyncBlockInserting.js');
                     echo  PHP_EOL . "</script>" . PHP_EOL;
 
 					$GLOBALS['rfwp_addedAlready']['asyncBlockInserting'] = true;
@@ -569,15 +562,15 @@ try {
                     echo "<script>" . PHP_EOL;
                     echo "if (typeof rb_ajaxurl==='undefined') {var rb_ajaxurl = '" . admin_url('admin-ajax.php') . "';}" . PHP_EOL;
 
-                    if ((empty(get_transient(RFWP_Variables::MOBILE_CACHE)) || empty(get_transient(RFWP_Variables::TABLET_CACHE)) ||
-                        empty(get_transient(RFWP_Variables::DESKTOP_CACHE))) && empty(get_transient(RFWP_Variables::CACHE))) {
+                    if ((empty(RFWP_Cache::getMobileCache()) || empty(RFWP_Cache::getTabletCache()) ||
+                        empty(RFWP_Cache::getDesktopCache())) && empty(RFWP_Cache::getCache())) {
 
-                        echo "if (typeof cache_devices==='undefined') {var cache_devices = true;}" . PHP_EOL;
-                    } else {
                         echo "if (typeof cache_devices==='undefined') {var cache_devices = false;}" . PHP_EOL;
+                    } else {
+                        echo "if (typeof cache_devices==='undefined') {var cache_devices = true;}" . PHP_EOL;
                     }
 
-                    include_once(dirname(__FILE__) . '/readyAdGather.js');
+                    include_once(plugin_dir_path(__FILE__) . 'readyAdGather.js');
                     echo  PHP_EOL . "</script>" . PHP_EOL;
 
 					$GLOBALS['rfwp_addedAlready']['readyAdGather'] = true;
@@ -599,9 +592,9 @@ try {
                 
 				add_action($insertPlace, 'RFWP_syncFunctionAdd11', 10);
 
-				$cacheTimeoutMobile = get_transient(RFWP_Variables::MOBILE_CACHE);
-				$cacheTimeoutTablet = get_transient(RFWP_Variables::TABLET_CACHE);
-				$cacheTimeoutDesktop = get_transient(RFWP_Variables::DESKTOP_CACHE);
+				$cacheTimeoutMobile = RFWP_Cache::getMobileCache();
+				$cacheTimeoutTablet = RFWP_Cache::getTabletCache();
+				$cacheTimeoutDesktop = RFWP_Cache::getDesktopCache();
 				if (!empty($GLOBALS['dev_mode'])) {
 					$cacheTimeoutMobile = 0;
 					$cacheTimeoutTablet = 0;
@@ -609,7 +602,7 @@ try {
 				}
 
 				if (empty($cacheTimeoutDesktop)||empty($cacheTimeoutTablet)||empty($cacheTimeoutMobile)) {
-					$cacheTimeout = get_transient(RFWP_Variables::CACHE);
+					$cacheTimeout = RFWP_Cache::getCache();
 
 					if (!empty($GLOBALS['dev_mode'])) {
 						$cacheTimeout = 0;
@@ -646,11 +639,7 @@ try {
 	if (empty(apply_filters('wp_doing_cron', defined('DOING_CRON') && DOING_CRON))) {
 	    if ((!empty($curUserCan)&&!empty($_POST['statusRefresher']))||empty($tableForToken)||empty($tableForCurrentPluginChecker)) {
 	        $wpdb->query('DELETE FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_mobile","rb_block_desktop","rb_block_mobile_new","rb_block_tablet_new","rb_block_desktop_new") AND post_author = 0');
-	        delete_transient('rb_cache_timeout');
-	        delete_transient('rb_longCacheDeploy');
-	        delete_transient('rb_mobile_cache_timeout');
-	        delete_transient('rb_tablet_cache_timeout');
-	        delete_transient('rb_desktop_cache_timeout');
+	        RFWP_Cache::deleteCaches();
 		    delete_option('realbig_status_gatherer_version');
 
 		    if (empty($GLOBALS['wp_rewrite'])) {
@@ -665,17 +654,10 @@ try {
 		    }
 
 		    $messageFLog = 'clear cached ads';
-		    error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+            RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 	    }
     }
-    if (!isset($GLOBALS['realbigForWP_version'])) {
-	    $pluginData = get_plugin_data(__FILE__);
-	    if (!empty($pluginData['Version'])) {
-		    $GLOBALS['realbigForWP_version'] = $pluginData['Version'];
-	    } else {
-		    $GLOBALS['realbigForWP_version'] = '0.3.8';
-	    }
-    }
+    RFWP_Utils::getVersion();
     if (!isset($lastSuccessVersionGatherer)||!isset($statusGatherer)) {
 	    if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
 		    RFWP_WorkProgressLog(false,'gather some statuses from options');
@@ -694,14 +676,10 @@ try {
 	/********** checking and creating tables ******************************************************************************/
 	if ((!empty($lastSuccessVersionGatherer)&&$lastSuccessVersionGatherer != $GLOBALS['realbigForWP_version'])||empty($lastSuccessVersionGatherer)) {
 		$wpdb->query('DELETE FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_mobile","rb_block_desktop","rb_block_mobile_new","rb_block_tablet_new","rb_block_desktop_new") AND post_author = 0');
-		delete_transient('rb_cache_timeout');
-		delete_transient('rb_longCacheDeploy');
-		delete_transient('rb_mobile_cache_timeout');
-		delete_transient('rb_tablet_cache_timeout');
-		delete_transient('rb_desktop_cache_timeout');
+        RFWP_Cache::deleteCaches();
 
 		$messageFLog = 'clear cached ads';
-        error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+        RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 
 		if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
 			RFWP_WorkProgressLog(false,'old cache clean');
@@ -782,8 +760,10 @@ try {
             if (!empty($_SERVER["REQUEST_URI"])) {
                 $usedUrl2 = $_SERVER["REQUEST_URI"];
             }
-            $usedUrl1[0] = $_SERVER["HTTP_HOST"].$usedUrl;
-            $usedUrl1[1] = $_SERVER["HTTP_HOST"].$usedUrl2;
+            $usedUrl1[0] = urldecode($_SERVER["HTTP_HOST"].$usedUrl);
+            $usedUrl1[1] = urldecode($_SERVER["HTTP_HOST"].$usedUrl2);
+            $usedUrl1[2] = urldecode(idn_to_utf8($_SERVER["HTTP_HOST"]).$usedUrl);
+            $usedUrl1[3] = urldecode(idn_to_utf8($_SERVER["HTTP_HOST"]).$usedUrl2);
 
             /** Test zone *********/
             /** End of test zone **/
@@ -856,6 +836,8 @@ try {
                         if (!empty($excludedPagesCheckArray)) {
                             foreach ($excludedPagesCheckArray AS $item) {
                                 $item = trim($item);
+                                $item = trim($item, ",;\n /");
+                                $item = urldecode($item);
                                 $item1 = preg_replace('~\\\~','\/', $item);
                                 $item2 = preg_replace('~\/~','\\', $item);
 
@@ -905,19 +887,11 @@ try {
 			add_action('wp_ajax_nopriv_RFWP_saveContentContainer', 'RFWP_saveContentContainer');
 		}
     }
-	$lastSyncTimeTransient = get_transient(RFWP_Variables::SYNC_ATTEMPT);
-	$activeSyncTransient   = get_transient(RFWP_Variables::SYNC_PROCESS);
-	if (!empty($GLOBALS['token'])&&$GLOBALS['token']!='no token'&&empty($activeSyncTransient)&&empty($lastSyncTimeTransient)) {
+	$activeSyncTransient   = RFWP_Cache::getProcessCache();
+	if (!empty($GLOBALS['token'])&&$GLOBALS['token']!='no token'&&empty($activeSyncTransient)) {
 		$nextSchedulerCheck = wp_next_scheduled('rb_cron_hook');
 		if (empty($nextSchedulerCheck)) {
 			RFWP_cronAutoGatheringLaunch();
-		} else {
-            if (!empty(apply_filters('wp_doing_cron', defined('DOING_CRON')&&DOING_CRON))) {
-	            RFWP_cronAutoSyncDelete();
-            }
-        }
-		if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
-			RFWP_WorkProgressLog(false,'auto sync cron create');
 		}
 	}
 	/** Cron check */
@@ -926,14 +900,13 @@ try {
 		if (!empty($GLOBALS['token'])) {
 			RFWP_cronCheckLog('token: '.$GLOBALS['token'].';');
 		}
-		RFWP_cronCheckLog('sync attempt: '.$lastSyncTimeTransient.';');
 		RFWP_cronCheckLog('sync process: '.$activeSyncTransient.';');
 		RFWP_cronCheckLog('cron passed in main');
 	}
 	/** End of cron check */
-	if (!empty($GLOBALS['token'])&&$GLOBALS['token']!='no token'&&!empty(apply_filters('wp_doing_cron', defined('DOING_CRON')&&DOING_CRON))&&empty($activeSyncTransient)&&empty($lastSyncTimeTransient)) {
-		RFWP_cronCheckLog('cron going to sync');
-		RFWP_autoSync();
+	if (!empty($GLOBALS['token'])&&$GLOBALS['token']!='no token'&&RFWP_isRbCron()) {
+        RFWP_cronCheckLog('cron going to sync');
+        RFWP_autoSync();
 	}
 	/********** end autosync and JS text edit *****************************************************************************/
 	/********** adding AD code in head area *******************************************************************************/
@@ -976,26 +949,18 @@ try {
 	/********** manual sync ***********************************************************************************************/
     if (empty(apply_filters('wp_doing_cron', defined('DOING_CRON')&&DOING_CRON))) {
 	    if (!empty($curUserCan)&&strpos($GLOBALS['PHP_SELF'], 'wp-admin')!= false) {
-		    if (!empty($curUserCan)&&!empty($_POST['saveTokenButton'])) {
-		        $workProcess = null;
-		        $getWorkProcess = $wpdb->get_var($wpdb->prepare('SELECT id FROM '.$wpPrefix.'realbig_settings WHERE optionName = %s', ["work_process_status"]));
-		        if (!empty($_POST['process_log'])) {
-			        $workProcess = 'enabled';
-                } else {
-			        $workProcess = 'disabled';
-                }
-		        if (!empty($_POST['cache_clear'])) {
-			        update_option('rb_cacheClearAllow', 'enabled');
-		        } else {
-			        update_option('rb_cacheClearAllow', 'disabled');
-                }
-		        if (!empty($getWorkProcess)) {
-			        $wpdb->update( $wpPrefix.'realbig_settings', ['optionValue' => $workProcess], ['id' => $getWorkProcess]);
-                } else {
-			        $wpdb->insert( $wpPrefix.'realbig_settings', ['optionName' => 'work_process_status', 'optionValue' => $workProcess]);
-		        }
+            $updateLogs = false;
+		    if (!empty($_POST['enableLogsButton'])) {
+                RFWP_Utils::saveToRbSettings(!empty($_POST['enable_logs']) ? '1' : '0', "enableLogs");
+                $updateLogs = true;
             }
-		    $wpOptionsCheckerSyncTime = $wpdb->get_row($wpdb->prepare('SELECT optionValue FROM '.$wpPrefix.'realbig_settings WHERE optionName = %s', ["token_sync_time"]));
+            if (!empty($_POST['saveTokenButton'])) {
+                if (!empty($_POST['cache_clear'])) {
+                    update_option('rb_cacheClearAllow', 'enabled');
+                } else {
+                    update_option('rb_cacheClearAllow', 'disabled');
+                }
+            }
 		    if (!empty($_POST['tokenInput'])) {
 			    $sanitized_token = sanitize_text_field($_POST['tokenInput']);
 			    if (RFWP_tokenMDValidate($sanitized_token)==true) {
@@ -1003,12 +968,13 @@ try {
 				    if (!isset($GLOBALS['RFWP_synchronize_vars'])) {
 					    $GLOBALS['RFWP_synchronize_vars'] = [];
 					    $GLOBALS['RFWP_synchronize_vars']['token'] = $sanitized_token;
-					    $GLOBALS['RFWP_synchronize_vars']['wpOptionsCheckerSyncTime'] = (empty($wpOptionsCheckerSyncTime) ? null : $wpOptionsCheckerSyncTime);
 					    $GLOBALS['RFWP_synchronize_vars']['sameTokenResult'] = $sameTokenResult;
 					    $GLOBALS['RFWP_synchronize_vars']['type'] = 'manual';
+					    $GLOBALS['RFWP_synchronize_vars']['updateLogs'] = $updateLogs;
 				    }
 
 				    RFWP_synchronizeLaunchAdd();
+                    add_action('wp_loaded', 'RFWP_cronAutoGatheringLaunch');
 			    } else {
 				    $GLOBALS['tokenStatusMessage'] = 'Неверный формат токена';
 				    $messageFLog = 'wrong token format';
@@ -1018,7 +984,7 @@ try {
 			    $messageFLog = 'no token';
 		    }
 		    if (!empty($messageFLog)) {
-			    error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 		    }
 		    RFWP_tokenTimeUpdateChecking($GLOBALS['token'], $wpPrefix);
 	    }
@@ -1046,8 +1012,8 @@ try {
 	/*********** begin of token input area ********************************************************************************/
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	if (is_admin()) {
-		include_once (dirname(__FILE__)."/adminPage.php");
-		add_action('admin_menu', 'RFWP_my_pl_settings_menu_create');
+		include_once (plugin_dir_path(__FILE__)."RFWP_AdminPage.php");
+		add_action('admin_menu', 'RFWP_AdminPage::settingsMenuCreate');
 	}
 	/************ end of token input area *********************************************************************************/
 	add_action( 'after_setup_theme', 'RFWP_saveThemeThumbnailSizes', 5000);
@@ -1056,7 +1022,6 @@ catch (Exception $ex)
 {
     try {
 	    global $wpdb;
-	    global $rb_logFile;
 
 	    $messageFLog = 'Deactivation error: '.$ex->getMessage().'; line: '.$ex->getLine().';';
 	    if (!empty($_POST)) {
@@ -1070,7 +1035,7 @@ catch (Exception $ex)
             }
         }
 
-	    error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+        RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 
 	    if (!empty($GLOBALS['wpPrefix'])) {
 	        $wpPrefix = $GLOBALS['wpPrefix'];
@@ -1079,18 +1044,7 @@ catch (Exception $ex)
 	        $wpPrefix = $table_prefix;
         }
 
-        $errorInDB = $wpdb->query("SELECT * FROM ".$wpPrefix."realbig_settings WHERE optionName = 'deactError'");
-	    if (empty($errorInDB)) {
-		    $wpdb->insert($wpPrefix.'realbig_settings', [
-			    'optionName'  => 'deactError',
-			    'optionValue' => 'realbigForWP: '.$ex->getMessage()
-		    ]);
-	    } else {
-		    $wpdb->update($wpPrefix.'realbig_settings', [
-			    'optionName'  => 'deactError',
-			    'optionValue' => 'realbigForWP: '.$ex->getMessage()
-		    ], ['optionName'  => 'deactError']);
-	    }
+        RFWP_Utils::saveToRbSettings('realbigForWP: ' . $ex->getMessage(), 'deactError');
     } catch (Exception $exIex) {
     } catch (Error $erIex) { }
 
@@ -1102,7 +1056,6 @@ catch (Error $ex)
 {
 	try {
         global $wpdb;
-        global $rb_logFile;
 
         $messageFLog = 'Deactivation error: '.$ex->getMessage().'; line: '.$ex->getLine().';';
         if (!empty($_POST)) {
@@ -1116,7 +1069,7 @@ catch (Error $ex)
             }
         }
 
-        error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+        RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 
         if (!empty($GLOBALS['wpPrefix'])) {
             $wpPrefix = $GLOBALS['wpPrefix'];
@@ -1125,18 +1078,7 @@ catch (Error $ex)
             $wpPrefix = $table_prefix;
         }
 
-        $errorInDB = $wpdb->query("SELECT * FROM ".$wpPrefix."realbig_settings WHERE optionName = 'deactError'");
-        if (empty($errorInDB)) {
-            $wpdb->insert($wpPrefix.'realbig_settings', [
-                'optionName'  => 'deactError',
-                'optionValue' => 'realbigForWP: '.$ex->getMessage()
-            ]);
-        } else {
-            $wpdb->update($wpPrefix.'realbig_settings', [
-                'optionName'  => 'deactError',
-                'optionValue' => 'realbigForWP: '.$ex->getMessage()
-            ], ['optionName'  => 'deactError']);
-        }
+        RFWP_Utils::saveToRbSettings('realbigForWP: ' . $ex->getMessage(), 'deactError');
 	} catch (Exception $exIex) {
 	} catch (Error $erIex) { }
 

@@ -13,7 +13,6 @@ try {
 	if (!function_exists('RFWP_dbTablesCreateFunction')) {
 		function RFWP_dbTablesCreateFunction($tableForCurrentPluginChecker, $tableForToken, $tableForTurboRssAds, $tableForAmpAds, $wpPrefix, $statusGatherer) {
 			global $wpdb;
-			global $rb_logFile;
 			try {
 				require_once (ABSPATH."/wp-admin/includes/upgrade.php");
 				if (empty($tableForCurrentPluginChecker)) {
@@ -54,7 +53,7 @@ ENGINE=InnoDB
 					$statusGatherer['realbig_plugin_settings_table'] = true;
 					$messageFLog = 'realbig_plugin_settings exists;';
 					if (!empty($messageFLog)) {
-						error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL,3,$rb_logFile);
+                        RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 					}
 				}
 
@@ -78,7 +77,7 @@ ENGINE=InnoDB
 				} else {
 					$statusGatherer['realbig_settings_table'] = true;
 					$messageFLog = 'realbig_settings exists;';
-                    error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL,3,$rb_logFile);
+                    RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 				}
 
 				if (empty($tableForTurboRssAds)) {
@@ -107,7 +106,7 @@ ENGINE=InnoDB
 				} else {
 					$statusGatherer['realbig_turbo_ads_table'] = true;
 					$messageFLog = 'realbig_turbo_ads exists;';
-                    error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL,3,$rb_logFile);
+                    RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 				}
 
 				if (empty($tableForAmpAds)) {
@@ -134,14 +133,14 @@ ENGINE=InnoDB
                 } else {
 					$statusGatherer['realbig_amp_ads_table'] = true;
 					$messageFLog = 'realbig_amp_ads exists;';
-					error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL,3,$rb_logFile);
+                    RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 				}
 
 				return $statusGatherer;
 			} catch (Exception $e) {
 //				echo $e;
 				$messageFLog = 'some error in table create: '.$e->getMessage().';';
-				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL,3,$rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 
 				$statusGatherer['realbig_plugin_settings_table'] = false;
 				$statusGatherer['realbig_settings_table']        = false;
@@ -151,7 +150,6 @@ ENGINE=InnoDB
 	}
 	if (!function_exists('RFWP_updateElementEnumValuesFunction')) {
 		function RFWP_updateElementEnumValuesFunction($wpPrefix, $statusGatherer) {
-			global $rb_logFile;
 			$requiredElementColumnValues = "enum('p','li','ul','ol','blockquote','img','video','iframe','h1','h2','h3','h4','h5','h6','h2-4','article')";
 			try {
 				function RFWP_checkElementColumnValues($wpPrefix, $requiredElementColumnValues) {
@@ -176,13 +174,13 @@ ENGINE=InnoDB
 				return $statusGatherer;
 			} catch (Exception $ex) {
 				$messageFLog = 'some error in update Element Enum Values: '.$ex->getMessage().';';
-				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL,3,$rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 
 				$statusGatherer['element_column_values'] = false;
 				return $statusGatherer;
 			} catch (Error $er) {
 				$messageFLog = 'some error in update Element Enum Values: '.$er->getMessage().';';
-				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL,3,$rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 
 				$statusGatherer['element_column_values'] = false;
 				return $statusGatherer;
@@ -192,7 +190,6 @@ ENGINE=InnoDB
 	if (!function_exists('RFWP_wpRealbigSettingsTableUpdateFunction')) {
 		function RFWP_wpRealbigSettingsTableUpdateFunction($wpPrefix) {
 			global $wpdb;
-			global $rb_logFile;
 			try {
 				$rez = $wpdb->query('SHOW FIELDS FROM ' . $wpPrefix . 'realbig_settings');
 
@@ -202,12 +199,12 @@ ENGINE=InnoDB
 				return true;
 			} catch (Exception $ex) {
 				$messageFLog = 'some error in wpRealbigSettingsTableUpdate: '.$ex->getMessage().';';
-				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL,3,$rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 
 				return false;
 			} catch (Error $er) {
 				$messageFLog = 'some error in wpRealbigSettingsTableUpdate: '.$er->getMessage().';';
-				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL,3,$rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 
 				return false;
 			}
@@ -239,7 +236,6 @@ ENGINE=InnoDB
 				'offTags',
                 'elementCss',
 			];
-			global $rb_logFile;
 			try {
 			    // !!! not ready yet!!!
 
@@ -262,14 +258,14 @@ ENGINE=InnoDB
 				return $statusGatherer;
 			} catch (Exception $ex) {
 				$messageFLog = 'some error in wpRealbigSettingsTableUpdate: '.$ex->getMessage().';';
-				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL,3,$rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 
 				$statusGatherer['realbig_plugin_settings_columns'] = false;
 
 				return $statusGatherer;
 			} catch (Error $er) {
 				$messageFLog = 'some error in wpRealbigSettingsTableUpdate: '.$er->getMessage().';';
-				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL,3,$rb_logFile);
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 
 				$statusGatherer['realbig_plugin_settings_columns'] = false;
 
@@ -282,10 +278,9 @@ catch (Exception $ex)
 {
 	try {
 		global $wpdb;
-		global $rb_logFile;
 
 		$messageFLog = 'Deactivation error: '.$ex->getMessage().';';
-		error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+        RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 
 		if (!empty($GLOBALS['wpPrefix'])) {
 			$wpPrefix = $GLOBALS['wpPrefix'];
@@ -294,18 +289,7 @@ catch (Exception $ex)
 			$wpPrefix = $table_prefix;
 		}
 
-		$errorInDB = $wpdb->query("SELECT * FROM ".$wpPrefix."realbig_settings WHERE optionName = 'deactError'");
-		if (empty($errorInDB)) {
-			$wpdb->insert($wpPrefix.'realbig_settings', [
-				'optionName'  => 'deactError',
-				'optionValue' => 'update: '.$ex->getMessage()
-			]);
-		} else {
-			$wpdb->update( $wpPrefix.'realbig_settings', [
-				'optionName'  => 'deactError',
-				'optionValue' => 'update: '.$ex->getMessage()
-			], ['optionName'  => 'deactError']);
-		}
+        RFWP_Utils::saveToRbSettings('update: ' . $ex->getMessage(), 'deactError');
 	} catch (Exception $exIex) {
 	} catch (Error $erIex) { }
 
@@ -316,10 +300,9 @@ catch (Error $er)
 {
 	try {
 		global $wpdb;
-		global $rb_logFile;
 
 		$messageFLog = 'Deactivation error: '.$er->getMessage().';';
-		error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+        RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 
 		if (!empty($GLOBALS['wpPrefix'])) {
 			$wpPrefix = $GLOBALS['wpPrefix'];
@@ -328,18 +311,7 @@ catch (Error $er)
 			$wpPrefix = $table_prefix;
 		}
 
-		$errorInDB = $wpdb->query("SELECT * FROM ".$wpPrefix."realbig_settings WHERE optionName = 'deactError'");
-		if (empty($errorInDB)) {
-			$wpdb->insert($wpPrefix.'realbig_settings', [
-				'optionName'  => 'deactError',
-				'optionValue' => 'update: '.$er->getMessage()
-			]);
-		} else {
-			$wpdb->update( $wpPrefix.'realbig_settings', [
-				'optionName'  => 'deactError',
-				'optionValue' => 'update: '.$er->getMessage()
-			], ['optionName'  => 'deactError']);
-		}
+        RFWP_Utils::saveToRbSettings('update: ' . $er->getMessage(), 'deactError');
 	} catch (Exception $exIex) {
 	} catch (Error $erIex) { }
 

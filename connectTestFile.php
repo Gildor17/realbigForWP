@@ -11,9 +11,9 @@ try {
     $returnData['errors'] = [];
     $errorsGather = '';
 
-    $checkCacheTimeoutMobile = get_transient(RFWP_Variables::MOBILE_CACHE);
-    $checkCacheTimeoutTablet = get_transient(RFWP_Variables::TABLET_CACHE);
-    $checkCacheTimeoutDesktop = get_transient(RFWP_Variables::DESKTOP_CACHE);
+    $checkCacheTimeoutMobile = RFWP_Cache::getMobileCache();
+    $checkCacheTimeoutTablet = RFWP_Cache::getTabletCache();
+    $checkCacheTimeoutDesktop = RFWP_Cache::getDesktopCache();
 
     if (!empty($checkCacheTimeoutMobile)&&!empty($checkCacheTimeoutTablet)&&!empty($checkCacheTimeoutDesktop)) {
         return true;
@@ -21,15 +21,15 @@ try {
 
 	$stopIt = false;
     while (empty($stopIt)) {
-	    $checkCacheTimeout = get_transient(RFWP_Variables::CACHE);
+	    $checkCacheTimeout = RFWP_Cache::getCache();
 	    if (!empty($checkCacheTimeout)) {
 		    return true;
 	    }
-	    $checkActiveCaching = get_transient(RFWP_Variables::ACTIVE_CACHE);
+	    $checkActiveCaching = RFWP_Cache::getActiveCache();
 	    if (!empty($checkActiveCaching)) {
 		    sleep(6);
 	    } else {
-		    set_transient(RFWP_Variables::ACTIVE_CACHE, time()+5, 5);
+            RFWP_Cache::setActiveCache();
 	        $stopIt = true;
         }
     }
@@ -46,10 +46,9 @@ try {
 } catch (Exception $ex) {
 	try {
 		global $wpdb;
-		global $rb_logFile;
 
 		$messageFLog = 'Deactivation error: '.$ex->getMessage().';';
-		error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+        RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 
 		if (!empty($GLOBALS['wpPrefix'])) {
 			$wpPrefix = $GLOBALS['wpPrefix'];
@@ -58,18 +57,7 @@ try {
 			$wpPrefix = $table_prefix;
 		}
 
-		$errorInDB = $wpdb->query("SELECT * FROM ".$wpPrefix."realbig_settings WHERE optionName = 'deactError'");
-		if (empty($errorInDB)) {
-			$wpdb->insert($wpPrefix.'realbig_settings', [
-				'optionName'  => 'deactError',
-				'optionValue' => 'realbigForWP: '.$ex->getMessage()
-			]);
-		} else {
-			$wpdb->update( $wpPrefix.'realbig_settings', [
-				'optionName'  => 'deactError',
-				'optionValue' => 'realbigForWP: '.$ex->getMessage()
-			], ['optionName'  => 'deactError']);
-		}
+        RFWP_Utils::saveToRbSettings('realbigForWP: ' . $ex->getMessage(), 'deactError');
 	} catch (Exception $exIex) {
 	} catch (Error $erIex) { }
 
@@ -79,10 +67,9 @@ try {
 } catch (Error $er) {
 	try {
 		global $wpdb;
-		global $rb_logFile;
 
 		$messageFLog = 'Deactivation error: '.$er->getMessage().';';
-		error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+        RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 
 		if (!empty($GLOBALS['wpPrefix'])) {
 			$wpPrefix = $GLOBALS['wpPrefix'];
@@ -91,18 +78,7 @@ try {
 			$wpPrefix = $table_prefix;
 		}
 
-		$errorInDB = $wpdb->query("SELECT * FROM ".$wpPrefix."realbig_settings WHERE optionName = 'deactError'");
-		if (empty($errorInDB)) {
-			$wpdb->insert($wpPrefix.'realbig_settings', [
-				'optionName'  => 'deactError',
-				'optionValue' => 'realbigForWP: '.$er->getMessage()
-			]);
-		} else {
-			$wpdb->update( $wpPrefix.'realbig_settings', [
-				'optionName'  => 'deactError',
-				'optionValue' => 'realbigForWP: '.$er->getMessage()
-			], ['optionName'  => 'deactError']);
-		}
+        RFWP_Utils::saveToRbSettings('realbigForWP: ' . $er->getMessage(), 'deactError');
 	} catch (Exception $exIex) {
 	} catch (Error $erIex) { }
 

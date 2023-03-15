@@ -3,8 +3,8 @@
 if (!defined("ABSPATH")) {exit;}
 
 try {
-    if (!class_exists('RFWP_Caches')) {
-        class RFWP_Caches {
+    if (!class_exists('RFWP_CachePlugins')) {
+        class RFWP_CachePlugins {
             private static $pluginList;
 
             public static function cacheClear() {
@@ -16,11 +16,11 @@ try {
                             try {
                                 self::$item();
                             } catch (Exception $ex) {
-                                $messageFLog = 'Some error in RFWP_Caches->cacheClear : '.$ex->getMessage().';';
-                                RFWP_Logs::saveLogs('errorsLog', $messageFLog);
+                                $messageFLog = 'Some error in RFWP_CachePlugins->cacheClear : '.$ex->getMessage().';';
+                                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
                             } catch (Error $er) {
-                                $messageFLog = 'Some error in RFWP_Caches->cacheClear : '.$er->getMessage().';';
-                                RFWP_Logs::saveLogs('errorsLog', $messageFLog);
+                                $messageFLog = 'Some error in RFWP_CachePlugins->cacheClear : '.$er->getMessage().';';
+                                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
                             }
                         }
                         unset($item);
@@ -157,10 +157,9 @@ try {
 catch (Exception $ex) {
 	try {
 		global $wpdb;
-		global $rb_logFile;
 
 		$messageFLog = 'Deactivation error: '.$ex->getMessage().';';
-		error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+        RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 
 		if (!empty($GLOBALS['wpPrefix'])) {
 			$wpPrefix = $GLOBALS['wpPrefix'];
@@ -169,18 +168,7 @@ catch (Exception $ex) {
 			$wpPrefix = $table_prefix;
 		}
 
-		$errorInDB = $wpdb->query("SELECT * FROM ".$wpPrefix."realbig_settings WHERE optionName = 'deactError'");
-		if (empty($errorInDB)) {
-			$wpdb->insert($wpPrefix.'realbig_settings', [
-				'optionName'  => 'deactError',
-				'optionValue' => 'caches: '.$ex->getMessage()
-			]);
-		} else {
-			$wpdb->update( $wpPrefix.'realbig_settings', [
-				'optionName'  => 'deactError',
-				'optionValue' => 'caches: '.$ex->getMessage()
-			], ['optionName'  => 'deactError']);
-		}
+        RFWP_Utils::saveToRbSettings('caches: ' . $ex->getMessage(), 'deactError');
 	} catch (Exception $exIex) {} catch (Error $erIex) {}
 
 	deactivate_plugins(plugin_basename(__FILE__));
@@ -189,10 +177,9 @@ catch (Exception $ex) {
 catch (Error $ex) {
 	try {
 		global $wpdb;
-		global $rb_logFile;
 
 		$messageFLog = 'Deactivation error: '.$ex->getMessage().';';
-		error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+        RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 
 		if (!empty($GLOBALS['wpPrefix'])) {
 			$wpPrefix = $GLOBALS['wpPrefix'];
@@ -201,18 +188,7 @@ catch (Error $ex) {
 			$wpPrefix = $table_prefix;
 		}
 
-		$errorInDB = $wpdb->query("SELECT * FROM ".$wpPrefix."realbig_settings WHERE optionName = 'deactError'");
-		if (empty($errorInDB)) {
-			$wpdb->insert($wpPrefix.'realbig_settings', [
-				'optionName'  => 'deactError',
-				'optionValue' => 'caches: '.$ex->getMessage()
-			]);
-		} else {
-			$wpdb->update( $wpPrefix.'realbig_settings', [
-				'optionName'  => 'deactError',
-				'optionValue' => 'caches: '.$ex->getMessage()
-			], ['optionName'  => 'deactError']);
-		}
+        RFWP_Utils::saveToRbSettings('caches: ' . $ex->getMessage(), 'deactError');
 	} catch (Exception $exIex) {} catch (Error $erIex) {}
 
 	deactivate_plugins(plugin_basename(__FILE__));

@@ -39,7 +39,6 @@ $GLOBALS['kill_rb'] = $kill_rb;
 /** Check IP */
 if (!empty($_POST['checkIp'])&&is_admin()&&empty(apply_filters('wp_doing_cron', defined('DOING_CRON')&&DOING_CRON))) {
 	$thisUrl = 'http://ifconfig.co/ip';
-	$checkIpLogFile = plugin_dir_path(__FILE__).'checkIpLog.log';
 //		    $thisResultSaved = get_option('checkIpResult');
 //		    if (empty($thisResultSaved)) {
 //			    $thisResult = wp_remote_get($thisUrl);
@@ -54,7 +53,7 @@ if (!empty($_POST['checkIp'])&&is_admin()&&empty(apply_filters('wp_doing_cron', 
 	$curlResult = curl_exec($curl);
 	if (!empty($curlResult)) {
 		global $curlResult;
-		error_log(PHP_EOL.current_time('mysql').':'.PHP_EOL.$curlResult.PHP_EOL, 3, $checkIpLogFile);
+        RFWP_Logs::saveLogs(RFWP_Logs::IP_LOG, PHP_EOL.$curlResult);
 	}
 	curl_close($curl);
 }

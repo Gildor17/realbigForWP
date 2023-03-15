@@ -4,79 +4,64 @@ if (!defined("ABSPATH")) {exit;}
 
 if (!class_exists('RFWP_Logs')) {
     class RFWP_Logs {
-        private static $missingLogFile = false;
+        const AMP_LOG = 'amp.log';
+        const CRON_LOG = 'cron.log';
+        const ERRORS_LOG = 'errors.log';
+        const IP_LOG = 'ip.log';
+        const MODULES_LOG = 'modules.log';
+        const RSS_LOG = 'rss.log';
+        const WORK_PROCESS_LOG = 'workProcess.log';
 
-        private static $errorsLog;
-        private static $workProcessLog;
-        private static $testCheckLog;
-        private static $rssCheckLog;
-        private static $modulesLog;
-        private static $ampTestLog;
+        const LOGS = [
+            'AMP' => self::AMP_LOG,
+            'Cron' => self::CRON_LOG,
+            'Ip' => self::IP_LOG,
+            'Modules' => self::MODULES_LOG,
+            'Rss' => self::RSS_LOG,
+            'Process' => self::WORK_PROCESS_LOG
+        ];
 
-//	public function __construct() {
-//		$this->generateFilePaths();
-//	}
-
-        public static function generateFilePaths() {
+        public static function saveLogs($fileName, $text, $useDateBefore = true) {
+            global $rb_enableLogs;
             try {
-                $logsList = self::getLogsList();
+                if (!empty($fileName) && in_array($fileName, self::LOGS)) {
+                    if ($rb_enableLogs) {
+                        $filePath = plugin_dir_path(__FILE__) . 'logs/' . $fileName;
 
-                if (!empty($logsList)) {
-                    foreach ($logsList as $k => $item) {
-                        try {
-                            if (file_exists(dirname(__FILE__).'/'.$item)) {
-                                self::$$k = plugin_dir_path(__FILE__).$item;
-                            } else {
-                                self::$missingLogFile = true;
-                            }
-                        } catch (Exception $ex) {} catch (Error $er) {}
+                        clearstatcache();
+                        if (!file_exists(dirname($filePath)))
+                            mkdir(dirname($filePath),0777, true);
+
+                        $message = PHP_EOL;
+                        if (!empty($useDateBefore)) {
+                            $message .= current_time('mysql');
+                        }
+
+                        error_log($message.': '.$text.PHP_EOL, 3, $filePath);
                     }
-                    unset($k,$item);
-                }
-
-                $GLOBALS['rb_logFile'] = plugin_dir_path(__FILE__).'wpPluginErrors.log';
-                $GLOBALS['rb_processlogFile'] = plugin_dir_path(__FILE__).'workProcess.log';
-                $GLOBALS['rb_testCheckLog'] = plugin_dir_path(__FILE__).'testCheckLog.log';
-                $GLOBALS['rb_rssCheckLog'] = plugin_dir_path(__FILE__).'rssCheckLog.log';
-                $GLOBALS['rb_modulesLog'] = plugin_dir_path(__FILE__).'modulesLog.log';
-                $GLOBALS['rb_ampTestLog'] = plugin_dir_path(__FILE__).'ampTestLog.log';
-
-                return true;
-            } catch (Exception $ex) {} catch (Error $er) {}
-            return false;
-        }
-
-        private static function getLogsList() {
-            // var name - file name
-            $list = [
-                'errorsLog' => 'wpPluginErrors.log',
-                'workProcessLog' => 'workProcess.log',
-                'testCheckLog' => 'testCheckLog.log',
-                'rssCheckLog' => 'rssCheckLog.log',
-                'modulesLog' => 'modulesLog.log',
-                'ampTestLog' => 'ampTestLog.log',
-            ];
-
-            return $list;
-        }
-
-        public static function saveLogs($logAttributeName, $text, $useDateBefore = true) {
-            try {
-                if (!empty(self::$$logAttributeName)) {
-                    $message = PHP_EOL;
-                    if (!empty($useDateBefore)) {
-                        $message .= current_time('mysql');
-                    }
-
-                    error_log($message.': '.$text.PHP_EOL, 3, self::$$logAttributeName);
                 }
             } catch (Exception $ex) {} catch (Error $er) {}
         }
 
-        public static function test1() {
-            $testVal = self::$errorsLog;
-//            throw new Exception('jk');
-            $penyok_stoparik = 0;
+        public static function clearLog($logFile) {
+            $dir = plugin_dir_path(__FILE__) . 'logs/';
+            if (in_array($logFile, self::LOGS) && file_exists($dir . $logFile)) {
+                unlink($dir . $logFile);
+            }
+        }
+
+        public static function clearAllLogs() {
+            foreach (self::LOGS as $log) {
+                self::clearLog($log);
+            }
+        }
+
+        public static function initEnableLogs() {
+            global $rb_enableLogs;
+
+            if (!isset($rb_enableLogs)) {
+                $rb_enableLogs = !empty(RFWP_Utils::getFromRbSettings('enableLogs'));
+            }
         }
     }
 }

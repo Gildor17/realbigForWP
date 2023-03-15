@@ -6,11 +6,6 @@ try {
 	// rss init begin
 	if (!function_exists('RFWP_rssInit')) {
 		function RFWP_rssInit() {
-			global $rb_rssCheckLog;
-
-			$messageFLog = 'point_dop 1;';
-			error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_rssCheckLog);
-
 			$posts = [];
 			$rb_rssFeedUrls = [];
 			$rssPartsCount = 1;
@@ -38,9 +33,6 @@ try {
 
 			if (!empty($posts)) {
 				$GLOBALS['rb_rssTurboAds'] = RFWP_getTurboAds();
-				$messageFLog = 'point_dop 2;';
-				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_rssCheckLog);
-
 				$rssDividedPosts = RFWP_rssDivine($posts, $rssOptions);
 				$GLOBALS['rb_rssDivideOptions']['posts'] = $rssDividedPosts;
 				$GLOBALS['rb_rssDivideOptions']['iteration'] = 0;
@@ -71,9 +63,6 @@ try {
 				$GLOBALS['rb_rssFeedUrls'] = $rb_rssFeedUrls;
 			}
 
-			$messageFLog = 'point_dop 3;';
-			error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_rssCheckLog);
-
 			global $wp_rewrite;
 			$wp_rewrite->flush_rules(false);
 		}
@@ -82,7 +71,6 @@ try {
 	if (!function_exists('RFWP_getTurboAds')) {
 		function RFWP_getTurboAds() {
 			if (!isset($GLOBALS['rb_turboAds'])) {
-				global $rb_rssCheckLog;
 				global $wpdb;
 				global $wpPrefix;
 
@@ -422,7 +410,6 @@ try {
 	}
 	if (!function_exists('RFWP_rssOptionsGet')) {
 	    function RFWP_rssOptionsGet() {
-	        global $rb_testCheckLog;
 	        if (!empty($GLOBALS['rssOptions'])) {
 	            $rssOptions = $GLOBALS['rssOptions'];
             } else {
@@ -439,42 +426,42 @@ try {
 		        $rssOptions['description'] = 'test_desc';
 		        $rssOptions['lang'] = 'RU';
 		        $rssOptions['pagesCount'] = 5;
-		        $rssOptions['divide'] = false;
+		        $rssOptions['divide'] = 0;
 		        $rssOptions['rssPartsSeparated'] = 5;
-		        $rssOptions['selectiveOff'] = false;
-		        $rssOptions['selectiveOffTracking'] = false;
+		        $rssOptions['selectiveOff'] = 0;
+		        $rssOptions['selectiveOffTracking'] = 0;
 		        $rssOptions['selectiveOffField'] = '';
-		        $rssOptions['onTurbo'] = true;
+		        $rssOptions['onTurbo'] = 'true';
 		        $rssOptions['onOffProtocol'] = 'default';
 		        // 2nd part
-		        $rssOptions['PostHtml'] = false;
-		        $rssOptions['PostDate'] = false;
+		        $rssOptions['PostHtml'] = 0;
+		        $rssOptions['PostDate'] = 0;
 		        $rssOptions['PostDateType'] = 'create';
-		        $rssOptions['PostExcerpt'] = false;
+		        $rssOptions['PostExcerpt'] = 0;
 		        $rssOptions['PostTitle'] = false;
 		        $rssOptions['SeoPlugin'] = 'yoast_seo';
-		        $rssOptions['Thumbnails'] = false;
+		        $rssOptions['Thumbnails'] = 0;
 		        $rssOptions['ThumbnailsSize'] = 'thumbnail';
 		        $rssOptions['PostAuthor'] = 'disable';
 		        $rssOptions['PostAuthorDirect'] = 'local_test_author';
 		        $rssOptions['ImageDesc'] = 'disable';
-		        $rssOptions['toc'] = false;
-		        $rssOptions['tocPostTypes'] = false;
+		        $rssOptions['toc'] = 0;
+		        $rssOptions['tocPostTypes'] = [];
 		        $rssOptions['tocTitleText'] = 'default_toc_title';
 		        $rssOptions['tocPosition'] = 'postBegin';
 		        $rssOptions['tocTitlesMin'] = 2;
 		        $rssOptions['tocTitlesLevels'] = false;
 		        // 3rd part
 		        $rssOptions['menu']= 'not_use';
-		        $rssOptions['blockShare']= false;
+		        $rssOptions['blockShare']= 0;
 		        $rssOptions['blockShareSocials']= false;
-		        $rssOptions['blockShareOrder']= false;
-		        $rssOptions['blockFeedback']= false;
+		        $rssOptions['blockShareOrder']= "";
+		        $rssOptions['blockFeedback']= 0;
 		        $rssOptions['blockFeedbackPosition']= 'left';
 		        $rssOptions['blockFeedbackPositionPlace']= 'begin';
 		        $rssOptions['blockFeedbackPositionTitle']= 'pos_title';
 		        $rssOptions['blockFeedbackButton']= false;
-		        $rssOptions['blockFeedbackButtonOrder']= false;
+		        $rssOptions['blockFeedbackButtonOrder']= "";
 		        $rssOptions['blockFeedbackButtonContacts']= 'empty';
 		        $rssOptions['blockFeedbackButtonContactsCall']= false;
 		        $rssOptions['blockFeedbackButtonContactsCallbackEmail']= false;
@@ -489,23 +476,23 @@ try {
 		        $rssOptions['blockFeedbackButtonContactsViber']= false;
 		        $rssOptions['blockFeedbackButtonContactsWhatsapp']= false;
 		        $rssOptions['blockFeedbackButtonContactsTelegram']= false;
-		        $rssOptions['blockComments']= false;
-		        $rssOptions['blockCommentsAvatars']= false;
-		        $rssOptions['blockCommentsCount']= false;
+		        $rssOptions['blockComments']= 0;
+		        $rssOptions['blockCommentsAvatars']= 0;
+		        $rssOptions['blockCommentsCount']= 20;
 		        $rssOptions['blockCommentsSort']= 'new_in_begin';
-		        $rssOptions['blockCommentsDate']= false;
-		        $rssOptions['blockCommentsTree']= false;
-		        $rssOptions['blockRelated']= false;
-		        $rssOptions['blockRelatedCount']= false;
-		        $rssOptions['blockRelatedDateLimitation']= false;
+		        $rssOptions['blockCommentsDate']= 0;
+		        $rssOptions['blockCommentsTree']= 0;
+		        $rssOptions['blockRelated']= 0;
+		        $rssOptions['blockRelatedCount']= 5;
+		        $rssOptions['blockRelatedDateLimitation']= 72;
 		        $rssOptions['blockRelatedThumb']= false;
-		        $rssOptions['blockRelatedUnstopable']= false;
-		        $rssOptions['blockRelatedCaching']= false;
+		        $rssOptions['blockRelatedUnstopable']= 0;
+		        $rssOptions['blockRelatedCaching']= 0;
 		        $rssOptions['blockRelatedCachelifetime']= false;
-		        $rssOptions['blockRating']= false;
-		        $rssOptions['blockRatingFrom']= false;
-		        $rssOptions['blockRatingTo']= false;
-		        $rssOptions['blockSearch']= false;
+		        $rssOptions['blockRating']= 0;
+		        $rssOptions['blockRatingFrom']= 1;
+		        $rssOptions['blockRatingTo']= 5;
+		        $rssOptions['blockSearch']= 0;
 		        $rssOptions['blockSearchDefaultText']= false;
 		        $rssOptions['blockSearchPosition']= 'postBegin';
 		        // 4th part
@@ -513,19 +500,19 @@ try {
 		        $rssOptions['couLiveInternet']= '';
 		        $rssOptions['couGoogleAnalytics']= '';
 		        // 5th part
-		        $rssOptions['typesPost']= false;
-		        $rssOptions['typesIncludes']= false;
-		        $rssOptions['typesTaxExcludes']= false;
-		        $rssOptions['typesTaxIncludes']= false;
-		        $rssOptions['typesInAdminCol']= false;
+		        $rssOptions['typesPost']= 'post;pro_tag';
+		        $rssOptions['typesIncludes']= 'exclude';
+		        $rssOptions['typesTaxExcludes']= '';
+		        $rssOptions['typesTaxIncludes']= '';
+		        $rssOptions['typesInAdminCol']= 0;
 		        // 6th part
-		        $rssOptions['filterSc']= false;
+		        $rssOptions['filterSc']= 0;
 		        $rssOptions['filterScField']= '';
-		        $rssOptions['filterTagsWithoutContent']= false;
+		        $rssOptions['filterTagsWithoutContent']= 0;
 		        $rssOptions['filterTagsWithoutContentField']= '';
-		        $rssOptions['filterTagsWithContent']= false;
+		        $rssOptions['filterTagsWithContent']= 0;
 		        $rssOptions['filterTagsWithContentField']= '';
-		        $rssOptions['filterContent']= false;
+		        $rssOptions['filterContent']= 0;
 		        $rssOptions['filterContentField']= '';
 		        // 7th part
 		        $rssOptions['template-post']= '';
@@ -656,6 +643,11 @@ try {
 
 	                                    $rssOptions[$k] = $localValue;
                                         break;
+                                    case 'feedTocPostTypes':
+                                        $localValue = explode(';', $rssOptionsGet[$item]);
+                                        $localValue = array_diff($localValue, ['']);
+                                        $rssOptions[$k] = $localValue;
+                                        break;
                                     default:
 	                                    $rssOptions[$k] = $rssOptionsGet[$item];
                                         break;
@@ -746,8 +738,6 @@ try {
 //				return $content;
 
 			$types = $rssOptions['tocPostTypes'];
-			$types = explode(";", $types);
-			$types = array_diff($types, array(''));
 
 			if (!in_array(get_post_type($postId), $types)) {
 				return $content;
@@ -755,7 +745,7 @@ try {
 
 			//подключение файла с классом Kama_Contents begin
 			if (!class_exists('Kama_Contents')) {
-				require_once dirname(__FILE__) . '/class-Kama_Contents.php';
+				require_once plugin_dir_path(__FILE__) . 'class-Kama_Contents.php';
 			}
 			//подключение файла с классом Kama_Contents end
 
@@ -1560,7 +1550,6 @@ try {
 //	add_filter( 'the_permalink_rss', 'RFWP_filter_permalink_rss' );
 	if (!function_exists('RFWP_rssCreate')) {
 		function RFWP_rssCreate() {
-			global $rb_rssCheckLog;
 
 			$rssOptions = RFWP_rssOptionsGet();
 			$GLOBALS['$rssOptions'] = $rssOptions;
@@ -1571,7 +1560,7 @@ try {
 			$postTypes = ['post','page'];
 
 			$messageFLog = 'point 1;';
-			error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_rssCheckLog);
+            RFWP_Logs::saveLogs(RFWP_Logs::RSS_LOG, $messageFLog);
 
 			if (!empty($_GET)&&!empty($_GET['paged'])) {
 				$paged = (intval($_GET['paged'])-1);
@@ -1587,14 +1576,14 @@ try {
 				$messageFLog .= 'post_count: '.count($_POST).';';
             }
 
-			error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_rssCheckLog);
+            RFWP_Logs::saveLogs(RFWP_Logs::RSS_LOG, $messageFLog);
 
 			if (isset($_GET['rb_rss_trash']) && $_GET['rb_rss_trash']=='1') {
 //				if (!empty($rssOptions['selectiveOff'])) {
 					RFWP_rss_lenta_trash($rssOptions);
 //				}
 				$messageFLog = 'point 2;';
-				error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_rssCheckLog);
+                RFWP_Logs::saveLogs(RFWP_Logs::RSS_LOG, $messageFLog);
 
 				exit;
 			}
@@ -1623,12 +1612,12 @@ try {
 			$rssOptions['charset'] = get_option('blog_charset');
 
 			$messageFLog = 'point 3;';
-			error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_rssCheckLog);
+            RFWP_Logs::saveLogs(RFWP_Logs::RSS_LOG, $messageFLog);
 
 			if (!empty($rssDivided)) {
 				foreach ($rssDivided AS $k1 => $item1) {
 					$messageFLog = 'point 4;';
-					error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_rssCheckLog);
+                    RFWP_Logs::saveLogs(RFWP_Logs::RSS_LOG, $messageFLog);
 
 					header('Content-Type: '.$rssOptions['contentType'].'; charset='.$rssOptions['charset'], true);
 					echo '<?xml version="1.0" encoding="'.$rssOptions['charset'].'"?'.'>'.PHP_EOL;
@@ -1965,10 +1954,9 @@ try {
 catch (Exception $ex) {
 	try {
 		global $wpdb;
-		global $rb_logFile;
 
 		$messageFLog = 'Deactivation error: '.$ex->getMessage().';';
-		error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+        RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 
 		if (!empty($GLOBALS['wpPrefix'])) {
 			$wpPrefix = $GLOBALS['wpPrefix'];
@@ -1977,18 +1965,7 @@ catch (Exception $ex) {
 			$wpPrefix = $table_prefix;
 		}
 
-		$errorInDB = $wpdb->query("SELECT * FROM ".$wpPrefix."realbig_settings WHERE optionName = 'deactError'");
-		if (empty($errorInDB)) {
-			$wpdb->insert($wpPrefix.'realbig_settings', [
-				'optionName'  => 'deactError',
-				'optionValue' => 'realbigForWP: '.$ex->getMessage()
-			]);
-		} else {
-			$wpdb->update($wpPrefix.'realbig_settings', [
-				'optionName'  => 'deactError',
-				'optionValue' => 'realbigForWP: '.$ex->getMessage()
-			], ['optionName'  => 'deactError']);
-		}
+        RFWP_Utils::saveToRbSettings('realbigForWP: ' . $ex->getMessage(), 'deactError');
 	} catch (Exception $exIex) {
 	} catch (Error $erIex) { }
 
@@ -1999,10 +1976,9 @@ catch (Exception $ex) {
 catch (Error $er) {
 	try {
 		global $wpdb;
-		global $rb_logFile;
 
 		$messageFLog = 'Deactivation error: '.$er->getMessage().';';
-		error_log(PHP_EOL.current_time('mysql').': '.$messageFLog.PHP_EOL, 3, $rb_logFile);
+        RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 
 		if (!empty($GLOBALS['wpPrefix'])) {
 			$wpPrefix = $GLOBALS['wpPrefix'];
@@ -2011,18 +1987,7 @@ catch (Error $er) {
 			$wpPrefix = $table_prefix;
 		}
 
-		$errorInDB = $wpdb->query("SELECT * FROM ".$wpPrefix."realbig_settings WHERE optionName = 'deactError'");
-		if (empty($errorInDB)) {
-			$wpdb->insert($wpPrefix.'realbig_settings', [
-				'optionName'  => 'deactError',
-				'optionValue' => 'realbigForWP: '.$er->getMessage()
-			]);
-		} else {
-			$wpdb->update( $wpPrefix.'realbig_settings', [
-				'optionName'  => 'deactError',
-				'optionValue' => 'realbigForWP: '.$er->getMessage()
-			], ['optionName'  => 'deactError']);
-		}
+        RFWP_Utils::saveToRbSettings('realbigForWP: ' . $er->getMessage(), 'deactError');
 	} catch (Exception $exIex) {
 	} catch (Error $erIex) { }
 
