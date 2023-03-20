@@ -436,7 +436,8 @@ try {
                     $schedule = wp_get_scheduled_event('rb_cron_hook');
                     $interval = RFWP_getPeriodSync();
 
-                    if (!empty($schedule) && !empty($schedule->interval) && $schedule->interval != $interval) {
+                    if (!empty($schedule) && $schedule->timestamp > time() && !empty($schedule->interval)
+                            && $schedule->interval != $interval) {
                         RFWP_cronAutoGatheringLaunch();
                     }
 				} catch (Exception $e) {

@@ -753,7 +753,7 @@ try {
 			        array_push($usedBlockIds, $item->post_title);
 
 			        $scriptString .= 'cachedBlocksArray[' . $item->post_title . '] = ' .
-                        RFWP_rb_cache_gathering_content($item->post_content, true) . $elementTextCache . ';' . PHP_EOL;
+                        RFWP_rb_cache_gathering_content($item->post_content, true) . ';' . PHP_EOL;
 		        }
 		        if (!empty($longCache)) {
 			        $scriptString .=

@@ -10,7 +10,7 @@ if (!class_exists('RFWP_Logs')) {
         const IP_LOG = 'ip.log';
         const MODULES_LOG = 'modules.log';
         const RSS_LOG = 'rss.log';
-        const WORK_PROCESS_LOG = 'workProcess.log';
+        const WORK_PROCESS_LOG = 'process.log';
 
         const LOGS = [
             'AMP' => self::AMP_LOG,
