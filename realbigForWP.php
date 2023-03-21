@@ -5,7 +5,7 @@ if (!defined("ABSPATH")) { exit;}
 /*
 Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
-Version:      1.0
+Version:      1.0.1
 Author:       Realbig Team
 Author URI:   https://realbig.media
 License:      GPLv2 or later
@@ -27,6 +27,7 @@ $res = $res && include_once(plugin_dir_path(__FILE__) . "textEditing.php");
 $res = $res && include_once(plugin_dir_path(__FILE__) . "syncApi.php");
 $res = $res && include_once(plugin_dir_path(__FILE__) . "RFWP_Amp.php");
 $res = $res && include_once(plugin_dir_path(__FILE__) . "RFWP_Utils.php");
+$res = $res && include_once(plugin_dir_path(__FILE__) . "RFWP_Punycode.php");
 
 if (empty($res)) {
     return false;
@@ -760,10 +761,13 @@ try {
             if (!empty($_SERVER["REQUEST_URI"])) {
                 $usedUrl2 = $_SERVER["REQUEST_URI"];
             }
+
+            $punycode = new RFWP_Punycode();
+
             $usedUrl1[0] = urldecode($_SERVER["HTTP_HOST"].$usedUrl);
             $usedUrl1[1] = urldecode($_SERVER["HTTP_HOST"].$usedUrl2);
-            $usedUrl1[2] = urldecode(idn_to_utf8($_SERVER["HTTP_HOST"]).$usedUrl);
-            $usedUrl1[3] = urldecode(idn_to_utf8($_SERVER["HTTP_HOST"]).$usedUrl2);
+            $usedUrl1[2] = urldecode($punycode->decode($_SERVER["HTTP_HOST"]).$usedUrl);
+            $usedUrl1[3] = urldecode($punycode->decode($_SERVER["HTTP_HOST"]).$usedUrl2);
 
             /** Test zone *********/
             /** End of test zone **/

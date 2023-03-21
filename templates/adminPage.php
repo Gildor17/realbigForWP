@@ -1,12 +1,17 @@
 <?php
+require_once ABSPATH . 'wp-admin/includes/class-wp-filesystem-base.php';
+require_once ABSPATH . 'wp-admin/includes/class-wp-filesystem-direct.php';
+
 include_once(plugin_dir_path(__FILE__) . "../RFWP_AdUtils.php");
 
 $tab = $args['tab'] ?: 'sync';
 
-wp_enqueue_style('rbwp_adminPage', plugins_url('assets/page.css', plugin_dir_path(__FILE__) . '../realbigForWP.php'),
-    false, RFWP_Utils::getVersion())
+$wp_filesystem = new \WP_Filesystem_Direct(null);
 ?>
-<link rel="stylesheet" href="../assets/page.css">
+
+<style>
+    <?= $wp_filesystem->get_contents( plugin_dir_path(__FILE__) . '../assets/page.css'); ?>
+</style>
 
 <h1>Настройки плагина «<?php echo RFWP_Utils::getName(); ?>» <span>v<?php echo RFWP_Utils::getVersion(); ?></span></h1>
 <div class="wrap">
