@@ -151,8 +151,8 @@ if (!class_exists('RFWP_AdminPage')) {
                 $res = [];
             }
 
-
-            load_template(__DIR__ . '/templates/adminPage.php', true, $res);
+            $GLOBALS['rb_adminPage_args'] = $res;
+            load_template(__DIR__ . '/templates/adminPage.php');
         }
 
         public static function clickButtons() {

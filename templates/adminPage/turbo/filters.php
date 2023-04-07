@@ -1,4 +1,5 @@
 <?php
+$args = !empty($GLOBALS['rb_adminPage_args']) && !empty($GLOBALS['rb_adminPage_args']['turboOptions']) ? $GLOBALS['rb_adminPage_args']['turboOptions'] : [];
 ?>
 
 <h2>Удалить указанные шорткоды: <?php echo RFWP_Utils::getYesOrNo(!empty($args['filterSc']) ? 1 : 0); ?></h2>

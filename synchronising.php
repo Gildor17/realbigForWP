@@ -426,6 +426,9 @@ try {
                 RFWP_Utils::saveToRbSettings('success', 'successUpdateMark');
 
 				try {
+					RFWP_Cache::deleteAttemptCache();
+					RFWP_Cache::setAttemptCache();
+
 					if ($decodedToken['status'] == 'success') {
                         $time = time();
                         RFWP_Utils::saveToRbSettings($time, 'token_sync_time');
@@ -868,29 +871,6 @@ try {
         }
     }
 
-    if (!function_exists('RFWP_isRbCron')) {
-        function RFWP_isRbCron() {
-            global $rb_isCron;
-
-            if (!isset($rb_isCron)) {
-                $isCron = false;
-                $activeSyncTransient   = RFWP_Cache::getProcessCache();
-                if (!empty(apply_filters('wp_doing_cron', defined('DOING_CRON')&&DOING_CRON))&&empty($activeSyncTransient)) {
-                    $activeCrons = wp_get_ready_cron_jobs();
-                    foreach ($activeCrons as $activeCron) {
-                        if (!empty($activeCron['rb_cron_hook'])) {
-                            $isCron = true;
-                            break;
-                        }
-                    }
-                }
-
-                $rb_isCron = $isCron;
-            }
-
-            return $rb_isCron;
-        }
-    }
     /** End of Creating Cron RB auto sync */
 	if (!function_exists('RFWP_getMenuList')) {
 		function RFWP_getMenuList() {

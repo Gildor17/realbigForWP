@@ -1,4 +1,5 @@
 <?php
+$args = !empty($GLOBALS['rb_adminPage_args']) && !empty($GLOBALS['rb_adminPage_args']['turboOptions']) ? $GLOBALS['rb_adminPage_args']['turboOptions'] : [];
 ?>
 <?php if (!empty($args['template-post']) || !empty($args['template-page'])): ?>
     <?php if (!empty($args['template-post'])): ?>

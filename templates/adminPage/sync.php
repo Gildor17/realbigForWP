@@ -1,4 +1,5 @@
 <?php
+$args = !empty($GLOBALS['rb_adminPage_args']) ? $GLOBALS['rb_adminPage_args'] : [];
 ?>
 
 <form method="post" name="tokenForm" id="tokenFormId">
@@ -37,11 +38,21 @@
     <?php endif; ?>
 </form>
 
-<?php if(!empty($GLOBALS['tokenTimeUpdate']) && $GLOBALS['tokenTimeUpdate'] != 'never'): ?>
+<?php if(!empty($GLOBALS['tokenTimeUpdate']) && $GLOBALS['tokenTimeUpdate'] != 'never'):
+    $timeOffset = ( get_option( 'gmt_offset' ) * HOUR_IN_SECONDS ); ?>
     <div style="font-size: 16px;margin-top: 30px;">
         <div class="element-separator more" style="color: <?php echo $GLOBALS['statusColor'] ?>">
-            Время последней синхронизации: <?php echo wp_date('Y-m-d H:i:s', $GLOBALS['tokenTimeUpdate']) ?></div>
-        <div class="element-separator more" style="font-weight: bold">
-            Время следующей втосинхронизации: <?php echo wp_date('Y-m-d H:i:s', wp_next_scheduled('rb_cron_hook')); ?></div>
+            Время последней синхронизации: <?php echo date_i18n('Y-m-d H:i:s', $GLOBALS['tokenTimeUpdate'] + $timeOffset) ?></div>
+        <?php if (!empty(RFWP_Cache::getAttemptCache()) || $GLOBALS['tokenTimeUpdate'] + RFWP_getPeriodSync() * 3 > time()): ?>
+            <div class="element-separator more" style="font-weight: bold">Время следующей автосинхронизации:
+                <?php if (!empty(RFWP_Cache::getAttemptCache())): ?>
+                    <?php echo date_i18n('Y-m-d H:i:s', RFWP_Cache::getAttemptCache() + $timeOffset); ?>
+                <?php elseif (wp_next_scheduled('rb_cron_hook')): ?>
+                    <?php echo date_i18n('Y-m-d H:i:s', wp_next_scheduled('rb_cron_hook') + $timeOffset); ?>
+                <?php endif; ?>
+            </div>
+        <?php else: ?>
+            <div class="element-separator more" style="font-weight: bold; color: red;">Проблема с автосинхронизацией</div>
+        <?php endif; ?>
     </div>
 <?php endif; ?>

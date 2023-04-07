@@ -12,6 +12,7 @@ if (!class_exists('RFWP_Cache')) {
         const ACTIVE_CACHE = "rb_active_cache";
         const LONG_CACHE = "rb_longCacheDeploy";
 
+        const ATTEMPT_CACHE = "rb_syncAttempt_cache";
         const PROCESS_CACHE = "rb_syncProcess_cache";
 
         public static function getMobileCache() {
@@ -60,6 +61,17 @@ if (!class_exists('RFWP_Cache')) {
         }
         public static function deleteProcessCache() {
             delete_transient(self::PROCESS_CACHE);
+        }
+
+        public static function getAttemptCache() {
+            return get_transient(self::ATTEMPT_CACHE);
+        }
+        public static function setAttemptCache() {
+            $period = RFWP_getPeriodSync();
+            set_transient(self::ATTEMPT_CACHE, time()+$period, $period);
+        }
+        public static function deleteAttemptCache() {
+            delete_transient(self::ATTEMPT_CACHE);
         }
 
         public static function getLongCache() {

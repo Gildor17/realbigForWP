@@ -1,4 +1,5 @@
 <?php
+$args = !empty($GLOBALS['rb_adminPage_args']) && !empty($GLOBALS['rb_adminPage_args']['cache']) ? $GLOBALS['rb_adminPage_args']['cache'] : [];
 ?>
 
 <?php if (!empty($args) && is_array($args)):?>

@@ -1,6 +1,7 @@
 <?php
+$args = !empty($GLOBALS['rb_adminPage_args']) ? $GLOBALS['rb_adminPage_args'] : [];
 $folder = plugin_dir_path(__FILE__) . '../../logs/';
-$files = list_files($folder);
+$files = list_files(rtrim($folder, '/'));
 ?>
 
 <?php if (!empty($files)): ?>

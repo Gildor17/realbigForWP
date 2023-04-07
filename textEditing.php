@@ -589,7 +589,7 @@ try {
 
 				global $wpdb;
 
-			    $cachedBlocks = get_posts(['post_type' => 'rb_block_' . $GLOBALS['rb_type_device'] . '_new','numberposts' => 100]);
+			    $cachedBlocks = get_posts(['post_type' => 'rb_block_' . $GLOBALS['rb_type_device'] . '_new','posts_per_page' => 100]);
 			    $longCache = RFWP_Cache::getLongCache();
 			    $content = RFWP_rb_cache_gathering($content, $cachedBlocks, $longCache);
 

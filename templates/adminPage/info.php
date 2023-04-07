@@ -1,4 +1,5 @@
 <?php
+$args = !empty($GLOBALS['rb_adminPage_args']) ? $GLOBALS['rb_adminPage_args'] : [];
 ?>
 
 <?php if (!empty($args['deacError'])): ?>
@@ -65,6 +66,7 @@
 <?php if (!empty($args['getBlocks'])): ?>
     <h2>Настройки рекламных мест из кабинета РБ</h2>
     <?php foreach ($args['getBlocks'] AS $item): ?>
-        <?php load_template(__DIR__ . '/ad_template.php', false, $item); ?>
+        <?php $GLOBALS['rb_adminPage_adTemplate'] = $item; ?>
+        <?php load_template(__DIR__ . '/ad_template.php', false); ?>
     <?php endforeach; ?>
 <?php endif; ?>

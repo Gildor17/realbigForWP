@@ -1,4 +1,5 @@
 <?php
+$args = !empty($GLOBALS['rb_adminPage_args']) && !empty($GLOBALS['rb_adminPage_args']['turboOptions']) ? $GLOBALS['rb_adminPage_args']['turboOptions'] : [];
 $menus = RFWP_getMenuList();
 ?>
 
@@ -11,7 +12,7 @@ $menus = RFWP_getMenuList();
 
 <h2>Добавить блок обратной связи на турбо-страницы: <?php echo RFWP_Utils::getYesOrNo(!empty($args['blockFeedback']) ? 1 : 0); ?></h2>
 <?php if (!empty($args['blockFeedback'])):?>
-    <?php load_template(__DIR__ . '/blocks/feedback.php', true, $args); ?>
+    <?php load_template(__DIR__ . '/blocks/feedback.php'); ?>
 <?php endif; ?>
 
 <h2>Добавить комментарии к турбо-страницам: <?php echo RFWP_Utils::getYesOrNo(!empty($args['blockComments']) ? 1 : 0); ?></h2>

@@ -15,7 +15,7 @@ try {
             $arrayForArray = [
                 'longCacheUse'=>RFWP_Cache::getLongCache(),
                 'activeCache' =>RFWP_Cache::getActiveCache(),
-                'syncAttempt' =>wp_next_scheduled('rb_cron_hook'),
+                'syncAttempt' =>RFWP_Cache::getAttemptCache(),
                 'syncProcess' =>RFWP_Cache::getProcessCache(),
                 'cache'       =>RFWP_Cache::getCache(),
                 'mobileCache' =>RFWP_Cache::getMobileCache(),

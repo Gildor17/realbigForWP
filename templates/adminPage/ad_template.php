@@ -1,4 +1,6 @@
 <?php
+$args = !empty($GLOBALS['rb_adminPage_adTemplate']) ? $GLOBALS['rb_adminPage_adTemplate'] : [];
+
 $tagCategories = RFWP_getTagsCategories();
 $tagString = $categoryString = "";
 

@@ -6,6 +6,7 @@ if (!function_exists('RFWP_syncNow')) {
         global $rb_periodSync;
         $rb_periodSync = 0.2;
 
+        RFWP_Cache::deleteAttemptCache();
 		RFWP_cronAutoGatheringLaunch();
 		$result['result'] = 'timeout cleared';
 

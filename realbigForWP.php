@@ -5,7 +5,7 @@ if (!defined("ABSPATH")) { exit;}
 /*
 Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
-Version:      1.0.1
+Version:      1.0.2
 Author:       Realbig Team
 Author URI:   https://realbig.media
 License:      GPLv2 or later
@@ -891,11 +891,14 @@ try {
 			add_action('wp_ajax_nopriv_RFWP_saveContentContainer', 'RFWP_saveContentContainer');
 		}
     }
-	$activeSyncTransient   = RFWP_Cache::getProcessCache();
-	if (!empty($GLOBALS['token'])&&$GLOBALS['token']!='no token'&&empty($activeSyncTransient)) {
+	$lastSyncTimeTransient = RFWP_Cache::getAttemptCache();
+	$activeSyncTransient = RFWP_Cache::getProcessCache();
+	if (!empty($GLOBALS['token'])&&$GLOBALS['token']!='no token'&&empty($activeSyncTransient)&&empty($lastSyncTimeTransient)) {
 		$nextSchedulerCheck = wp_next_scheduled('rb_cron_hook');
 		if (empty($nextSchedulerCheck)) {
 			RFWP_cronAutoGatheringLaunch();
+		} elseif (!empty(apply_filters('wp_doing_cron', defined('DOING_CRON')&&DOING_CRON))) {
+			RFWP_cronAutoSyncDelete();
 		}
 	}
 	/** Cron check */
@@ -908,7 +911,8 @@ try {
 		RFWP_cronCheckLog('cron passed in main');
 	}
 	/** End of cron check */
-	if (!empty($GLOBALS['token'])&&$GLOBALS['token']!='no token'&&RFWP_isRbCron()) {
+	if (!empty($GLOBALS['token'])&&$GLOBALS['token']!='no token'&&empty($activeSyncTransient)&&empty($lastSyncTimeTransient)&&
+            !empty(apply_filters('wp_doing_cron', defined('DOING_CRON')&&DOING_CRON))) {
         RFWP_cronCheckLog('cron going to sync');
         RFWP_autoSync();
 	}

@@ -1,4 +1,5 @@
 <?php
+$args = !empty($GLOBALS['rb_adminPage_args']) && !empty($GLOBALS['rb_adminPage_args']['turboOptions']) ? $GLOBALS['rb_adminPage_args']['turboOptions'] : [];
 ?>
 
 <?php if (!empty($args['couYandexMetrics']) | !empty($args['couLiveInternet']) || !empty($args['couGoogleAnalytics'])): ?>

@@ -1,4 +1,6 @@
 <?php
+$args = !empty($GLOBALS['rb_adminPage_args']) && !empty($GLOBALS['rb_adminPage_args']['turboOptions']) ? $GLOBALS['rb_adminPage_args']['turboOptions'] : [];
+
 $position = ['left' => 'Слева', 'right' => 'Справа', 'false' => 'В указанном месте'];
 $orders = [
     'call' => ['title' => 'Звонок', 'attr' => 'blockFeedbackButtonContactsCall'],

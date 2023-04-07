@@ -13,25 +13,25 @@
 </ul>
 <div class="rfwp_white-blk">
     <div class="rfwp-blocks" data-tab="turbo-1">
-        <?php load_template(__DIR__ . '/turbo/feed.php', true, $args); ?>
+        <?php load_template(__DIR__ . '/turbo/feed.php'); ?>
     </div>
     <div class="rfwp-blocks hidden" data-tab="turbo-2">
-        <?php load_template(__DIR__ . '/turbo/design.php', true, $args); ?>
+        <?php load_template(__DIR__ . '/turbo/design.php'); ?>
     </div>
     <div class="rfwp-blocks hidden" data-tab="turbo-3">
-        <?php load_template(__DIR__ . '/turbo/blocks.php', true, $args); ?>
+        <?php load_template(__DIR__ . '/turbo/blocks.php'); ?>
     </div>
     <div class="rfwp-blocks hidden" data-tab="turbo-4">
-        <?php load_template(__DIR__ . '/turbo/counts.php', true, $args); ?>
+        <?php load_template(__DIR__ . '/turbo/counts.php'); ?>
     </div>
     <div class="rfwp-blocks hidden" data-tab="turbo-5">
-        <?php load_template(__DIR__ . '/turbo/types.php', true, $args); ?>
+        <?php load_template(__DIR__ . '/turbo/types.php'); ?>
     </div>
     <div class="rfwp-blocks hidden" data-tab="turbo-6">
-        <?php load_template(__DIR__ . '/turbo/filters.php', true, $args); ?>
+        <?php load_template(__DIR__ . '/turbo/filters.php'); ?>
     </div>
     <div class="rfwp-blocks hidden" data-tab="turbo-7">
-        <?php load_template(__DIR__ . '/turbo/templates.php', true, $args); ?>
+        <?php load_template(__DIR__ . '/turbo/templates.php'); ?>
     </div>
     <div class="rfwp-blocks hidden" data-tab="turbo-8">
         <?php load_template(__DIR__ . '/turbo/ads.php'); ?>

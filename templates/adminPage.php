@@ -4,7 +4,8 @@ require_once ABSPATH . 'wp-admin/includes/class-wp-filesystem-direct.php';
 
 include_once(plugin_dir_path(__FILE__) . "../RFWP_AdUtils.php");
 
-$tab = $args['tab'] ?: 'sync';
+$args = !empty($GLOBALS['rb_adminPage_args']) ? $GLOBALS['rb_adminPage_args'] : [];
+$tab = !empty($args['tab']) ? $args['tab'] : 'sync';
 
 $wp_filesystem = new \WP_Filesystem_Direct(null);
 ?>
@@ -28,21 +29,21 @@ $wp_filesystem = new \WP_Filesystem_Direct(null);
     <?php endif; ?>
     <div class="rfwp_white-blk">
         <div class="rfwp-blocks<?php echo $tab != 'sync' ? ' hidden' : '' ?>" data-tab="sync">
-            <?php load_template(__DIR__ . '/adminPage/sync.php', true, $args); ?>
+            <?php load_template(__DIR__ . '/adminPage/sync.php'); ?>
         </div>
         <?php if (!empty($args['rbSettings'])): ?>
             <div class="rfwp-blocks<?php echo $tab != 'info' ? ' hidden' : '' ?>" data-tab="info">
-                <?php load_template(__DIR__ . '/adminPage/info.php', true, $args); ?>
+                <?php load_template(__DIR__ . '/adminPage/info.php'); ?>
             </div>
             <div class="rfwp-blocks<?php echo $tab != 'cache' ? ' hidden' : '' ?>" data-tab="cache">
-                <?php load_template(__DIR__ . '/adminPage/cache.php', true, $args['cache']); ?>
+                <?php load_template(__DIR__ . '/adminPage/cache.php'); ?>
             </div>
             <div class="rfwp-blocks<?php echo $tab != 'logs' ? ' hidden' : '' ?>" data-tab="logs">
-                <?php load_template(__DIR__ . '/adminPage/logs.php', true, $args); ?>
+                <?php load_template(__DIR__ . '/adminPage/logs.php'); ?>
             </div>
             <?php if (!empty($args['turboOptions'])): ?>
                 <div class="rfwp-blocks<?php echo $tab != 'turbo' ? ' hidden' : '' ?>" data-tab="turbo">
-                    <?php load_template(__DIR__ . '/adminPage/turbo.php', true, $args['turboOptions']); ?>
+                    <?php load_template(__DIR__ . '/adminPage/turbo.php'); ?>
                 </div>
             <?php endif; ?>
         <?php endif; ?>

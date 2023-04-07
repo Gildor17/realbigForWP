@@ -1,4 +1,6 @@
 <?php
+$args = !empty($GLOBALS['rb_adminPage_args']) && !empty($GLOBALS['rb_adminPage_args']['turboOptions']) ? $GLOBALS['rb_adminPage_args']['turboOptions'] : [];
+
 $types = ['post' => 'Posts', 'page' => 'Pages'];
 $typesArr = explode(';', $args['typesPost']);
 foreach ($typesArr as &$type) {
