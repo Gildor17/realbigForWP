@@ -2,7 +2,7 @@
 Contributors: 101
 Tags: AD, content filling
 Requires at least: 4.5
-Tested up to: 6.2
+Tested up to: 6.3
 Stable tag: 0.1.26.56
 Requires PHP: 5.6
 License: GPLv2 or later
@@ -106,6 +106,13 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 * is_archive() — любая из архивных страниц (категории, метки, автора, даты).
 
 == Changelog ==
+
+= 1.0.3 =
+
+Изменения версии:
+
+* исправили ошибку с автосинхронизацией плагина для litespeed серверов;
+* другие мелкие улучшения и правки.
 
 = 1.0.2 =
 

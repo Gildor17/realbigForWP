@@ -21,7 +21,7 @@ try {
 
 	$stopIt = false;
     while (empty($stopIt)) {
-	    $checkCacheTimeout = RFWP_Cache::getCache();
+	    $checkCacheTimeout = RFWP_Cache::getCacheTimeout();
 	    if (!empty($checkCacheTimeout)) {
 		    return true;
 	    }

@@ -5,7 +5,7 @@ if (!defined("ABSPATH")) { exit;}
 /*
 Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
-Version:      1.0.2
+Version:      1.0.3
 Author:       Realbig Team
 Author URI:   https://realbig.media
 License:      GPLv2 or later
@@ -564,7 +564,7 @@ try {
                     echo "if (typeof rb_ajaxurl==='undefined') {var rb_ajaxurl = '" . admin_url('admin-ajax.php') . "';}" . PHP_EOL;
 
                     if ((empty(RFWP_Cache::getMobileCache()) || empty(RFWP_Cache::getTabletCache()) ||
-                        empty(RFWP_Cache::getDesktopCache())) && empty(RFWP_Cache::getCache())) {
+                        empty(RFWP_Cache::getDesktopCache())) && empty(RFWP_Cache::getCacheTimeout())) {
 
                         echo "if (typeof cache_devices==='undefined') {var cache_devices = false;}" . PHP_EOL;
                     } else {
@@ -603,7 +603,7 @@ try {
 				}
 
 				if (empty($cacheTimeoutDesktop)||empty($cacheTimeoutTablet)||empty($cacheTimeoutMobile)) {
-					$cacheTimeout = RFWP_Cache::getCache();
+					$cacheTimeout = RFWP_Cache::getCacheTimeout();
 
 					if (!empty($GLOBALS['dev_mode'])) {
 						$cacheTimeout = 0;

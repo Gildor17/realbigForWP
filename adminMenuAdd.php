@@ -17,7 +17,7 @@ try {
                 'activeCache' =>RFWP_Cache::getActiveCache(),
                 'syncAttempt' =>RFWP_Cache::getAttemptCache(),
                 'syncProcess' =>RFWP_Cache::getProcessCache(),
-                'cache'       =>RFWP_Cache::getCache(),
+                'cache'       =>RFWP_Cache::getCacheTimeout(),
                 'mobileCache' =>RFWP_Cache::getMobileCache(),
                 'tabletCache' =>RFWP_Cache::getTabletCache(),
                 'desktopCache'=>RFWP_Cache::getDesktopCache(),

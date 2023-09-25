@@ -968,7 +968,7 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
                 else if (blockSettingArray[i]["setting_type"] == 6) {
                     if (containerFor6th.length > 0) {
                         for (let j = 0; j < containerFor6th.length; j++) {
-                            if (containerFor6th[j]["elementPlace"]<blockSettingArray[i]["elementPlace"]) {
+                            if (containerFor6th[j]["elementPlace"]>blockSettingArray[i]["elementPlace"]) {
                                 /* continue; */
                                 if (j == containerFor6th.length-1) {
                                     containerFor6th.push(blockSettingArray[i]);
@@ -1001,7 +1001,7 @@ function asyncBlocksInsertingFunction(blockSettingArray) {
                 else if (blockSettingArray[i]["setting_type"] == 7) {
                     if (containerFor7th.length > 0) {
                         for (let j = 0; j < containerFor7th.length; j++) {
-                            if (containerFor7th[j]["elementPlace"]<blockSettingArray[i]["elementPlace"]) {
+                            if (containerFor7th[j]["elementPlace"]>blockSettingArray[i]["elementPlace"]) {
                                 /* continue; */
                                 if (j == containerFor7th.length-1) {
                                     containerFor7th.push(blockSettingArray[i]);

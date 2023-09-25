@@ -27,9 +27,9 @@ $args = !empty($GLOBALS['rb_adminPage_args']) ? $GLOBALS['rb_adminPage_args'] : 
     <?php if (!empty($GLOBALS['tokenStatusMessage'])): ?>
         <span name="rezultDiv" style="font-size: 16px"><?php echo $GLOBALS['tokenStatusMessage'] ?></span>
     <?php endif; ?>
-    <? if (!empty($GLOBALS['connection_request_rezult']) && $GLOBALS['connection_request_rezult'] != 'success'): ?>
+    <?php if (!empty($GLOBALS['connection_request_rezult']) && $GLOBALS['connection_request_rezult'] != 'success'): ?>
         <div class="element-separator"><?php echo $GLOBALS['connection_request_rezult'] ?></div>
-    <? endif; ?>
+    <?php endif; ?>
     <?php if (!empty($args['devMode'])): ?>
         <?php submit_button( 'Check-Ip', 'big', 'checkIp', true) ?>
         <?php if (!empty($args['curlResult'])): ?>

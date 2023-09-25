@@ -598,7 +598,7 @@ try {
 								}
 								unset($rk,$ritem);
 
-								RFWP_Cache::setCache();
+								RFWP_Cache::setCacheTimeout();
 								if (!empty($resultTypes['mobile'])) {
 									RFWP_Cache::setMobileCache();
 								}

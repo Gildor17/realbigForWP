@@ -17,7 +17,7 @@ $args = !empty($GLOBALS['rb_adminPage_args']) ? $GLOBALS['rb_adminPage_args'] : 
         <div>
             <?php if (!empty($args['domain'])): ?>
                 Домен для рекламы: <span style="color: green"><?php echo $args['domain']?></span>. <br>
-            <? endif; ?>
+            <?php endif; ?>
             <?php if (!empty($args['pushStatus']) && !empty($args['pushDomain'])): ?>
                 Домен для push: <span style="color: green"><?php echo $args['pushDomain']?></span>. <br>
             <?php endif; ?>
