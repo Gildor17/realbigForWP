@@ -6,19 +6,16 @@ if (!class_exists('RFWP_AdminPage')) {
     class RFWP_AdminPage
     {
         public static function settingsMenuCreate() {
+            global $wp_filesystem;
             $iconUrl = "";
 
             try {
-                $arrContextOptions=array(
-                    "ssl"=>array(
-                        "verify_peer"=>false,
-                        "verify_peer_name"=>false,
-                    ),
-                );
-
-                $iconUrl = file_get_contents(plugins_url().'/'.basename(__DIR__).'/assets/realbig_plugin_standart.svg' ,
-                    false, stream_context_create($arrContextOptions));
-                $iconUrl = 'data:image/svg+xml;base64,' . base64_encode($iconUrl);
+                WP_Filesystem();
+                $filePath = plugin_dir_path( __FILE__ ).'assets/realbig_plugin_standart.svg';
+                if ( $wp_filesystem->exists( $filePath ) ) {
+                    $iconUrl = $wp_filesystem->get_contents( $filePath );
+                    $iconUrl = 'data:image/svg+xml;base64,' . base64_encode($iconUrl);
+                }
             } catch (Exception $ex) {
                 RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, 'Error Load Menu Icon: ' . $ex->getMessage());
             } catch (Error $ex) {

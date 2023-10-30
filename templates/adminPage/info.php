@@ -3,12 +3,21 @@ $args = !empty($GLOBALS['rb_adminPage_args']) ? $GLOBALS['rb_adminPage_args'] : 
 ?>
 
 <?php if (!empty($args['deacError'])): ?>
-    <div class="squads-blocks">
+    <div class="squads-blocks" style="<?php echo (time() - strtotime($args['deacTime']) > 60 * 60 * 24 * 7) ? 'width: 100%' : ''; ?>">
+        <?php if (time() - strtotime($args['deacTime']) > 60 * 60 * 24 * 7): ?>
+            <div class="element-separator most accordion-section">
+                <div class="accordion-section-title">Последняя деактивация</div>
+                <div class="accordion-section-content">
+        <?php endif; ?>
         Причина последней деактивации:
         <div>
             <span style="color: red">Ошибка: <?php echo $args['deacError']?></span><br>
             Время: <?php echo $args['deacTime']?> <br>
         </div>
+        <?php if (time() - strtotime($args['deacTime']) > 60 * 60 * 24 * 7): ?>
+                </div>
+            </div>
+        <?php endif; ?>
     </div>
 <?php endif; ?>
 <?php if (!empty($args['domain']) || !empty($args['pushStatus']) && !empty($args['pushDomain'])): ?>
