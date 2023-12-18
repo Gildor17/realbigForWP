@@ -31,7 +31,7 @@ $args = !empty($GLOBALS['rb_adminPage_args']) ? $GLOBALS['rb_adminPage_args'] : 
         <div class="element-separator"><?php echo $GLOBALS['connection_request_rezult'] ?></div>
     <?php endif; ?>
     <?php if (!empty($args['devMode'])): ?>
-        <?php submit_button( 'Check-Ip', 'big', 'checkIp', true) ?>
+        <?php submit_button( 'Check-Ip', 'big', 'checkIp') ?>
         <?php if (!empty($args['curlResult'])): ?>
             <span id="ip-result"><?php echo $args['curlResult'] ?></span>
         <?php endif; ?>

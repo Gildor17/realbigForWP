@@ -5,7 +5,7 @@ if (!defined("ABSPATH")) { exit;}
 /*
 Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
-Version:      1.0.4
+Version:      1.0.5
 Author:       Realbig Team
 Author URI:   https://realbig.media
 License:      GPLv2 or later
@@ -135,11 +135,6 @@ try {
     ) {
 	    if (((!empty($_POST['action'])&&$_POST['action']=='heartbeat')||!empty(apply_filters('wp_doing_cron', defined('DOING_CRON') && DOING_CRON)))&&!isset($GLOBALS['rb_variables']['localRotatorGatherTimeout'])) {
 		    $GLOBALS['rb_variables']['localRotatorGatherTimeout'] = get_transient(RFWP_Variables::LOCAL_ROTATOR_GATHER);
-	    }
-	    if ((!empty($_POST['saveTokenButton']))
-	        ||(isset($GLOBALS['rb_variables']['localRotatorGatherTimeout'])&&empty($GLOBALS['rb_variables']['localRotatorGatherTimeout']))
-	    ) {
-		    RFWP_createLocalRotator();
 	    }
     }
 	/** End of Rotator file creation */
@@ -954,50 +949,6 @@ try {
 		}
 	}
 	/********** end of adding AD code in head area ************************************************************************/
-	/********** manual sync ***********************************************************************************************/
-    if (empty(apply_filters('wp_doing_cron', defined('DOING_CRON')&&DOING_CRON))) {
-	    if (!empty($curUserCan)&&strpos($GLOBALS['PHP_SELF'], 'wp-admin')!= false) {
-            $updateLogs = false;
-		    if (!empty($_POST['enableLogsButton'])) {
-                RFWP_Utils::saveToRbSettings(!empty($_POST['enable_logs']) ? '1' : '0', "enableLogs");
-                $updateLogs = true;
-            }
-            if (!empty($_POST['saveTokenButton'])) {
-                if (!empty($_POST['cache_clear'])) {
-                    update_option('rb_cacheClearAllow', 'enabled');
-                } else {
-                    update_option('rb_cacheClearAllow', 'disabled');
-                }
-            }
-		    if (!empty($_POST['tokenInput'])) {
-			    $sanitized_token = sanitize_text_field($_POST['tokenInput']);
-			    if (RFWP_tokenMDValidate($sanitized_token)==true) {
-				    $sameTokenResult = false;
-				    if (!isset($GLOBALS['RFWP_synchronize_vars'])) {
-					    $GLOBALS['RFWP_synchronize_vars'] = [];
-					    $GLOBALS['RFWP_synchronize_vars']['token'] = $sanitized_token;
-					    $GLOBALS['RFWP_synchronize_vars']['sameTokenResult'] = $sameTokenResult;
-					    $GLOBALS['RFWP_synchronize_vars']['type'] = 'manual';
-					    $GLOBALS['RFWP_synchronize_vars']['updateLogs'] = $updateLogs;
-				    }
-
-				    RFWP_synchronizeLaunchAdd();
-                    add_action('wp_loaded', 'RFWP_cronAutoGatheringLaunch');
-			    } else {
-				    $GLOBALS['tokenStatusMessage'] = 'Неверный формат токена';
-				    $messageFLog = 'wrong token format';
-			    }
-		    } elseif ($GLOBALS['token'] == 'no token') {
-			    $GLOBALS['tokenStatusMessage'] = 'Введите токен';
-			    $messageFLog = 'no token';
-		    }
-		    if (!empty($messageFLog)) {
-                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
-		    }
-		    RFWP_tokenTimeUpdateChecking($GLOBALS['token'], $wpPrefix);
-	    }
-    }
-	/********** end of manual sync ****************************************************************************************/
 	/************* blocks for text ****************************************************************************************/
 	if (empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&!is_admin()) {
         if (empty($excludedPage)) {

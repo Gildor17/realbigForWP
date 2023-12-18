@@ -32,6 +32,9 @@ if (!class_exists('RFWP_AdminPage')) {
         }
 
         public static function tokenSync() {
+            if (!is_admin() || !current_user_can('activate_plugins'))
+                return;
+
             global $wpdb;
             global $wpPrefix;
             global $curlResult;
@@ -153,11 +156,82 @@ if (!class_exists('RFWP_AdminPage')) {
         }
 
         public static function clickButtons() {
-            if (!empty($_POST['clearLogs'])) {
-                RFWP_Logs::clearAllLogs();
-            }
-            else if (!empty($_POST['clearCache'])) {
-                RFWP_Cache::clearCaches();
+            if (wp_get_raw_referer() && !wp_get_referer() && !empty($_POST)) {
+                if (!empty($GLOBALS['wpPrefix'])) {
+                    $wpPrefix = $GLOBALS['wpPrefix'];
+                } else {
+                    global $table_prefix;
+                    $wpPrefix = $table_prefix;
+                }
+
+                if (!empty($_POST['clearLogs'])) {
+                    RFWP_Logs::clearAllLogs();
+                }
+                else if (!empty($_POST['clearCache'])) {
+                    RFWP_Cache::clearCaches();
+                }
+
+                /* manual sync */
+                $updateLogs = false;
+                if (!empty($_POST['enableLogsButton'])) {
+                    RFWP_Utils::saveToRbSettings(!empty($_POST['enable_logs']) ? '1' : '0', "enableLogs");
+                    $updateLogs = true;
+                }
+                if (!empty($_POST['saveTokenButton'])) {
+                    if (!empty($_POST['cache_clear'])) {
+                        update_option('rb_cacheClearAllow', 'enabled');
+                    } else {
+                        update_option('rb_cacheClearAllow', 'disabled');
+                    }
+
+                    if (!empty($GLOBALS['rb_localRotator']) && !empty($GLOBALS['rb_variables']['rotator']) && !empty($GLOBALS['rb_variables']['adDomain'])
+                        && isset($GLOBALS['rb_variables']['localRotatorGatherTimeout']) && empty($GLOBALS['rb_variables']['localRotatorGatherTimeout'])) {
+                            RFWP_createLocalRotator();
+                    }
+                }
+                if (!empty($_POST['tokenInput'])) {
+                    $sanitized_token = sanitize_text_field($_POST['tokenInput']);
+                    if (RFWP_tokenMDValidate($sanitized_token)==true) {
+                        $sameTokenResult = false;
+                        if (!isset($GLOBALS['RFWP_synchronize_vars'])) {
+                            $GLOBALS['RFWP_synchronize_vars'] = [];
+                            $GLOBALS['RFWP_synchronize_vars']['token'] = $sanitized_token;
+                            $GLOBALS['RFWP_synchronize_vars']['sameTokenResult'] = $sameTokenResult;
+                            $GLOBALS['RFWP_synchronize_vars']['type'] = 'manual';
+                            $GLOBALS['RFWP_synchronize_vars']['updateLogs'] = $updateLogs;
+                        }
+
+                        RFWP_synchronizeLaunchAdd();
+                        add_action('wp_loaded', 'RFWP_cronAutoGatheringLaunch');
+                    } else {
+                        $GLOBALS['tokenStatusMessage'] = 'Неверный формат токена';
+                        $messageFLog = 'wrong token format';
+                    }
+                } elseif ($GLOBALS['token'] == 'no token') {
+                    $GLOBALS['tokenStatusMessage'] = 'Введите токен';
+                    $messageFLog = 'no token';
+                }
+                if (!empty($messageFLog)) {
+                    RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
+                }
+                RFWP_tokenTimeUpdateChecking($GLOBALS['token'], $wpPrefix);
+                /* end of manual sync */
+
+                /* check ip */
+                if (!empty($_POST['checkIp'])) {
+                    $thisUrl = 'http://ifconfig.co/ip';
+                    $curl = curl_init();
+                    curl_setopt($curl,CURLOPT_URL, $thisUrl);
+                    curl_setopt($curl,CURLOPT_RETURNTRANSFER, 1);
+                    curl_setopt($curl,CURLOPT_IPRESOLVE,CURL_IPRESOLVE_V4);
+                    $curlResult = curl_exec($curl);
+                    if (!empty($curlResult)) {
+                        global $curlResult;
+                        RFWP_Logs::saveLogs(RFWP_Logs::IP_LOG, PHP_EOL.$curlResult);
+                    }
+                    curl_close($curl);
+                }
+                /* end of check ip */
             }
         }
     }
