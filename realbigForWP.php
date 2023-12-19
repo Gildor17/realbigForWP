@@ -133,9 +133,14 @@ try {
         &&!empty($GLOBALS['rb_variables']['rotator'])
         &&!empty($GLOBALS['rb_variables']['adDomain'])
     ) {
-	    if (((!empty($_POST['action'])&&$_POST['action']=='heartbeat')||!empty(apply_filters('wp_doing_cron', defined('DOING_CRON') && DOING_CRON)))&&!isset($GLOBALS['rb_variables']['localRotatorGatherTimeout'])) {
-		    $GLOBALS['rb_variables']['localRotatorGatherTimeout'] = get_transient(RFWP_Variables::LOCAL_ROTATOR_GATHER);
+	    if (((!empty($_POST['action'])&&$_POST['action']=='heartbeat')||!empty(apply_filters('wp_doing_cron', defined('DOING_CRON') && DOING_CRON)))&&!isset($GLOBALS['rb_variables'][RFWP_Variables::LOCAL_ROTATOR_GATHER])) {
+		    $GLOBALS['rb_variables'][RFWP_Variables::LOCAL_ROTATOR_GATHER] = get_transient(RFWP_Variables::LOCAL_ROTATOR_GATHER);
 	    }
+        if ((!empty($_POST['saveTokenButton']))
+            ||(isset($GLOBALS['rb_variables'][RFWP_Variables::LOCAL_ROTATOR_GATHER])&&empty($GLOBALS['rb_variables'][RFWP_Variables::LOCAL_ROTATOR_GATHER]))
+        ) {
+            RFWP_createLocalRotator();
+        }
     }
 	/** End of Rotator file creation */
 	/** Functions zone *********************************************************************************************************************************************************************/

@@ -1038,7 +1038,7 @@ try {
                         RFWP_Utils::saveToRbSettings($urlToFile, 'localRotatorUrl');
 	                    $GLOBALS['rb_variables']['localRotatorUrl'] = $urlToFile;
 	                    set_transient(RFWP_Variables::LOCAL_ROTATOR_GATHER, true, 15*60);
-	                    $GLOBALS['rb_variables']['localRotatorGatherTimeout'] = true;
+	                    $GLOBALS['rb_variables'][RFWP_Variables::LOCAL_ROTATOR_GATHER] = null;
 	                    break;
                     }
                 }

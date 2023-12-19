@@ -183,11 +183,6 @@ if (!class_exists('RFWP_AdminPage')) {
                     } else {
                         update_option('rb_cacheClearAllow', 'disabled');
                     }
-
-                    if (!empty($GLOBALS['rb_localRotator']) && !empty($GLOBALS['rb_variables']['rotator']) && !empty($GLOBALS['rb_variables']['adDomain'])
-                        && isset($GLOBALS['rb_variables']['localRotatorGatherTimeout']) && empty($GLOBALS['rb_variables']['localRotatorGatherTimeout'])) {
-                            RFWP_createLocalRotator();
-                    }
                 }
                 if (!empty($_POST['tokenInput'])) {
                     $sanitized_token = sanitize_text_field($_POST['tokenInput']);
