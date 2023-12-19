@@ -5,7 +5,7 @@ if (!defined("ABSPATH")) { exit;}
 /*
 Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
-Version:      1.0.5
+Version:      1.0.6
 Author:       Realbig Team
 Author URI:   https://realbig.media
 License:      GPLv2 or later
@@ -978,6 +978,7 @@ try {
 	if (is_admin()) {
 		include_once (plugin_dir_path(__FILE__)."RFWP_AdminPage.php");
 		add_action('admin_menu', 'RFWP_AdminPage::settingsMenuCreate');
+        RFWP_AdminPage::clickButtons();
 	}
 	/************ end of token input area *********************************************************************************/
 	add_action( 'after_setup_theme', 'RFWP_saveThemeThumbnailSizes', 5000);

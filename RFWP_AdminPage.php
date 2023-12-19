@@ -57,7 +57,6 @@ if (!class_exists('RFWP_AdminPage')) {
 
             RFWP_initTestMode();
             RFWP_saveThemeThumbnailSizes();
-            self::clickButtons();
 
             if (!empty($GLOBALS['dev_mode'])) {
                 $res['killRbAvailable'] = true;
@@ -156,14 +155,9 @@ if (!class_exists('RFWP_AdminPage')) {
         }
 
         public static function clickButtons() {
-            if (wp_get_raw_referer() && !wp_get_referer() && !empty($_POST)) {
-                if (!empty($GLOBALS['wpPrefix'])) {
-                    $wpPrefix = $GLOBALS['wpPrefix'];
-                } else {
-                    global $table_prefix;
-                    $wpPrefix = $table_prefix;
-                }
+            global $wpPrefix;
 
+            if (wp_get_raw_referer() && !wp_get_referer() && !empty($_POST)) {
                 if (!empty($_POST['clearLogs'])) {
                     RFWP_Logs::clearAllLogs();
                 }
@@ -202,14 +196,7 @@ if (!class_exists('RFWP_AdminPage')) {
                         $GLOBALS['tokenStatusMessage'] = 'Неверный формат токена';
                         $messageFLog = 'wrong token format';
                     }
-                } elseif ($GLOBALS['token'] == 'no token') {
-                    $GLOBALS['tokenStatusMessage'] = 'Введите токен';
-                    $messageFLog = 'no token';
                 }
-                if (!empty($messageFLog)) {
-                    RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
-                }
-                RFWP_tokenTimeUpdateChecking($GLOBALS['token'], $wpPrefix);
                 /* end of manual sync */
 
                 /* check ip */
@@ -227,6 +214,17 @@ if (!class_exists('RFWP_AdminPage')) {
                     curl_close($curl);
                 }
                 /* end of check ip */
+            } else {
+                if ($GLOBALS['token'] == 'no token') {
+                    $GLOBALS['tokenStatusMessage'] = 'Введите токен';
+                    $messageFLog = 'no token';
+                }
+            }
+
+            RFWP_tokenTimeUpdateChecking($GLOBALS['token'], $wpPrefix);
+
+            if (!empty($messageFLog)) {
+                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
             }
         }
     }

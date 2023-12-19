@@ -107,6 +107,12 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 == Changelog ==
 
+= 1.0.6 =
+
+Изменения версии:
+
+* мелкие улучшения и правки.
+
 = 1.0.5 =
 
 Изменения версии:
