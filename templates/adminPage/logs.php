@@ -15,7 +15,9 @@ $files = list_files(rtrim($folder, '/'));
     <?php endforeach; ?>
 
     <form method="post" class="ml-auto" name="logsForm" id="logsFormId">
-        <?php submit_button( 'Очистить все логи', 'primary', 'clearLogs') ?></form>
+        <input type="hidden" name="_csrf" value="<?php echo $args['_csrf'] ?>" />
+        <?php submit_button( 'Очистить все логи', 'primary', 'clearLogs') ?>
+    </form>
 <?php else: ?>
     Нет логов на данном сайте
 <?php endif; ?>
@@ -26,6 +28,7 @@ $files = list_files(rtrim($folder, '/'));
         <label><input type="checkbox" name="enable_logs" id="enable_logs_id" <?php echo $args['enable_logs'] ?>>
             Включить сбор логов</label>
     </div>
+    <input type="hidden" name="_csrf" value="<?php echo $args['_csrf'] ?>" />
     <?php submit_button( 'Синхронизировать', 'primary', 'enableLogsButton' ) ?>
 </form>
 

@@ -5,6 +5,8 @@ if (!defined("ABSPATH")) {exit;}
 if (!class_exists('RFWP_AdminPage')) {
     class RFWP_AdminPage
     {
+        public const CSRF_ACTION = "rfwp_admin_page";
+
         public static function settingsMenuCreate() {
             global $wp_filesystem;
             $iconUrl = "";
@@ -53,6 +55,7 @@ if (!class_exists('RFWP_AdminPage')) {
                 'rbSettings' => null,
                 'turboOptions' => RFWP_generateTurboRssUrls(),
                 'tab' => isset($_GET['tab']) ? $_GET['tab'] : null,
+                "_csrf" => wp_create_nonce(self::CSRF_ACTION),
             ];
 
             RFWP_initTestMode();
@@ -155,6 +158,9 @@ if (!class_exists('RFWP_AdminPage')) {
         }
 
         public static function clickButtons() {
+            if (empty($_POST["_csrf"]) || !wp_verify_nonce($_POST["_csrf"], self::CSRF_ACTION))
+                return;
+
             global $wpPrefix;
 
             if (wp_get_raw_referer() && !wp_get_referer() && !empty($_POST)) {

@@ -36,6 +36,8 @@ $args = !empty($GLOBALS['rb_adminPage_args']) ? $GLOBALS['rb_adminPage_args'] : 
             <span id="ip-result"><?php echo $args['curlResult'] ?></span>
         <?php endif; ?>
     <?php endif; ?>
+
+    <input type="hidden" name="_csrf" value="<?php echo $args['_csrf'] ?>" />
 </form>
 
 <?php if(!empty($GLOBALS['tokenTimeUpdate']) && $GLOBALS['tokenTimeUpdate'] != 'never'):

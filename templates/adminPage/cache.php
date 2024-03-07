@@ -1,5 +1,6 @@
 <?php
 $args = !empty($GLOBALS['rb_adminPage_args']) && !empty($GLOBALS['rb_adminPage_args']['cache']) ? $GLOBALS['rb_adminPage_args']['cache'] : [];
+$csrf = !empty($GLOBALS['rb_adminPage_args']) && !empty($GLOBALS['rb_adminPage_args']['_csrf']) ? $GLOBALS['rb_adminPage_args']['_csrf'] : '';
 ?>
 
 <?php if (!empty($args) && is_array($args)):?>
@@ -28,7 +29,9 @@ $args = !empty($GLOBALS['rb_adminPage_args']) && !empty($GLOBALS['rb_adminPage_a
     </div>
 
     <form method="post" class="ml-auto" name="cacheForm" id="cacheFormId">
-        <?php submit_button( 'Очистить кеш', 'primary', 'clearCache') ?></form>
+        <input type="hidden" name="_csrf" value="<?php echo $csrf ?>" />
+        <?php submit_button( 'Очистить кеш', 'primary', 'clearCache') ?>
+    </form>
 <?php else: ?>
     Нет закешированных блоков
 <?php endif; ?>

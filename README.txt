@@ -107,6 +107,12 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 == Changelog ==
 
+= 1.0.7 =
+
+Изменения версии:
+
+* добавили CSRF проверку.
+
 = 1.0.6 =
 
 Изменения версии:

@@ -5,7 +5,8 @@
 $kill_rb_db = $wpdb->get_results('SELECT id,optionValue FROM '.$wpPrefix.'realbig_settings WHERE optionName = "kill_rb"', ARRAY_A);
 if (empty(apply_filters('wp_doing_cron', defined('DOING_CRON') && DOING_CRON)) && !empty(is_admin())
     && wp_get_raw_referer() && !wp_get_referer()) {
-	if (!empty($curUserCan)&&!empty($_POST['saveTokenButton'])) {
+	if (!empty($curUserCan) && !empty($_POST['saveTokenButton']) &&
+            !empty($_POST["_csrf"]) && wp_verify_nonce($_POST["_csrf"], RFWP_AdminPage::CSRF_ACTION)) {
 		if (!empty($_POST['kill_rb'])) {
 			$saveVal = 2;
 		} else {
