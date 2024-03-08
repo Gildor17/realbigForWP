@@ -111,7 +111,7 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 Изменения версии:
 
-* добавили CSRF проверку.
+* добавили защиту от CSRF.
 
 = 1.0.6 =
 
