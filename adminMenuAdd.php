@@ -106,7 +106,7 @@ catch (Exception $ex) {
 	} catch (Error $erIex) { }
 
 	deactivate_plugins(plugin_basename( __FILE__ ));
-	?><div style="margin-left: 200px; border: 3px solid red"><?php echo $ex; ?></div><?php
+	?><div style="margin-left: 200px; border: 3px solid red"><?php echo esc_html($ex); ?></div><?php
 }
 catch (Error $er) {
 	try {
@@ -127,5 +127,5 @@ catch (Error $er) {
 	} catch (Error $erIex) { }
 
 	deactivate_plugins(plugin_basename( __FILE__ ));
-	?><div style="margin-left: 200px; border: 3px solid red"><?php echo $er; ?></div><?php
+	?><div style="margin-left: 200px; border: 3px solid red"><?php echo esc_html($er); ?></div><?php
 }

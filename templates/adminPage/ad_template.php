@@ -46,16 +46,16 @@ if (!empty($args['onCategories'])) {
 ?>
 
 <div class="squads-blocks width-whole">
-    <div class="element-separator">ID: <b><?php echo $args['block_number']; ?></b></div>
+    <div class="element-separator">ID: <b><?php echo esc_html($args['block_number']); ?></b></div>
     <div class="element-separator">Тип отображения:
-        <b><?php echo RFWP_AdUtils::getSettingsType($args['setting_type']);
-        if (in_array($args['setting_type'], [6, 7])) echo ": " . $args['elementPlace'] . " от начала текста" ?></b>
+        <b><?php echo esc_html(RFWP_AdUtils::getSettingsType($args['setting_type']));
+        if (in_array($args['setting_type'], [6, 7])) echo ": " . esc_html($args['elementPlace']) . " от начала текста" ?></b>
     </div>
-    <div class="element-separator">Минимум символов: <b><?php echo $args['minSymbols']; ?></b></div>
-    <div class="element-separator">Максимум символов: <b><?php echo $args['maxSymbols']; ?></b></div>
-    <div class="element-separator">Минимум заголовков: <b><?php echo $args['minHeaders']; ?></b></div>
-    <div class="element-separator">Максимум заголовков: <b><?php echo $args['maxHeaders']; ?></b></div>
-    <div class="element-separator">Теги: <b><?php echo $tagString; ?></b></div>
-    <div class="element-separator">Категории: <b><?php echo $categoryString; ?></b></div>
-    <div class="element-separator">Расположение: <b><?php echo ucfirst($args['elementCss']); ?></b></div>
+    <div class="element-separator">Минимум символов: <b><?php echo esc_html($args['minSymbols']); ?></b></div>
+    <div class="element-separator">Максимум символов: <b><?php echo esc_html($args['maxSymbols']); ?></b></div>
+    <div class="element-separator">Минимум заголовков: <b><?php echo esc_html($args['minHeaders']); ?></b></div>
+    <div class="element-separator">Максимум заголовков: <b><?php echo esc_html($args['maxHeaders']); ?></b></div>
+    <div class="element-separator">Теги: <b><?php echo esc_html($tagString); ?></b></div>
+    <div class="element-separator">Категории: <b><?php echo esc_html($categoryString); ?></b></div>
+    <div class="element-separator">Расположение: <b><?php echo esc_html(ucfirst($args['elementCss'])); ?></b></div>
 </div>

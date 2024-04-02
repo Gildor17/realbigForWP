@@ -1,8 +1,8 @@
 === Realbig For WordPress ===
 Contributors: 101
 Tags: AD, content filling
-Requires at least: 4.5
-Tested up to: 6.4
+Requires at least: 6.2
+Tested up to: 6.4.3
 Stable tag: 0.1.26.56
 Requires PHP: 5.6
 License: GPLv2 or later

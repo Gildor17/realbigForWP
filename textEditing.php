@@ -10,7 +10,7 @@ if (!defined("ABSPATH")) { exit;}
  */
 
 try {
-	if (empty(apply_filters('wp_doing_cron', defined('DOING_CRON') && DOING_CRON))) {
+    if (empty(apply_filters('wp_doing_cron', defined('DOING_CRON') && DOING_CRON))) {
 		if (!function_exists('RFWP_gatheringContentLength')) {
 			function RFWP_gatheringContentLength($content, $isRepeated=null) {
 				try {
@@ -55,7 +55,7 @@ try {
 							}
 						}
 						restore_error_handler();
-						$contentLength = mb_strlen(strip_tags($contentForLength), 'utf-8');
+						$contentLength = mb_strlen(wp_strip_all_tags($contentForLength), 'utf-8');
 						return $contentLength;
 					} else {
 						return $contentLength;
@@ -116,9 +116,9 @@ try {
 							$messageFLog = 'Error content length from function;';
                             RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
 
-							$contentLength = mb_strlen(strip_tags($content), 'utf-8');
+							$contentLength = mb_strlen(wp_strip_all_tags($content), 'utf-8');
 						}
-						$contentLengthOld = mb_strlen(strip_tags($content), 'utf-8');
+						$contentLengthOld = mb_strlen(wp_strip_all_tags($content), 'utf-8');
 
 						$headersMatchesResult = preg_match_all('~<(h1|h2|h3|h4|h5|h6)~', $content, $headM);
 						$headersMatchesResult = count($headM[0]);
@@ -227,7 +227,9 @@ try {
 					$itemArray = [];
 					$checkExcluded = RFWP_checkPageType();
 					if (!empty($checkExcluded)&&!empty($fromDb)&&!empty($fromDb['adBlocks'])&&count($fromDb['adBlocks']) > 0) {
-						$contentSelector = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM ".$wpPrefix."realbig_settings WHERE optionName = %s",['contentSelector']));
+                        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
+						$contentSelector = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM %i WHERE optionName = %s",
+                            "{$wpPrefix}realbig_settings", "contentSelector"));
 						if (empty($contentSelector)) {
 							$contentSelector = null;
 						}
@@ -287,7 +289,7 @@ try {
             let possibleClasses = [\'.taxonomy-description\',\'.entry-content\',\'.post-wrap\',\'.post-body\',\'#blog-entries\',\'.content\',\'.archive-posts__item-text\',\'.single-company_wrapper\',\'.posts-container\',\'.content-area\',\'.post-listing\',\'.td-category-description\',\'.jeg_posts_wrap\'];
             let deniedClasses = [\'.percentPointerClass\',\'.addedInserting\',\'#toc_container\'];
             let deniedString = "";
-            let contentSelector = \''.$contentSelector.'\';
+            let contentSelector = \''.esc_attr(stripslashes($contentSelector)).'\';
             let contentCheck = null;
             if (contentSelector) {
                 contentCheck = document.querySelector(contentSelector);
@@ -333,8 +335,8 @@ try {
                 cpSpan.setAttribute(\'id\', \'content_pointer_id\');
                 cpSpan.classList.add(\'no-content\');
                 cpSpan.setAttribute(\'data-content-length\', \'0\');
-                cpSpan.setAttribute(\'data-accepted-blocks\', \''.$adBlocksIdsString.'\');
-                cpSpan.setAttribute(\'data-rejected-blocks\', \''.$rejectedIdsString.'\');
+                cpSpan.setAttribute(\'data-accepted-blocks\', \''.esc_attr(stripslashes($adBlocksIdsString)).'\');
+                cpSpan.setAttribute(\'data-rejected-blocks\', \''.esc_attr(stripslashes($rejectedIdsString)).'\');
                 window.jsInputerLaunch = 10;
                 
                 if (!cpSpan.parentNode) contentCheck.prepend(cpSpan);
@@ -357,8 +359,8 @@ try {
                         cpSpan.classList.add(\'no-content\');
                         cpSpan.classList.add(\'hard-content\');
                         cpSpan.setAttribute(\'data-content-length\', \'0\');
-                        cpSpan.setAttribute(\'data-accepted-blocks\', \''.$adBlocksIdsString.'\');
-                        cpSpan.setAttribute(\'data-rejected-blocks\', \''.$rejectedIdsString.'\');
+                        cpSpan.setAttribute(\'data-accepted-blocks\', \''.esc_attr(stripslashes($adBlocksIdsString)).'\');
+                        cpSpan.setAttribute(\'data-rejected-blocks\', \''.esc_attr(stripslashes($rejectedIdsString)).'\');
                         window.jsInputerLaunch = 10;
                         
                         contentCheck.prepend(cpSpan);
@@ -664,7 +666,7 @@ try {
                     $src = $src.'?ver='.$pluginVersion;
                 }
 				/* ?><script>let penyok_stoparik = 0;</script><?php /**/
-				?><script type="text/javascript" src="<?php echo $src; ?>" id="<?php echo $GLOBALS['rb_variables']['rotator']; ?>-js" async=""></script><?php /**/
+				?><script type="text/javascript" src="<?php echo esc_url($src); ?>" id="<?php echo esc_attr($GLOBALS['rb_variables']['rotator']); ?>-js" async=""></script><?php /**/
 //				wp_enqueue_script(
 //					$GLOBALS['rb_variables']['rotator'],
 //					plugins_url().'/'.basename(__DIR__).'/'.$GLOBALS['rb_variables']['rotator'].'.js',
@@ -687,7 +689,9 @@ try {
 
 		    $result['excIdClass'] = null;
 		    $result['blockDuplicate'] = 'yes';
-		    $realbig_settings_info = $wpdb->get_results('SELECT optionName, optionValue FROM '.$GLOBALS['wpPrefix'].'realbig_settings WGPS WHERE optionName IN ("excludedIdAndClasses","blockDuplicate")');
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
+		    $realbig_settings_info = $wpdb->get_results($wpdb->prepare('SELECT optionName, optionValue FROM %i WGPS WHERE optionName IN (%s, %s)',
+                "{$GLOBALS['wpPrefix']}realbig_settings", "excludedIdAndClasses", "blockDuplicate"));
 		    if (!empty($realbig_settings_info)) {
 			    foreach ($realbig_settings_info AS $k => $item) {
 				    if (isset($item->optionValue)) {
@@ -793,7 +797,7 @@ try {
             $content = preg_replace('~/scr_pt_close;~ius', '/script',$content);
 
             if ($encode) {
-                $content = json_encode($content, JSON_UNESCAPED_UNICODE);
+                $content = wp_json_encode($content, JSON_UNESCAPED_UNICODE);
                 $content = preg_replace('~<script~ius', '<scr"+"ipt',$content);
                 $content = preg_replace('~/script~ius', '/scr"+"ipt',$content);
                 $content = preg_replace('~(\r\n|\n|\r)~ius',' ',$content);
@@ -812,19 +816,20 @@ try {
 				$tablet_browser = 0;
 				$mobile_browser = 0;
 
-				if (preg_match('/(tablet|ipad|playbook)|(android(?!.*(mobi|opera mini)))/i', strtolower($_SERVER['HTTP_USER_AGENT']))) {
+				if (isset($_SERVER['HTTP_USER_AGENT']) && preg_match('/(tablet|ipad|playbook)|(android(?!.*(mobi|opera mini)))/i', strtolower($_SERVER['HTTP_USER_AGENT']))) {
 					$tablet_browser++;
 				}
 
-				if (preg_match('/(up.browser|up.link|mmp|symbian|smartphone|midp|wap|phone|android|iemobile)/i', strtolower($_SERVER['HTTP_USER_AGENT']))) {
+				if (isset($_SERVER['HTTP_USER_AGENT']) && preg_match('/(up.browser|up.link|mmp|symbian|smartphone|midp|wap|phone|android|iemobile)/i', strtolower($_SERVER['HTTP_USER_AGENT']))) {
 					$mobile_browser++;
 				}
 
-				if ((strpos(strtolower($_SERVER['HTTP_ACCEPT']),'application/vnd.wap.xhtml+xml') > 0) or ((isset($_SERVER['HTTP_X_WAP_PROFILE']) or isset($_SERVER['HTTP_PROFILE'])))) {
+				if ((isset($_SERVER['HTTP_ACCEPT']) && strpos(strtolower($_SERVER['HTTP_ACCEPT']),'application/vnd.wap.xhtml+xml') > 0) ||
+                    ((isset($_SERVER['HTTP_X_WAP_PROFILE']) || isset($_SERVER['HTTP_PROFILE'])))) {
 					$mobile_browser++;
 				}
 
-				$mobile_ua = strtolower(substr($_SERVER['HTTP_USER_AGENT'], 0, 4));
+				$mobile_ua = isset($_SERVER['HTTP_ACCEPT']) ? strtolower(substr($_SERVER['HTTP_USER_AGENT'], 0, 4)) : "";
 				$mobile_agents = array(
 					'w3c ','acs-','alav','alca','amoi','audi','avan','benq','bird','blac',
 					'blaz','brew','cell','cldc','cmd-','dang','doco','eric','hipt','inno',
@@ -840,7 +845,7 @@ try {
 					$mobile_browser++;
 				}
 
-				if (strpos(strtolower($_SERVER['HTTP_USER_AGENT']),'opera mini') > 0) {
+				if (isset($_SERVER['HTTP_ACCEPT']) && strpos(strtolower($_SERVER['HTTP_USER_AGENT']),'opera mini') > 0) {
 					$mobile_browser++;
 					//Check for tablets on opera mini alternative headers
 					$stock_ua = strtolower(isset($_SERVER['HTTP_X_OPERAMINI_PHONE_UA'])?$_SERVER['HTTP_X_OPERAMINI_PHONE_UA']:(isset($_SERVER['HTTP_DEVICE_STOCK_UA'])?$_SERVER['HTTP_DEVICE_STOCK_UA']:''));
@@ -872,6 +877,8 @@ try {
 	if (!function_exists('RFWP_headerInsertor')) {
 		function RFWP_headerInsertor($patternType) {
 			try {
+                include_once(plugin_dir_path(__FILE__) . "RFWP_Variables.php");
+
 			    $detectedHeader = false;
 				if ($patternType=='ad') {
 					$checkedHeaderPattern = '~rbConfig=(\s|\r\n|\n|\r)*?\{start\:performance\.now\(\)~iu';
@@ -887,13 +894,14 @@ try {
                 $result = true;
 
 				$themeHeaderFileOpen = false;
-				$wp_cur_theme_root = get_theme_root();
 				$wp_cur_theme_name = get_stylesheet();
 				if (!empty($wp_cur_theme_name)) {
                     if (!empty($wp_cur_theme_root)) {
-                        $themeHeaderFileCheck = file_exists($wp_cur_theme_root.'/'.$wp_cur_theme_name.'/header.php');
+                        $themeHeaderFileCheck = file_exists(get_theme_root().'/'.$wp_cur_theme_name.'/header.php');
                         if ($themeHeaderFileCheck) {
-                            $themeHeaderFileOpen = file_get_contents($wp_cur_theme_root.'/'.$wp_cur_theme_name.'/header.php');
+                            //@codingStandardsIgnoreStart
+                            $themeHeaderFileOpen = file_get_contents(get_theme_root().'/'.$wp_cur_theme_name.'/header.php');
+                            //@codingStandardsIgnoreEnd
                         }
                     }
                     if (empty($themeHeaderFileOpen)) {
@@ -915,15 +923,15 @@ try {
                         if (!empty($rebootHeaderGet)&&!empty($rebootHeaderGet['code_head'])) {
                             $checkedHeader = preg_match($checkedHeaderPattern, $rebootHeaderGet['code_head'], $rm1);
                             if (count($rm1) == 0) {
-                                ?><script>console.log('reboot <?php echo $patternType ?>: nun')</script><?php
+                                ?><script>console.log('reboot <?php echo esc_html($patternType) ?>: nun')</script><?php
                                 $result = true;
                             } else {
-                                ?><script>console.log('reboot <?php echo $patternType ?>: presents')</script><?php
+                                ?><script>console.log('reboot <?php echo esc_html($patternType) ?>: presents')</script><?php
                                 $result = false;
                                 $detectedHeader = true;
                             }
                         } else {
-                            ?><script>console.log('reboot <?php echo $patternType ?>: options error')</script><?php
+                            ?><script>console.log('reboot <?php echo esc_html($patternType) ?>: options error')</script><?php
                         }
                     }
 
@@ -931,14 +939,14 @@ try {
                         if (!empty($themeHeaderFileOpen)) {
                             $checkedHeader = preg_match($checkedHeaderPattern, $themeHeaderFileOpen, $m);
                             if (count($m) == 0) {
-                                ?><script>console.log('<?php echo $patternType ?>: nun')</script><?php
+                                ?><script>console.log('<?php echo esc_html($patternType) ?>: nun')</script><?php
                                 $result = true;
                             } else {
-                                ?><script>console.log('<?php echo $patternType ?>: presents')</script><?php
+                                ?><script>console.log('<?php echo esc_html($patternType) ?>: presents')</script><?php
                                 $result = false;
                             }
                         } else {
-                            ?><script>console.log('<?php echo $patternType ?>: header error')</script><?php
+                            ?><script>console.log('<?php echo esc_html($patternType) ?>: header error')</script><?php
                             $result = true;
                         }
                     }
@@ -1040,16 +1048,21 @@ launchInsertingsFunctionLaunch();'.PHP_EOL;
 				global $table_prefix;
 				$wpPrefix = $table_prefix;
 			}
-			if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
+			if (!is_admin() && empty(apply_filters('wp_doing_cron', defined('DOING_CRON') && DOING_CRON))
+                && empty(apply_filters('wp_doing_ajax', defined('DOING_AJAX') && DOING_AJAX))) {
 				RFWP_WorkProgressLog(false,'insertsToString begin');
 			}
 
 			try {
+                // @codingStandardsIgnoreStart
 				if (isset($filter)&&in_array($filter, [0,1])) {
-					$posts = $wpdb->get_results($wpdb->prepare('SELECT * FROM '.$wpPrefix.'posts WHERE post_type = %s AND pinged = %s', ['rb_inserting',$filter]));
+					$posts = $wpdb->get_results($wpdb->prepare('SELECT * FROM %i WHERE post_type = %s AND pinged = %s',
+                        "{$wpPrefix}posts", "rb_inserting", $filter));
 				} else {
-					$posts = $wpdb->get_results($wpdb->prepare('SELECT * FROM '.$wpPrefix.'posts WHERE post_type = %s', ['rb_inserting']));
+					$posts = $wpdb->get_results($wpdb->prepare('SELECT * FROM %i WHERE post_type = %s',
+                        "{$wpPrefix}posts", "rb_inserting"));
 				}
+                // @codingStandardsIgnoreEnd
 				if (!empty($posts)) {
 					if ($type=='header') {
 						if (!empty($GLOBALS['addInsertings']['header']['insertsCounter'])) {
@@ -1534,7 +1547,11 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 			$statusFor404 = 'show';
 			$obligatoryMargin = 0;
 			$tagsListForTextLength = null;
-			$realbig_settings_info = $wpdb->get_results('SELECT optionName, optionValue FROM '.$wpPrefix.'realbig_settings WGPS WHERE optionName IN ("excludedIdAndClasses","blockDuplicate","obligatoryMargin","statusFor404","tagsListForTextLength")');
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
+			$realbig_settings_info = $wpdb->get_results($wpdb->prepare(
+                    'SELECT optionName, optionValue FROM %i WGPS WHERE optionName IN (%s, %s, %s, %s,%s)',
+                    "{$wpPrefix}realbig_settings", "excludedIdAndClasses", "blockDuplicate", "obligatoryMargin",
+                "statusFor404", "tagsListForTextLength"));
 			if (!empty($realbig_settings_info)) {
 				foreach ($realbig_settings_info AS $k => $item) {
 					if (isset($item->optionValue)) {
@@ -1562,7 +1579,8 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 				unset($k,$item);
 			}
 			if ((!is_404())||$statusFor404!='disable') {
-				$adBlocks = $wpdb->get_results('SELECT * FROM '.$wpPrefix.'realbig_plugin_settings WGPS');
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
+				$adBlocks = $wpdb->get_results($wpdb->prepare('SELECT * FROM %i WGPS', "{$wpPrefix}realbig_plugin_settings"));
             }
 
 			if (!empty($excIdClass)) {
@@ -1763,7 +1781,7 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 			        $taxonomies = get_taxonomies($args, 'objects');
 
 			        foreach ($taxonomies as $taxonomy) {
-				        $rb_taxonomies[$type][$taxonomy->name] = __($taxonomy->label);
+				        $rb_taxonomies[$type][$taxonomy->name] = $taxonomy->label;
 			        }
 		        }
 	        }
@@ -1788,7 +1806,9 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 		        global $wpPrefix;
 
 		        $usedTaxonomies = [];
-		        $array = $wpdb->get_results('SELECT optionValue FROM '.$wpPrefix.'realbig_settings WGPS WHERE optionName = "usedTaxonomies"');
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
+		        $array = $wpdb->get_results($wpdb->prepare('SELECT optionValue FROM %i WGPS WHERE optionName = %s',
+                    "{$wpPrefix}realbig_settings", "usedTaxonomies"));
 
 		        if (!empty($array[0]->optionValue)) {
 			        $usedTaxonomies = json_decode($array[0]->optionValue, true);
@@ -1830,7 +1850,8 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 			$gatherContentTimeoutLong = get_transient(RFWP_Variables::GATHER_CONTENT_LONG);
 			$gatherContentTimeoutShort = get_transient(RFWP_Variables::GATHER_CONTENT_SHORT);
 
-			if (empty($gatherContentTimeoutLong)&&empty($gatherContentTimeoutShort)) {
+			if (empty($gatherContentTimeoutLong) && empty($gatherContentTimeoutShort)
+                && !empty($_POST["_csrf"]) && wp_verify_nonce($_POST["_csrf"], RFWP_Variables::CSRF_USER_JS_ACTION)) {
 				$data = $_POST['data'];
 
 				if (!empty($data)) {
@@ -1854,7 +1875,9 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
             try {
                 global $wpdb;
 
-                $jsToHead = $wpdb->get_var('SELECT optionValue FROM '.$GLOBALS['wpPrefix'].'realbig_settings WHERE optionName = "jsToHead"');
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
+                $jsToHead = $wpdb->get_var($wpdb->prepare('SELECT optionValue FROM %i WHERE optionName = %s',
+                    "{$GLOBALS['wpPrefix']}realbig_settings", "jsToHead"));
                 if ($jsToHead!==null) {
                     $jsToHead = intval($jsToHead);
                 }
@@ -1881,7 +1904,9 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 	                global $wpdb;
 	                $wpPrefix = RFWP_getTablePrefix();
 
-	                $result = $wpdb->prepare($wpdb->get_var('SELECT optionValue FROM '.$wpPrefix.'realbig_settings WHERE optionName = %s'), [$settingName]);
+                    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
+	                $result = $wpdb->prepare($wpdb->get_var('SELECT optionValue FROM %i WHERE optionName = %s'),
+                        "{$wpPrefix}realbig_settings", $settingName);
 	                if (!empty($addToGlobal)) {
 		                $GLOBALS['rb_variables'][$settingName] = $result;
 	                }
@@ -1913,7 +1938,7 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
                     }
                 }
                 var xhr = new XMLHttpRequest();
-                xhr.open('GET',"//<?php echo $getDomain ?>/<?php echo $getRotator ?>.min.js",true);
+                xhr.open('GET',"<?php echo esc_url("//$getDomain/$getRotator.min.js") ?>",true);
                 xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
                 xhr.onreadystatechange = function() {
                     if (xhr.status != 200) {
@@ -1940,7 +1965,7 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
                     }
                 }
                 var xhr = new XMLHttpRequest();
-                xhr.open('GET',"//<?php echo $getDomain ?>/<?php echo $getRotator ?>.json",true);
+                xhr.open('GET',"<?php echo esc_url("//$getDomain/$getRotator.json") ?>",true);
                 xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
                 xhr.onreadystatechange = function() {
                     if (xhr.status != 200) {
@@ -1974,7 +1999,7 @@ catch (Exception $ex)
 	} catch (Error $erIex) { }
 
 	deactivate_plugins(plugin_basename( __FILE__ ));
-	?><div style="margin-left: 200px; border: 3px solid red"><?php echo $ex; ?></div><?php
+	?><div style="margin-left: 200px; border: 3px solid red"><?php echo esc_html($ex); ?></div><?php
 }
 catch (Error $er)
 {
@@ -1996,5 +2021,5 @@ catch (Error $er)
 	} catch (Error $erIex) { }
 
 	deactivate_plugins(plugin_basename( __FILE__ ));
-	?><div style="margin-left: 200px; border: 3px solid red"><?php echo $er; ?></div><?php
+	?><div style="margin-left: 200px; border: 3px solid red"><?php echo esc_html($er); ?></div><?php
 }

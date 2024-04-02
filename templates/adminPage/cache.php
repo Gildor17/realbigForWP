@@ -18,9 +18,12 @@ $csrf = !empty($GLOBALS['rb_adminPage_args']) && !empty($GLOBALS['rb_adminPage_a
             <tbody>
                 <?php foreach ($args as $blockId => $caches): ?>
                     <tr>
-                        <td><b><?php echo $blockId ?></b></td>
+                        <td><b><?php echo esc_html($blockId) ?></b></td>
+                        <? // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                         <td><?php echo isset($caches['desktop']) ? RFWP_rb_cache_gathering_content($caches['desktop']) : "—"; ?></td>
+                        <? // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                         <td><?php echo isset($caches['tablet']) ? RFWP_rb_cache_gathering_content($caches['tablet']) : "—"; ?></td>
+                        <? // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                         <td><?php echo isset($caches['mobile']) ? RFWP_rb_cache_gathering_content($caches['mobile']) : "—"; ?></td>
                     </tr>
                 <?php endforeach; ?>
@@ -29,7 +32,7 @@ $csrf = !empty($GLOBALS['rb_adminPage_args']) && !empty($GLOBALS['rb_adminPage_a
     </div>
 
     <form method="post" class="ml-auto" name="cacheForm" id="cacheFormId">
-        <input type="hidden" name="_csrf" value="<?php echo $csrf ?>" />
+        <input type="hidden" name="_csrf" value="<?php echo esc_attr($csrf) ?>" />
         <?php submit_button( 'Очистить кеш', 'primary', 'clearCache') ?>
     </form>
 <?php else: ?>

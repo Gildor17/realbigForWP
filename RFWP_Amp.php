@@ -19,8 +19,8 @@ if (!class_exists('RFWP_Amp')) {
 //				    if (!empty($ampOptions)&&!empty($ampOptions['status'])&&$ampOptions['status']=='enabled') {
 				    if (!empty($ampOptions)&&isset($ampOptions['ampEnable'])&&intval($ampOptions['ampEnable'])==1) {
 				    	global $wpdb;
-				    	$wpPrefix = $GLOBALS['wpPrefix'];
-					    $tableForAmpAds = $wpdb->get_var('SHOW TABLES LIKE "'.$GLOBALS['wpPrefix'].'realbig_amp_ads"');      //settings for ads in AMP
+                        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
+					    $tableForAmpAds = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', "{$GLOBALS['wpPrefix']}realbig_amp_ads"));      //settings for ads in AMP
 
 					    if (!empty($tableForAmpAds)) {
 						    add_filter('the_content', ['RFWP_Amp', 'adToContent'], 500);
@@ -64,8 +64,8 @@ if (!class_exists('RFWP_Amp')) {
 			        return $content;
 		        }
 		        global $wpdb;
-		        $wpPrefix = $GLOBALS['wpPrefix'];
-		        $ampAds = $wpdb->get_results('SELECT * FROM '.$wpPrefix.'realbig_amp_ads WRAA');
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
+		        $ampAds = $wpdb->get_results($wpdb->prepare('SELECT * FROM %i WRAA', "{$GLOBALS['wpPrefix']}realbig_amp_ads"));
 		        if (empty($ampAds)) {
 			        return $content;
 		        }

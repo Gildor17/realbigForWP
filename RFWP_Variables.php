@@ -10,5 +10,9 @@ if (!class_exists('RFWP_Variables')) {
        const GATHER_CONTENT_SHORT = "gatherContentContainerShort";
 
        const CUSTOM_SYNC = "rb_customSyncUsed";
+
+
+        const CSRF_ACTION = "rfwp_admin_page";
+        const CSRF_USER_JS_ACTION = "rfwp_user_js";
     }
 }

@@ -23,15 +23,17 @@ try {
 		}
 		$GLOBALS['wpPrefix'] = $wpPrefix;
 
-		$wpdb->query('DELETE FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_mobile","rb_block_desktop","rb_block_mobile_new","rb_block_desktop_new","rb_inserting") AND post_author = 0');
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
+		$wpdb->query($wpdb->prepare('DELETE FROM %i WHERE post_type IN (%s, %s, %s, %s, %s) AND post_author = 0',
+            "{$wpPrefix}posts", "rb_block_mobile", "rb_block_desktop", "rb_block_mobile_new", "rb_block_desktop_new", "rb_inserting"));
 
 		delete_option( 'realbig_status_gatherer' );
 		delete_option( 'realbig_status_gatherer_version' );
 
-		$tableName = $wpPrefix . 'realbig_plugin_settings';
-		$wpdb->query("DROP TABLE IF EXISTS ". $tableName);
-		$tableName = $wpPrefix . 'realbig_settings';
-		$wpdb->query("DROP TABLE IF EXISTS ". $tableName);
+        // @codingStandardsIgnoreStart
+		$wpdb->query($wpdb->prepare("DROP TABLE IF EXISTS %i", "{$wpPrefix}realbig_plugin_settings"));
+		$wpdb->query($wpdb->prepare("DROP TABLE IF EXISTS %i", "{$wpPrefix}realbig_settings"));
+        // @codingStandardsIgnoreEnd
 	}
 } catch (Exception $ex) {
 	try {
@@ -51,7 +53,7 @@ try {
 	} catch (Exception $exIex) { } catch (Error $erIex) { }
 
 	deactivate_plugins(plugin_basename( __FILE__ ));
-	?><div style="margin-left: 200px; border: 3px solid red"><?php echo $ex; ?></div><?php
+	?><div style="margin-left: 200px; border: 3px solid red"><?php echo esc_html($ex); ?></div><?php
 } catch (Error $er) {
 	try {
 		global $wpdb;
@@ -70,5 +72,5 @@ try {
 	} catch (Exception $exIex) { } catch (Error $erIex) { }
 
 	deactivate_plugins(plugin_basename( __FILE__ ));
-	?><div style="margin-left: 200px; border: 3px solid red"><?php echo $er; ?></div><?php
+	?><div style="margin-left: 200px; border: 3px solid red"><?php echo esc_html($er); ?></div><?php
 }

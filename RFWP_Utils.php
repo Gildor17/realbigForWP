@@ -49,12 +49,14 @@ if (!class_exists('RFWP_Utils')) {
                 global $wpdb;
                 $wpPrefix = RFWP_getWpPrefix();
 
-                $getOption = $wpdb->query($wpdb->prepare("SELECT id FROM ".$wpPrefix."realbig_settings WHERE optionName = %s",[$optionName]));
+                // @codingStandardsIgnoreStart
+                $getOption = $wpdb->query($wpdb->prepare("SELECT id FROM %i WHERE optionName = %s", "{$wpPrefix}realbig_settings", $optionName));
                 if (empty($getOption)) {
                     $res = $wpdb->insert($wpPrefix.'realbig_settings', ['optionName' => $optionName, 'optionValue' => $value]);
                 } else {
                     $res = $wpdb->update($wpPrefix.'realbig_settings', ['optionValue' => $value], ['optionName' => $optionName]);
                 }
+                // @codingStandardsIgnoreEnd
 
                 return $res;
             }
@@ -73,8 +75,8 @@ if (!class_exists('RFWP_Utils')) {
         public static function getFromRbSettings($optionName) {
             global $wpdb;
             $wpPrefix = RFWP_getWpPrefix();
-
-            $getOption = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM ".$wpPrefix."realbig_settings WHERE optionName = %s",[$optionName]));
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
+            $getOption = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM %i WHERE optionName = %s", "{$wpPrefix}realbig_settings", $optionName));
 
             return $getOption;
         }

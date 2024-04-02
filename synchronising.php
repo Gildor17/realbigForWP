@@ -15,7 +15,8 @@ try {
 			$rssSelectiveOffField = RFWP_rssSelectiveOffFieldGet();
             $unsuccessfullAjaxSyncAttempt = 0;
 
-			if (!empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
+			if (!empty(apply_filters('wp_doing_cron', defined('DOING_CRON') && DOING_CRON))
+                && empty(apply_filters('wp_doing_ajax', defined('DOING_AJAX') && DOING_AJAX))) {
 				RFWP_cronCheckLog('cron in sync passed');
 			}
 
@@ -33,7 +34,7 @@ try {
 
 			$getCategoriesTags = RFWP_getTagsCategories();
 			if (!empty($getCategoriesTags)) {
-				$getCategoriesTags = json_encode($getCategoriesTags);
+				$getCategoriesTags = wp_json_encode($getCategoriesTags);
 			}
 
 			try {
@@ -46,8 +47,8 @@ try {
                         'sameToken' => $sameTokenResult,
                         'urlData'   => $urlData,
                         'getCategoriesTags' => $getCategoriesTags,
-                        'getShortcodes' => json_encode($shortcodesToSend),
-                        'getMenuList' => json_encode($menuItemList),
+                        'getShortcodes' => wp_json_encode($shortcodesToSend),
+                        'getMenuList' => wp_json_encode($menuItemList),
                         'otherInfo' => $otherInfo,
                         'pluginVersion' => $pluginVersion,
                         'rssSelectiveOffField' => $rssSelectiveOffField,
@@ -127,17 +128,40 @@ try {
                                     }
 
 								    $counter = 0;
-								    $wpdb->query('DELETE FROM '.$wpPrefix.'realbig_plugin_settings');
-								    $sqlTokenSave = "INSERT INTO ".$wpPrefix."realbig_plugin_settings (text, block_number, setting_type, element, directElement, elementPosition, elementPlace, firstPlace, elementCount, elementStep, minSymbols, maxSymbols, minHeaders, maxHeaders, onCategories, offCategories, onTags, offTags, elementCss) VALUES ";
+                                    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
+								    $wpdb->query($wpdb->prepare('DELETE FROM %i', "{$wpPrefix}realbig_plugin_settings"));
+                                    $params = ["{$wpPrefix}realbig_plugin_settings"];
+								    $sqlTokenSave = "INSERT INTO %i (text, block_number, setting_type, element, directElement, elementPosition, " .
+                                        "elementPlace, firstPlace, elementCount, elementStep, minSymbols, maxSymbols, minHeaders, maxHeaders, " .
+                                        "onCategories, offCategories, onTags, offTags, elementCss) VALUES ";
 								    foreach ($decodedToken['data'] AS $k => $item) {
 									    $counter ++;
-									    $sqlTokenSave .= ($counter != 1 ?", ":"")."('".$item['text']."',".(int) sanitize_text_field($item['block_number']).", ".(int) sanitize_text_field($item['setting_type']).", '".sanitize_text_field($item['element'])."', '".sanitize_text_field( $item['directElement'] ) . "', " . (int) sanitize_text_field($item['elementPosition']) . ", " . (int) sanitize_text_field($item['elementPlace']) . ", " . (int) sanitize_text_field($item['firstPlace']) . ", " . (int) sanitize_text_field($item['elementCount']) . ", " . (int) sanitize_text_field($item['elementStep']) . ", " . (int) sanitize_text_field($item['minSymbols']) . ", " . (int) sanitize_text_field($item['maxSymbols']) . ", " . (int) sanitize_text_field($item['minHeaders']).", " . (int) sanitize_text_field($item['maxHeaders']).", '".sanitize_text_field($item['onCategories'])."', '".sanitize_text_field($item['offCategories'])."', '".sanitize_text_field($item['onTags'])."', '".sanitize_text_field($item['offTags'])."', '".sanitize_text_field($item['elementCss'])."')";
+									    $sqlTokenSave .= ($counter != 1 ?", ":"") .
+                                            "(%s, %d, %d, %s, %s, %d, %d, %d, %d, %d, %d, %d, %d, %d, %s, %s, %s, %s, %s)";
+                                        array_push($params, $item['text'], (int) sanitize_text_field($item['block_number']),
+                                            (int) sanitize_text_field($item['setting_type']), sanitize_text_field($item['element']),
+                                            sanitize_text_field($item['directElement']), (int) sanitize_text_field($item['elementPosition']),
+                                            (int) sanitize_text_field($item['elementPlace']), (int) sanitize_text_field($item['firstPlace']),
+                                            (int) sanitize_text_field($item['elementCount']), (int) sanitize_text_field($item['elementStep']),
+                                            (int) sanitize_text_field($item['minSymbols']), (int) sanitize_text_field($item['maxSymbols']),
+                                            (int) sanitize_text_field($item['minHeaders']), (int) sanitize_text_field($item['maxHeaders']),
+                                            sanitize_text_field($item['onCategories']), sanitize_text_field($item['offCategories']),
+                                            sanitize_text_field($item['onTags']), sanitize_text_field($item['offTags']),
+                                            sanitize_text_field($item['elementCss']));
 								    }
 								    unset($k, $item);
-								    $sqlTokenSave .= " ON DUPLICATE KEY UPDATE text = values(text), setting_type = values(setting_type), element = values(element), directElement = values(directElement), elementPosition = values(elementPosition), elementPlace = values(elementPlace), firstPlace = values(firstPlace), elementCount = values(elementCount), elementStep = values(elementStep), minSymbols = values(minSymbols), maxSymbols = values(maxSymbols), minHeaders = values(minHeaders), maxHeaders = values(maxHeaders), onCategories = values(onCategories), offCategories = values(offCategories), onTags = values(onTags), offTags = values(offTags), elementCss = values(elementCss) ";
-								    $wpdb->query($sqlTokenSave);
+								    $sqlTokenSave .= " ON DUPLICATE KEY UPDATE text = values(text), setting_type = values(setting_type), " .
+                                        "element = values(element), directElement = values(directElement), elementPosition = values(elementPosition), " .
+                                        "elementPlace = values(elementPlace), firstPlace = values(firstPlace), elementCount = values(elementCount), " .
+                                        "elementStep = values(elementStep), minSymbols = values(minSymbols), maxSymbols = values(maxSymbols), " .
+                                        "minHeaders = values(minHeaders), maxHeaders = values(maxHeaders), onCategories = values(onCategories), " .
+                                        "offCategories = values(offCategories), onTags = values(onTags), offTags = values(offTags), " .
+                                        "elementCss = values(elementCss) ";
+                                    // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
+								    $wpdb->query($wpdb->prepare($sqlTokenSave, $params));
 							    } elseif (empty($decodedToken['data'])&&sanitize_text_field($decodedToken['status']) == "empty_success") {
-								    $wpdb->query('DELETE FROM '.$wpPrefix.'realbig_plugin_settings');
+                                    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
+								    $wpdb->query($wpdb->prepare('DELETE FROM %i', "{$wpPrefix}realbig_plugin_settings"));
 							    }
 
 							    // if no needly note, then create
@@ -173,7 +197,7 @@ try {
 							    }
 							    /** Selected taxonomies */
 							    if (isset($decodedToken['taxonomies'])) {
-                                    $sanitised = sanitize_text_field(json_encode($decodedToken['taxonomies'], JSON_UNESCAPED_UNICODE));
+                                    $sanitised = sanitize_text_field(wp_json_encode($decodedToken['taxonomies'], JSON_UNESCAPED_UNICODE));
                                     RFWP_Utils::saveToRbSettings($sanitised, 'usedTaxonomies');
 							    }
 							    /** End of selected taxonomies */
@@ -214,7 +238,8 @@ try {
 
 							        if ($insertings['status']='ok') {
 							            foreach ($insertings['data'] AS $k=>$item) {
-							                $content_for_post = 'begin_of_header_code'.$item['headerField'].'end_of_header_code&begin_of_body_code'.$item['bodyField'].'end_of_body_code';
+							                $content_for_post = 'begin_of_header_code' . $item['headerField'] .
+                                                'end_of_header_code&begin_of_body_code' . $item['bodyField'] . 'end_of_body_code';
 
 								            $postarr = [
 									            'post_content' => $content_for_post,
@@ -278,7 +303,8 @@ try {
                                         if (!empty($rbTurboSettings)&&is_array($rbTurboSettings)&&!empty($rbTurboSettings['feedSelectiveOffField'])) {
                                             $feedSelectiveOffField = $rbTurboSettings['feedSelectiveOffField'];
                                             if (is_string($feedSelectiveOffField)) {
-	                                            $feedSelectiveOffField = explode("\n", str_replace(array("\r\n", "\r"), "\n", $feedSelectiveOffField));
+	                                            $feedSelectiveOffField = explode("\n", str_replace(array("\r\n", "\r"),
+                                                    "\n", $feedSelectiveOffField));
                                             }
 	                                        $newRssSelectiveOffField = $rssSelectiveOffField;
 	                                        foreach ($rssSelectiveOffField as $k3 => $item3) {
@@ -302,63 +328,64 @@ try {
 	                                        update_option('rfwp_selectiveOffFieldRestore', '');
                                         }
                                     }
-                                    $turboSettings = json_encode($decodedToken['turboSettings'], JSON_UNESCAPED_UNICODE);
+                                    $turboSettings = wp_json_encode($decodedToken['turboSettings'], JSON_UNESCAPED_UNICODE);
                                     update_option('rb_TurboRssOptions', $turboSettings, false);
                                 } elseif (isset($decodedToken['turboSettings'])) {
 	                                update_option('rb_TurboRssOptions', '[]', false);
                                 }
                                 /** End of Turbo rss */
 							    /** Turbo rss ads */
-							    $wpdb->query('DELETE FROM '.$wpPrefix.'realbig_turbo_ads');
+                                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
+							    $wpdb->query($wpdb->prepare('DELETE FROM %i', "{$wpPrefix}realbig_turbo_ads"));
 							    if (!empty($decodedToken['turboAdSettings'])) {
-							    	$listOfColums = ['blockId', 'adNetwork', 'adNetworkYandex', 'adNetworkAdfox', 'settingType', 'element', 'elementPosition', 'elementPlace'];
 								    $counter = 0;
-//								    $sqlTokenSave = "INSERT INTO ".$wpPrefix."realbig_turbo_ads (blockId, adNetwork, adNetworkYandex, adNetworkAdfox, settingType, element, elementPosition, elementPlace) VALUES ";
-								    $sqlTokenSave = "INSERT INTO ".$wpPrefix."realbig_turbo_ads (";
-								    foreach ($listOfColums AS $k => $item) {
-									    $sqlTokenSave .= ($k != 0 ?", ":"").$item;
-								    }
+                                    $params = ["{$wpPrefix}realbig_turbo_ads"];
+								    $sqlTokenSave = "INSERT INTO %i (blockId, adNetwork, adNetworkYandex, adNetworkAdfox, settingType, element, " .
+                                        "elementPosition, elementPlace) VALUES ";
 								    unset($k, $item);
-								    $sqlTokenSave .= ") VALUES ";
 								    foreach ($decodedToken['turboAdSettings'] AS $k => $item) {
 									    $counter ++;
-									    $sqlTokenSave .= ($counter != 1 ?", ":"")."(".(int) sanitize_text_field($item['blockId']).",'".sanitize_text_field($item['adNetwork'])."','".sanitize_text_field($item['adNetworkYandex'])."','".$item['adNetworkAdfox']."','".sanitize_text_field($item['settingType'])."','".sanitize_text_field($item['element'])."',".(int) sanitize_text_field($item['elementPosition']).",".(int) sanitize_text_field($item['elementPlace']).")";
+									    $sqlTokenSave .= ($counter != 1 ?", ":"") . "(%d, %s, %s, %s, %s, %s, %d, %d)";
+                                        array_push($params,(int) sanitize_text_field($item['blockId']), sanitize_text_field($item['adNetwork']),
+                                            sanitize_text_field($item['adNetworkYandex']), $item['adNetworkAdfox'],
+                                            sanitize_text_field($item['settingType']), sanitize_text_field($item['element']),
+                                            (int) sanitize_text_field($item['elementPosition']), (int) sanitize_text_field($item['elementPlace']));
 								    }
 								    unset($k, $item, $counter);
-								    $sqlTokenSave .= " ON DUPLICATE KEY UPDATE blockId = values(blockId), adNetwork = values(adNetwork), adNetworkYandex = values(adNetworkYandex), adNetworkAdfox = values(adNetworkAdfox), settingType = values(settingType), element = values(element), elementPosition = values(elementPosition), elementPlace = values(elementPlace) ";
-								    $wpdb->query($sqlTokenSave);
+								    $sqlTokenSave .= " ON DUPLICATE KEY UPDATE blockId = values(blockId), adNetwork = values(adNetwork), " .
+                                        "adNetworkYandex = values(adNetworkYandex), adNetworkAdfox = values(adNetworkAdfox), " .
+                                        "settingType = values(settingType), element = values(element), elementPosition = values(elementPosition), " .
+                                        "elementPlace = values(elementPlace) ";
+                                    // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
+								    $wpdb->query($wpdb->prepare($sqlTokenSave, $params));
 							    }
 							    /** End of Turbo rss ads */
 							    /** Amp */
                                 if (!empty($decodedToken['ampSettings'])) {
-	                                $turboSettings = json_encode($decodedToken['ampSettings'], JSON_UNESCAPED_UNICODE);
+	                                $turboSettings = wp_json_encode($decodedToken['ampSettings'], JSON_UNESCAPED_UNICODE);
 	                                update_option('rb_ampSettings', $turboSettings, false);
                                 }
 							    /** End of Amp */
                                 /** Amp ads */
                                 if (!empty($decodedToken['ampAdSettings'])) {
-                                    $listOfColums = ['blockId', 'adField', 'settingType', 'element', 'elementPosition', 'elementPlace'];
                                     $counter = 0;
-                                    $wpdb->query('DELETE FROM '.$wpPrefix.'realbig_amp_ads');
-                                    $sqlTokenSave = "INSERT INTO ".$wpPrefix."realbig_amp_ads (";
-                                    foreach ($listOfColums AS $k => $item) {
-                                        if ($k != 0) {
-                                            $sqlTokenSave .= ", ";
-                                        }
-                                        $sqlTokenSave .= $item;
-                                    }
-                                    unset($k, $item);
-                                    $sqlTokenSave .= ") VALUES ";
+                                    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
+                                    $wpdb->query($wpdb->prepare('DELETE FROM %i', "{$wpPrefix}realbig_amp_ads"));
+                                    $params = ["{$wpPrefix}realbig_amp_ads"];
+                                    $sqlTokenSave = "INSERT INTO %i (blockId, adField, settingType, element, elementPosition, elementPlace) VALUES ";
                                     foreach ($decodedToken['ampAdSettings'] AS $k => $item) {
                                         $counter ++;
-                                        if ($counter != 1) {
-                                            $sqlTokenSave .= ", ";
-                                        }
-                                        $sqlTokenSave .= "(".(int) sanitize_text_field($item['blockId']).",'".sanitize_text_field($item['adField'])."','".sanitize_text_field($item['settingType'])."','".sanitize_text_field($item['element'])."',".(int) sanitize_text_field($item['elementPosition']).",".(int) sanitize_text_field($item['elementPlace']).")";
+                                        $sqlTokenSave .= ($counter != 1 ?", ":"") . "(%d, %s, %s, %s, %d, %d)";
+                                        array_push($params, (int) sanitize_text_field($item['blockId']), sanitize_text_field($item['adField']),
+                                            sanitize_text_field($item['settingType']), sanitize_text_field($item['element']),
+                                            (int) sanitize_text_field($item['elementPosition']), (int) sanitize_text_field($item['elementPlace']));
                                     }
                                     unset($k, $item, $counter);
-                                    $sqlTokenSave .= " ON DUPLICATE KEY UPDATE blockId = values(blockId), adField = values(adField), settingType = values(settingType), element = values(element), elementPosition = values(elementPosition), elementPlace = values(elementPlace) ";
-                                    $wpdb->query($sqlTokenSave);
+                                    $sqlTokenSave .= " ON DUPLICATE KEY UPDATE blockId = values(blockId), adField = values(adField), " .
+                                        "settingType = values(settingType), element = values(element), elementPosition = values(elementPosition), " .
+                                        "elementPlace = values(elementPlace) ";
+                                    // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
+                                    $wpdb->query($wpdb->prepare($sqlTokenSave, $params));
                                 }
                                 /** End of Amp ads */
                                 /** 404 pages status */
@@ -398,7 +425,9 @@ try {
 							    $GLOBALS['token'] = $tokenInput;
 
 							    wp_cache_flush();
-							    if (class_exists('RFWP_CachePlugins')&&!empty($_POST)&&!empty($_POST['cache_clear'])&&$_POST['cache_clear']=='on') {
+							    if (class_exists('RFWP_CachePlugins') && !empty($_POST) &&
+                                    !empty($_POST["_csrf"]) && wp_verify_nonce($_POST["_csrf"], RFWP_Variables::CSRF_ACTION) &&
+                                    !empty($_POST['cache_clear']) && $_POST['cache_clear']=='on') {
                                     RFWP_CachePlugins::cacheClear();
                                 }
 
@@ -526,20 +555,28 @@ try {
 
 									if (!empty($ritem['types'])) {
 									    foreach ($ritem['types'] as $type) {
+                                            // @codingStandardsIgnoreStart
 										    switch ($type) {
 											    case 'mobile':
-												    $postCheckMobile  = $wpdb->get_var($wpdb->prepare('SELECT id FROM '.$wpPrefix.'posts WHERE post_type = %s AND post_title = %s',['rb_block_mobile_new',$ritem['blockId']]));
+												    $postCheckMobile  = $wpdb->get_var(
+                                                            $wpdb->prepare('SELECT id FROM %i WHERE post_type = %s AND post_title = %s',
+                                                                "{$wpPrefix}posts", "rb_block_mobile_new", $ritem["blockId"]));
 												    $resultTypes['mobile'] = true;
 												    break;
 											    case 'tablet':
-												    $postCheckTablet = $wpdb->get_var($wpdb->prepare('SELECT id FROM '.$wpPrefix.'posts WHERE post_type = %s AND post_title = %s',['rb_block_tablet_new',$ritem['blockId']]));
+												    $postCheckTablet = $wpdb->get_var(
+                                                            $wpdb->prepare('SELECT id FROM %i WHERE post_type = %s AND post_title = %s',
+                                                                "{$wpPrefix}posts", "rb_block_tablet_new", $ritem["blockId"]));
 												    $resultTypes['tablet'] = true;
 												    break;
 											    case 'desktop':
-												    $postCheckDesktop = $wpdb->get_var($wpdb->prepare('SELECT id FROM '.$wpPrefix.'posts WHERE post_type = %s AND post_title = %s',['rb_block_desktop_new',$ritem['blockId']]));
+												    $postCheckDesktop = $wpdb->get_var(
+                                                            $wpdb->prepare('SELECT id FROM %i WHERE post_type = %s AND post_title = %s',
+                                                                "{$wpPrefix}posts", "rb_block_desktop_new", $ritem["blockId"]));
 												    $resultTypes['desktop'] = true;
 												    break;
 										    }
+                                            // @codingStandardsIgnoreEnd
                                         }
                                     }
 
@@ -644,14 +681,22 @@ try {
 				global $wpdb;
 				try {
                     if (empty($GLOBALS['tokenTimeUpdate'])) {
-                        $timeUpdate = $wpdb->get_results("SELECT optionValue FROM ".$wpPrefix."realbig_settings WHERE optionName = 'token_sync_time'");
+                        // @codingStandardsIgnoreStart
+                        $timeUpdate = $wpdb->get_results($wpdb->prepare("SELECT optionValue FROM %i WHERE optionName = %s",
+                            "{$wpPrefix}realbig_settings", "token_sync_time"));
                         if (empty($timeUpdate)) {
                             $updateResult = RFWP_wpRealbigSettingsTableUpdateFunction($wpPrefix);
                             if ($updateResult == true) {
-                                $timeUpdate = $wpdb->get_results("SELECT optionValue FROM ".$wpPrefix."realbig_settings WHERE optionName = 'token_sync_time'");
+                                $timeUpdate = $wpdb->get_results($wpdb->prepare("SELECT optionValue FROM %i WHERE optionName = %s",
+                                    "{$wpPrefix}realbig_settings", "token_sync_time"));
                             }
                         }
-                        if (!empty($token)&&$token != 'no token'&&((!empty($GLOBALS['tokenStatusMessage'])&&($GLOBALS['tokenStatusMessage'] == 'Синхронизация прошла успешно' || $GLOBALS['tokenStatusMessage'] == 'Не нашло позиций для блоков на указанном сайте, добавьте позиции для сайтов на странице настроек плагина')) || empty($GLOBALS['tokenStatusMessage'])) && !empty($timeUpdate)) {
+                        // @codingStandardsIgnoreEnd
+                        if (!empty($token) && $token != 'no token' && ((!empty($GLOBALS['tokenStatusMessage']) &&
+                                    ($GLOBALS['tokenStatusMessage'] == 'Синхронизация прошла успешно' ||
+                                        $GLOBALS['tokenStatusMessage'] == 'Не нашло позиций для блоков на указанном сайте, ' .
+                                        'добавьте позиции для сайтов на странице настроек плагина')) ||
+                                empty($GLOBALS['tokenStatusMessage'])) && !empty($timeUpdate)) {
                             if (!empty($timeUpdate)) {
                                 $timeUpdate                 = get_object_vars($timeUpdate[0]);
                                 $GLOBALS['tokenTimeUpdate'] = $timeUpdate['optionValue'];
@@ -681,7 +726,9 @@ try {
                 } else {
 				    global $wpdb;
 				    $GLOBALS['tokenStatusMessage'] = null;
-				    $token                         = $wpdb->get_results("SELECT optionValue FROM ".$wpPrefix."realbig_settings WHERE optionName = '_wpRealbigPluginToken'");
+                    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
+				    $token = $wpdb->get_results($wpdb->prepare("SELECT optionValue FROM %i WHERE optionName = %s",
+                        "{$wpPrefix}realbig_settings", "_wpRealbigPluginToken"));
 
 				    if (!empty($token)) {
 					    $token            = get_object_vars($token[0]);
@@ -830,7 +877,8 @@ try {
                 wp_schedule_event(time() + RFWP_getPeriodSync(), 'autoSync', 'rb_cron_hook');
 			}
 
-            if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
+            if (!is_admin() && empty(apply_filters('wp_doing_cron', defined('DOING_CRON') && DOING_CRON))
+                && empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX') && DOING_AJAX))) {
                 RFWP_WorkProgressLog(false,'auto sync cron create');
             }
 		}
@@ -876,7 +924,7 @@ try {
 		function RFWP_getMenuList() {
 			$menuMap = [];
 			try {
-				$menuTerms = get_terms('nav_menu', array('hide_empty' => true));
+				$menuTerms = get_terms(['taxonomy' => 'nav_menu', 'hide_empty' => true]);
 				if (!empty($menuTerms)) {
 					foreach ($menuTerms AS $k => $item) {
 						$menuMap[$item->term_id] = $item->name;
@@ -988,7 +1036,10 @@ try {
     }
 	if (!function_exists('RFWP_createAndFillLocalRotator')) {
 		function RFWP_createAndFillLocalRotator($rotatorFileInfo) {
-			try {
+            WP_Filesystem();
+            global $wp_filesystem;
+
+            try {
                 $rotatorFileInfo['checkFileExists'] = false;
                 foreach ($rotatorFileInfo['pathUrlToFolderParts'] as $k => $item) {
                     $pathToFile = $item['path'].$item['pathAdditional'].$GLOBALS['rb_variables']['rotator'].'.js';
@@ -1001,31 +1052,17 @@ try {
 		                    ),
 	                    );
 
-	                    $rotatorFileInfo['fileRotatorContent'] = file_get_contents($rotatorFileInfo['urlToRotator'],
-                            false, stream_context_create($arrContextOptions));
+                        $response = wp_remote_get($rotatorFileInfo['urlToRotator'], ["sslverify" => false]);
+
+	                    $rotatorFileInfo['fileRotatorContent'] = wp_remote_retrieve_body($response);
                     } catch (Exception $ex) {
                         $fileGetContentError = true;
                     } catch (Error $er) {
                         $fileGetContentError = true;
                     }
 
-                    if (empty($rotatorFileInfo['fileRotatorContent'])) {
-                        if (!empty($fileGetContentError)&&function_exists('curl_init')) {
-                            $ch = curl_init();
-                            curl_setopt($ch, CURLOPT_URL, $rotatorFileInfo['urlToRotator']);
-                            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                            $rotatorFileInfo['fileRotatorContent'] = curl_exec($ch);
-                            curl_close($ch);
-                        }
-                    }
-
                     if (!empty($rotatorFileInfo['fileRotatorContent'])) {
-                        $rotatorFile = fopen($pathToFile, 'w');
-                        if ($rotatorFile!==false) {
-                            file_put_contents($pathToFile, $rotatorFileInfo['fileRotatorContent']);
-                            fclose($rotatorFile);
-                        }
-                        unset($rotatorFile);
+                        $wp_filesystem->put_contents($pathToFile, $rotatorFileInfo['fileRotatorContent']);
                     }
 
 	                $checkResult = RFWP_checkRotatorFileSingle($pathToFile,$urlToFile);
@@ -1215,7 +1252,7 @@ try {
 	        global $wpdb;
 
 		    $thumbnailsSizes = RFWP_getThumbnailsSizes();
-		    $thumbnailsSizes = json_encode($thumbnailsSizes);
+		    $thumbnailsSizes = wp_json_encode($thumbnailsSizes);
             RFWP_Utils::saveToRbSettings($thumbnailsSizes,'thumbnailsSizes');
 
 	        return true;
@@ -1243,7 +1280,9 @@ try {
 				global $wpdb;
 				global $wpPrefix;
 
-				$syncDomain = $wpdb->get_var('SELECT optionValue FROM '.$wpPrefix.'realbig_settings WGPS WHERE optionName = "sync_domain"');
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
+				$syncDomain = $wpdb->get_var($wpdb->prepare('SELECT optionValue FROM %i WGPS WHERE optionName = %s',
+                    "{$wpPrefix}realbig_settings", "sync_domain"));
 			}
 
             if (empty($syncDomain)) {
@@ -1274,7 +1313,7 @@ catch (Exception $ex)
 	} catch (Error $erIex) { }
 
 	deactivate_plugins(plugin_basename(__FILE__));
-	?><div style="margin-left: 200px; border: 3px solid red"><?php echo $ex; ?></div><?php
+	?><div style="margin-left: 200px; border: 3px solid red"><?php echo esc_html($ex); ?></div><?php
 }
 catch (Error $er)
 {
@@ -1296,5 +1335,5 @@ catch (Error $er)
 	} catch (Error $erIex) { }
 
 	deactivate_plugins(plugin_basename( __FILE__ ));
-	?><div style="margin-left: 200px; border: 3px solid red"><?php echo $er; ?></div><?php
+	?><div style="margin-left: 200px; border: 3px solid red"><?php echo esc_html($er); ?></div><?php
 }

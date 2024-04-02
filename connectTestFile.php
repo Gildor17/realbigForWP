@@ -35,7 +35,7 @@ try {
     }
 
     $data = '';
-    if (!empty($_POST['data'])) {
+    if (!empty($_POST['_csrf']) && wp_verify_nonce($_POST['_csrf'], RFWP_Variables::CSRF_USER_JS_ACTION) && !empty($_POST['data'])) {
         $data = $_POST['data'];
 
 	    $data = preg_replace("~\\\'~", "'", $data);
@@ -63,7 +63,7 @@ try {
 
 //	include_once ( dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
 	deactivate_plugins(plugin_basename( __FILE__ ));
-	?><div style="margin-left: 200px; border: 3px solid red"><?php echo $ex; ?></div><?php
+	?><div style="margin-left: 200px; border: 3px solid red"><?php echo esc_html($ex); ?></div><?php
 } catch (Error $er) {
 	try {
 		global $wpdb;
@@ -84,5 +84,5 @@ try {
 
 //	include_once ( dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
 	deactivate_plugins(plugin_basename( __FILE__ ));
-	?><div style="margin-left: 200px; border: 3px solid red"><?php echo $er; ?></div><?php
+	?><div style="margin-left: 200px; border: 3px solid red"><?php echo esc_html($er); ?></div><?php
 }

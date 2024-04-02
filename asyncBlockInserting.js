@@ -1252,7 +1252,7 @@ function insertingsFunctionLaunch() {
 
 function setLongCache() {
     let xhttp = new XMLHttpRequest();
-    let sendData = 'action=setLongCache&type=longCatching';
+    let sendData = 'action=setLongCache&type=longCatching&_csrf='+rb_csrf;
     xhttp.onreadystatechange = function(redata) {
         if (this.readyState == 4 && this.status == 200) {
             console.log('long cache deployed');
@@ -1449,7 +1449,7 @@ function saveContentBlock(contentContainer) {
         if (!gather_content) {
             console.log('content gather save function entered');
             let xhttp = new XMLHttpRequest();
-            let sendData = 'action=RFWP_saveContentContainer&type=gatherContentBlock&data='+contentContainer;
+            let sendData = 'action=RFWP_saveContentContainer&type=gatherContentBlock&data='+contentContainer+'&_csrf='+rb_csrf;
             xhttp.onreadystatechange = function(redata) {
                 if (this.readyState == 4 && this.status == 200) {
                     console.log('content gather succeed');

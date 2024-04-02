@@ -88,7 +88,9 @@ try {
 		$GLOBALS['rb_variables']['rotator'] = null;
 		$GLOBALS['rb_variables']['localRotatorUrl'] = null;
 		$GLOBALS['rb_variables']['adWithStatic'] = null;
-		$getOV = $wpdb->get_results('SELECT optionName, optionValue FROM '.$GLOBALS['wpPrefix'].'realbig_settings WHERE optionName IN ("domain","rotator","localRotatorUrl","adWithStatic")');
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
+		$getOV = $wpdb->get_results($wpdb->prepare("SELECT optionName, optionValue FROM %i" .
+            " WHERE optionName IN ('domain','rotator','localRotatorUrl','adWithStatic')", "{$GLOBALS['wpPrefix']}realbig_settings"));
 		if (!empty($getOV)) {
 			foreach ($getOV AS $k => $item) {
 				if (!empty($item->optionValue)) {
@@ -133,10 +135,11 @@ try {
         &&!empty($GLOBALS['rb_variables']['rotator'])
         &&!empty($GLOBALS['rb_variables']['adDomain'])
     ) {
-	    if (((!empty($_POST['action'])&&$_POST['action']=='heartbeat')||!empty(apply_filters('wp_doing_cron', defined('DOING_CRON') && DOING_CRON)))&&!isset($GLOBALS['rb_variables'][RFWP_Variables::LOCAL_ROTATOR_GATHER])) {
+	    if (((!empty($_POST["_csrf"]) && wp_verify_nonce($_POST["_csrf"], RFWP_Variables::CSRF_ACTION) && !empty($_POST['action']) && $_POST['action'] == 'heartbeat')
+                || !empty(apply_filters('wp_doing_cron', defined('DOING_CRON') && DOING_CRON))) && !isset($GLOBALS['rb_variables'][RFWP_Variables::LOCAL_ROTATOR_GATHER])) {
 		    $GLOBALS['rb_variables'][RFWP_Variables::LOCAL_ROTATOR_GATHER] = get_transient(RFWP_Variables::LOCAL_ROTATOR_GATHER);
 	    }
-        if ((!empty($_POST['saveTokenButton']))
+        if ((!empty($_POST["_csrf"]) && wp_verify_nonce($_POST["_csrf"], RFWP_Variables::CSRF_ACTION) && !empty($_POST['saveTokenButton']))
             ||(isset($GLOBALS['rb_variables'][RFWP_Variables::LOCAL_ROTATOR_GATHER])&&empty($GLOBALS['rb_variables'][RFWP_Variables::LOCAL_ROTATOR_GATHER]))
         ) {
             RFWP_createLocalRotator();
@@ -148,7 +151,10 @@ try {
 		/********** Cached AD blocks saving **********************************************************************************/
         if (!function_exists('saveAdBlocks')) {
             function saveAdBlocks($tunnelData) {
-                if (!empty($_POST['type'])&&$_POST['type']=='blocksGethering') {
+                include_once(plugin_dir_path(__FILE__) . "RFWP_Variables.php");
+
+                if (!empty($_POST['_csrf']) && wp_verify_nonce($_POST['_csrf'], RFWP_Variables::CSRF_USER_JS_ACTION)
+                        && !empty($_POST['type']) && $_POST['type']=='blocksGethering') {
                     include_once (plugin_dir_path(__FILE__).'connectTestFile.php');
                 }
                 return $tunnelData;
@@ -156,7 +162,10 @@ try {
         }
         if (!function_exists('setLongCache')) {
             function setLongCache($tunnelData) {
-                if (!empty($_POST['type'])&&$_POST['type']=='longCatching') {
+                include_once(plugin_dir_path(__FILE__) . "RFWP_Variables.php");
+
+                if (!empty($_POST['_csrf']) && wp_verify_nonce($_POST['_csrf'], RFWP_Variables::CSRF_USER_JS_ACTION)
+                        && !empty($_POST['type'])&&$_POST['type']=='longCatching') {
                     RFWP_Cache::setLongCache();
                 }
                 return $tunnelData;
@@ -179,6 +188,7 @@ try {
 						RFWP_WorkProgressLog(false,'blocks_in_head_add end');
 					}
 
+                    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 					?><?php echo $content ?><?php
 				} catch (Exception $ex) {
 					$messageFLog = 'RFWP_blocks_in_head_add errors: '.$ex->getMessage().';';
@@ -197,7 +207,7 @@ try {
 					}
 					$content = '';
 					$content = RFWP_launch_without_content_function($content);
-
+                    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 					?><?php echo $content ?><?php
 				} catch (Exception $ex) {
 					$messageFLog = 'RFWP_launch_without_content errors: '.$ex->getMessage().';';
@@ -231,7 +241,9 @@ try {
 				$getDomain = 'newrrb.bid';
 				$getRotator = 'f6ds8jhy56';
 
-				$getOV = $wpdb->get_results('SELECT optionName, optionValue FROM '.$GLOBALS['wpPrefix'].'realbig_settings WHERE optionName IN ("domain","rotator")');
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
+				$getOV = $wpdb->get_results($wpdb->prepare("SELECT optionName, optionValue FROM %i WHERE optionName IN (%s, %s)",
+                    "{$GLOBALS['wpPrefix']}realbig_settings", "domain", "rotator"));
 				foreach ($getOV AS $k => $item) {
 					if (!empty($item->optionValue)) {
 						if ($item->optionName == 'domain') {
@@ -258,6 +270,7 @@ try {
 //					RFWP_launch_cache_local($getRotator, $getDomain);
 
 					if ($headerParsingResult == true) {
+                        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 						echo RFWP_get_rotator_code($getRotator, $getDomain);
 					}
 				}
@@ -271,7 +284,9 @@ try {
 			    global $wpdb;
 			    $getCode = '';
 
-			    $array = $wpdb->get_results('SELECT optionValue FROM '.$GLOBALS['wpPrefix'].'realbig_settings WHERE optionName IN ("rotatorCode")', ARRAY_A);
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
+			    $array = $wpdb->get_results($wpdb->prepare("SELECT optionValue FROM %i WHERE optionName=%s",
+                    "{$GLOBALS['wpPrefix']}realbig_settings", "rotatorCode"), ARRAY_A);
 
 			    if (!empty($array[0]['optionValue'])) {
 			        $getCode = html_entity_decode($array[0]['optionValue']);
@@ -309,14 +324,16 @@ try {
 					if (isset($GLOBALS['rb_push']['universalDomain'])) {
 						$pushDomain = $GLOBALS['rb_push']['universalDomain'];
                     } else {
-						$pushDomain = $wpdb->get_var('SELECT optionValue FROM '.$GLOBALS['wpPrefix'].'realbig_settings WHERE optionName = "pushUniversalDomain"');
+                        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
+						$pushDomain = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM %i WHERE optionName = %s",
+                            "{$GLOBALS['wpPrefix']}realbig_settings", "pushUniversalDomain"));
 					}
 					if (empty($pushDomain)) {
 						$pushDomain = 'newup.bid';
 					}
 
 					?><script charset="utf-8" async
-                              src="https://<?php echo $pushDomain ?>/pjs/<?php echo $GLOBALS['rb_push']['universalCode'] ?>.js"></script> <?php
+                              src="<?php echo esc_url("https://{$pushDomain}/pjs/{$GLOBALS['rb_push']['universalCode']}.js") ?>"></script> <?php
 				}
 				if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
 					RFWP_WorkProgressLog(false,'push_universal_head_add end');
@@ -334,6 +351,7 @@ try {
                         }
 					}
                 }
+                // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 				?><?php echo $stringToAdd ?><?php
 				if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
 					RFWP_WorkProgressLog(false,'inserts_head_add end');
@@ -417,7 +435,10 @@ try {
 						$excIdClass = null;
 						$blockDuplicate = 'yes';
 						$statusFor404 = 'show';
-						$realbig_settings_info = $wpdb->get_results('SELECT optionName, optionValue FROM '.$GLOBALS['wpPrefix'].'realbig_settings WGPS WHERE optionName IN ("excludedIdAndClasses","blockDuplicate","statusFor404")');
+                        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
+						$realbig_settings_info = $wpdb->get_results($wpdb->prepare("SELECT optionName, optionValue FROM %i WGPS " .
+                            "WHERE optionName IN (%s, %s, %s)",
+                            "{$GLOBALS['wpPrefix']}realbig_settings", 'excludedIdAndClasses', 'blockDuplicate', 'statusFor404'));
 						if (!empty($realbig_settings_info)) {
 							foreach ($realbig_settings_info AS $k => $item) {
 								if (isset($item->optionValue)) {
@@ -455,9 +476,13 @@ try {
 
 						if ((!is_404())||$statusFor404!='disable') {
 							if (!empty($content)) {
-								$fromDb = $wpdb->get_results('SELECT * FROM '.$GLOBALS['wpPrefix'].'realbig_plugin_settings WGPS');
+                                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
+								$fromDb = $wpdb->get_results($wpdb->prepare("SELECT * FROM %i WGPS",
+                                    "{$GLOBALS['wpPrefix']}realbig_plugin_settings"));
 							} else {
-								$fromDb = $wpdb->get_results('SELECT * FROM '.$GLOBALS['wpPrefix'].'realbig_plugin_settings WGPS WHERE setting_type = 3');
+                                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
+								$fromDb = $wpdb->get_results($wpdb->prepare("SELECT * FROM %i WGPS WHERE setting_type = 3",
+                                    "{$GLOBALS['wpPrefix']}realbig_plugin_settings"));
 							}
                         }
 
@@ -536,8 +561,11 @@ try {
 			function RFWP_syncFunctionAdd11() {
 				RFWP_addWebnavozJs();
 				if (empty($GLOBALS['rfwp_addedAlready']['asyncBlockInserting'])) {
+                    include_once(plugin_dir_path(__FILE__) . "RFWP_Variables.php");
+
 					echo "<script>" . PHP_EOL;
-					echo "if (typeof rb_ajaxurl==='undefined') {var rb_ajaxurl = '" . admin_url('admin-ajax.php') . "';}" . PHP_EOL;
+					echo "if (typeof rb_ajaxurl==='undefined') {var rb_ajaxurl = '" . esc_url(admin_url('admin-ajax.php')) . "';}" . PHP_EOL;
+					echo "if (typeof rb_csrf==='undefined') {var rb_csrf = '" . esc_html(wp_create_nonce(RFWP_Variables::CSRF_USER_JS_ACTION)) . "';}" . PHP_EOL;
 
 					if (empty(get_transient(RFWP_Variables::GATHER_CONTENT_LONG)) &&
                         empty(get_transient(RFWP_Variables::GATHER_CONTENT_SHORT))) {
@@ -560,8 +588,11 @@ try {
 		if (!function_exists('RFWP_syncFunctionAdd21')) {
 			function RFWP_syncFunctionAdd21() {
 				if (empty($GLOBALS['rfwp_addedAlready']['readyAdGather'])) {
+                    include_once(plugin_dir_path(__FILE__) . "RFWP_Variables.php");
+
                     echo "<script>" . PHP_EOL;
-                    echo "if (typeof rb_ajaxurl==='undefined') {var rb_ajaxurl = '" . admin_url('admin-ajax.php') . "';}" . PHP_EOL;
+                    echo "if (typeof rb_ajaxurl==='undefined') {var rb_ajaxurl = '" . esc_url(admin_url('admin-ajax.php')) . "';}" . PHP_EOL;
+                    echo "if (typeof rb_csrf==='undefined') {var rb_csrf = '" . esc_html(wp_create_nonce(RFWP_Variables::CSRF_USER_JS_ACTION)) . "';}" . PHP_EOL;
 
                     if ((empty(RFWP_Cache::getMobileCache()) || empty(RFWP_Cache::getTabletCache()) ||
                         empty(RFWP_Cache::getDesktopCache())) && empty(RFWP_Cache::getCacheTimeout())) {
@@ -628,10 +659,12 @@ try {
 	    delete_transient('gatherContentContainerLong');
     }
     /***************** End of clean content selector cache **************/
-	$tableForCurrentPluginChecker = $wpdb->get_var('SHOW TABLES LIKE "'.$wpPrefix.'realbig_plugin_settings"');   //settings for block table checking
-	$tableForToken                = $wpdb->get_var('SHOW TABLES LIKE "'.$wpPrefix.'realbig_settings"');      //settings for token and other
-	$tableForTurboRssAds          = $wpdb->get_var('SHOW TABLES LIKE "'.$wpPrefix.'realbig_turbo_ads"');      //settings for ads in turbo RSS
-	$tableForAmpAds               = $wpdb->get_var('SHOW TABLES LIKE "'.$wpPrefix.'realbig_amp_ads"');      //settings for ads in AMP
+    // @codingStandardsIgnoreStart
+	$tableForCurrentPluginChecker = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', "{$wpPrefix}realbig_plugin_settings"));   //settings for block table checking
+	$tableForToken                = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', "{$wpPrefix}realbig_settings"));      //settings for token and other
+	$tableForTurboRssAds          = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', "{$wpPrefix}realbig_turbo_ads"));      //settings for ads in turbo RSS
+	$tableForAmpAds               = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', "{$wpPrefix}realbig_amp_ads"));      //settings for ads in AMP
+    // @codingStandardsIgnoreEnd
 
 	if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
 		RFWP_WorkProgressLog(false,'tables check');
@@ -639,7 +672,9 @@ try {
 
 	if (empty(apply_filters('wp_doing_cron', defined('DOING_CRON') && DOING_CRON))) {
 	    if ((!empty($curUserCan)&&!empty($_POST['statusRefresher']))||empty($tableForToken)||empty($tableForCurrentPluginChecker)) {
-	        $wpdb->query('DELETE FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_mobile","rb_block_desktop","rb_block_mobile_new","rb_block_tablet_new","rb_block_desktop_new") AND post_author = 0');
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
+	        $wpdb->query($wpdb->prepare("DELETE FROM %i WHERE post_type IN (%s, %s, %s, %s, %s) AND post_author = 0",
+                "{$wpPrefix}posts", "rb_block_mobile", "rb_block_desktop", "rb_block_mobile_new", "rb_block_tablet_new", "rb_block_desktop_new"));
 	        RFWP_Cache::deleteCaches();
 		    delete_option('realbig_status_gatherer_version');
 
@@ -676,7 +711,9 @@ try {
 	/****************** end of updater code *******************************************************************************/
 	/********** checking and creating tables ******************************************************************************/
 	if ((!empty($lastSuccessVersionGatherer)&&$lastSuccessVersionGatherer != $GLOBALS['realbigForWP_version'])||empty($lastSuccessVersionGatherer)) {
-		$wpdb->query('DELETE FROM '.$wpPrefix.'posts WHERE post_type IN ("rb_block_mobile","rb_block_desktop","rb_block_mobile_new","rb_block_tablet_new","rb_block_desktop_new") AND post_author = 0');
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
+		$wpdb->query($wpdb->prepare("DELETE FROM %i WHERE post_type IN (%s, %s, %s, %s, %s) AND post_author = 0",
+            "{$wpPrefix}posts", "rb_block_mobile", "rb_block_desktop", "rb_block_mobile_new", "rb_block_tablet_new", "rb_block_desktop_new"));
         RFWP_Cache::deleteCaches();
 
 		$messageFLog = 'clear cached ads';
@@ -698,7 +735,8 @@ try {
 		}
 	}
 	if ($statusGatherer['realbig_plugin_settings_table'] == true && ($statusGatherer['realbig_plugin_settings_columns'] == false || $lastSuccessVersionGatherer != $GLOBALS['realbigForWP_version'])) {
-		$colCheck = $wpdb->get_col('SHOW COLUMNS FROM '.$wpPrefix.'realbig_plugin_settings');
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
+		$colCheck = $wpdb->get_col($wpdb->prepare("SHOW COLUMNS FROM %i", "{$wpPrefix}realbig_plugin_settings"));
 		if (!empty($colCheck)) {
 			$statusGatherer = RFWP_wpRealbigPluginSettingsColomnUpdateFunction($wpPrefix, $colCheck, $statusGatherer);
 			if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
@@ -717,8 +755,12 @@ try {
 		}
 	}
 
-	$unmarkSuccessfulUpdate      = $wpdb->get_var('SELECT optionValue FROM '.$wpPrefix.'realbig_settings WHERE optionName = "successUpdateMark"');
-	$jsAutoSynchronizationStatus = $wpdb->get_var('SELECT optionValue FROM '.$wpPrefix.'realbig_settings WHERE optionName = "jsAutoSyncFails"');
+    // @codingStandardsIgnoreStart
+	$unmarkSuccessfulUpdate      = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM %i WHERE optionName = %s",
+        "{$wpPrefix}realbig_settings", "successUpdateMark"));
+	$jsAutoSynchronizationStatus = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM %i WHERE optionName = %s",
+        "{$wpPrefix}realbig_settings", "jsAutoSyncFails"));
+    // @codingStandardsIgnoreEnd
 
 	if ($statusGatherer['realbig_plugin_settings_table'] == true && ($statusGatherer['element_column_values'] == false || $lastSuccessVersionGatherer != $GLOBALS['realbigForWP_version'])) {
 		/** enumUpdate */
@@ -736,7 +778,7 @@ try {
 				add_option('realbig_status_gatherer_version', $GLOBALS['realbigForWP_version'], '', 'no');
 			}
 		}
-		$statusGathererJson = json_encode($statusGatherer);
+		$statusGathererJson = wp_json_encode($statusGatherer);
 		if (!empty($statusGatherer['update_status_gatherer']) && $statusGatherer['update_status_gatherer'] == true) {
 			update_option('realbig_status_gatherer', $statusGathererJson, 'no');
 		} else {
@@ -775,7 +817,9 @@ try {
             if (is_admin()) {
                 $excludedPage = true;
             } elseif (!empty($usedUrl)||!empty($usedUrl2)) {
-                $pageChecksDb = $wpdb->get_results($wpdb->prepare("SELECT optionValue, optionName FROM ".$wpPrefix."realbig_settings WHERE optionName IN (%s,%s,%s)", ['excludedMainPage','excludedPages','excludedPageTypes']), ARRAY_A);
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
+                $pageChecksDb = $wpdb->get_results($wpdb->prepare("SELECT optionValue, optionName FROM %i WHERE optionName IN (%s,%s,%s)",
+                    "{$wpPrefix}realbig_settings", "excludedMainPage", "excludedPages", "excludedPageTypes"), ARRAY_A);
                 $pageChecks = [];
                 foreach ($pageChecksDb AS $k => $item) {
                     $pageChecks[$item['optionName']] = $item['optionValue'];
@@ -929,11 +973,9 @@ try {
 
         add_action('wp_head', 'RFWP_AD_header_add', 0);
 		$separatedStatuses = [];
-		$statuses = $wpdb->get_results($wpdb->prepare('SELECT optionName, optionValue FROM '.$wpPrefix.'realbig_settings WHERE optionName IN (%s,%s,%s)', [
-			"pushUniversalCode",
-			"pushUniversalStatus",
-            "pushUniversalDomain"
-		]), ARRAY_A);
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
+		$statuses = $wpdb->get_results($wpdb->prepare('SELECT optionName, optionValue FROM %i WHERE optionName IN (%s,%s,%s)',
+            "{$wpPrefix}realbig_settings", "pushUniversalCode", "pushUniversalStatus", "pushUniversalDomain"), ARRAY_A);
 		if (!empty($statuses)) {
 		    foreach ($statuses AS $k => $item) {
 			    $separatedStatuses[$item['optionName']] = $item['optionValue'];
@@ -1015,7 +1057,7 @@ catch (Exception $ex)
 
 //	include_once ( dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
 	deactivate_plugins(plugin_basename( __FILE__ ));
-	?><div style="margin-left: 200px; border: 3px solid red"><?php echo $ex; ?></div><?php
+	?><div style="margin-left: 200px; border: 3px solid red"><?php echo esc_html($ex); ?></div><?php
 }
 catch (Error $ex)
 {
@@ -1049,5 +1091,5 @@ catch (Error $ex)
 
 //	include_once ( dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
 	deactivate_plugins(plugin_basename( __FILE__ ));
-    ?><div style="margin-left: 200px; border: 3px solid red"><?php echo $ex; ?></div><?php
+    ?><div style="margin-left: 200px; border: 3px solid red"><?php echo esc_html($ex); ?></div><?php
 }

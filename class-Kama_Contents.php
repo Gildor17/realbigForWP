@@ -115,7 +115,7 @@ class Kama_Contents {
 	 */
 	function make_contents( & $content, $tags = '' ){
 		// return if text is too short
-		if( mb_strlen( strip_tags($content) ) < $this->opt->min_length )
+		if( mb_strlen( wp_strip_all_tags($content) ) < $this->opt->min_length )
 			return '';
 
 		$this->temp     = $this->opt;
@@ -368,7 +368,7 @@ class Kama_Contents {
 
 	## anchor transliteration
 	function _sanitaze_anchor( $anch ){
-		$anch = strip_tags( $anch );
+		$anch = wp_strip_all_tags( $anch );
 
 		$iso9 = array(
 			'А'=>'A', 'Б'=>'B', 'В'=>'V', 'Г'=>'G', 'Д'=>'D', 'Е'=>'E', 'Ё'=>'YO', 'Ж'=>'ZH',

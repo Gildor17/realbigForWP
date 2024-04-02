@@ -5,8 +5,6 @@ if (!defined("ABSPATH")) {exit;}
 if (!class_exists('RFWP_AdminPage')) {
     class RFWP_AdminPage
     {
-        public const CSRF_ACTION = "rfwp_admin_page";
-
         public static function settingsMenuCreate() {
             global $wp_filesystem;
             $iconUrl = "";
@@ -24,7 +22,7 @@ if (!class_exists('RFWP_AdminPage')) {
                 RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, 'Error Load Menu Icon: ' . $ex->getMessage());
             }
 
-            add_menu_page( 'Your code sending configuration', 'realBIG', 'administrator', __FILE__, '\RFWP_AdminPage::tokenSync', $iconUrl);
+            add_menu_page( 'Your code sending configuration', 'realBIG', 'administrator', "rfwp_admin_page", '\RFWP_AdminPage::tokenSync', $iconUrl);
             add_action('admin_init', 'RFWP_AdminPage::registerSettings');
         }
 
@@ -54,8 +52,8 @@ if (!class_exists('RFWP_AdminPage')) {
                 'enable_logs' => '',
                 'rbSettings' => null,
                 'turboOptions' => RFWP_generateTurboRssUrls(),
-                'tab' => isset($_GET['tab']) ? $_GET['tab'] : null,
-                "_csrf" => wp_create_nonce(self::CSRF_ACTION),
+                'tab' => isset($_GET['tab']) ? $_GET['tab'] : null, // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+                "_csrf" => wp_create_nonce(RFWP_Variables::CSRF_ACTION),
             ];
 
             RFWP_initTestMode();
@@ -66,10 +64,13 @@ if (!class_exists('RFWP_AdminPage')) {
             } else {
                 $res['killRbAvailable'] = false;
             }
-            $res['getBlocks'] = $wpdb->get_results('SELECT * FROM '.$wpPrefix.'realbig_plugin_settings', ARRAY_A);
 
-            $cached = $wpdb->get_results('SELECT post_title, post_content, post_type FROM '.$wpPrefix.'posts
-                                    WHERE post_type IN ("rb_block_desktop_new", "rb_block_tablet_new", "rb_block_mobile_new")');
+            // @codingStandardsIgnoreStart
+            $res['getBlocks'] = $wpdb->get_results($wpdb->prepare('SELECT * FROM %i', "{$wpPrefix}realbig_plugin_settings"), ARRAY_A);
+
+            $cached = $wpdb->get_results($wpdb->prepare('SELECT post_title, post_content, post_type FROM %i ' .
+                'WHERE post_type IN (%s, %s, %s)', "{$wpPrefix}posts", "rb_block_desktop_new", "rb_block_tablet_new", "rb_block_mobile_new"));
+            // @codingStandardsIgnoreEnd
             $cacheKeys = ["rb_block_desktop_new" => "desktop", "rb_block_tablet_new" => "tablet", "rb_block_mobile_new" => "mobile"];
             if (!empty($cached)) {
                 foreach ($cached as $cache) {
@@ -82,11 +83,12 @@ if (!class_exists('RFWP_AdminPage')) {
             }
 
             try {
-                $res['rbSettings'] = $wpdb->get_results('SELECT optionName, optionValue, timeUpdate FROM ' . $GLOBALS["wpPrefix"] .
-                    'realbig_settings WHERE optionName IN ("deactError","domain","excludedMainPage","excludedPages","pushStatus",' .
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
+                $res['rbSettings'] = $wpdb->get_results($wpdb->prepare('SELECT optionName, optionValue, timeUpdate FROM %i ' .
+                    'WHERE optionName IN ("deactError","domain","excludedMainPage","excludedPages","pushStatus",' .
                     '"excludedPageTypes","excludedIdAndClasses","kill_rb","pushUniversalStatus","pushUniversalDomain",' .
                     '"statusFor404","blockDuplicate","jsToHead","obligatoryMargin","tagsListForTextLength","usedTaxonomies",' .
-                    '"enableLogs")', ARRAY_A);
+                    '"enableLogs")', "{$GLOBALS['wpPrefix']}realbig_settings"), ARRAY_A);
 //			$rbTransients = $wpdb->get_results('SELECT optionName, optionValue, timeUpdate FROM ' . $GLOBALS["wpPrefix"] . 'realbig_settings WHERE optionName IN ("deactError","domain","excludedMainPage","excludedPages","pushStatus","excludedPageTypes","kill_rb")', ARRAY_A);
 
                 if (!empty($res['rbSettings'])) {
@@ -158,7 +160,7 @@ if (!class_exists('RFWP_AdminPage')) {
         }
 
         public static function clickButtons() {
-            if (empty($_POST["_csrf"]) || !wp_verify_nonce($_POST["_csrf"], self::CSRF_ACTION))
+            if (empty($_POST["_csrf"]) || !wp_verify_nonce($_POST["_csrf"], RFWP_Variables::CSRF_ACTION))
                 return;
 
             global $wpPrefix;
@@ -208,16 +210,12 @@ if (!class_exists('RFWP_AdminPage')) {
                 /* check ip */
                 if (!empty($_POST['checkIp'])) {
                     $thisUrl = 'http://ifconfig.co/ip';
-                    $curl = curl_init();
-                    curl_setopt($curl,CURLOPT_URL, $thisUrl);
-                    curl_setopt($curl,CURLOPT_RETURNTRANSFER, 1);
-                    curl_setopt($curl,CURLOPT_IPRESOLVE,CURL_IPRESOLVE_V4);
-                    $curlResult = curl_exec($curl);
+                    $response = wp_remote_get($thisUrl);
+                    $curlResult = wp_remote_retrieve_body($response);
                     if (!empty($curlResult)) {
                         global $curlResult;
                         RFWP_Logs::saveLogs(RFWP_Logs::IP_LOG, PHP_EOL.$curlResult);
                     }
-                    curl_close($curl);
                 }
                 /* end of check ip */
             } else {

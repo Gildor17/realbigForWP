@@ -4,7 +4,7 @@ var fetchedCounter = 0;
 function sendReadyBlocksNew(blocks) {
     if (!cache_devices) {
         let xhttp = new XMLHttpRequest();
-        let sendData = 'action=saveAdBlocks&type=blocksGethering&data='+blocks;
+        let sendData = 'action=saveAdBlocks&type=blocksGethering&data='+blocks+'&_csrf='+rb_csrf;
         xhttp.onreadystatechange = function(redata) {
             if (this.readyState == 4 && this.status == 200) {
                 console.log('cache succeed');

@@ -109,9 +109,9 @@ if (!class_exists('RFWP_Cache')) {
             self::deleteCaches();
             global $wpdb;
             global $wpPrefix;
-
-            $wpdb->query('DELETE FROM '.$wpPrefix.'posts
-                                WHERE post_type IN ("rb_block_desktop_new", "rb_block_tablet_new", "rb_block_mobile_new")');
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
+            $wpdb->query($wpdb->prepare('DELETE FROM %i WHERE post_type IN (%s, %s, %s)',
+                "{$wpPrefix}posts", "rb_block_desktop_new", "rb_block_tablet_new", "rb_block_mobile_new"));
         }
 
         private static function getCache($cache) {

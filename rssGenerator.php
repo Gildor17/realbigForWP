@@ -26,7 +26,7 @@ try {
 				$posts = get_posts([
 					'numberposts' => $rssOptions['pagesCount'],
 					'post_type' => $postTypes,
-					'tax_query' => $tax_query,
+					'tax_query' => $tax_query, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
 					'fields' => ['ID'],
 				]);
 			}
@@ -74,7 +74,8 @@ try {
 				global $wpdb;
 				global $wpPrefix;
 
-				$rb_turboAds = $wpdb->get_results("SELECT * FROM ".$wpPrefix."realbig_turbo_ads", ARRAY_A);
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
+				$rb_turboAds = $wpdb->get_results($wpdb->prepare("SELECT * FROM %i", "{$wpPrefix}realbig_turbo_ads"), ARRAY_A);
 				$GLOBALS['rb_turboAds'] = $rb_turboAds;
 			} else {
 				$rb_turboAds = $GLOBALS['rb_turboAds'];
@@ -219,9 +220,6 @@ try {
 			    }
 		    }
 
-		    //преобразовываем галереи в турбо-галереи
-//		    add_shortcode('gallery', 'gallery_shortcode');
-//		    add_filter( 'post_gallery', 'RFWP_rss_turbo_gallery', 10, 2 );
 		    $content = RFWP_rss_do_gallery($content);
 		    if (!empty($rssOptions['toc'])) {
 			    $content = RFWP_rssTocAdd($content, $rssOptions, $postId);
@@ -229,76 +227,6 @@ try {
 
 		    return $content;
 	    }
-    }
-	//функция преобразования стандартных галерей движка в турбо-галереи begin
-	if (!function_exists('RFWP_rss_turbo_gallery')) {
-		function RFWP_rss_turbo_gallery( $output, $attr ) {
-
-			$yturbo_options = get_option('yturbo_options');
-			if ( ! is_feed($yturbo_options['ytrssname']) ) {return;}
-
-			$post = get_post();
-
-			static $instance = 0;
-			$instance++;
-
-			if ( ! empty( $attr['ids'] ) ) {
-				// 'ids' is explicitly ordered, unless you specify otherwise.
-				if ( empty( $attr['orderby'] ) ) {
-					$attr['orderby'] = 'post__in';
-				}
-				$attr['include'] = $attr['ids'];
-			}
-
-			$html5 = current_theme_supports( 'html5', 'gallery' );
-			$atts = shortcode_atts( array(
-				'order'      => 'ASC',
-				'orderby'    => 'menu_order ID',
-				'id'         => $post ? $post->ID : 0,
-				'itemtag'    => $html5 ? 'figure'     : 'dl',
-				'icontag'    => $html5 ? 'div'        : 'dt',
-				'captiontag' => $html5 ? 'figcaption' : 'dd',
-				'columns'    => 3,
-				'size'       => 'thumbnail',
-				'include'    => '',
-				'exclude'    => '',
-				'link'       => ''
-			), $attr, 'gallery' );
-
-			$id = intval( $atts['id'] );
-
-			$atts['include'] = str_replace(array("&#187;","&#8243;"), "", $atts['include']);
-			$atts['orderby'] = str_replace(array("&#187;","&#8243;"), "", $atts['orderby']);
-			$atts['order'] = str_replace(array("&#187;","&#8243;"), "", $atts['order']);
-			$atts['exclude'] = str_replace(array("&#187;","&#8243;"), "", $atts['exclude']);
-
-			if ( ! empty( $atts['include'] ) ) {
-				$_attachments = get_posts( array( 'include' => $atts['include'], 'post_status' => 'inherit', 'post_type' => 'attachment', 'post_mime_type' => 'image', 'order' => $atts['order'], 'orderby' => $atts['orderby'] ) );
-
-				$attachments = array();
-				foreach ( $_attachments as $key => $val ) {
-					$attachments[$val->ID] = $_attachments[$key];
-				}
-
-			} elseif ( ! empty( $atts['exclude'] ) ) {
-				$attachments = get_children( array( 'post_parent' => $id, 'exclude' => $atts['exclude'], 'post_status' => 'inherit', 'post_type' => 'attachment', 'post_mime_type' => 'image', 'order' => $atts['order'], 'orderby' => $atts['orderby'] ) );
-			} else {
-				$attachments = get_children( array( 'post_parent' => $id, 'post_status' => 'inherit', 'post_type' => 'attachment', 'post_mime_type' => 'image', 'order' => $atts['order'], 'orderby' => $atts['orderby'] ) );
-			}
-
-			if ( empty( $attachments ) ) {
-				return '';
-			}
-
-			$output = PHP_EOL.'<div data-block="gallery">'.PHP_EOL;
-
-			foreach ( $attachments as $id => $attachment ) {
-				$output .= '<img src="'.wp_get_attachment_url($id) . '"/>'.PHP_EOL;
-			}
-			$output .= '</div>'.PHP_EOL;
-
-			return $output;
-		}
     }
     //функция преобразования стандартных галерей движка в турбо-галереи end
     //функция преобразования стандартных галерей движка в турбо-галереи в гутенберге begin
@@ -834,14 +762,14 @@ try {
 					switch ($network) {
 						case 'call':
 							if ($rssOptions['blockFeedbackButtonContactsCall']) {
-								$content .= '<div data-type="call" data-url="'.$rssOptions['blockFeedbackButtonContactsCall'].'"></div>'.PHP_EOL;
+								$content .= '<div data-type="call" data-url="'.esc_url($rssOptions['blockFeedbackButtonContactsCall']).'"></div>'.PHP_EOL;
 							}
 							break;
 						case 'callback':
 							if ($rssOptions['blockFeedbackButtonContactsCallbackEmail']) {
-								$content .= '<div data-type="callback" data-send-to="'.$rssOptions['blockFeedbackButtonContactsCallbackEmail'].'"';
+								$content .= '<div data-type="callback" data-send-to="'.esc_url($rssOptions['blockFeedbackButtonContactsCallbackEmail']).'"';
 								if ($rssOptions['blockFeedbackButtonContactsCallbackOrganizationName'] && $rssOptions['blockFeedbackButtonContactsCallbackTermsOfUse']) {
-									$content .= ' data-agreement-company="'.stripslashes($rssOptions['blockFeedbackButtonContactsCallbackOrganizationName']).'" data-agreement-link="'.$rssOptions['blockFeedbackButtonContactsCallbackTermsOfUse'].'"';
+									$content .= ' data-agreement-company="'.esc_attr(stripslashes($rssOptions['blockFeedbackButtonContactsCallbackOrganizationName'])).'" data-agreement-link="'.esc_url($rssOptions['blockFeedbackButtonContactsCallbackTermsOfUse']).'"';
 								}
 							}
 							$content .= '></div>'.PHP_EOL;
@@ -851,42 +779,42 @@ try {
 							break;
 						case 'mail':
 							if ($rssOptions['blockFeedbackButtonContactsMail']) {
-								$content .= '<div data-type="mail" data-url="'.$rssOptions['blockFeedbackButtonContactsMail'].'"></div>'.PHP_EOL;
+								$content .= '<div data-type="mail" data-url="'.esc_url($rssOptions['blockFeedbackButtonContactsMail']).'"></div>'.PHP_EOL;
 							}
 							break;
 						case 'vkontakte':
 							if ($rssOptions['blockFeedbackButtonContactsVkontakte']) {
-								$content .= '<div data-type="vkontakte" data-url="'.$rssOptions['blockFeedbackButtonContactsVkontakte'].'"></div>'.PHP_EOL;
+								$content .= '<div data-type="vkontakte" data-url="'.esc_url($rssOptions['blockFeedbackButtonContactsVkontakte']).'"></div>'.PHP_EOL;
 							}
 							break;
 						case 'odnoklassniki':
 							if ($rssOptions['blockFeedbackButtonContactsOdnoklassniki']) {
-								$content .= '<div data-type="odnoklassniki" data-url="'.$rssOptions['blockFeedbackButtonContactsOdnoklassniki'].'"></div>'.PHP_EOL;
+								$content .= '<div data-type="odnoklassniki" data-url="'.esc_url($rssOptions['blockFeedbackButtonContactsOdnoklassniki']).'"></div>'.PHP_EOL;
 							}
 							break;
 						case 'twitter':
 							if ($rssOptions['blockFeedbackButtonContactsTwitter']) {
-								$content .= '<div data-type="twitter" data-url="'.$rssOptions['blockFeedbackButtonContactsTwitter'].'"></div>'.PHP_EOL;
+								$content .= '<div data-type="twitter" data-url="'.esc_url($rssOptions['blockFeedbackButtonContactsTwitter']).'"></div>'.PHP_EOL;
 							}
 							break;
 						case 'facebook':
 							if ($rssOptions['blockFeedbackButtonContactsFacebook']) {
-								$content .= '<div data-type="facebook" data-url="'.$rssOptions['blockFeedbackButtonContactsFacebook'].'"></div>'.PHP_EOL;
+								$content .= '<div data-type="facebook" data-url="'.esc_url($rssOptions['blockFeedbackButtonContactsFacebook']).'"></div>'.PHP_EOL;
 							}
 							break;
 						case 'viber':
 							if ($rssOptions['blockFeedbackButtonContactsViber']) {
-								$content .= '<div data-type="viber" data-url="'.$rssOptions['blockFeedbackButtonContactsViber'].'"></div>'.PHP_EOL;
+								$content .= '<div data-type="viber" data-url="'.esc_url($rssOptions['blockFeedbackButtonContactsViber']).'"></div>'.PHP_EOL;
 							}
 							break;
 						case 'whatsapp':
 							if ($rssOptions['blockFeedbackButtonContactsWhatsapp']) {
-								$content .= '<div data-type="whatsapp" data-url="'.$rssOptions['blockFeedbackButtonContactsWhatsapp'].'"></div>'.PHP_EOL;
+								$content .= '<div data-type="whatsapp" data-url="'.esc_url($rssOptions['blockFeedbackButtonContactsWhatsapp']).'"></div>'.PHP_EOL;
 							}
 							break;
 						case 'telegram':
 							if ($rssOptions['blockFeedbackButtonContactsTelegram']) {
-								$content .= '<div data-type="telegram" data-url="'.$rssOptions['blockFeedbackButtonContactsTelegram'].'"></div>'.PHP_EOL;
+								$content .= '<div data-type="telegram" data-url="'.esc_url($rssOptions['blockFeedbackButtonContactsTelegram']).'"></div>'.PHP_EOL;
 							}
 							break;
 					}
@@ -896,7 +824,7 @@ try {
 
 			if (!empty($content))
 			{
-				$content = PHP_EOL . PHP_EOL . '<div data-block="widget-feedback" data-title="' . $rssOptions['blockFeedbackPositionTitle'] . '" data-stick="' . $rssOptions['blockFeedbackPosition'] . '">' . PHP_EOL . $content . '</div>' . PHP_EOL;
+				$content = PHP_EOL . PHP_EOL . '<div data-block="widget-feedback" data-title="' . esc_attr(stripslashes($rssOptions['blockFeedbackPositionTitle'])) . '" data-stick="' . esc_attr(stripslashes($rssOptions['blockFeedbackPosition'])) . '">' . PHP_EOL . $content . '</div>' . PHP_EOL;
 			}
 
 			return $content;
@@ -917,7 +845,7 @@ try {
                 data-avatar-url="<?php echo esc_url( get_avatar_url( $comment, 100 ) ); ?>"
             <?php } ?>
             <?php if (!empty($ytcommentsdate)) { ?>
-                data-subtitle="<?php echo get_comment_date(); ?> в <?php echo get_comment_time(); ?>"
+                data-subtitle="<?php echo esc_html(get_comment_date()); ?> в <?php echo esc_html(get_comment_time()); ?>"
             <?php } ?>
             >
             <div data-block="content">
@@ -945,7 +873,7 @@ try {
 	if (!function_exists('RFWP_rss_search_widget')) {
 		function RFWP_rss_search_widget($rssOptions) {
 			$url = get_bloginfo('url') . '/?s={s}';
-			$content = PHP_EOL.'<form action="'.$url.'" method="GET"><input type="search" name="s" placeholder="'.$rssOptions['blockSearchDefaultText'].'" /></form>'.PHP_EOL;
+			$content = PHP_EOL.'<form action="'.esc_html($url).'" method="GET"><input type="search" name="s" placeholder="'.esc_attr($rssOptions['blockSearchDefaultText']).'" /></form>'.PHP_EOL;
 
 			return $content;
 		}
@@ -1033,7 +961,7 @@ try {
 						}
 					}
 				}
-
+                // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 				echo $content;
 			}
 		}
@@ -1377,8 +1305,8 @@ try {
 	//функция вывода мусорной ленты begin
 	if (!function_exists('RFWP_rss_lenta_trash')) {
 		function RFWP_rss_lenta_trash($rssOptions) {
-			header('Content-Type: ' . feed_content_type('rss2') . '; charset=' . get_option('blog_charset'), true);
-			echo '<?xml version="1.0" encoding="'.get_option('blog_charset').'"?'.'>'.PHP_EOL;
+			header('Content-Type: ' . feed_content_type('rss2') . '; charset=' . esc_html(get_option('blog_charset')), true);
+			echo '<?xml version="1.0" encoding="'.esc_html(get_option('blog_charset')).'"?'.'>'.PHP_EOL;
 			?>
 			<rss
 				xmlns:yandex="http://news.yandex.ru"
@@ -1387,11 +1315,11 @@ try {
 				version="2.0">
 				<channel>
 					<turbo:cms_plugin>C125AEEC6018B4A0EF9BF40E6615DD17</turbo:cms_plugin>
-					<title><?php echo stripslashes($rssOptions['title']); ?></title>
-					<link><?php echo esc_html($rssOptions['url']); ?></link>
-					<description><?php echo stripslashes($rssOptions['description']); ?></description>
-					<language><?php echo $rssOptions['lang']; ?></language>
-					<generator>RSS for Yandex Turbo v<?php echo $rssOptions['version']; ?> (https://wordpress.org/plugins/rss-for-yandex-turbo/)</generator>
+					<title><?php echo esc_html($rssOptions['title']); ?></title>
+					<link><?php echo esc_url($rssOptions['url']); ?></link>
+					<description><?php echo esc_html($rssOptions['description']); ?></description>
+					<language><?php echo esc_html($rssOptions['lang']); ?></language>
+					<generator>RSS for Yandex Turbo v<?php echo esc_html($rssOptions['version']); ?> (https://wordpress.org/plugins/rss-for-yandex-turbo/)</generator>
 					<?php
 					$rfwp_selectiveOffFieldGet = get_option('rfwp_selectiveOffField');
 					$textAr = [];
@@ -1421,15 +1349,12 @@ try {
                     if (!empty($textAr)) {
 						$i = 0;
 						foreach ($textAr as $line) {
-							$line = stripcslashes($line);
-							$line = '<item turbo="false"><link>' . $line . '</link></item>' . PHP_EOL;
-							if ($i > 0) echo '    ';
-							echo $line;
+							echo ($i > 0 ? "" : "    ") .  '<item turbo="false"><link>' . esc_url(stripcslashes($line)) . '</link></item>' . PHP_EOL;
 							$i++;
 						}
 					} else {
 						//чтобы яндекс не ругался на пустую ленту, если на удалении нет записей
-						echo '<item turbo="false"><link>' . get_bloginfo_rss('url') . '/musor-page/</link></item>' . PHP_EOL;
+						echo '<item turbo="false"><link>' . esc_url(get_bloginfo_rss('url')) . '/musor-page/</link></item>' . PHP_EOL;
 					}
 					?>
 				</channel>
@@ -1562,6 +1487,7 @@ try {
 			$messageFLog = 'point 1;';
             RFWP_Logs::saveLogs(RFWP_Logs::RSS_LOG, $messageFLog);
 
+            //@codingStandardsIgnoreStart
 			if (!empty($_GET)&&!empty($_GET['paged'])) {
 				$paged = (intval($_GET['paged'])-1);
             }
@@ -1587,6 +1513,7 @@ try {
 
 				exit;
 			}
+            //@codingStandardsIgnoreEnd
 
 			if (!empty($rssDivideOptions['posts'][$paged])) {
 			    $localPosts = $rssDivideOptions['posts'][$paged];
@@ -1619,8 +1546,8 @@ try {
 					$messageFLog = 'point 4;';
                     RFWP_Logs::saveLogs(RFWP_Logs::RSS_LOG, $messageFLog);
 
-					header('Content-Type: '.$rssOptions['contentType'].'; charset='.$rssOptions['charset'], true);
-					echo '<?xml version="1.0" encoding="'.$rssOptions['charset'].'"?'.'>'.PHP_EOL;
+					header('Content-Type: '.$rssOptions['contentType'].'; charset='.esc_html($rssOptions['charset']), true);
+					echo '<?xml version="1.0" encoding="'.esc_html($rssOptions['charset']).'"?'.'>'.PHP_EOL;
 					?>
 					<rss
 						xmlns:yandex="http://news.yandex.ru"
@@ -1629,17 +1556,18 @@ try {
 						version="2.0">
 						<channel>
 							<!-- Информация о сайте-источнике -->
-                            <testTime><?php echo current_time('mysql'); ?></testTime>
-							<title><?php echo esc_html($rssOptions['title']) ?></title>
-							<link><?php echo $rssOptions['url'] ?></link>
-							<description><?php echo $rssOptions['description'] ?></description>
-							<?php if (!empty($rssOptions['couYandexMetrics'])) { ?><turbo:analytics id="<?php echo $rssOptions['couYandexMetrics']; ?>" type="Yandex"></turbo:analytics><?php echo PHP_EOL; ?><?php } ?>
+                            <testTime><?php echo esc_html(current_time('mysql')); ?></testTime>
+							<title><?php echo esc_attr(stripslashes($rssOptions['title'])) ?></title>
+							<link><?php echo esc_url($rssOptions['url']) ?></link>
+							<description><?php echo esc_attr(stripslashes($rssOptions['description'])) ?></description>
+							<?php if (!empty($rssOptions['couYandexMetrics'])) { ?><turbo:analytics id="<?php echo esc_attr(stripslashes($rssOptions['couYandexMetrics'])); ?>" type="Yandex"></turbo:analytics><?php echo PHP_EOL; ?><?php } ?>
 							<?php if (!empty($rssOptions['couLiveInternet'])) { ?><turbo:analytics type="LiveInternet"></turbo:analytics><?php echo PHP_EOL; ?><?php } ?>
-							<?php if (!empty($rssOptions['couGoogleAnalytics'])) { ?><turbo:analytics id="<?php echo $rssOptions['couGoogleAnalytics']; ?>" type="Google"></turbo:analytics><?php echo PHP_EOL; ?><?php } ?>
-                            <language><?php echo $rssOptions['lang'] ?></language>
+							<?php if (!empty($rssOptions['couGoogleAnalytics'])) { ?><turbo:analytics id="<?php echo esc_attr(stripslashes($rssOptions['couGoogleAnalytics'])); ?>" type="Google"></turbo:analytics><?php echo PHP_EOL; ?><?php } ?>
+                            <language><?php echo esc_attr(stripslashes($rssOptions['lang'])) ?></language>
 							<?php if (!empty($rssOptions['analytics'])): ?>
 								<turbo:analytics></turbo:analytics>
 							<?php endif; ?>
+                            <? // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                             <?php if (!empty($ads)) {echo $ads;} ?>
 							<?php if (!empty($rssOptions['adNetwork'])): ?>
 								<turbo:adNetwork></turbo:adNetwork>
@@ -1647,27 +1575,27 @@ try {
                             <?php if (!empty($item1)): ?>
                                 <?php $imageSizes = RFWP_getThumbnailsSizes(); ?>
 							    <?php foreach ($item1 AS $k => $item): ?>
-                                    <item turbo="<?php echo $rssOptions['onTurbo'] ?>">
+                                    <item turbo="<?php echo esc_attr($rssOptions['onTurbo']) ?>">
                                         <!-- Информация о странице -->
-                                        <title><?php echo RFWP_rss_cut_by_words(237, esc_html($item->post_title)); ?></title>
-                                        <link><?php echo $item->guid ?></link>
-                                        <turbo:source><?php echo $item->guid ?></turbo:source>
-                                        <turbo:topic><?php echo $item->post_title ?></turbo:topic>
+                                        <title><?php echo esc_html(RFWP_rss_cut_by_words(237, $item->post_title)); ?></title>
+                                        <link><?php echo esc_url($item->guid) ?></link>
+                                        <turbo:source><?php echo esc_url($item->guid) ?></turbo:source>
+                                        <turbo:topic><?php echo esc_html($item->post_title) ?></turbo:topic>
                                         <?php if (!empty($rssOptions['PostHtml'])): ?>
                                             <turbo:extendedHtml>true</turbo:extendedHtml>
                                         <?php endif; ?>
                                         <?php if (!empty($rssOptions['PostDate'])): ?>
                                             <?php if ($rssOptions['PostDateType'] == 'create'&&!empty($item->post_date_gmt)) { ?>
-                                                <pubDate><?php echo $item->post_date_gmt ?> +0300</pubDate>
+                                                <pubDate><?php echo esc_html($item->post_date_gmt) ?> +0300</pubDate>
                                             <?php } elseif ($rssOptions['PostDateType'] == 'edit'&&!empty($item->post_modified_gmt)) { ?>
-                                                <pubDate><?php echo $item->post_modified_gmt ?> +0300</pubDate>
+                                                <pubDate><?php echo esc_html($item->post_modified_gmt) ?> +0300</pubDate>
                                             <?php } ?>
                                         <?php endif; ?>
                                         <?php if ($rssOptions['PostAuthor'] != 'disable') { ?>
                                             <?php if (!empty($rssOptions['PostAuthorDirect'])&&$rssOptions['PostAuthor'] != 'enable') {
-                                                echo '<author>'.$rssOptions['PostAuthorDirect'].'</author>'.PHP_EOL;
+                                                echo '<author>'.esc_html($rssOptions['PostAuthorDirect']).'</author>'.PHP_EOL;
                                             } else {
-                                                echo '<author>'.$item->post_author_name.'</author>'.PHP_EOL;
+                                                echo '<author>'.esc_html($item->post_author_name).'</author>'.PHP_EOL;
                                             }
                                         } ?>
                                         <?php /* <yandex:related></yandex:related> /**/ ?>
@@ -1676,7 +1604,7 @@ try {
                                             <header>
                                                 <?php if (!empty($rssOptions['Thumbnails'])&&isset($rssOptions['ThumbnailsSize'])&&has_post_thumbnail($item->ID)) {
                                                     $size = !empty($imageSizes[$rssOptions['ThumbnailsSize']]) ? $imageSizes[$rssOptions['ThumbnailsSize']] : '';
-                                                    echo '<figure><img src="'. strtok(get_the_post_thumbnail_url($item->ID, $size), '?').'" /></figure>'.PHP_EOL;
+                                                    echo '<figure><img src="'. esc_url(strtok(get_the_post_thumbnail_url($item->ID, $size), '?')).'" /></figure>'.PHP_EOL;
                                                 } ?>
                                                 <?php if ($rssOptions['PostTitle']) {
                                                     include_once(ABSPATH . 'wp-admin/includes/plugin.php');
@@ -1720,8 +1648,8 @@ try {
                                                         $localTitle = apply_filters('convert_chars', $localTitle);
                                                         $localTitle = apply_filters('ent2ncr', $localTitle, 8);
                                                         $localTitle = RFWP_rss_remove_emoji($localTitle);
-                                                        $localTitle = RFWP_rss_cut_by_words(237, esc_html($localTitle));
-                                                        echo "<h1>{$localTitle}</h1>" . PHP_EOL;
+                                                        $localTitle = RFWP_rss_cut_by_words(237, $localTitle);
+                                                        echo "<h1>" . esc_html($localTitle) . "</h1>" . PHP_EOL;
                                                     }
                                                     if ($rssOptions['SeoPlugin'] == 'all_in_one_seo_pack') {
                                                         if (is_plugin_active('all-in-one-seo-pack/all_in_one_seo_pack.php')) {
@@ -1754,10 +1682,10 @@ try {
                                                         $localTitle = apply_filters('ent2ncr', $localTitle, 8);
                                                         $localTitle = RFWP_rss_remove_emoji($localTitle);
                                                         $localTitle = RFWP_rss_cut_by_words(237, esc_html($localTitle));
-                                                        echo "<h1>{$localTitle}</h1>" . PHP_EOL;
+                                                        echo "<h1>" . esc_html($localTitle) . "</h1>" . PHP_EOL;
                                                     }
                                                 } else { ?>
-                                                    <h1><?php echo RFWP_rss_cut_by_words(237, esc_html($item->post_title)); ?></h1>
+                                                    <h1><?php echo esc_html(RFWP_rss_cut_by_words(237, $item->post_title)); ?></h1>
                                                 <?php } ?>
                                                 <?php if ($rssOptions['menu']!='not_use') {
                                                     echo '<menu>'.PHP_EOL;
@@ -1767,7 +1695,7 @@ try {
                                                     foreach ((array) $menu_items as $key => $menu_item) {
                                                         $title = $menu_item->title;
                                                         $url = $menu_item->url;
-                                                        echo '<a href="'.$url.'">'.$title.'</a>'.PHP_EOL;
+                                                        echo '<a href="'.esc_url($url).'">'.esc_html($title).'</a>'.PHP_EOL;
                                                     }
                                                     unset($key,$menu_item);
 
@@ -1775,31 +1703,37 @@ try {
                                                 } ?>
                                             </header>
                                             <?php if (!empty($rssOptions['blockRating'])) {
-                                                $temprating = mt_rand ($rssOptions['blockRatingFrom']*100, $rssOptions['blockRatingTo']*100) / 100;
+                                                $temprating = wp_rand($rssOptions['blockRatingFrom']*100, $rssOptions['blockRatingTo']*100) / 100;
                                                 echo '<div itemscope itemtype="http://schema.org/Rating">
-                                                        <meta itemprop="ratingValue" content="'.$temprating.'">
-                                                        <meta itemprop="bestRating" content="' . max($rssOptions['blockRatingTo'], 5) . '">
+                                                        <meta itemprop="ratingValue" content="'.esc_attr($temprating).'">
+                                                        <meta itemprop="bestRating" content="' . esc_attr(max($rssOptions['blockRatingTo'], 5)) . '">
                                                     </div>';
                                             } ?>
                                             <?php if (!empty($rssOptions['blockSearch'])&&$rssOptions['blockSearchPosition'] == 'postBegin') {
+                                                // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
                                                 echo RFWP_rss_search_widget($rssOptions);
                                             } ?>
                                             <?php if (!empty($rssOptions['blockFeedback']) && $rssOptions['blockFeedbackPosition'] == 'false' && $rssOptions['blockFeedbackPositionPlace'] == 'begin') {
+                                                // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
                                                 echo RFWP_rss_block_feedback($rssOptions);
                                             } ?>
-	                                        <?php echo htmlspecialchars_decode($item->post_content) ?>
+	                                        <?php // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                                            echo htmlspecialchars_decode($item->post_content) ?>
                                             <?php if (!empty($rssOptions['blockShare'])) {
-                                                echo PHP_EOL.'<div data-block="share" data-network="'.$rssOptions['blockShareOrder'].'"></div>';
+                                                echo PHP_EOL.'<div data-block="share" data-network="'.esc_attr($rssOptions['blockShareOrder']).'"></div>';
     //											if ($ytad4 == 'enabled' && $ytad4meta != 'disabled') { echo PHP_EOL.'<figure data-turbo-ad-id="fourth_ad_place"></figure>'.PHP_EOL; }
                                                 do_action( 'yturbo_after_share' );
                                             } ?>
                                             <?php if (!empty($rssOptions['blockFeedback']) && $rssOptions['blockFeedbackPosition'] == 'false' && $rssOptions['blockFeedbackPositionPlace'] == 'end') {
+                                                // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
                                                 echo RFWP_rss_block_feedback($rssOptions);
                                             } ?>
                                             <?php if (!empty($rssOptions['blockFeedback']) && $rssOptions['blockFeedbackPosition'] != 'false') {
+                                                // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
                                                 echo RFWP_rss_block_feedback($rssOptions);
                                             } ?>
                                             <?php if (!empty($rssOptions['blockSearch'])&&$rssOptions['blockSearchPosition'] == 'postEnd') {
+                                                // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
                                                 echo RFWP_rss_search_widget($rssOptions);
                                             } ?>
                                             <?php if (!empty($rssOptions['blockComments'])) {
@@ -1820,7 +1754,7 @@ try {
                                                     'status' => 'approve',
                                                 ));
                                                 if (!empty($comments)) {
-                                                    echo PHP_EOL.'<div data-block="comments" data-url="'.get_permalink($item->ID).'#respond">';
+                                                    echo PHP_EOL.'<div data-block="comments" data-url="'.esc_url(get_permalink($item->ID)).'#respond">';
                                                 }
                                                 wp_list_comments(array(
                                                     'type' => 'comment',
@@ -1867,7 +1801,7 @@ try {
                                                 array_push($cur_post_id, $item->ID);
 
                                                 $args = array(
-                                                    'post__not_in' => $cur_post_id,
+                                                    'post__not_in' => $cur_post_id, // phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_post__not_in
                                                     'cat' => $cats,
                                                     'orderby' => 'rand',
                                                     'date_query' => array('after' => $rssOptions['blockRelatedDateLimitation'] . ' month ago',),
@@ -1875,8 +1809,8 @@ try {
                                                     'post_type' => $yttype,
                                                     'post_status' => 'publish',
                                                     'posts_per_page' => $rssOptions['blockRelatedCount'],
-                                                    'tax_query' => $tax_query,
-                                                    'meta_query' => array(
+                                                    'tax_query' => $tax_query, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
+                                                    'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
                                                         'relation' => 'OR',
                                                         array('key' => 'ytrssenabled_meta_value', 'compare' => 'NOT EXISTS',),
                                                         array('key' => 'ytrssenabled_meta_value', 'value' => 'yes', 'compare' => '!=',),
@@ -1886,15 +1820,15 @@ try {
 
                                                 if (!$related->have_posts()) {
                                                     $args = array(
-                                                        'post__not_in' => $cur_post_id,
+                                                        'post__not_in' => $cur_post_id, // phpcs:ignore WordPressVIPMinimum.Performance.WPQueryParams.PostNotIn_post__not_in
                                                         'orderby' => 'rand',
                                                         'date_query' => array('after' => $rssOptions['blockRelatedDateLimitation'].' month ago',),
                                                         'ignore_sticky_posts' => 1,
                                                         'post_type' => $yttype,
                                                         'post_status' => 'publish',
                                                         'posts_per_page' => $rssOptions['blockRelatedCount'],
-                                                        'tax_query' => $tax_query,
-                                                        'meta_query' => array(
+                                                        'tax_query' => $tax_query, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
+                                                        'meta_query' => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
                                                             'relation' => 'OR',
                                                             array('key' => 'ytrssenabled_meta_value', 'compare' => 'NOT EXISTS',),
                                                             array('key' => 'ytrssenabled_meta_value', 'value' => 'yes', 'compare' => '!=',),
@@ -1915,18 +1849,21 @@ try {
                                                     if ( $ytremove == 'yes' ) continue;
                                                     $thumburl = '';
                                                     if ($rssOptions['blockRelatedThumb'] != "disable"&& has_post_thumbnail($item->ID)&&empty($rssOptions['blockRelatedUnstopable'])) {
-                                                        $thumburl = ' img="' . strtok(get_the_post_thumbnail_url($item->ID,$rssOptions['blockRelatedThumb']), '?') . '"';
+                                                        $thumburl = ' img="' . esc_attr(strtok(get_the_post_thumbnail_url($item->ID,$rssOptions['blockRelatedThumb']), '?')) . '"';
                                                     }
                                                     $rlink = htmlspecialchars(get_the_permalink());
                                                     $rtitle = get_the_title_rss();
                                                     if ($rssOptions['blockRelatedThumb'] != "disable"&&empty($rssOptions['blockRelatedUnstopable'])) {
-                                                        $rcontent .=  '<link url="'.$rlink.'"'.$thumburl.'>'.$rtitle.'</link>'.PHP_EOL;
+                                                        $rcontent .=  '<link url="'.esc_url($rlink).'"'.$thumburl.'>'.esc_html($rtitle).'</link>'.PHP_EOL;
                                                     } else {
-                                                        $rcontent .=  '<link url="'.$rlink.'">'.$rtitle.'</link>'.PHP_EOL;
+                                                        $rcontent .=  '<link url="'.esc_url($rlink).'">'.esc_html($rtitle).'</link>'.PHP_EOL;
                                                     }
                                                 endwhile;
                                                 if ($related->have_posts()) {$rcontent .=  '</yandex:related>'.PHP_EOL;}
-                                                if ($related->have_posts()) {echo $rcontent;}
+                                                if ($related->have_posts()) {
+                                                    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                                                    echo $rcontent;
+                                                }
     //		                                    wp_reset_query($related);
                                                 wp_reset_query();
 
@@ -1934,6 +1871,7 @@ try {
                                                     set_transient('related-' . $tempID, $rcontent, $rssOptions['blockRelatedCachelifetime'] * HOUR_IN_SECONDS);
                                                 }
                                             } else {
+                                                // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
                                                 echo $rcontent;
                                             }
                                         } else {
@@ -1971,7 +1909,7 @@ catch (Exception $ex) {
 
 //	include_once ( dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
 	deactivate_plugins(plugin_basename( __FILE__ ));
-	?><div style="margin-left: 200px; border: 3px solid red"><?php echo $ex; ?></div><?php
+	?><div style="margin-left: 200px; border: 3px solid red"><?php echo esc_html($ex); ?></div><?php
 }
 catch (Error $er) {
 	try {
@@ -1993,5 +1931,5 @@ catch (Error $er) {
 
 //	include_once ( dirname(__FILE__)."/../../../wp-admin/includes/plugin.php" );
 	deactivate_plugins(plugin_basename( __FILE__ ));
-	?><div style="margin-left: 200px; border: 3px solid red"><?php echo $er; ?></div><?php
+	?><div style="margin-left: 200px; border: 3px solid red"><?php echo esc_html($er); ?></div><?php
 }

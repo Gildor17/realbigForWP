@@ -30,7 +30,7 @@ if (!class_exists('RFWP_Logs')) {
 
                         clearstatcache();
                         if (!file_exists(dirname($filePath)))
-                            mkdir(dirname($filePath),0777, true);
+                            wp_mkdir_p(dirname($filePath));
 
                         $message = PHP_EOL;
                         if (!empty($useDateBefore)) {
@@ -46,7 +46,7 @@ if (!class_exists('RFWP_Logs')) {
         public static function clearLog($logFile) {
             $dir = plugin_dir_path(__FILE__) . 'logs/';
             if (in_array($logFile, self::LOGS) && file_exists($dir . $logFile)) {
-                unlink($dir . $logFile);
+                wp_delete_file($dir . $logFile);
             }
         }
 

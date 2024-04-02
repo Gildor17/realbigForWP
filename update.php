@@ -156,11 +156,17 @@ ENGINE=InnoDB
 					global $wpdb;
 					$localReturnValue = false;
 
-					$enumTypeQuery = $wpdb->get_results('SHOW FIELDS FROM '.$wpPrefix.'realbig_plugin_settings WHERE Field = "element"');
+                    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
+					$enumTypeQuery = $wpdb->get_results($wpdb->prepare('SHOW FIELDS FROM %i WHERE Field = %s',
+                        "{$wpPrefix}realbig_plugin_settings", "element"));
 					if (!empty($enumTypeQuery)) {
 						$enumTypeQuery = get_object_vars($enumTypeQuery[0]);
 						if ($enumTypeQuery['Type'] != $requiredElementColumnValues) {
-							$alterResult = $wpdb->query("ALTER TABLE ".$wpPrefix."realbig_plugin_settings MODIFY `element` ENUM('p','li','ul','ol','blockquote','img','video','iframe','h1','h2','h3','h4','h5','h6','h2-4','article') NULL DEFAULT NULL");
+                            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
+							$alterResult = $wpdb->query($wpdb->prepare("ALTER TABLE %i MODIFY `element` " .
+                                "ENUM(%s, %s , %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) NULL DEFAULT NULL",
+                                "{$wpPrefix}realbig_plugin_settings", "p", "li", "ul", "ol", "blockquote", "img", "video",
+                                "iframe", "h1", "h2", "h3", "h4", "h5", "h6", 'h2-4', "article"));
 							if (!empty($alterResult)&&is_int($alterResult)&&$alterResult == 1) {
 								$localReturnValue = RFWP_checkElementColumnValues($wpPrefix, $requiredElementColumnValues);
 							}
@@ -191,11 +197,14 @@ ENGINE=InnoDB
 		function RFWP_wpRealbigSettingsTableUpdateFunction($wpPrefix) {
 			global $wpdb;
 			try {
-				$rez = $wpdb->query('SHOW FIELDS FROM ' . $wpPrefix . 'realbig_settings');
+                // @codingStandardsIgnoreStart
+				$rez = $wpdb->query($wpdb->prepare('SHOW FIELDS FROM %i', "{$wpPrefix}realbig_settings"));
 
 				if ($rez != 4) {
-					$wpdb->query('ALTER TABLE ' . $wpPrefix . 'realbig_settings ADD `timeUpdate` TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP AFTER optionValue');
+					$wpdb->query($wpdb->prepare('ALTER TABLE %i ADD `timeUpdate` TIMESTAMP NULL DEFAULT NULL ON ' .
+                        'UPDATE CURRENT_TIMESTAMP AFTER optionValue', "{$wpPrefix}realbig_settings"));
 				}
+                // @codingStandardsIgnoreEnd
 				return true;
 			} catch (Exception $ex) {
 				$messageFLog = 'some error in wpRealbigSettingsTableUpdate: '.$ex->getMessage().';';
@@ -242,11 +251,15 @@ ENGINE=InnoDB
 				foreach ($requiredColumnsInRealbigPluginSettingsTable as $item) {
 					if (!in_array($item, $colCheck)) {
 						$atLeastOneMissedColumn = true;
+                        // @codingStandardsIgnoreStart
 						if (in_array($item, ['text','directElement','onCategories','offCategories','onTags','offTags','elementCss'])) {
-							$wpdb->query('ALTER TABLE '.$wpPrefix.'realbig_plugin_settings ADD COLUMN '.$item.' TEXT NULL DEFAULT NULL');
+							$wpdb->query($wpdb->prepare('ALTER TABLE %i ADD COLUMN %i TEXT NULL DEFAULT NULL',
+                                "{$wpPrefix}realbig_plugin_settings", $item));
 						} else {
-							$wpdb->query('ALTER TABLE '.$wpPrefix.'realbig_plugin_settings ADD COLUMN '.$item.' INT(11) NULL DEFAULT NULL');
+							$wpdb->query($wpdb->prepare('ALTER TABLE %i ADD COLUMN %i INT(11) NULL DEFAULT NULL',
+                                "{$wpPrefix}realbig_plugin_settings", $item));
 						}
+                        // @codingStandardsIgnoreEnd
 					}
 				}
 				if ($atLeastOneMissedColumn == false) {
@@ -294,7 +307,7 @@ catch (Exception $ex)
 	} catch (Error $erIex) { }
 
 	deactivate_plugins(plugin_basename( __FILE__ ));
-	?><div style="margin-left: 200px; border: 3px solid red"><?php echo $ex; ?></div><?php
+	?><div style="margin-left: 200px; border: 3px solid red"><?php echo esc_html($ex); ?></div><?php
 }
 catch (Error $er)
 {
@@ -316,5 +329,5 @@ catch (Error $er)
 	} catch (Error $erIex) { }
 
 	deactivate_plugins(plugin_basename( __FILE__ ));
-	?><div style="margin-left: 200px; border: 3px solid red"><?php echo $er; ?></div><?php
+	?><div style="margin-left: 200px; border: 3px solid red"><?php echo esc_html($er); ?></div><?php
 }
