@@ -829,7 +829,7 @@ try {
 					$mobile_browser++;
 				}
 
-				$mobile_ua = isset($_SERVER['HTTP_ACCEPT']) ? strtolower(substr($_SERVER['HTTP_USER_AGENT'], 0, 4)) : "";
+				$mobile_ua = isset($_SERVER['HTTP_USER_AGENT']) ? strtolower(substr($_SERVER['HTTP_USER_AGENT'], 0, 4)) : "";
 				$mobile_agents = array(
 					'w3c ','acs-','alav','alca','amoi','audi','avan','benq','bird','blac',
 					'blaz','brew','cell','cldc','cmd-','dang','doco','eric','hipt','inno',
@@ -845,7 +845,7 @@ try {
 					$mobile_browser++;
 				}
 
-				if (isset($_SERVER['HTTP_ACCEPT']) && strpos(strtolower($_SERVER['HTTP_USER_AGENT']),'opera mini') > 0) {
+				if (isset($_SERVER['HTTP_USER_AGENT']) && strpos(strtolower($_SERVER['HTTP_USER_AGENT']),'opera mini') > 0) {
 					$mobile_browser++;
 					//Check for tablets on opera mini alternative headers
 					$stock_ua = strtolower(isset($_SERVER['HTTP_X_OPERAMINI_PHONE_UA'])?$_SERVER['HTTP_X_OPERAMINI_PHONE_UA']:(isset($_SERVER['HTTP_DEVICE_STOCK_UA'])?$_SERVER['HTTP_DEVICE_STOCK_UA']:''));
