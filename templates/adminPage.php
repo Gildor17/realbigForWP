@@ -12,7 +12,7 @@ $wp_filesystem = new \WP_Filesystem_Direct(null);
 
 <style>
     <?php // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-     echo $wp_filesystem->get_contents( plugin_dir_path(__FILE__) . '../assets/page.css'); ?>
+     echo $wp_filesystem->get_contents( plugin_dir_path(__FILE__) . '../assets/css/page.css'); ?>
 </style>
 
 <h1>Настройки плагина «<?php echo esc_html(RFWP_Utils::getName()); ?>» <span>v<?php echo esc_html(RFWP_Utils::getVersion()); ?></span></h1>

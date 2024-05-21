@@ -133,11 +133,11 @@ try {
                                     $params = ["{$wpPrefix}realbig_plugin_settings"];
 								    $sqlTokenSave = "INSERT INTO %i (text, block_number, setting_type, element, directElement, elementPosition, " .
                                         "elementPlace, firstPlace, elementCount, elementStep, minSymbols, maxSymbols, minHeaders, maxHeaders, " .
-                                        "onCategories, offCategories, onTags, offTags, elementCss) VALUES ";
+                                        "onCategories, offCategories, onTags, offTags, elementCss, showNoElement) VALUES ";
 								    foreach ($decodedToken['data'] AS $k => $item) {
 									    $counter ++;
 									    $sqlTokenSave .= ($counter != 1 ?", ":"") .
-                                            "(%s, %d, %d, %s, %s, %d, %d, %d, %d, %d, %d, %d, %d, %d, %s, %s, %s, %s, %s)";
+                                            "(%s, %d, %d, %s, %s, %d, %d, %d, %d, %d, %d, %d, %d, %d, %s, %s, %s, %s, %s";
                                         array_push($params, $item['text'], (int) sanitize_text_field($item['block_number']),
                                             (int) sanitize_text_field($item['setting_type']), sanitize_text_field($item['element']),
                                             sanitize_text_field($item['directElement']), (int) sanitize_text_field($item['elementPosition']),
@@ -148,6 +148,14 @@ try {
                                             sanitize_text_field($item['onCategories']), sanitize_text_field($item['offCategories']),
                                             sanitize_text_field($item['onTags']), sanitize_text_field($item['offTags']),
                                             sanitize_text_field($item['elementCss']));
+
+                                        if (sanitize_text_field($item['showNoElement']) != "") {
+                                            $sqlTokenSave .= ", %d";
+                                            array_push($params, (int) sanitize_text_field($item['showNoElement']));
+                                        } else {
+                                            $sqlTokenSave .= ", null";
+                                        }
+                                        $sqlTokenSave .= ")";
 								    }
 								    unset($k, $item);
 								    $sqlTokenSave .= " ON DUPLICATE KEY UPDATE text = values(text), setting_type = values(setting_type), " .
@@ -156,7 +164,7 @@ try {
                                         "elementStep = values(elementStep), minSymbols = values(minSymbols), maxSymbols = values(maxSymbols), " .
                                         "minHeaders = values(minHeaders), maxHeaders = values(maxHeaders), onCategories = values(onCategories), " .
                                         "offCategories = values(offCategories), onTags = values(onTags), offTags = values(offTags), " .
-                                        "elementCss = values(elementCss) ";
+                                        "elementCss = values(elementCss), showNoElement = values(showNoElement) ";
                                     // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
 								    $wpdb->query($wpdb->prepare($sqlTokenSave, $params));
 							    } elseif (empty($decodedToken['data'])&&sanitize_text_field($decodedToken['status']) == "empty_success") {
@@ -194,6 +202,10 @@ try {
 							    if (isset($decodedToken['adWithStatic'])) {
                                     $sanitised = sanitize_text_field($decodedToken['adWithStatic']);
                                     RFWP_Utils::saveToRbSettings($sanitised, 'adWithStatic');
+							    }
+							    if (isset($decodedToken['showAdsNoElement'])) {
+                                    $sanitised = sanitize_text_field($decodedToken['showAdsNoElement']);
+                                    RFWP_Utils::saveToRbSettings($sanitised, 'showAdsNoElement');
 							    }
 							    /** Selected taxonomies */
 							    if (isset($decodedToken['taxonomies'])) {

@@ -11,7 +11,7 @@ if (!class_exists('RFWP_AdminPage')) {
 
             try {
                 WP_Filesystem();
-                $filePath = plugin_dir_path( __FILE__ ).'assets/realbig_plugin_standart.svg';
+                $filePath = plugin_dir_path( __FILE__ ).'assets/images/realbig_plugin_standart.svg';
                 if ( $wp_filesystem->exists( $filePath ) ) {
                     $iconUrl = $wp_filesystem->get_contents( $filePath );
                     $iconUrl = 'data:image/svg+xml;base64,' . base64_encode($iconUrl);
@@ -165,7 +165,9 @@ if (!class_exists('RFWP_AdminPage')) {
 
             global $wpPrefix;
 
-            if (wp_get_raw_referer() && !wp_get_referer() && !empty($_POST)) {
+            if (!empty($_POST) && wp_get_raw_referer() && !wp_get_referer() &&
+                    preg_replace('~^https?://~', '//', home_url() . wp_unslash( $_SERVER['REQUEST_URI'] )) ===
+                        preg_replace('~^https?://~', '//', wp_get_raw_referer())) {
                 if (!empty($_POST['clearLogs'])) {
                     RFWP_Logs::clearAllLogs();
                 }

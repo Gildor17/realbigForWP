@@ -190,7 +190,7 @@ try {
 							$finalRejectedBlocks = ' data-rejected-blocks="'.$rejectedBlocksString.'"';
 						}
 
-						$editedContent = '<span id="content_pointer_id" data-content-length="'.$contentLength.'"'.$finalRejectedBlocks.$finalAcceptedBlocks.'></span>'.$editedContent;
+						$editedContent = '<span class="content_pointer_class" data-content-length="'.$contentLength.'"'.$finalRejectedBlocks.$finalAcceptedBlocks.'></span>'.$editedContent;
 
 						$creatingJavascriptParserForContent = RFWP_creatingJavascriptParserForContentFunction_content();
 						$editedContent                      = $editedContent.$creatingJavascriptParserForContent;
@@ -264,8 +264,8 @@ try {
     }
     if (typeof launchAsyncFunctionLauncher === "undefined") {
         function launchAsyncFunctionLauncher() {
-            if (typeof asyncFunctionLauncher !== "undefined" && typeof asyncFunctionLauncher === "function") {
-                asyncFunctionLauncher();
+            if (typeof RFWP_BlockInserting === "function") {
+                RFWP_BlockInserting.launch(blockSettingArray);
             } else {
                 setTimeout(function () {
                     launchAsyncFunctionLauncher();
@@ -290,9 +290,9 @@ try {
             let deniedClasses = [\'.percentPointerClass\',\'.addedInserting\',\'#toc_container\'];
             let deniedString = "";
             let contentSelector = \''.esc_attr(stripslashes($contentSelector)).'\';
-            let contentCheck = null;
+            let contentsCheck = null;
             if (contentSelector) {
-                contentCheck = document.querySelector(contentSelector);
+                contentsCheck = document.querySelectorAll(contentSelector);
             }
 
             if (block_classes && block_classes.length > 0) {
@@ -309,37 +309,39 @@ try {
                 }
             }
             
-            if (!contentCheck) {
+            if (!contentsCheck || !contentsCheck.length) {
                 for (let i = 0; i < possibleClasses.length; i++) {
-                    contentCheck = document.querySelector(possibleClasses[i]+deniedString);
-                    if (contentCheck) {
+                    contentsCheck = document.querySelectorAll(possibleClasses[i]+deniedString);
+                    if (contentsCheck.length > 0) {
                         break;
                     }
                 }
             }
-            if (!contentCheck) {
-                contentCheck = document.querySelector(\'[itemprop=articleBody]\');
+            if (!contentsCheck || !contentsCheck.length) {
+                contentsCheck = document.querySelectorAll(\'[itemprop=articleBody]\');
             }
-            if (contentCheck) {
-                console.log(\'content is here\');
-                let contentPointerCheck = document.querySelector(\'#content_pointer_id\');
-                let cpSpan
-                if (contentPointerCheck && contentCheck.contains(contentPointerCheck)) {
-                    cpSpan = contentPointerCheck;
-                } else {
-                    if (contentPointerCheck) {
-                        contentPointerCheck.parentNode.removeChild(contentPointerCheck);
+            if (contentsCheck && contentsCheck.length > 0) {
+                contentsCheck.forEach((contentCheck) => {
+                    console.log(\'content is here\');
+                    let contentPointerCheck = contentCheck.querySelector(\'.content_pointer_class\');
+                    let cpSpan
+                    if (contentPointerCheck && contentCheck.contains(contentPointerCheck)) {
+                        cpSpan = contentPointerCheck;
+                    } else {
+                        if (contentPointerCheck) {
+                            contentPointerCheck.parentNode.removeChild(contentPointerCheck);
+                        }
+                        cpSpan = document.createElement(\'SPAN\');                    
                     }
-                    cpSpan = document.createElement(\'SPAN\');                    
-                }
-                cpSpan.setAttribute(\'id\', \'content_pointer_id\');
-                cpSpan.classList.add(\'no-content\');
-                cpSpan.setAttribute(\'data-content-length\', \'0\');
-                cpSpan.setAttribute(\'data-accepted-blocks\', \''.esc_attr(stripslashes($adBlocksIdsString)).'\');
-                cpSpan.setAttribute(\'data-rejected-blocks\', \''.esc_attr(stripslashes($rejectedIdsString)).'\');
-                window.jsInputerLaunch = 10;
-                
-                if (!cpSpan.parentNode) contentCheck.prepend(cpSpan);
+                    cpSpan.classList.add(\'content_pointer_class\');
+                    cpSpan.classList.add(\'no-content\');
+                    cpSpan.setAttribute(\'data-content-length\', \'0\');
+                    cpSpan.setAttribute(\'data-accepted-blocks\', \'\');
+                    cpSpan.setAttribute(\'data-rejected-blocks\', \'\');
+                    window.jsInputerLaunch = 10;
+                    
+                    if (!cpSpan.parentNode) contentCheck.prepend(cpSpan);
+                });
                 
                 launchAsyncFunctionLauncher();
                 launchGatherContentBlock();
@@ -351,11 +353,11 @@ try {
                         contentMonitoring();
                     }, 200);
                 } else {
-                    contentCheck = document.querySelector("body"+deniedString+" div"+deniedString);
-                    if (contentCheck) {
+                    contentsCheck = document.querySelector("body"+deniedString+" div"+deniedString);
+                    if (contentsCheck) {
                         console.log(\'content is here hard\');
                         let cpSpan = document.createElement(\'SPAN\');
-                        cpSpan.setAttribute(\'id\', \'content_pointer_id\');
+                        cpSpan.classList.add(\'content_pointer_class\');
                         cpSpan.classList.add(\'no-content\');
                         cpSpan.classList.add(\'hard-content\');
                         cpSpan.setAttribute(\'data-content-length\', \'0\');
@@ -363,7 +365,7 @@ try {
                         cpSpan.setAttribute(\'data-rejected-blocks\', \''.esc_attr(stripslashes($rejectedIdsString)).'\');
                         window.jsInputerLaunch = 10;
                         
-                        contentCheck.prepend(cpSpan);
+                        contentsCheck.prepend(cpSpan);
                         launchAsyncFunctionLauncher();
                     }   
                 }
@@ -1118,179 +1120,6 @@ launchInsertingsFunctionLaunch();'.PHP_EOL;
 			return $result;
 		}
 	}
-	if (!function_exists('RFWP_creatingJavascriptParserForContentFunction')) {
-		function RFWP_creatingJavascriptParserForContentFunction($fromDb, $usedBlocks, $contentLength, $excIdClass, $shortcodes, $rejectedBlocks, $blockDuplicate) {
-			try {
-				$cou1 = 0;
-				global $rfwp_shortcodes;
-				$scriptingCodeResult = [];
-				$contentBeforeScript = ''.PHP_EOL;
-				$cssCode = ''.PHP_EOL;
-				$cssCode .='<style>
-    .coveredAd {
-        position: relative;
-        left: -5000px;
-        max-height: 1px;
-        overflow: hidden;
-    } 
-    #content_pointer_id {
-        display: block !important;
-        width: 100% !important;
-    }
-</style>';
-				$scriptingCode = '
-            <script>
-            var cou1 = 0;
-            if (typeof blockSettingArray==="undefined") {
-                var blockSettingArray = [];
-            } else {
-                if (Array.isArray(blockSettingArray)) {
-                    cou1 = blockSettingArray.length;
-                } else {
-                    var blockSettingArray = [];
-                }
-            }
-            var cou2 = 0;
-            if (typeof usedBlockSettingArray==="undefined") {
-                var usedBlockSettingArray = [];
-            } else {
-                if (Array.isArray(usedBlockSettingArray)) {
-                    cou2 = usedBlockSettingArray.length;
-                } else {
-                    var usedBlockSettingArray = [];
-                }
-            }
-            if (typeof excIdClass==="undefined") {
-                var excIdClass = ["'.$excIdClass.'"];
-            }
-            if (typeof contentLength==="undefined") {
-                var contentLength = '.$contentLength.';
-            } else {
-                contentLength = '.$contentLength.';
-            }
-            if (typeof blockDuplicate==="undefined") {
-                var blockDuplicate = "'.$blockDuplicate.'";
-            }                        
-            ';
-
-				$k1 = 0;
-				foreach ($fromDb AS $k => $item) {
-					$resultHere = 'normal';
-					if (is_object($item)) {
-						$item = get_object_vars($item);
-					}
-					if (in_array($item['id'], $usedBlocks)) {
-						$resultHere = 'used';
-                    }
-					elseif (in_array($item['id'], $rejectedBlocks)) {
-						$resultHere = 'rejected';
-					}
-//					$resultHere = in_array($item['id'], $usedBlocks);
-//					if ($resultHere == false) {
-					if ($resultHere == 'normal') {
-//				    $contentBeforeScript .= $item['text'].PHP_EOL;
-						$scriptingCode .= 'blockSettingArray[cou1] = [];'.PHP_EOL;
-
-						if (!empty($item['minSymbols'])&&$item['minSymbols'] > 1) {
-							$scriptingCode .= 'blockSettingArray[cou1]["minSymbols"] = '.$item['minSymbols'].'; '.PHP_EOL;
-						} else {
-							$scriptingCode .= 'blockSettingArray[cou1]["minSymbols"] = 0;'.PHP_EOL;
-						}
-						if (!empty($item['maxSymbols'])&&$item['maxSymbols'] > 1) {
-							$scriptingCode .= 'blockSettingArray[cou1]["maxSymbols"] = '.$item['maxSymbols'].'; '.PHP_EOL;
-						} else {
-							$scriptingCode .= 'blockSettingArray[cou1]["maxSymbols"] = 0;'.PHP_EOL;
-						}
-						if (!empty($item['minHeaders'])&&$item['minHeaders'] > 1) {
-							$scriptingCode .= 'blockSettingArray[cou1]["minHeaders"] = '.$item['minHeaders'].'; '.PHP_EOL;
-						} else {
-							$scriptingCode .= 'blockSettingArray[cou1]["minHeaders"] = 0;'.PHP_EOL;
-						}
-						if (!empty($item['maxHeaders'])&&$item['maxHeaders'] > 1) {
-							$scriptingCode .= 'blockSettingArray[cou1]["maxHeaders"] = '.$item['maxHeaders'].'; '.PHP_EOL;
-						} else {
-							$scriptingCode .= 'blockSettingArray[cou1]["maxHeaders"] = 0;'.PHP_EOL;
-						}
-						$scriptingCode     .= 'blockSettingArray[cou1]["id"] = \''.$item['id'].'\'; '.PHP_EOL;
-						if (!empty($rfwp_shortcodes[$item['block_number']])) {
-							$scriptingCode .= 'blockSettingArray[cou1]["sc"] = \'1\'; '.PHP_EOL;
-						} else {
-							$scriptingCode .= 'blockSettingArray[cou1]["sc"] = \'0\'; '.PHP_EOL;
-						}
-						$currentItemContent = $item['text'];
-						$currentItemContent = preg_replace('~(\'|\")~','\\\$1',$currentItemContent);
-						$currentItemContent = preg_replace('~(\r\n)~','',$currentItemContent);
-//					$currentItemContent = preg_replace('~(\<\/script\>)~','</scr"+"ipt>',$currentItemContent);
-//					$scriptingCode     .= 'blockSettingArray[cou1]["text"] = \'' . $item['text'] . '\'; ' . PHP_EOL;
-						$scriptingCode     .= 'blockSettingArray[cou1]["text"] = \'' . $currentItemContent . '\'; ' . PHP_EOL;
-						$scriptingCode     .= 'blockSettingArray[cou1]["setting_type"] = '.$item['setting_type'].'; ' . PHP_EOL;
-						if (!empty($item['elementCss'])) {
-							$scriptingCode     .= 'blockSettingArray[cou1]["elementCss"] = "'.$item['elementCss'].'"; ' . PHP_EOL;
-						}
-						if ($item['setting_type'] == 1)       {       //for ordinary block
-//						$scriptingCode .= 'blockSettingArray[cou1]["setting_type"] = 1; ' . PHP_EOL;
-							$scriptingCode .= 'blockSettingArray[cou1]["element"] = "' . $item['element'] . '"; ' . PHP_EOL;
-							$scriptingCode .= 'blockSettingArray[cou1]["elementPosition"] = ' . $item['elementPosition'] . '; ' . PHP_EOL;
-							$scriptingCode .= 'blockSettingArray[cou1]["elementPlace"] = ' . $item['elementPlace'] . '; ' . PHP_EOL;
-						} elseif ($item['setting_type'] == 2) {       //for repeatable
-							$scriptingCode .= 'blockSettingArray[cou1]["element"] = "' . $item['element'] . '"; ' . PHP_EOL;
-							$scriptingCode .= 'blockSettingArray[cou1]["elementPosition"] = ' . $item['elementPosition'] . '; ' . PHP_EOL;
-							$scriptingCode .= 'blockSettingArray[cou1]["firstPlace"] = "' . $item['firstPlace'] . '"; ' . PHP_EOL;
-							$scriptingCode .= 'blockSettingArray[cou1]["elementCount"] = "' . $item['elementCount'] . '"; ' . PHP_EOL;
-							$scriptingCode .= 'blockSettingArray[cou1]["elementStep"] = "' . $item['elementStep'] . '"; ' . PHP_EOL;
-						} elseif ($item['setting_type'] == 3) {       //for direct block
-							$scriptingCode .= 'blockSettingArray[cou1]["element"] = "' . $item['element'] . '"; ' . PHP_EOL;
-							$scriptingCode .= 'blockSettingArray[cou1]["directElement"] = "' . $item['directElement'] . '"; ' . PHP_EOL;
-							$scriptingCode .= 'blockSettingArray[cou1]["elementPosition"] = ' . $item['elementPosition'] . '; ' . PHP_EOL;
-							$scriptingCode .= 'blockSettingArray[cou1]["elementPlace"] = ' . $item['elementPlace'] . '; ' . PHP_EOL;
-						} elseif (in_array($item['setting_type'],[6,7])) {       //for percentage
-							$scriptingCode .= 'blockSettingArray[cou1]["elementPlace"] = ' . $item['elementPlace'] . '; ' . PHP_EOL;
-						}
-						$scriptingCode .= 'cou1++;'.PHP_EOL;
-//						$cou1++;
-					}
-					elseif ($resultHere == 'used') {
-						$scriptingCode .= 'usedBlockSettingArray[cou2] = [];'.PHP_EOL;
-						$scriptingCode .= 'usedBlockSettingArray[cou2]["id"] = \''.$item['block_number'].'\'; '.PHP_EOL;
-						$scriptingCode .= 'usedBlockSettingArray[cou2]["elementPosition"] = '.$item['elementPosition'].'; '.PHP_EOL;
-						$scriptingCode .= 'cou2++;'.PHP_EOL;
-						$k1++;
-					}
-				}
-				$scriptingCode .= PHP_EOL;
-				$scriptingCode .= 'window.jsInputerLaunch = 15;'.PHP_EOL;
-				$scriptingCode .=
-'if (typeof launchAsyncFunctionLauncher === "undefined") {
-    function launchAsyncFunctionLauncher() {
-        if (typeof asyncFunctionLauncher !== "undefined" && typeof asyncFunctionLauncher === "function") {
-            asyncFunctionLauncher();
-        } else {
-            setTimeout(function () {
-                launchAsyncFunctionLauncher();
-            }, 100)
-        }
-    }
-}
-launchAsyncFunctionLauncher();'.PHP_EOL;
-
-				$scriptingCode .= PHP_EOL;
-				$scriptingCode .= '</script>';
-
-				$scriptingCodeResult['before'] = $contentBeforeScript.$cssCode;
-				$scriptingCodeResult['after'] = $scriptingCode;
-				$scriptingCode = $contentBeforeScript.$cssCode.$scriptingCode;
-				return $scriptingCodeResult;
-			} catch (Exception $ex) {
-				$messageFLog = 'Some error in creatingJavascriptParserForContent: '.$ex->getMessage().';';
-                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
-				return '';
-			} catch (Error $er) {
-				$messageFLog = 'Some error in creatingJavascriptParserForContent: '.$er->getMessage().';';
-                RFWP_Logs::saveLogs(RFWP_Logs::ERRORS_LOG, $messageFLog);
-				return '';
-			}
-		}
-	}
 	if (!function_exists('RFWP_creatingJavascriptParserForContentFunction_content')) {
 		function RFWP_creatingJavascriptParserForContentFunction_content() {
 			try {
@@ -1303,8 +1132,8 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 				$scriptingCode .=
 'if (typeof launchAsyncFunctionLauncher === "undefined") {
     function launchAsyncFunctionLauncher() {
-        if (typeof asyncFunctionLauncher !== "undefined" && typeof asyncFunctionLauncher === "function") {
-            asyncFunctionLauncher();
+        if (typeof RFWP_BlockInserting === "function") {
+            RFWP_BlockInserting.launch(blockSettingArray);
         } else {
             setTimeout(function () {
                 launchAsyncFunctionLauncher();
@@ -1329,7 +1158,7 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 		}
 	}
 	if (!function_exists('RFWP_creatingJavascriptParserForContentFunction_test')) {
-		function RFWP_creatingJavascriptParserForContentFunction_test($fromDb, $excIdClass, $blockDuplicate, $obligatoryMargin, $tagsListForTextLength) {
+		function RFWP_creatingJavascriptParserForContentFunction_test($fromDb, $excIdClass, $blockDuplicate, $obligatoryMargin, $tagsListForTextLength, $showAdsNoElement) {
 			try {
 				/*?><script>console.log('Header addings passed');</script><?php*/
 				if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
@@ -1347,7 +1176,7 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
         max-height: 1px;
         overflow: hidden;
     } 
-    #content_pointer_id {
+    .content_pointer_class {
         display: block !important;
         width: 100% !important;
     }
@@ -1420,6 +1249,11 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 						} else {
 							$scriptingCode .= 'blockSettingArray[cou1]["maxHeaders"] = 0;'.PHP_EOL;
 						}
+                        if (isset($item['showNoElement'])) {
+                            $scriptingCode .= 'blockSettingArray[cou1]["showNoElement"] = '.$item['showNoElement'].'; '.PHP_EOL;
+                        } else {
+                            $scriptingCode .= 'blockSettingArray[cou1]["showNoElement"] = '.$showAdsNoElement.';'.PHP_EOL;
+                        }
 						$scriptingCode     .= 'blockSettingArray[cou1]["id"] = \''.$item['id'].'\'; '.PHP_EOL;
 						if (!empty($rfwp_shortcodes[$item['block_number']])) {
 							$scriptingCode .= 'blockSettingArray[cou1]["sc"] = \'1\'; '.PHP_EOL;
@@ -1433,6 +1267,7 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 //					$scriptingCode     .= 'blockSettingArray[cou1]["text"] = \'' . $item['text'] . '\'; ' . PHP_EOL;
 						$scriptingCode     .= 'blockSettingArray[cou1]["text"] = \'' . $currentItemContent . '\'; ' . PHP_EOL;
 						$scriptingCode     .= 'blockSettingArray[cou1]["setting_type"] = '.$item['setting_type'].'; ' . PHP_EOL;
+						$scriptingCode     .= 'blockSettingArray[cou1]["rb_under"] = ' . wp_rand(100000, 1000000) . '; ' . PHP_EOL;
 //						$scriptingCode     .= 'blockSettingArray[cou1]["block_number"] = '.$item['block_number'].'; ' . PHP_EOL;
 						if (!empty($item['elementCss'])) {
 							$scriptingCode     .= 'blockSettingArray[cou1]["elementCss"] = "'.$item['elementCss'].'"; ' . PHP_EOL;
@@ -1545,13 +1380,14 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 			$blockDuplicate = 'yes';
 			$adBlocks = [];
 			$statusFor404 = 'show';
+			$showAdsNoElement = 0;
 			$obligatoryMargin = 0;
 			$tagsListForTextLength = null;
             // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
 			$realbig_settings_info = $wpdb->get_results($wpdb->prepare(
-                    'SELECT optionName, optionValue FROM %i WGPS WHERE optionName IN (%s, %s, %s, %s,%s)',
+                    'SELECT optionName, optionValue FROM %i WGPS WHERE optionName IN (%s, %s, %s, %s,%s,%s)',
                     "{$wpPrefix}realbig_settings", "excludedIdAndClasses", "blockDuplicate", "obligatoryMargin",
-                "statusFor404", "tagsListForTextLength"));
+                "statusFor404", "showAdsNoElement", "tagsListForTextLength"));
 			if (!empty($realbig_settings_info)) {
 				foreach ($realbig_settings_info AS $k => $item) {
 					if (isset($item->optionValue)) {
@@ -1572,6 +1408,9 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 								break;
 							case 'statusFor404':
 								$statusFor404 = $item->optionValue;
+								break;
+							case 'showAdsNoElement':
+								$showAdsNoElement = $item->optionValue;
 								break;
 						}
 					}
@@ -1622,10 +1461,11 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 			$result['adBlocks'] = $adBlocks;
 			$result['excIdClass'] = $excIdClass;
 			$result['blockDuplicate'] = $blockDuplicate;
-			$result['obligatoryMargin'] = $obligatoryMargin;
-			$result['tagsListForTextLength'] = $tagsListForTextLength;
-			return $result;
-		}
+            $result['obligatoryMargin'] = $obligatoryMargin;
+            $result['tagsListForTextLength'] = $tagsListForTextLength;
+            $result['showAdsNoElement'] = $showAdsNoElement;
+            return $result;
+        }
     }
 	if (!function_exists('test_sc_oval_exec')) {
 		function test_sc_oval_exec() {
@@ -1823,7 +1663,7 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 		function RFWP_addWebnavozJs() {
 		    $plugin1 = 'webnavoz-likes/webnavoz-likes.php';
 			if (is_plugin_active($plugin1)) {
-				?><script><?php include_once (plugin_dir_path(__FILE__).'webnawozComp.js'); ?></script><?php
+				?><script><?php include_once (plugin_dir_path(__FILE__).'assets/js/webnawozComp.js'); ?></script><?php
 			}
 		}
 	}

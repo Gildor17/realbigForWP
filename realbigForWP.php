@@ -5,7 +5,7 @@ if (!defined("ABSPATH")) { exit;}
 /*
 Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
-Version:      1.0.7
+Version:      1.1.0
 Author:       Realbig Team
 Author URI:   https://realbig.media
 License:      GPLv2 or later
@@ -182,7 +182,7 @@ try {
 					$content = RFWP_shortCodesAdd('');
 					$fromDb = RFWP_gatherBlocksFromDb();
 					$GLOBALS['fromDb'] = $fromDb;
-					$contentBlocks = RFWP_creatingJavascriptParserForContentFunction_test($fromDb['adBlocks'], $fromDb['excIdClass'], $fromDb['blockDuplicate'], $fromDb['obligatoryMargin'], $fromDb['tagsListForTextLength']);
+					$contentBlocks = RFWP_creatingJavascriptParserForContentFunction_test($fromDb['adBlocks'], $fromDb['excIdClass'], $fromDb['blockDuplicate'], $fromDb['obligatoryMargin'], $fromDb['tagsListForTextLength'], $fromDb['showAdsNoElement']);
 					$content = $contentBlocks['before'].$content.$contentBlocks['after'];
 					if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
 						RFWP_WorkProgressLog(false,'blocks_in_head_add end');
@@ -519,7 +519,7 @@ try {
 			function RFWP_syncFunctionAdd1() {
 				wp_enqueue_script(
 					'asyncBlockInserting',
-					plugins_url().'/'.basename(__DIR__).'/asyncBlockInserting.js',
+					plugins_url().'/'.basename(__DIR__).'/assets/js/asyncBlockInserting.js',
 					array('jquery'),
 					$GLOBALS['realbigForWP_version'],
 					false
@@ -540,7 +540,7 @@ try {
 			function RFWP_syncFunctionAdd2() {
 				wp_enqueue_script(
 					'readyAdGather',
-					plugins_url().'/'.basename(__DIR__).'/readyAdGather.js',
+					plugins_url().'/'.basename(__DIR__).'/assets/js/readyAdGather.js',
 					array('jquery'),
 					$GLOBALS['realbigForWP_version'],
 					false
@@ -575,7 +575,8 @@ try {
                         echo "if (typeof gather_content==='undefined') {var gather_content = false;}" . PHP_EOL;
                     }
 
-                    include_once(plugin_dir_path(__FILE__) . 'asyncBlockInserting.js');
+                    include_once(plugin_dir_path(__FILE__) . 'assets/js/RFWP_BlockInserting.js');
+                    include_once(plugin_dir_path(__FILE__) . 'assets/js/asyncBlockInserting.js');
                     echo  PHP_EOL . "</script>" . PHP_EOL;
 
 					$GLOBALS['rfwp_addedAlready']['asyncBlockInserting'] = true;
@@ -602,7 +603,7 @@ try {
                         echo "if (typeof cache_devices==='undefined') {var cache_devices = true;}" . PHP_EOL;
                     }
 
-                    include_once(plugin_dir_path(__FILE__) . 'readyAdGather.js');
+                    include_once(plugin_dir_path(__FILE__) . 'assets/js/readyAdGather.js');
                     echo  PHP_EOL . "</script>" . PHP_EOL;
 
 					$GLOBALS['rfwp_addedAlready']['readyAdGather'] = true;
