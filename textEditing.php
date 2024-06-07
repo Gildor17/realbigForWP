@@ -228,7 +228,7 @@ try {
 					$checkExcluded = RFWP_checkPageType();
 					if (!empty($checkExcluded)&&!empty($fromDb)&&!empty($fromDb['adBlocks'])&&count($fromDb['adBlocks']) > 0) {
                         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-						$contentSelector = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM '{$wpPrefix}realbig_settings' " .
+						$contentSelector = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM `{$wpPrefix}realbig_settings` " .
                             "WHERE optionName = %s", "contentSelector"));
 						if (empty($contentSelector)) {
 							$contentSelector = null;
@@ -289,7 +289,7 @@ try {
             let possibleClasses = [\'.taxonomy-description\',\'.entry-content\',\'.post-wrap\',\'.post-body\',\'#blog-entries\',\'.content\',\'.archive-posts__item-text\',\'.single-company_wrapper\',\'.posts-container\',\'.content-area\',\'.post-listing\',\'.td-category-description\',\'.jeg_posts_wrap\'];
             let deniedClasses = [\'.percentPointerClass\',\'.addedInserting\',\'#toc_container\'];
             let deniedString = "";
-            let contentSelector = \''.esc_attr(stripslashes($contentSelector)).'\';
+            let contentSelector = \''.esc_attr(stripslashes((string)$contentSelector)).'\';
             let contentsCheck = null;
             if (contentSelector) {
                 contentsCheck = document.querySelectorAll(contentSelector);
@@ -1648,7 +1648,7 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 
 		        $usedTaxonomies = [];
                 // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
-		        $array = $wpdb->get_results($wpdb->prepare('SELECT optionValue FROM `{$wpPrefix}realbig_settings` WGPS WHERE optionName = %s',
+		        $array = $wpdb->get_results($wpdb->prepare("SELECT optionValue FROM `{$wpPrefix}realbig_settings` WGPS WHERE optionName = %s",
                     "usedTaxonomies"));
 
 		        if (!empty($array[0]->optionValue)) {

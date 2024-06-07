@@ -129,7 +129,7 @@ try {
 
 								    $counter = 0;
                                     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
-								    $wpdb->query('DELETE FROM `{$wpPrefix}realbig_plugin_settings`');
+								    $wpdb->query("DELETE FROM `{$wpPrefix}realbig_plugin_settings`");
                                     $params = [];
 								    $sqlTokenSave = "INSERT INTO `{$wpPrefix}realbig_plugin_settings` (text, block_number, setting_type, element, directElement, elementPosition, " .
                                         "elementPlace, firstPlace, elementCount, elementStep, minSymbols, maxSymbols, minHeaders, maxHeaders, " .
@@ -169,7 +169,7 @@ try {
 								    $wpdb->query($wpdb->prepare($sqlTokenSave, $params));
 							    } elseif (empty($decodedToken['data'])&&sanitize_text_field($decodedToken['status']) == "empty_success") {
                                     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
-								    $wpdb->query('DELETE FROM `{$wpPrefix}realbig_plugin_settings`');
+								    $wpdb->query("DELETE FROM `{$wpPrefix}realbig_plugin_settings`");
 							    }
 
 							    // if no needly note, then create
@@ -348,7 +348,7 @@ try {
                                 /** End of Turbo rss */
 							    /** Turbo rss ads */
                                 // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
-							    $wpdb->query('DELETE FROM `{$wpPrefix}realbig_turbo_ads`');
+							    $wpdb->query("DELETE FROM `{$wpPrefix}realbig_turbo_ads`");
 							    if (!empty($decodedToken['turboAdSettings'])) {
 								    $counter = 0;
                                     $params = [];
@@ -382,7 +382,7 @@ try {
                                 if (!empty($decodedToken['ampAdSettings'])) {
                                     $counter = 0;
                                     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
-                                    $wpdb->query('DELETE FROM `{$wpPrefix}realbig_amp_ads`');
+                                    $wpdb->query("DELETE FROM `{$wpPrefix}realbig_amp_ads`");
                                     $params = [];
                                     $sqlTokenSave = "INSERT INTO `{$wpPrefix}realbig_amp_ads` (blockId, adField, settingType, element, elementPosition, elementPlace) VALUES ";
                                     foreach ($decodedToken['ampAdSettings'] AS $k => $item) {
@@ -571,19 +571,19 @@ try {
 										    switch ($type) {
 											    case 'mobile':
 												    $postCheckMobile  = $wpdb->get_var(
-                                                            $wpdb->prepare('SELECT id FROM `{$wpPrefix}posts` WHERE post_type = %s AND post_title = %s',
+                                                            $wpdb->prepare("SELECT id FROM `{$wpPrefix}posts` WHERE post_type = %s AND post_title = %s",
                                                                 "rb_block_mobile_new", $ritem["blockId"]));
 												    $resultTypes['mobile'] = true;
 												    break;
 											    case 'tablet':
 												    $postCheckTablet = $wpdb->get_var(
-                                                            $wpdb->prepare('SELECT id FROM `{$wpPrefix}posts` WHERE post_type = %s AND post_title = %s',
+                                                            $wpdb->prepare("SELECT id FROM `{$wpPrefix}posts` WHERE post_type = %s AND post_title = %s",
                                                                 "rb_block_tablet_new", $ritem["blockId"]));
 												    $resultTypes['tablet'] = true;
 												    break;
 											    case 'desktop':
 												    $postCheckDesktop = $wpdb->get_var(
-                                                            $wpdb->prepare('SELECT id FROM `{$wpPrefix}posts` WHERE post_type = %s AND post_title = %s',
+                                                            $wpdb->prepare("SELECT id FROM `{$wpPrefix}posts` WHERE post_type = %s AND post_title = %s",
                                                                 "rb_block_desktop_new", $ritem["blockId"]));
 												    $resultTypes['desktop'] = true;
 												    break;
@@ -1293,7 +1293,7 @@ try {
 				global $wpPrefix;
 
                 // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
-				$syncDomain = $wpdb->get_var($wpdb->prepare('SELECT optionValue FROM `{$wpPrefix}realbig_settings` WGPS WHERE optionName = %s',
+				$syncDomain = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM `{$wpPrefix}realbig_settings` WGPS WHERE optionName = %s",
                     "sync_domain"));
 			}
 

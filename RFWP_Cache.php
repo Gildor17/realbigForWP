@@ -110,7 +110,7 @@ if (!class_exists('RFWP_Cache')) {
             global $wpdb;
             global $wpPrefix;
             // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
-            $wpdb->query($wpdb->prepare('DELETE FROM `{$wpPrefix}posts` WHERE post_type IN (%s, %s, %s)',
+            $wpdb->query($wpdb->prepare("DELETE FROM `{$wpPrefix}posts` WHERE post_type IN (%s, %s, %s)",
                 "rb_block_desktop_new", "rb_block_tablet_new", "rb_block_mobile_new"));
         }
 
