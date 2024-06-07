@@ -66,10 +66,10 @@ if (!class_exists('RFWP_AdminPage')) {
             }
 
             // @codingStandardsIgnoreStart
-            $res['getBlocks'] = $wpdb->get_results($wpdb->prepare('SELECT * FROM %i', "{$wpPrefix}realbig_plugin_settings"), ARRAY_A);
+            $res['getBlocks'] = $wpdb->get_results("SELECT * FROM `{$wpPrefix}realbig_plugin_settings`", ARRAY_A);
 
-            $cached = $wpdb->get_results($wpdb->prepare('SELECT post_title, post_content, post_type FROM %i ' .
-                'WHERE post_type IN (%s, %s, %s)', "{$wpPrefix}posts", "rb_block_desktop_new", "rb_block_tablet_new", "rb_block_mobile_new"));
+            $cached = $wpdb->get_results($wpdb->prepare("SELECT post_title, post_content, post_type FROM `{$wpPrefix}posts` " .
+                "WHERE post_type IN (%s, %s, %s)", "rb_block_desktop_new", "rb_block_tablet_new", "rb_block_mobile_new"));
             // @codingStandardsIgnoreEnd
             $cacheKeys = ["rb_block_desktop_new" => "desktop", "rb_block_tablet_new" => "tablet", "rb_block_mobile_new" => "mobile"];
             if (!empty($cached)) {
@@ -84,11 +84,14 @@ if (!class_exists('RFWP_AdminPage')) {
 
             try {
                 // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
-                $res['rbSettings'] = $wpdb->get_results($wpdb->prepare('SELECT optionName, optionValue, timeUpdate FROM %i ' .
-                    'WHERE optionName IN ("deactError","domain","excludedMainPage","excludedPages","pushStatus",' .
-                    '"excludedPageTypes","excludedIdAndClasses","kill_rb","pushUniversalStatus","pushUniversalDomain",' .
-                    '"statusFor404","blockDuplicate","jsToHead","obligatoryMargin","tagsListForTextLength","usedTaxonomies",' .
-                    '"enableLogs")', "{$GLOBALS['wpPrefix']}realbig_settings"), ARRAY_A);
+                $res['rbSettings'] = $wpdb->get_results($wpdb->prepare("SELECT optionName, optionValue, timeUpdate " .
+                    // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+                    "FROM `{$GLOBALS['wpPrefix']}realbig_settings` " .
+                    'WHERE optionName IN (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',
+                    "deactError", "domain", "excludedMainPage", "excludedPages", "pushStatus", "excludedPageTypes",
+                    "excludedIdAndClasses", "kill_rb", "pushUniversalStatus", "pushUniversalDomain", "statusFor404",
+                    "blockDuplicate", "jsToHead", "obligatoryMargin", "tagsListForTextLength", "usedTaxonomies",
+                    "enableLogs"), ARRAY_A);
 //			$rbTransients = $wpdb->get_results('SELECT optionName, optionValue, timeUpdate FROM ' . $GLOBALS["wpPrefix"] . 'realbig_settings WHERE optionName IN ("deactError","domain","excludedMainPage","excludedPages","pushStatus","excludedPageTypes","kill_rb")', ARRAY_A);
 
                 if (!empty($res['rbSettings'])) {

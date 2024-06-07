@@ -1,7 +1,7 @@
 === Realbig For WordPress ===
 Contributors: 101
 Tags: AD, content filling
-Requires at least: 6.2
+Requires at least: 4.5
 Tested up to: 6.5.3
 Stable tag: 0.1.26.56
 Requires PHP: 5.6
@@ -106,6 +106,13 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 * is_archive() — любая из архивных страниц (категории, метки, автора, даты).
 
 == Changelog ==
+
+= 1.1.1 =
+
+Изменения версии:
+
+* вернули поддержку старых версий Wordpress (4.5);
+* другие мелкие улучшения и правки.
 
 = 1.1.0 =
 

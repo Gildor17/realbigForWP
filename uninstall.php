@@ -23,16 +23,16 @@ try {
 		}
 		$GLOBALS['wpPrefix'] = $wpPrefix;
 
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
-		$wpdb->query($wpdb->prepare('DELETE FROM %i WHERE post_type IN (%s, %s, %s, %s, %s) AND post_author = 0',
-            "{$wpPrefix}posts", "rb_block_mobile", "rb_block_desktop", "rb_block_mobile_new", "rb_block_desktop_new", "rb_inserting"));
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$wpdb->query($wpdb->prepare("DELETE FROM `{$wpPrefix}posts` WHERE post_type IN (%s, %s, %s, %s, %s) AND post_author = 0",
+            "rb_block_mobile", "rb_block_desktop", "rb_block_mobile_new", "rb_block_desktop_new", "rb_inserting"));
 
 		delete_option( 'realbig_status_gatherer' );
 		delete_option( 'realbig_status_gatherer_version' );
 
         // @codingStandardsIgnoreStart
-		$wpdb->query($wpdb->prepare("DROP TABLE IF EXISTS %i", "{$wpPrefix}realbig_plugin_settings"));
-		$wpdb->query($wpdb->prepare("DROP TABLE IF EXISTS %i", "{$wpPrefix}realbig_settings"));
+		$wpdb->query("DROP TABLE IF EXISTS `{$wpPrefix}realbig_plugin_settings`");
+		$wpdb->query("DROP TABLE IF EXISTS `{$wpPrefix}realbig_settings`");
         // @codingStandardsIgnoreEnd
 	}
 } catch (Exception $ex) {

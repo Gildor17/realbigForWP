@@ -2,9 +2,9 @@
 
 /** Kill rb connection emulation */
 // 1 - ok connection; 2 - error connection;
-// phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
-$kill_rb_db = $wpdb->get_results($wpdb->prepare('SELECT id,optionValue FROM %i WHERE optionName = %s',
-    "{$wpPrefix}realbig_settings", "kill_rb"), ARRAY_A);
+// phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+$kill_rb_db = $wpdb->get_results($wpdb->prepare("SELECT id,optionValue FROM `{$wpPrefix}realbig_settings` WHERE optionName = %s",
+    "kill_rb"), ARRAY_A);
 if (empty(apply_filters('wp_doing_cron', defined('DOING_CRON') && DOING_CRON)) && !empty(is_admin())
     && wp_get_raw_referer() && !wp_get_referer()) {
 	if (!empty($curUserCan) && !empty($_POST['saveTokenButton']) &&

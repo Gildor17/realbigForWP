@@ -74,8 +74,8 @@ try {
 				global $wpdb;
 				global $wpPrefix;
 
-                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
-				$rb_turboAds = $wpdb->get_results($wpdb->prepare("SELECT * FROM %i", "{$wpPrefix}realbig_turbo_ads"), ARRAY_A);
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				$rb_turboAds = $wpdb->get_results("SELECT * FROM `{$wpPrefix}realbig_turbo_ads`", ARRAY_A);
 				$GLOBALS['rb_turboAds'] = $rb_turboAds;
 			} else {
 				$rb_turboAds = $GLOBALS['rb_turboAds'];

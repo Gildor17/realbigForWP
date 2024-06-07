@@ -156,16 +156,16 @@ ENGINE=InnoDB
 					global $wpdb;
 					$localReturnValue = false;
 
-                    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
-					$enumTypeQuery = $wpdb->get_results($wpdb->prepare('SHOW FIELDS FROM %i WHERE Field = %s',
-                        "{$wpPrefix}realbig_plugin_settings", "element"));
+                    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+					$enumTypeQuery = $wpdb->get_results($wpdb->prepare("SHOW FIELDS FROM `{$wpPrefix}realbig_plugin_settings` WHERE Field = %s",
+                        "element"));
 					if (!empty($enumTypeQuery)) {
 						$enumTypeQuery = get_object_vars($enumTypeQuery[0]);
 						if ($enumTypeQuery['Type'] != $requiredElementColumnValues) {
-                            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
-							$alterResult = $wpdb->query($wpdb->prepare("ALTER TABLE %i MODIFY `element` " .
+                            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+							$alterResult = $wpdb->query($wpdb->prepare("ALTER TABLE `{$wpPrefix}realbig_plugin_settings` MODIFY `element` " .
                                 "ENUM(%s, %s , %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) NULL DEFAULT NULL",
-                                "{$wpPrefix}realbig_plugin_settings", "p", "li", "ul", "ol", "blockquote", "img", "video",
+                                "p", "li", "ul", "ol", "blockquote", "img", "video",
                                 "iframe", "h1", "h2", "h3", "h4", "h5", "h6", 'h2-4', "article"));
 							if (!empty($alterResult)&&is_int($alterResult)&&$alterResult == 1) {
 								$localReturnValue = RFWP_checkElementColumnValues($wpPrefix, $requiredElementColumnValues);
@@ -198,11 +198,11 @@ ENGINE=InnoDB
 			global $wpdb;
 			try {
                 // @codingStandardsIgnoreStart
-				$rez = $wpdb->query($wpdb->prepare('SHOW FIELDS FROM %i', "{$wpPrefix}realbig_settings"));
+				$rez = $wpdb->query("SHOW FIELDS FROM `{$wpPrefix}realbig_settings`");
 
 				if ($rez != 4) {
-					$wpdb->query($wpdb->prepare('ALTER TABLE %i ADD `timeUpdate` TIMESTAMP NULL DEFAULT NULL ON ' .
-                        'UPDATE CURRENT_TIMESTAMP AFTER optionValue', "{$wpPrefix}realbig_settings"));
+					$wpdb->query("ALTER TABLE `{$wpPrefix}realbig_settings` ADD `timeUpdate` TIMESTAMP NULL DEFAULT NULL ON " .
+                        "UPDATE CURRENT_TIMESTAMP AFTER optionValue");
 				}
                 // @codingStandardsIgnoreEnd
 				return true;
@@ -254,11 +254,9 @@ ENGINE=InnoDB
 						$atLeastOneMissedColumn = true;
                         // @codingStandardsIgnoreStart
 						if (in_array($item, ['text','directElement','onCategories','offCategories','onTags','offTags','elementCss'])) {
-							$wpdb->query($wpdb->prepare('ALTER TABLE %i ADD COLUMN %i TEXT NULL DEFAULT NULL',
-                                "{$wpPrefix}realbig_plugin_settings", $item));
+							$wpdb->query("ALTER TABLE `{$wpPrefix}realbig_plugin_settings` ADD COLUMN `{$item}` TEXT NULL DEFAULT NULL");
 						} else {
-							$wpdb->query($wpdb->prepare('ALTER TABLE %i ADD COLUMN %i INT(11) NULL DEFAULT NULL',
-                                "{$wpPrefix}realbig_plugin_settings", $item));
+							$wpdb->query("ALTER TABLE `{$wpPrefix}realbig_plugin_settings` ADD COLUMN `{$item}` INT(11) NULL DEFAULT NULL");
 						}
                         // @codingStandardsIgnoreEnd
 					}

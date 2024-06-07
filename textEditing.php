@@ -227,9 +227,9 @@ try {
 					$itemArray = [];
 					$checkExcluded = RFWP_checkPageType();
 					if (!empty($checkExcluded)&&!empty($fromDb)&&!empty($fromDb['adBlocks'])&&count($fromDb['adBlocks']) > 0) {
-                        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
-						$contentSelector = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM %i WHERE optionName = %s",
-                            "{$wpPrefix}realbig_settings", "contentSelector"));
+                        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+						$contentSelector = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM '{$wpPrefix}realbig_settings' " .
+                            "WHERE optionName = %s", "contentSelector"));
 						if (empty($contentSelector)) {
 							$contentSelector = null;
 						}
@@ -691,9 +691,9 @@ try {
 
 		    $result['excIdClass'] = null;
 		    $result['blockDuplicate'] = 'yes';
-            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
-		    $realbig_settings_info = $wpdb->get_results($wpdb->prepare('SELECT optionName, optionValue FROM %i WGPS WHERE optionName IN (%s, %s)',
-                "{$GLOBALS['wpPrefix']}realbig_settings", "excludedIdAndClasses", "blockDuplicate"));
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		    $realbig_settings_info = $wpdb->get_results($wpdb->prepare("SELECT optionName, optionValue FROM `{$GLOBALS['wpPrefix']}realbig_settings` WGPS " .
+                "WHERE optionName IN (%s, %s)", "excludedIdAndClasses", "blockDuplicate"));
 		    if (!empty($realbig_settings_info)) {
 			    foreach ($realbig_settings_info AS $k => $item) {
 				    if (isset($item->optionValue)) {
@@ -1058,11 +1058,11 @@ launchInsertingsFunctionLaunch();'.PHP_EOL;
 			try {
                 // @codingStandardsIgnoreStart
 				if (isset($filter)&&in_array($filter, [0,1])) {
-					$posts = $wpdb->get_results($wpdb->prepare('SELECT * FROM %i WHERE post_type = %s AND pinged = %s',
-                        "{$wpPrefix}posts", "rb_inserting", $filter));
+					$posts = $wpdb->get_results($wpdb->prepare("SELECT * FROM `{$wpPrefix}posts` WHERE post_type = %s AND pinged = %s",
+                        "rb_inserting", $filter));
 				} else {
-					$posts = $wpdb->get_results($wpdb->prepare('SELECT * FROM %i WHERE post_type = %s',
-                        "{$wpPrefix}posts", "rb_inserting"));
+					$posts = $wpdb->get_results($wpdb->prepare("SELECT * FROM `{$wpPrefix}posts` WHERE post_type = %s",
+                        "rb_inserting"));
 				}
                 // @codingStandardsIgnoreEnd
 				if (!empty($posts)) {
@@ -1385,8 +1385,9 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 			$tagsListForTextLength = null;
             // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
 			$realbig_settings_info = $wpdb->get_results($wpdb->prepare(
-                    'SELECT optionName, optionValue FROM %i WGPS WHERE optionName IN (%s, %s, %s, %s,%s,%s)',
-                    "{$wpPrefix}realbig_settings", "excludedIdAndClasses", "blockDuplicate", "obligatoryMargin",
+                    // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+                    "SELECT optionName, optionValue FROM `{$wpPrefix}realbig_settings` WGPS WHERE optionName IN (%s, %s, %s, %s,%s,%s)",
+                "excludedIdAndClasses", "blockDuplicate", "obligatoryMargin",
                 "statusFor404", "showAdsNoElement", "tagsListForTextLength"));
 			if (!empty($realbig_settings_info)) {
 				foreach ($realbig_settings_info AS $k => $item) {
@@ -1418,8 +1419,8 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 				unset($k,$item);
 			}
 			if ((!is_404())||$statusFor404!='disable') {
-                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
-				$adBlocks = $wpdb->get_results($wpdb->prepare('SELECT * FROM %i WGPS', "{$wpPrefix}realbig_plugin_settings"));
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				$adBlocks = $wpdb->get_results("SELECT * FROM `{$wpPrefix}realbig_plugin_settings` WGPS");
             }
 
 			if (!empty($excIdClass)) {
@@ -1647,8 +1648,8 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 
 		        $usedTaxonomies = [];
                 // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
-		        $array = $wpdb->get_results($wpdb->prepare('SELECT optionValue FROM %i WGPS WHERE optionName = %s',
-                    "{$wpPrefix}realbig_settings", "usedTaxonomies"));
+		        $array = $wpdb->get_results($wpdb->prepare('SELECT optionValue FROM `{$wpPrefix}realbig_settings` WGPS WHERE optionName = %s',
+                    "usedTaxonomies"));
 
 		        if (!empty($array[0]->optionValue)) {
 			        $usedTaxonomies = json_decode($array[0]->optionValue, true);
@@ -1715,9 +1716,9 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
             try {
                 global $wpdb;
 
-                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
-                $jsToHead = $wpdb->get_var($wpdb->prepare('SELECT optionValue FROM %i WHERE optionName = %s',
-                    "{$GLOBALS['wpPrefix']}realbig_settings", "jsToHead"));
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+                $jsToHead = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM `{$GLOBALS['wpPrefix']}realbig_settings` " .
+                    "WHERE optionName = %s", "jsToHead"));
                 if ($jsToHead!==null) {
                     $jsToHead = intval($jsToHead);
                 }
@@ -1744,9 +1745,9 @@ launchAsyncFunctionLauncher();'.PHP_EOL;
 	                global $wpdb;
 	                $wpPrefix = RFWP_getTablePrefix();
 
-                    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
-	                $result = $wpdb->prepare($wpdb->get_var('SELECT optionValue FROM %i WHERE optionName = %s'),
-                        "{$wpPrefix}realbig_settings", $settingName);
+                    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+	                $result = $wpdb->prepare($wpdb->get_var("SELECT optionValue FROM `{$wpPrefix}realbig_settings` " .
+                        "WHERE optionName = %s"), $settingName);
 	                if (!empty($addToGlobal)) {
 		                $GLOBALS['rb_variables'][$settingName] = $result;
 	                }

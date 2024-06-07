@@ -1,4 +1,4 @@
-class RFWP_BlockInserting {
+window.RFWP_BlockInserting = class {
     _blockSettingArray;
 
     static endedSc = false;
@@ -1039,4 +1039,4 @@ class RFWP_BlockInserting {
 
         return {array: tlArray, length: textLength};
     }
-}
+};

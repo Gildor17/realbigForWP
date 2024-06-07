@@ -129,9 +129,9 @@ try {
 
 								    $counter = 0;
                                     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
-								    $wpdb->query($wpdb->prepare('DELETE FROM %i', "{$wpPrefix}realbig_plugin_settings"));
-                                    $params = ["{$wpPrefix}realbig_plugin_settings"];
-								    $sqlTokenSave = "INSERT INTO %i (text, block_number, setting_type, element, directElement, elementPosition, " .
+								    $wpdb->query('DELETE FROM `{$wpPrefix}realbig_plugin_settings`');
+                                    $params = [];
+								    $sqlTokenSave = "INSERT INTO `{$wpPrefix}realbig_plugin_settings` (text, block_number, setting_type, element, directElement, elementPosition, " .
                                         "elementPlace, firstPlace, elementCount, elementStep, minSymbols, maxSymbols, minHeaders, maxHeaders, " .
                                         "onCategories, offCategories, onTags, offTags, elementCss, showNoElement) VALUES ";
 								    foreach ($decodedToken['data'] AS $k => $item) {
@@ -169,7 +169,7 @@ try {
 								    $wpdb->query($wpdb->prepare($sqlTokenSave, $params));
 							    } elseif (empty($decodedToken['data'])&&sanitize_text_field($decodedToken['status']) == "empty_success") {
                                     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
-								    $wpdb->query($wpdb->prepare('DELETE FROM %i', "{$wpPrefix}realbig_plugin_settings"));
+								    $wpdb->query('DELETE FROM `{$wpPrefix}realbig_plugin_settings`');
 							    }
 
 							    // if no needly note, then create
@@ -348,11 +348,11 @@ try {
                                 /** End of Turbo rss */
 							    /** Turbo rss ads */
                                 // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
-							    $wpdb->query($wpdb->prepare('DELETE FROM %i', "{$wpPrefix}realbig_turbo_ads"));
+							    $wpdb->query('DELETE FROM `{$wpPrefix}realbig_turbo_ads`');
 							    if (!empty($decodedToken['turboAdSettings'])) {
 								    $counter = 0;
-                                    $params = ["{$wpPrefix}realbig_turbo_ads"];
-								    $sqlTokenSave = "INSERT INTO %i (blockId, adNetwork, adNetworkYandex, adNetworkAdfox, settingType, element, " .
+                                    $params = [];
+								    $sqlTokenSave = "INSERT INTO `{$wpPrefix}realbig_turbo_ads` (blockId, adNetwork, adNetworkYandex, adNetworkAdfox, settingType, element, " .
                                         "elementPosition, elementPlace) VALUES ";
 								    unset($k, $item);
 								    foreach ($decodedToken['turboAdSettings'] AS $k => $item) {
@@ -382,9 +382,9 @@ try {
                                 if (!empty($decodedToken['ampAdSettings'])) {
                                     $counter = 0;
                                     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
-                                    $wpdb->query($wpdb->prepare('DELETE FROM %i', "{$wpPrefix}realbig_amp_ads"));
-                                    $params = ["{$wpPrefix}realbig_amp_ads"];
-                                    $sqlTokenSave = "INSERT INTO %i (blockId, adField, settingType, element, elementPosition, elementPlace) VALUES ";
+                                    $wpdb->query('DELETE FROM `{$wpPrefix}realbig_amp_ads`');
+                                    $params = [];
+                                    $sqlTokenSave = "INSERT INTO `{$wpPrefix}realbig_amp_ads` (blockId, adField, settingType, element, elementPosition, elementPlace) VALUES ";
                                     foreach ($decodedToken['ampAdSettings'] AS $k => $item) {
                                         $counter ++;
                                         $sqlTokenSave .= ($counter != 1 ?", ":"") . "(%d, %s, %s, %s, %d, %d)";
@@ -571,20 +571,20 @@ try {
 										    switch ($type) {
 											    case 'mobile':
 												    $postCheckMobile  = $wpdb->get_var(
-                                                            $wpdb->prepare('SELECT id FROM %i WHERE post_type = %s AND post_title = %s',
-                                                                "{$wpPrefix}posts", "rb_block_mobile_new", $ritem["blockId"]));
+                                                            $wpdb->prepare('SELECT id FROM `{$wpPrefix}posts` WHERE post_type = %s AND post_title = %s',
+                                                                "rb_block_mobile_new", $ritem["blockId"]));
 												    $resultTypes['mobile'] = true;
 												    break;
 											    case 'tablet':
 												    $postCheckTablet = $wpdb->get_var(
-                                                            $wpdb->prepare('SELECT id FROM %i WHERE post_type = %s AND post_title = %s',
-                                                                "{$wpPrefix}posts", "rb_block_tablet_new", $ritem["blockId"]));
+                                                            $wpdb->prepare('SELECT id FROM `{$wpPrefix}posts` WHERE post_type = %s AND post_title = %s',
+                                                                "rb_block_tablet_new", $ritem["blockId"]));
 												    $resultTypes['tablet'] = true;
 												    break;
 											    case 'desktop':
 												    $postCheckDesktop = $wpdb->get_var(
-                                                            $wpdb->prepare('SELECT id FROM %i WHERE post_type = %s AND post_title = %s',
-                                                                "{$wpPrefix}posts", "rb_block_desktop_new", $ritem["blockId"]));
+                                                            $wpdb->prepare('SELECT id FROM `{$wpPrefix}posts` WHERE post_type = %s AND post_title = %s',
+                                                                "rb_block_desktop_new", $ritem["blockId"]));
 												    $resultTypes['desktop'] = true;
 												    break;
 										    }
@@ -694,13 +694,13 @@ try {
 				try {
                     if (empty($GLOBALS['tokenTimeUpdate'])) {
                         // @codingStandardsIgnoreStart
-                        $timeUpdate = $wpdb->get_results($wpdb->prepare("SELECT optionValue FROM %i WHERE optionName = %s",
-                            "{$wpPrefix}realbig_settings", "token_sync_time"));
+                        $timeUpdate = $wpdb->get_results($wpdb->prepare("SELECT optionValue FROM `{$wpPrefix}realbig_settings` WHERE optionName = %s",
+                            "token_sync_time"));
                         if (empty($timeUpdate)) {
                             $updateResult = RFWP_wpRealbigSettingsTableUpdateFunction($wpPrefix);
                             if ($updateResult == true) {
-                                $timeUpdate = $wpdb->get_results($wpdb->prepare("SELECT optionValue FROM %i WHERE optionName = %s",
-                                    "{$wpPrefix}realbig_settings", "token_sync_time"));
+                                $timeUpdate = $wpdb->get_results($wpdb->prepare("SELECT optionValue FROM `{$wpPrefix}realbig_settings` WHERE optionName = %s",
+                                    "token_sync_time"));
                             }
                         }
                         // @codingStandardsIgnoreEnd
@@ -738,9 +738,9 @@ try {
                 } else {
 				    global $wpdb;
 				    $GLOBALS['tokenStatusMessage'] = null;
-                    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
-				    $token = $wpdb->get_results($wpdb->prepare("SELECT optionValue FROM %i WHERE optionName = %s",
-                        "{$wpPrefix}realbig_settings", "_wpRealbigPluginToken"));
+                    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				    $token = $wpdb->get_results($wpdb->prepare("SELECT optionValue FROM `{$wpPrefix}realbig_settings` WHERE optionName = %s",
+                        "_wpRealbigPluginToken"));
 
 				    if (!empty($token)) {
 					    $token            = get_object_vars($token[0]);
@@ -1293,8 +1293,8 @@ try {
 				global $wpPrefix;
 
                 // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
-				$syncDomain = $wpdb->get_var($wpdb->prepare('SELECT optionValue FROM %i WGPS WHERE optionName = %s',
-                    "{$wpPrefix}realbig_settings", "sync_domain"));
+				$syncDomain = $wpdb->get_var($wpdb->prepare('SELECT optionValue FROM `{$wpPrefix}realbig_settings` WGPS WHERE optionName = %s',
+                    "sync_domain"));
 			}
 
             if (empty($syncDomain)) {

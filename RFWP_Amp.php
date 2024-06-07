@@ -64,8 +64,8 @@ if (!class_exists('RFWP_Amp')) {
 			        return $content;
 		        }
 		        global $wpdb;
-                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
-		        $ampAds = $wpdb->get_results($wpdb->prepare('SELECT * FROM %i WRAA', "{$GLOBALS['wpPrefix']}realbig_amp_ads"));
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		        $ampAds = $wpdb->get_results("SELECT * FROM `{$GLOBALS['wpPrefix']}realbig_amp_ads` WRAA");
 		        if (empty($ampAds)) {
 			        return $content;
 		        }

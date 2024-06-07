@@ -5,7 +5,7 @@ if (!defined("ABSPATH")) { exit;}
 /*
 Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
-Version:      1.1.0
+Version:      1.1.1
 Author:       Realbig Team
 Author URI:   https://realbig.media
 License:      GPLv2 or later
@@ -88,9 +88,9 @@ try {
 		$GLOBALS['rb_variables']['rotator'] = null;
 		$GLOBALS['rb_variables']['localRotatorUrl'] = null;
 		$GLOBALS['rb_variables']['adWithStatic'] = null;
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
-		$getOV = $wpdb->get_results($wpdb->prepare("SELECT optionName, optionValue FROM %i" .
-            " WHERE optionName IN ('domain','rotator','localRotatorUrl','adWithStatic')", "{$GLOBALS['wpPrefix']}realbig_settings"));
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$getOV = $wpdb->get_results("SELECT optionName, optionValue FROM `{$GLOBALS['wpPrefix']}realbig_settings` " .
+            "WHERE optionName IN ('domain','rotator','localRotatorUrl','adWithStatic')");
 		if (!empty($getOV)) {
 			foreach ($getOV AS $k => $item) {
 				if (!empty($item->optionValue)) {
@@ -241,9 +241,9 @@ try {
 				$getDomain = 'newrrb.bid';
 				$getRotator = 'f6ds8jhy56';
 
-                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
-				$getOV = $wpdb->get_results($wpdb->prepare("SELECT optionName, optionValue FROM %i WHERE optionName IN (%s, %s)",
-                    "{$GLOBALS['wpPrefix']}realbig_settings", "domain", "rotator"));
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				$getOV = $wpdb->get_results($wpdb->prepare("SELECT optionName, optionValue FROM `{$GLOBALS['wpPrefix']}realbig_settings` " .
+                    "WHERE optionName IN (%s, %s)", "domain", "rotator"));
 				foreach ($getOV AS $k => $item) {
 					if (!empty($item->optionValue)) {
 						if ($item->optionName == 'domain') {
@@ -284,9 +284,9 @@ try {
 			    global $wpdb;
 			    $getCode = '';
 
-                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
-			    $array = $wpdb->get_results($wpdb->prepare("SELECT optionValue FROM %i WHERE optionName=%s",
-                    "{$GLOBALS['wpPrefix']}realbig_settings", "rotatorCode"), ARRAY_A);
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			    $array = $wpdb->get_results($wpdb->prepare("SELECT optionValue FROM `{$GLOBALS['wpPrefix']}realbig_settings` WHERE optionName=%s",
+                    "rotatorCode"), ARRAY_A);
 
 			    if (!empty($array[0]['optionValue'])) {
 			        $getCode = html_entity_decode($array[0]['optionValue']);
@@ -324,9 +324,9 @@ try {
 					if (isset($GLOBALS['rb_push']['universalDomain'])) {
 						$pushDomain = $GLOBALS['rb_push']['universalDomain'];
                     } else {
-                        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
-						$pushDomain = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM %i WHERE optionName = %s",
-                            "{$GLOBALS['wpPrefix']}realbig_settings", "pushUniversalDomain"));
+                        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+						$pushDomain = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM `{$GLOBALS['wpPrefix']}realbig_settings` " .
+                            "WHERE optionName = %s", "pushUniversalDomain"));
 					}
 					if (empty($pushDomain)) {
 						$pushDomain = 'newup.bid';
@@ -436,9 +436,10 @@ try {
 						$blockDuplicate = 'yes';
 						$statusFor404 = 'show';
                         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
-						$realbig_settings_info = $wpdb->get_results($wpdb->prepare("SELECT optionName, optionValue FROM %i WGPS " .
-                            "WHERE optionName IN (%s, %s, %s)",
-                            "{$GLOBALS['wpPrefix']}realbig_settings", 'excludedIdAndClasses', 'blockDuplicate', 'statusFor404'));
+						$realbig_settings_info = $wpdb->get_results($wpdb->prepare("SELECT optionName, optionValue " .
+                            // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+                            "FROM `{$GLOBALS['wpPrefix']}realbig_settings` WGPS WHERE optionName IN (%s, %s, %s)",
+                            'excludedIdAndClasses', 'blockDuplicate', 'statusFor404'));
 						if (!empty($realbig_settings_info)) {
 							foreach ($realbig_settings_info AS $k => $item) {
 								if (isset($item->optionValue)) {
@@ -475,15 +476,13 @@ try {
 						}
 
 						if ((!is_404())||$statusFor404!='disable') {
+                            // @codingStandardsIgnoreStart
 							if (!empty($content)) {
-                                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
-								$fromDb = $wpdb->get_results($wpdb->prepare("SELECT * FROM %i WGPS",
-                                    "{$GLOBALS['wpPrefix']}realbig_plugin_settings"));
+								$fromDb = $wpdb->get_results("SELECT * FROM `{$GLOBALS['wpPrefix']}realbig_plugin_settings` WGPS");
 							} else {
-                                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
-								$fromDb = $wpdb->get_results($wpdb->prepare("SELECT * FROM %i WGPS WHERE setting_type = 3",
-                                    "{$GLOBALS['wpPrefix']}realbig_plugin_settings"));
+								$fromDb = $wpdb->get_results("SELECT * FROM `{$GLOBALS['wpPrefix']}realbig_plugin_settings` WGPS WHERE setting_type = 3");
 							}
+                            // @codingStandardsIgnoreEnd
                         }
 
 						require_once (plugin_dir_path(__FILE__)."textEditing.php");
@@ -579,7 +578,7 @@ try {
                     include_once(plugin_dir_path(__FILE__) . 'assets/js/asyncBlockInserting.js');
                     echo  PHP_EOL . "</script>" . PHP_EOL;
 
-					$GLOBALS['rfwp_addedAlready']['asyncBlockInserting'] = true;
+                    $GLOBALS['rfwp_addedAlready']['asyncBlockInserting'] = true;
 					if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
 						RFWP_WorkProgressLog(false,'asyncBlockInserting file add');
 					}
@@ -673,9 +672,9 @@ try {
 
 	if (empty(apply_filters('wp_doing_cron', defined('DOING_CRON') && DOING_CRON))) {
 	    if ((!empty($curUserCan)&&!empty($_POST['statusRefresher']))||empty($tableForToken)||empty($tableForCurrentPluginChecker)) {
-            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
-	        $wpdb->query($wpdb->prepare("DELETE FROM %i WHERE post_type IN (%s, %s, %s, %s, %s) AND post_author = 0",
-                "{$wpPrefix}posts", "rb_block_mobile", "rb_block_desktop", "rb_block_mobile_new", "rb_block_tablet_new", "rb_block_desktop_new"));
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+	        $wpdb->query($wpdb->prepare("DELETE FROM `{$wpPrefix}posts` WHERE post_type IN (%s, %s, %s, %s, %s) AND post_author = 0",
+                "rb_block_mobile", "rb_block_desktop", "rb_block_mobile_new", "rb_block_tablet_new", "rb_block_desktop_new"));
 	        RFWP_Cache::deleteCaches();
 		    delete_option('realbig_status_gatherer_version');
 
@@ -712,9 +711,9 @@ try {
 	/****************** end of updater code *******************************************************************************/
 	/********** checking and creating tables ******************************************************************************/
 	if ((!empty($lastSuccessVersionGatherer)&&$lastSuccessVersionGatherer != $GLOBALS['realbigForWP_version'])||empty($lastSuccessVersionGatherer)) {
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
-		$wpdb->query($wpdb->prepare("DELETE FROM %i WHERE post_type IN (%s, %s, %s, %s, %s) AND post_author = 0",
-            "{$wpPrefix}posts", "rb_block_mobile", "rb_block_desktop", "rb_block_mobile_new", "rb_block_tablet_new", "rb_block_desktop_new"));
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$wpdb->query($wpdb->prepare("DELETE FROM `{$wpPrefix}posts` WHERE post_type IN (%s, %s, %s, %s, %s) AND post_author = 0",
+             "rb_block_mobile", "rb_block_desktop", "rb_block_mobile_new", "rb_block_tablet_new", "rb_block_desktop_new"));
         RFWP_Cache::deleteCaches();
 
 		$messageFLog = 'clear cached ads';
@@ -736,8 +735,8 @@ try {
 		}
 	}
 	if ($statusGatherer['realbig_plugin_settings_table'] == true && ($statusGatherer['realbig_plugin_settings_columns'] == false || $lastSuccessVersionGatherer != $GLOBALS['realbigForWP_version'])) {
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
-		$colCheck = $wpdb->get_col($wpdb->prepare("SHOW COLUMNS FROM %i", "{$wpPrefix}realbig_plugin_settings"));
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$colCheck = $wpdb->get_col("SHOW COLUMNS FROM `{$wpPrefix}realbig_plugin_settings`");
 		if (!empty($colCheck)) {
 			$statusGatherer = RFWP_wpRealbigPluginSettingsColomnUpdateFunction($wpPrefix, $colCheck, $statusGatherer);
 			if (!is_admin()&&empty(apply_filters('wp_doing_cron',defined('DOING_CRON')&&DOING_CRON))&&empty(apply_filters('wp_doing_ajax',defined('DOING_AJAX')&&DOING_AJAX))) {
@@ -757,10 +756,10 @@ try {
 	}
 
     // @codingStandardsIgnoreStart
-	$unmarkSuccessfulUpdate      = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM %i WHERE optionName = %s",
-        "{$wpPrefix}realbig_settings", "successUpdateMark"));
-	$jsAutoSynchronizationStatus = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM %i WHERE optionName = %s",
-        "{$wpPrefix}realbig_settings", "jsAutoSyncFails"));
+	$unmarkSuccessfulUpdate      = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM `{$wpPrefix}realbig_settings` " .
+        "WHERE optionName = %s", "successUpdateMark"));
+	$jsAutoSynchronizationStatus = $wpdb->get_var($wpdb->prepare("SELECT optionValue FROM `{$wpPrefix}realbig_settings` " .
+        "WHERE optionName = %s", "jsAutoSyncFails"));
     // @codingStandardsIgnoreEnd
 
 	if ($statusGatherer['realbig_plugin_settings_table'] == true && ($statusGatherer['element_column_values'] == false || $lastSuccessVersionGatherer != $GLOBALS['realbigForWP_version'])) {
@@ -818,9 +817,9 @@ try {
             if (is_admin()) {
                 $excludedPage = true;
             } elseif (!empty($usedUrl)||!empty($usedUrl2)) {
-                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
-                $pageChecksDb = $wpdb->get_results($wpdb->prepare("SELECT optionValue, optionName FROM %i WHERE optionName IN (%s,%s,%s)",
-                    "{$wpPrefix}realbig_settings", "excludedMainPage", "excludedPages", "excludedPageTypes"), ARRAY_A);
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+                $pageChecksDb = $wpdb->get_results($wpdb->prepare("SELECT optionValue, optionName FROM `{$wpPrefix}realbig_settings` " .
+                    "WHERE optionName IN (%s,%s,%s)", "excludedMainPage", "excludedPages", "excludedPageTypes"), ARRAY_A);
                 $pageChecks = [];
                 foreach ($pageChecksDb AS $k => $item) {
                     $pageChecks[$item['optionName']] = $item['optionValue'];
@@ -974,9 +973,9 @@ try {
 
         add_action('wp_head', 'RFWP_AD_header_add', 0);
 		$separatedStatuses = [];
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
-		$statuses = $wpdb->get_results($wpdb->prepare('SELECT optionName, optionValue FROM %i WHERE optionName IN (%s,%s,%s)',
-            "{$wpPrefix}realbig_settings", "pushUniversalCode", "pushUniversalStatus", "pushUniversalDomain"), ARRAY_A);
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$statuses = $wpdb->get_results($wpdb->prepare("SELECT optionName, optionValue FROM `{$wpPrefix}realbig_settings` " .
+            "WHERE optionName IN (%s,%s,%s)", "pushUniversalCode", "pushUniversalStatus", "pushUniversalDomain"), ARRAY_A);
 		if (!empty($statuses)) {
 		    foreach ($statuses AS $k => $item) {
 			    $separatedStatuses[$item['optionName']] = $item['optionValue'];
