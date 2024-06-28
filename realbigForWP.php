@@ -5,7 +5,7 @@ if (!defined("ABSPATH")) { exit;}
 /*
 Plugin name:  Realbig Media Git version
 Description:  Плагин для монетизации от RealBig.media
-Version:      1.1.1
+Version:      1.1.1.1
 Author:       Realbig Team
 Author URI:   https://realbig.media
 License:      GPLv2 or later
@@ -704,7 +704,7 @@ try {
 	/***************** updater code ***************************************************************************************/
 	require (dirname(__FILE__).'/plugin-update-checker/plugin-update-checker.php');
 	$myUpdateChecker = Puc_v4p10_Factory::buildUpdateChecker(
-		'https://github.com/Gildor17/realbigForWP',
+		'https://github.com/SamWorkshops/realbigForWP',
 		__FILE__,
         basename(dirname(__FILE__))
 	);
